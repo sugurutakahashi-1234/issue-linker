@@ -1,6 +1,6 @@
 {
   "name": "issue-number-branch",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "issue-number-branch",
   "publishConfig": {
     "access": "public"
