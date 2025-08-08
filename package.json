@@ -24,7 +24,11 @@
   ],
   "scripts": {
     "🔧": "========== Workspace Commands (all packages) ==========",
-    "build": "bun run --filter '*' build",
+    "build:core": "bun run --filter '@sugurutakahashi-1234/issue-number-branch-core' build",
+    "build:api": "bun run --filter '@sugurutakahashi-1234/issue-number-branch-api' build",
+    "build:cli": "bun run --filter '@sugurutakahashi-1234/issue-number-branch' build",
+    "build:action": "bun run --filter '@sugurutakahashi-1234/issue-number-branch-action' build",
+    "build": "bun run build:core && bun run build:api && bun run build:cli && bun run build:action",
     "typecheck": "bun run --filter '*' typecheck",
     "test": "bun test",
     "test:quiet": "bun test > /dev/null 2>&1 && echo '✅ All tests passed' || echo '❌ Tests failed'",
