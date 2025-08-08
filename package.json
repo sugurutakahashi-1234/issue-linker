@@ -25,7 +25,7 @@
   "scripts": {
     "🔧": "========== Workspace Commands (all packages) ==========",
     "build": "bun run --filter '*' build",
-    "typecheck": "tsc --noEmit -p tsconfig.base.json && bun run --filter '*' typecheck",
+    "typecheck": "bun run --filter '*' typecheck",
     "test": "bun test",
     "test:quiet": "bun test > /dev/null 2>&1 && echo '✅ All tests passed' || echo '❌ Tests failed'",
     "ci": "bun run --filter '*' ci && bun run test:e2e && bun run update:docs && bun run knip",
