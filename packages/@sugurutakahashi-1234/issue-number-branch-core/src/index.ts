@@ -1,5 +1,8 @@
 // Core package - Main exports
 
+// Re-export constants
+/** @public */
+export { DEFAULT_CHECK_OPTIONS } from "./constants.js";
 /** @public */
 export type {
   CheckOptions,

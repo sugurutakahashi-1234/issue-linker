@@ -33652,7 +33652,7 @@ __webpack_unused_export__ = defaultContentType
 
 /***/ }),
 
-/***/ 7627:
+/***/ 6375:
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
 
 // ESM COMPAT FLAG
@@ -33660,9 +33660,22 @@ __nccwpck_require__.r(__webpack_exports__);
 
 // EXPORTS
 __nccwpck_require__.d(__webpack_exports__, {
+  DEFAULT_CHECK_OPTIONS: () => (/* reexport */ DEFAULT_CHECK_OPTIONS),
   checkBranch: () => (/* reexport */ checkBranch)
 });
 
+;// CONCATENATED MODULE: ../issue-number-branch-core/dist/constants.js
+// Constants for issue-number-branch
+/**
+ * Default values for check options
+ */
+const DEFAULT_CHECK_OPTIONS = {
+    /** Default glob pattern to exclude branches */
+    excludePattern: "{main,master,develop}",
+    /** Default issue state filter */
+    issueState: "all",
+};
+//# sourceMappingURL=constants.js.map
 ;// CONCATENATED MODULE: ../issue-number-branch-core/dist/domain/extractors.js
 // Domain layer - Pure extraction functions
 /**
@@ -40960,12 +40973,6 @@ class Config {
         }
         // Default to GitHub.com
         return "https://api.github.com";
-    }
-    getDefaults() {
-        return {
-            excludePattern: "{main,master,develop}",
-            issueState: "all",
-        };
     }
     // For testing purposes
     static resetInstance() {
@@ -49857,17 +49864,26 @@ class GitHubClient {
 
 
 
+
 /**
  * Main use case for checking if a branch name contains a valid issue number
  * @param options - Options for the check
  * @returns Result of the check
  */
 async function checkBranch(options = {}) {
+    // Validate issue state if provided
+    if (options.issueState && !isValidIssueState(options.issueState)) {
+        return {
+            success: false,
+            reason: "error",
+            branch: options.branch ?? "unknown",
+            message: `Invalid issue state "${options.issueState}". Valid options are "all", "open", or "closed".`,
+        };
+    }
     const config = Config.getInstance();
-    const defaults = config.getDefaults();
     // Merge options with defaults
-    const excludePattern = options.excludePattern ?? defaults.excludePattern;
-    const issueState = options.issueState ?? defaults.issueState;
+    const excludePattern = options.excludePattern ?? DEFAULT_CHECK_OPTIONS.excludePattern;
+    const issueState = options.issueState ?? DEFAULT_CHECK_OPTIONS.issueState;
     const githubToken = options.githubToken ?? config.getGitHubToken();
     // Initialize clients
     const gitClient = new GitClient();
@@ -49948,9 +49964,18 @@ async function checkBranch(options = {}) {
         };
     }
 }
+/**
+ * Helper function to validate issue state
+ */
+function isValidIssueState(state) {
+    return state === "all" || state === "open" || state === "closed";
+}
 //# sourceMappingURL=check-branch.js.map
 ;// CONCATENATED MODULE: ../issue-number-branch-core/dist/index.js
 // Core package - Main exports
+// Re-export constants
+/** @public */
+
 // Re-export only what's needed by API package
 /** @public */
 
@@ -50038,30 +50063,22 @@ var exports = __webpack_exports__;
 Object.defineProperty(exports, "B", ({ value: true }));
 const tslib_1 = __nccwpck_require__(4594);
 const core = tslib_1.__importStar(__nccwpck_require__(7930));
-const issue_number_branch_api_1 = __nccwpck_require__(7627);
+const issue_number_branch_api_1 = __nccwpck_require__(6375);
 async function run() {
     try {
         // Get inputs
         const branch = core.getInput("branch") || undefined;
         const owner = core.getInput("owner") || undefined;
         const repo = core.getInput("repo") || undefined;
-        const excludePattern = core.getInput("exclude_pattern") || "{main,master,develop}";
-        const issueStateInput = core.getInput("issue_state") || "all";
-        // Validate issue state
-        const issueState = issueStateInput;
-        if (issueState !== "all" &&
-            issueState !== "open" &&
-            issueState !== "closed") {
-            core.setFailed(`Invalid issue state "${issueState}". Valid options are "all", "open", or "closed".`);
-            return;
-        }
-        // Check branch with provided options
+        const excludePattern = core.getInput("exclude_pattern") || issue_number_branch_api_1.DEFAULT_CHECK_OPTIONS.excludePattern;
+        const issueStateInput = core.getInput("issue_state") || issue_number_branch_api_1.DEFAULT_CHECK_OPTIONS.issueState;
+        // Check branch with provided options (validation is done in Core layer)
         const result = await (0, issue_number_branch_api_1.checkBranch)({
             ...(branch && { branch }),
             ...(owner && { owner }),
             ...(repo && { repo }),
             excludePattern,
-            issueState,
+            issueState: issueStateInput,
         });
         // Set outputs
         core.setOutput("success", result.success.toString());

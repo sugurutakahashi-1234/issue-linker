@@ -6,6 +6,7 @@ export {
   type CheckOptions,
   type CheckResult,
   checkBranch,
+  DEFAULT_CHECK_OPTIONS,
   type IssueState,
   type IssueStateFilter,
 } from "@sugurutakahashi-1234/issue-number-branch-core";

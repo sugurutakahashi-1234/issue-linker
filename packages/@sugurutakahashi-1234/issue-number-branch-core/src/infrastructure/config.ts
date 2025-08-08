@@ -54,16 +54,6 @@ export class Config {
     return "https://api.github.com";
   }
 
-  getDefaults(): {
-    excludePattern: string;
-    issueState: "all";
-  } {
-    return {
-      excludePattern: "{main,master,develop}",
-      issueState: "all",
-    };
-  }
-
   // For testing purposes
   static resetInstance(): void {
     Config.instance = null;

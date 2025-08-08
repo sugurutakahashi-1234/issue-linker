@@ -1,6 +1,7 @@
 import * as core from "@actions/core";
 import {
   checkBranch,
+  DEFAULT_CHECK_OPTIONS,
   type IssueStateFilter,
 } from "@sugurutakahashi-1234/issue-number-branch-api";
 
@@ -11,29 +12,17 @@ async function run() {
     const owner = core.getInput("owner") || undefined;
     const repo = core.getInput("repo") || undefined;
     const excludePattern =
-      core.getInput("exclude_pattern") || "{main,master,develop}";
-    const issueStateInput = core.getInput("issue_state") || "all";
+      core.getInput("exclude_pattern") || DEFAULT_CHECK_OPTIONS.excludePattern;
+    const issueStateInput =
+      core.getInput("issue_state") || DEFAULT_CHECK_OPTIONS.issueState;
 
-    // Validate issue state
-    const issueState = issueStateInput as IssueStateFilter;
-    if (
-      issueState !== "all" &&
-      issueState !== "open" &&
-      issueState !== "closed"
-    ) {
-      core.setFailed(
-        `Invalid issue state "${issueState}". Valid options are "all", "open", or "closed".`,
-      );
-      return;
-    }
-
-    // Check branch with provided options
+    // Check branch with provided options (validation is done in Core layer)
     const result = await checkBranch({
       ...(branch && { branch }),
       ...(owner && { owner }),
       ...(repo && { repo }),
       excludePattern,
-      issueState,
+      issueState: issueStateInput as IssueStateFilter,
     });
 
     // Set outputs

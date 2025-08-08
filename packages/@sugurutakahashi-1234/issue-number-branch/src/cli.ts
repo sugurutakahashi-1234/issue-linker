@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import { program } from "@commander-js/extra-typings";
 import {
   checkBranch,
+  DEFAULT_CHECK_OPTIONS,
   type IssueStateFilter,
 } from "@sugurutakahashi-1234/issue-number-branch-api";
 
@@ -25,45 +26,32 @@ program
   .option("--repo <repo>", "repository name (default: from git remote)")
   .option(
     "--exclude-pattern <pattern>",
-    "glob pattern to exclude branches (default: {main,master,develop})\n" +
+    `glob pattern to exclude branches (default: ${DEFAULT_CHECK_OPTIONS.excludePattern})\n` +
       "Pattern examples:\n" +
       "  '{main,master,develop}'  - exclude specific branches\n" +
       "  'release/*'              - exclude with wildcard\n" +
       "  '{release,hotfix}/*'     - exclude multiple prefixes\n" +
       "  '!(feature|bugfix)/*'    - exclude all except these",
-    "{main,master,develop}",
+    DEFAULT_CHECK_OPTIONS.excludePattern,
   )
   .option(
     "--issue-state <state>",
-    "filter by issue state: all, open, or closed (default: all)\n" +
+    `filter by issue state: all, open, or closed (default: ${DEFAULT_CHECK_OPTIONS.issueState})\n` +
       "Examples:\n" +
       "  'all'    - check both open and closed issues\n" +
       "  'open'   - check only open issues\n" +
       "  'closed' - check only closed issues",
-    "all",
+    DEFAULT_CHECK_OPTIONS.issueState,
   )
   .action(async (options) => {
     try {
-      // Validate issue state option
-      const issueState = options.issueState as IssueStateFilter;
-      if (
-        issueState !== "all" &&
-        issueState !== "open" &&
-        issueState !== "closed"
-      ) {
-        console.error(
-          `❌ Invalid issue state "${issueState}". Valid options are "all", "open", or "closed".`,
-        );
-        process.exit(2);
-      }
-
-      // Check branch with provided options
+      // Check branch with provided options (validation is done in Core layer)
       const result = await checkBranch({
         ...(options.branch && { branch: options.branch }),
         ...(options.owner && { owner: options.owner }),
         ...(options.repo && { repo: options.repo }),
         excludePattern: options.excludePattern,
-        issueState,
+        issueState: options.issueState as IssueStateFilter,
       });
 
       // Display result with improved formatting

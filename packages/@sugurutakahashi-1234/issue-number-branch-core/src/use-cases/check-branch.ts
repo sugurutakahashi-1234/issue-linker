@@ -1,5 +1,6 @@
 // Use case layer - Main business logic
 
+import { DEFAULT_CHECK_OPTIONS } from "../constants.js";
 import { extractIssueNumbers } from "../domain/extractors.js";
 import { parseGitRemoteUrl } from "../domain/parsers.js";
 import {
@@ -9,7 +10,7 @@ import {
 import { Config } from "../infrastructure/config.js";
 import { GitClient } from "../infrastructure/git-client.js";
 import { GitHubClient } from "../infrastructure/github-client.js";
-import type { CheckOptions, CheckResult } from "../types.js";
+import type { CheckOptions, CheckResult, IssueStateFilter } from "../types.js";
 
 /**
  * Main use case for checking if a branch name contains a valid issue number
@@ -19,12 +20,22 @@ import type { CheckOptions, CheckResult } from "../types.js";
 export async function checkBranch(
   options: CheckOptions = {},
 ): Promise<CheckResult> {
+  // Validate issue state if provided
+  if (options.issueState && !isValidIssueState(options.issueState)) {
+    return {
+      success: false,
+      reason: "error",
+      branch: options.branch ?? "unknown",
+      message: `Invalid issue state "${options.issueState}". Valid options are "all", "open", or "closed".`,
+    };
+  }
+
   const config = Config.getInstance();
-  const defaults = config.getDefaults();
 
   // Merge options with defaults
-  const excludePattern = options.excludePattern ?? defaults.excludePattern;
-  const issueState = options.issueState ?? defaults.issueState;
+  const excludePattern =
+    options.excludePattern ?? DEFAULT_CHECK_OPTIONS.excludePattern;
+  const issueState = options.issueState ?? DEFAULT_CHECK_OPTIONS.issueState;
   const githubToken = options.githubToken ?? config.getGitHubToken();
 
   // Initialize clients
@@ -111,4 +122,11 @@ export async function checkBranch(
       message: error instanceof Error ? error.message : String(error),
     };
   }
+}
+
+/**
+ * Helper function to validate issue state
+ */
+function isValidIssueState(state: unknown): state is IssueStateFilter {
+  return state === "all" || state === "open" || state === "closed";
 }
