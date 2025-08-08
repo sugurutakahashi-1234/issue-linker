@@ -1,35 +1,87 @@
 import * as core from "@actions/core";
-import { checkCurrentBranch } from "@sugurutakahashi-1234/issue-number-branch-api";
+import {
+  checkBranch,
+  type IssueStateFilter,
+} from "@sugurutakahashi-1234/issue-number-branch-api";
 
 async function run() {
   try {
-    // TODO: Add input validation
-    // TODO: Better error messages for GitHub Actions context
+    // Get inputs
+    const branch = core.getInput("branch") || undefined;
+    const owner = core.getInput("owner") || undefined;
+    const repo = core.getInput("repo") || undefined;
+    const excludePattern =
+      core.getInput("exclude_pattern") || "{main,master,develop}";
+    const issueStateInput = core.getInput("issue_state") || "all";
 
-    const excludeGlob = core.getInput("exclude_glob") || "main|master|develop";
-    const allowedStates = (core.getInput("allowed_states") || "open,closed")
-      .split(",")
-      .map((s) => s.trim()) as ("open" | "closed")[];
+    // Validate issue state
+    const issueState = issueStateInput as IssueStateFilter;
+    if (
+      issueState !== "all" &&
+      issueState !== "open" &&
+      issueState !== "closed"
+    ) {
+      core.setFailed(
+        `Invalid issue state "${issueState}". Valid options are "all", "open", or "closed".`,
+      );
+      return;
+    }
 
-    const res = await checkCurrentBranch({ excludeGlob, allowedStates });
+    // Check branch with provided options
+    const result = await checkBranch({
+      ...(branch && { branch }),
+      ...(owner && { owner }),
+      ...(repo && { repo }),
+      excludePattern,
+      issueState,
+    });
 
-    if (res.ok) {
-      core.info(`OK: ${res.message}`);
-      core.setOutput("status", "ok");
-      if (res.matched) {
-        core.setOutput("issue_number", res.matched.toString());
+    // Set outputs
+    core.setOutput("success", result.success.toString());
+    core.setOutput("reason", result.reason);
+    core.setOutput("branch", result.branch);
+
+    if (result.issueNumber) {
+      core.setOutput("issue_number", result.issueNumber.toString());
+    }
+
+    if (result.metadata) {
+      core.setOutput("owner", result.metadata.owner || "");
+      core.setOutput("repo", result.metadata.repo || "");
+      core.setOutput("metadata", JSON.stringify(result.metadata));
+    }
+
+    // Log result
+    if (result.success) {
+      core.info(`✅ ${result.message}`);
+      if (result.metadata) {
+        core.info(
+          `Repository: ${result.metadata.owner}/${result.metadata.repo}`,
+        );
+        if (result.issueNumber) {
+          core.info(`Issue: #${result.issueNumber}`);
+        }
       }
     } else {
-      // TODO: Consider different failure modes (warning vs error)
-      core.setFailed(
-        `${res.reason === "error" ? "ERR" : "NG"}: ${res.message}`,
-      );
+      core.setFailed(`❌ ${result.message}`);
+      if (result.metadata) {
+        core.error(
+          `Repository: ${result.metadata.owner}/${result.metadata.repo}`,
+        );
+        if (result.metadata.checkedIssues?.length) {
+          core.error(
+            `Checked issues: ${result.metadata.checkedIssues.join(", ")}`,
+          );
+        }
+      }
     }
   } catch (error) {
-    // TODO: Better error reporting with stack traces in debug mode
     core.setFailed(
       `Unexpected error: ${error instanceof Error ? error.message : String(error)}`,
     );
+    if (error instanceof Error && error.stack) {
+      core.debug(`Stack trace: ${error.stack}`);
+    }
   }
 }
 

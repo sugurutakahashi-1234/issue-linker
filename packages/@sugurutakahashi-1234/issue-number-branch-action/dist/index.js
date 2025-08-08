@@ -3180,6 +3180,1536 @@ function copyFile(srcFile, destFile, force) {
 
 /***/ }),
 
+/***/ 7605:
+/***/ (function(module) {
+
+/**
+  * This file contains the Bottleneck library (MIT), compiled to ES2017, and without Clustering support.
+  * https://github.com/SGrondin/bottleneck
+  */
+(function (global, factory) {
+	 true ? module.exports = factory() :
+	0;
+}(this, (function () { 'use strict';
+
+	var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
+
+	function getCjsExportFromNamespace (n) {
+		return n && n['default'] || n;
+	}
+
+	var load = function(received, defaults, onto = {}) {
+	  var k, ref, v;
+	  for (k in defaults) {
+	    v = defaults[k];
+	    onto[k] = (ref = received[k]) != null ? ref : v;
+	  }
+	  return onto;
+	};
+
+	var overwrite = function(received, defaults, onto = {}) {
+	  var k, v;
+	  for (k in received) {
+	    v = received[k];
+	    if (defaults[k] !== void 0) {
+	      onto[k] = v;
+	    }
+	  }
+	  return onto;
+	};
+
+	var parser = {
+		load: load,
+		overwrite: overwrite
+	};
+
+	var DLList;
+
+	DLList = class DLList {
+	  constructor(incr, decr) {
+	    this.incr = incr;
+	    this.decr = decr;
+	    this._first = null;
+	    this._last = null;
+	    this.length = 0;
+	  }
+
+	  push(value) {
+	    var node;
+	    this.length++;
+	    if (typeof this.incr === "function") {
+	      this.incr();
+	    }
+	    node = {
+	      value,
+	      prev: this._last,
+	      next: null
+	    };
+	    if (this._last != null) {
+	      this._last.next = node;
+	      this._last = node;
+	    } else {
+	      this._first = this._last = node;
+	    }
+	    return void 0;
+	  }
+
+	  shift() {
+	    var value;
+	    if (this._first == null) {
+	      return;
+	    } else {
+	      this.length--;
+	      if (typeof this.decr === "function") {
+	        this.decr();
+	      }
+	    }
+	    value = this._first.value;
+	    if ((this._first = this._first.next) != null) {
+	      this._first.prev = null;
+	    } else {
+	      this._last = null;
+	    }
+	    return value;
+	  }
+
+	  first() {
+	    if (this._first != null) {
+	      return this._first.value;
+	    }
+	  }
+
+	  getArray() {
+	    var node, ref, results;
+	    node = this._first;
+	    results = [];
+	    while (node != null) {
+	      results.push((ref = node, node = node.next, ref.value));
+	    }
+	    return results;
+	  }
+
+	  forEachShift(cb) {
+	    var node;
+	    node = this.shift();
+	    while (node != null) {
+	      (cb(node), node = this.shift());
+	    }
+	    return void 0;
+	  }
+
+	  debug() {
+	    var node, ref, ref1, ref2, results;
+	    node = this._first;
+	    results = [];
+	    while (node != null) {
+	      results.push((ref = node, node = node.next, {
+	        value: ref.value,
+	        prev: (ref1 = ref.prev) != null ? ref1.value : void 0,
+	        next: (ref2 = ref.next) != null ? ref2.value : void 0
+	      }));
+	    }
+	    return results;
+	  }
+
+	};
+
+	var DLList_1 = DLList;
+
+	var Events;
+
+	Events = class Events {
+	  constructor(instance) {
+	    this.instance = instance;
+	    this._events = {};
+	    if ((this.instance.on != null) || (this.instance.once != null) || (this.instance.removeAllListeners != null)) {
+	      throw new Error("An Emitter already exists for this object");
+	    }
+	    this.instance.on = (name, cb) => {
+	      return this._addListener(name, "many", cb);
+	    };
+	    this.instance.once = (name, cb) => {
+	      return this._addListener(name, "once", cb);
+	    };
+	    this.instance.removeAllListeners = (name = null) => {
+	      if (name != null) {
+	        return delete this._events[name];
+	      } else {
+	        return this._events = {};
+	      }
+	    };
+	  }
+
+	  _addListener(name, status, cb) {
+	    var base;
+	    if ((base = this._events)[name] == null) {
+	      base[name] = [];
+	    }
+	    this._events[name].push({cb, status});
+	    return this.instance;
+	  }
+
+	  listenerCount(name) {
+	    if (this._events[name] != null) {
+	      return this._events[name].length;
+	    } else {
+	      return 0;
+	    }
+	  }
+
+	  async trigger(name, ...args) {
+	    var e, promises;
+	    try {
+	      if (name !== "debug") {
+	        this.trigger("debug", `Event triggered: ${name}`, args);
+	      }
+	      if (this._events[name] == null) {
+	        return;
+	      }
+	      this._events[name] = this._events[name].filter(function(listener) {
+	        return listener.status !== "none";
+	      });
+	      promises = this._events[name].map(async(listener) => {
+	        var e, returned;
+	        if (listener.status === "none") {
+	          return;
+	        }
+	        if (listener.status === "once") {
+	          listener.status = "none";
+	        }
+	        try {
+	          returned = typeof listener.cb === "function" ? listener.cb(...args) : void 0;
+	          if (typeof (returned != null ? returned.then : void 0) === "function") {
+	            return (await returned);
+	          } else {
+	            return returned;
+	          }
+	        } catch (error) {
+	          e = error;
+	          {
+	            this.trigger("error", e);
+	          }
+	          return null;
+	        }
+	      });
+	      return ((await Promise.all(promises))).find(function(x) {
+	        return x != null;
+	      });
+	    } catch (error) {
+	      e = error;
+	      {
+	        this.trigger("error", e);
+	      }
+	      return null;
+	    }
+	  }
+
+	};
+
+	var Events_1 = Events;
+
+	var DLList$1, Events$1, Queues;
+
+	DLList$1 = DLList_1;
+
+	Events$1 = Events_1;
+
+	Queues = class Queues {
+	  constructor(num_priorities) {
+	    var i;
+	    this.Events = new Events$1(this);
+	    this._length = 0;
+	    this._lists = (function() {
+	      var j, ref, results;
+	      results = [];
+	      for (i = j = 1, ref = num_priorities; (1 <= ref ? j <= ref : j >= ref); i = 1 <= ref ? ++j : --j) {
+	        results.push(new DLList$1((() => {
+	          return this.incr();
+	        }), (() => {
+	          return this.decr();
+	        })));
+	      }
+	      return results;
+	    }).call(this);
+	  }
+
+	  incr() {
+	    if (this._length++ === 0) {
+	      return this.Events.trigger("leftzero");
+	    }
+	  }
+
+	  decr() {
+	    if (--this._length === 0) {
+	      return this.Events.trigger("zero");
+	    }
+	  }
+
+	  push(job) {
+	    return this._lists[job.options.priority].push(job);
+	  }
+
+	  queued(priority) {
+	    if (priority != null) {
+	      return this._lists[priority].length;
+	    } else {
+	      return this._length;
+	    }
+	  }
+
+	  shiftAll(fn) {
+	    return this._lists.forEach(function(list) {
+	      return list.forEachShift(fn);
+	    });
+	  }
+
+	  getFirst(arr = this._lists) {
+	    var j, len, list;
+	    for (j = 0, len = arr.length; j < len; j++) {
+	      list = arr[j];
+	      if (list.length > 0) {
+	        return list;
+	      }
+	    }
+	    return [];
+	  }
+
+	  shiftLastFrom(priority) {
+	    return this.getFirst(this._lists.slice(priority).reverse()).shift();
+	  }
+
+	};
+
+	var Queues_1 = Queues;
+
+	var BottleneckError;
+
+	BottleneckError = class BottleneckError extends Error {};
+
+	var BottleneckError_1 = BottleneckError;
+
+	var BottleneckError$1, DEFAULT_PRIORITY, Job, NUM_PRIORITIES, parser$1;
+
+	NUM_PRIORITIES = 10;
+
+	DEFAULT_PRIORITY = 5;
+
+	parser$1 = parser;
+
+	BottleneckError$1 = BottleneckError_1;
+
+	Job = class Job {
+	  constructor(task, args, options, jobDefaults, rejectOnDrop, Events, _states, Promise) {
+	    this.task = task;
+	    this.args = args;
+	    this.rejectOnDrop = rejectOnDrop;
+	    this.Events = Events;
+	    this._states = _states;
+	    this.Promise = Promise;
+	    this.options = parser$1.load(options, jobDefaults);
+	    this.options.priority = this._sanitizePriority(this.options.priority);
+	    if (this.options.id === jobDefaults.id) {
+	      this.options.id = `${this.options.id}-${this._randomIndex()}`;
+	    }
+	    this.promise = new this.Promise((_resolve, _reject) => {
+	      this._resolve = _resolve;
+	      this._reject = _reject;
+	    });
+	    this.retryCount = 0;
+	  }
+
+	  _sanitizePriority(priority) {
+	    var sProperty;
+	    sProperty = ~~priority !== priority ? DEFAULT_PRIORITY : priority;
+	    if (sProperty < 0) {
+	      return 0;
+	    } else if (sProperty > NUM_PRIORITIES - 1) {
+	      return NUM_PRIORITIES - 1;
+	    } else {
+	      return sProperty;
+	    }
+	  }
+
+	  _randomIndex() {
+	    return Math.random().toString(36).slice(2);
+	  }
+
+	  doDrop({error, message = "This job has been dropped by Bottleneck"} = {}) {
+	    if (this._states.remove(this.options.id)) {
+	      if (this.rejectOnDrop) {
+	        this._reject(error != null ? error : new BottleneckError$1(message));
+	      }
+	      this.Events.trigger("dropped", {args: this.args, options: this.options, task: this.task, promise: this.promise});
+	      return true;
+	    } else {
+	      return false;
+	    }
+	  }
+
+	  _assertStatus(expected) {
+	    var status;
+	    status = this._states.jobStatus(this.options.id);
+	    if (!(status === expected || (expected === "DONE" && status === null))) {
+	      throw new BottleneckError$1(`Invalid job status ${status}, expected ${expected}. Please open an issue at https://github.com/SGrondin/bottleneck/issues`);
+	    }
+	  }
+
+	  doReceive() {
+	    this._states.start(this.options.id);
+	    return this.Events.trigger("received", {args: this.args, options: this.options});
+	  }
+
+	  doQueue(reachedHWM, blocked) {
+	    this._assertStatus("RECEIVED");
+	    this._states.next(this.options.id);
+	    return this.Events.trigger("queued", {args: this.args, options: this.options, reachedHWM, blocked});
+	  }
+
+	  doRun() {
+	    if (this.retryCount === 0) {
+	      this._assertStatus("QUEUED");
+	      this._states.next(this.options.id);
+	    } else {
+	      this._assertStatus("EXECUTING");
+	    }
+	    return this.Events.trigger("scheduled", {args: this.args, options: this.options});
+	  }
+
+	  async doExecute(chained, clearGlobalState, run, free) {
+	    var error, eventInfo, passed;
+	    if (this.retryCount === 0) {
+	      this._assertStatus("RUNNING");
+	      this._states.next(this.options.id);
+	    } else {
+	      this._assertStatus("EXECUTING");
+	    }
+	    eventInfo = {args: this.args, options: this.options, retryCount: this.retryCount};
+	    this.Events.trigger("executing", eventInfo);
+	    try {
+	      passed = (await (chained != null ? chained.schedule(this.options, this.task, ...this.args) : this.task(...this.args)));
+	      if (clearGlobalState()) {
+	        this.doDone(eventInfo);
+	        await free(this.options, eventInfo);
+	        this._assertStatus("DONE");
+	        return this._resolve(passed);
+	      }
+	    } catch (error1) {
+	      error = error1;
+	      return this._onFailure(error, eventInfo, clearGlobalState, run, free);
+	    }
+	  }
+
+	  doExpire(clearGlobalState, run, free) {
+	    var error, eventInfo;
+	    if (this._states.jobStatus(this.options.id === "RUNNING")) {
+	      this._states.next(this.options.id);
+	    }
+	    this._assertStatus("EXECUTING");
+	    eventInfo = {args: this.args, options: this.options, retryCount: this.retryCount};
+	    error = new BottleneckError$1(`This job timed out after ${this.options.expiration} ms.`);
+	    return this._onFailure(error, eventInfo, clearGlobalState, run, free);
+	  }
+
+	  async _onFailure(error, eventInfo, clearGlobalState, run, free) {
+	    var retry, retryAfter;
+	    if (clearGlobalState()) {
+	      retry = (await this.Events.trigger("failed", error, eventInfo));
+	      if (retry != null) {
+	        retryAfter = ~~retry;
+	        this.Events.trigger("retry", `Retrying ${this.options.id} after ${retryAfter} ms`, eventInfo);
+	        this.retryCount++;
+	        return run(retryAfter);
+	      } else {
+	        this.doDone(eventInfo);
+	        await free(this.options, eventInfo);
+	        this._assertStatus("DONE");
+	        return this._reject(error);
+	      }
+	    }
+	  }
+
+	  doDone(eventInfo) {
+	    this._assertStatus("EXECUTING");
+	    this._states.next(this.options.id);
+	    return this.Events.trigger("done", eventInfo);
+	  }
+
+	};
+
+	var Job_1 = Job;
+
+	var BottleneckError$2, LocalDatastore, parser$2;
+
+	parser$2 = parser;
+
+	BottleneckError$2 = BottleneckError_1;
+
+	LocalDatastore = class LocalDatastore {
+	  constructor(instance, storeOptions, storeInstanceOptions) {
+	    this.instance = instance;
+	    this.storeOptions = storeOptions;
+	    this.clientId = this.instance._randomIndex();
+	    parser$2.load(storeInstanceOptions, storeInstanceOptions, this);
+	    this._nextRequest = this._lastReservoirRefresh = this._lastReservoirIncrease = Date.now();
+	    this._running = 0;
+	    this._done = 0;
+	    this._unblockTime = 0;
+	    this.ready = this.Promise.resolve();
+	    this.clients = {};
+	    this._startHeartbeat();
+	  }
+
+	  _startHeartbeat() {
+	    var base;
+	    if ((this.heartbeat == null) && (((this.storeOptions.reservoirRefreshInterval != null) && (this.storeOptions.reservoirRefreshAmount != null)) || ((this.storeOptions.reservoirIncreaseInterval != null) && (this.storeOptions.reservoirIncreaseAmount != null)))) {
+	      return typeof (base = (this.heartbeat = setInterval(() => {
+	        var amount, incr, maximum, now, reservoir;
+	        now = Date.now();
+	        if ((this.storeOptions.reservoirRefreshInterval != null) && now >= this._lastReservoirRefresh + this.storeOptions.reservoirRefreshInterval) {
+	          this._lastReservoirRefresh = now;
+	          this.storeOptions.reservoir = this.storeOptions.reservoirRefreshAmount;
+	          this.instance._drainAll(this.computeCapacity());
+	        }
+	        if ((this.storeOptions.reservoirIncreaseInterval != null) && now >= this._lastReservoirIncrease + this.storeOptions.reservoirIncreaseInterval) {
+	          ({
+	            reservoirIncreaseAmount: amount,
+	            reservoirIncreaseMaximum: maximum,
+	            reservoir
+	          } = this.storeOptions);
+	          this._lastReservoirIncrease = now;
+	          incr = maximum != null ? Math.min(amount, maximum - reservoir) : amount;
+	          if (incr > 0) {
+	            this.storeOptions.reservoir += incr;
+	            return this.instance._drainAll(this.computeCapacity());
+	          }
+	        }
+	      }, this.heartbeatInterval))).unref === "function" ? base.unref() : void 0;
+	    } else {
+	      return clearInterval(this.heartbeat);
+	    }
+	  }
+
+	  async __publish__(message) {
+	    await this.yieldLoop();
+	    return this.instance.Events.trigger("message", message.toString());
+	  }
+
+	  async __disconnect__(flush) {
+	    await this.yieldLoop();
+	    clearInterval(this.heartbeat);
+	    return this.Promise.resolve();
+	  }
+
+	  yieldLoop(t = 0) {
+	    return new this.Promise(function(resolve, reject) {
+	      return setTimeout(resolve, t);
+	    });
+	  }
+
+	  computePenalty() {
+	    var ref;
+	    return (ref = this.storeOptions.penalty) != null ? ref : (15 * this.storeOptions.minTime) || 5000;
+	  }
+
+	  async __updateSettings__(options) {
+	    await this.yieldLoop();
+	    parser$2.overwrite(options, options, this.storeOptions);
+	    this._startHeartbeat();
+	    this.instance._drainAll(this.computeCapacity());
+	    return true;
+	  }
+
+	  async __running__() {
+	    await this.yieldLoop();
+	    return this._running;
+	  }
+
+	  async __queued__() {
+	    await this.yieldLoop();
+	    return this.instance.queued();
+	  }
+
+	  async __done__() {
+	    await this.yieldLoop();
+	    return this._done;
+	  }
+
+	  async __groupCheck__(time) {
+	    await this.yieldLoop();
+	    return (this._nextRequest + this.timeout) < time;
+	  }
+
+	  computeCapacity() {
+	    var maxConcurrent, reservoir;
+	    ({maxConcurrent, reservoir} = this.storeOptions);
+	    if ((maxConcurrent != null) && (reservoir != null)) {
+	      return Math.min(maxConcurrent - this._running, reservoir);
+	    } else if (maxConcurrent != null) {
+	      return maxConcurrent - this._running;
+	    } else if (reservoir != null) {
+	      return reservoir;
+	    } else {
+	      return null;
+	    }
+	  }
+
+	  conditionsCheck(weight) {
+	    var capacity;
+	    capacity = this.computeCapacity();
+	    return (capacity == null) || weight <= capacity;
+	  }
+
+	  async __incrementReservoir__(incr) {
+	    var reservoir;
+	    await this.yieldLoop();
+	    reservoir = this.storeOptions.reservoir += incr;
+	    this.instance._drainAll(this.computeCapacity());
+	    return reservoir;
+	  }
+
+	  async __currentReservoir__() {
+	    await this.yieldLoop();
+	    return this.storeOptions.reservoir;
+	  }
+
+	  isBlocked(now) {
+	    return this._unblockTime >= now;
+	  }
+
+	  check(weight, now) {
+	    return this.conditionsCheck(weight) && (this._nextRequest - now) <= 0;
+	  }
+
+	  async __check__(weight) {
+	    var now;
+	    await this.yieldLoop();
+	    now = Date.now();
+	    return this.check(weight, now);
+	  }
+
+	  async __register__(index, weight, expiration) {
+	    var now, wait;
+	    await this.yieldLoop();
+	    now = Date.now();
+	    if (this.conditionsCheck(weight)) {
+	      this._running += weight;
+	      if (this.storeOptions.reservoir != null) {
+	        this.storeOptions.reservoir -= weight;
+	      }
+	      wait = Math.max(this._nextRequest - now, 0);
+	      this._nextRequest = now + wait + this.storeOptions.minTime;
+	      return {
+	        success: true,
+	        wait,
+	        reservoir: this.storeOptions.reservoir
+	      };
+	    } else {
+	      return {
+	        success: false
+	      };
+	    }
+	  }
+
+	  strategyIsBlock() {
+	    return this.storeOptions.strategy === 3;
+	  }
+
+	  async __submit__(queueLength, weight) {
+	    var blocked, now, reachedHWM;
+	    await this.yieldLoop();
+	    if ((this.storeOptions.maxConcurrent != null) && weight > this.storeOptions.maxConcurrent) {
+	      throw new BottleneckError$2(`Impossible to add a job having a weight of ${weight} to a limiter having a maxConcurrent setting of ${this.storeOptions.maxConcurrent}`);
+	    }
+	    now = Date.now();
+	    reachedHWM = (this.storeOptions.highWater != null) && queueLength === this.storeOptions.highWater && !this.check(weight, now);
+	    blocked = this.strategyIsBlock() && (reachedHWM || this.isBlocked(now));
+	    if (blocked) {
+	      this._unblockTime = now + this.computePenalty();
+	      this._nextRequest = this._unblockTime + this.storeOptions.minTime;
+	      this.instance._dropAllQueued();
+	    }
+	    return {
+	      reachedHWM,
+	      blocked,
+	      strategy: this.storeOptions.strategy
+	    };
+	  }
+
+	  async __free__(index, weight) {
+	    await this.yieldLoop();
+	    this._running -= weight;
+	    this._done += weight;
+	    this.instance._drainAll(this.computeCapacity());
+	    return {
+	      running: this._running
+	    };
+	  }
+
+	};
+
+	var LocalDatastore_1 = LocalDatastore;
+
+	var BottleneckError$3, States;
+
+	BottleneckError$3 = BottleneckError_1;
+
+	States = class States {
+	  constructor(status1) {
+	    this.status = status1;
+	    this._jobs = {};
+	    this.counts = this.status.map(function() {
+	      return 0;
+	    });
+	  }
+
+	  next(id) {
+	    var current, next;
+	    current = this._jobs[id];
+	    next = current + 1;
+	    if ((current != null) && next < this.status.length) {
+	      this.counts[current]--;
+	      this.counts[next]++;
+	      return this._jobs[id]++;
+	    } else if (current != null) {
+	      this.counts[current]--;
+	      return delete this._jobs[id];
+	    }
+	  }
+
+	  start(id) {
+	    var initial;
+	    initial = 0;
+	    this._jobs[id] = initial;
+	    return this.counts[initial]++;
+	  }
+
+	  remove(id) {
+	    var current;
+	    current = this._jobs[id];
+	    if (current != null) {
+	      this.counts[current]--;
+	      delete this._jobs[id];
+	    }
+	    return current != null;
+	  }
+
+	  jobStatus(id) {
+	    var ref;
+	    return (ref = this.status[this._jobs[id]]) != null ? ref : null;
+	  }
+
+	  statusJobs(status) {
+	    var k, pos, ref, results, v;
+	    if (status != null) {
+	      pos = this.status.indexOf(status);
+	      if (pos < 0) {
+	        throw new BottleneckError$3(`status must be one of ${this.status.join(', ')}`);
+	      }
+	      ref = this._jobs;
+	      results = [];
+	      for (k in ref) {
+	        v = ref[k];
+	        if (v === pos) {
+	          results.push(k);
+	        }
+	      }
+	      return results;
+	    } else {
+	      return Object.keys(this._jobs);
+	    }
+	  }
+
+	  statusCounts() {
+	    return this.counts.reduce(((acc, v, i) => {
+	      acc[this.status[i]] = v;
+	      return acc;
+	    }), {});
+	  }
+
+	};
+
+	var States_1 = States;
+
+	var DLList$2, Sync;
+
+	DLList$2 = DLList_1;
+
+	Sync = class Sync {
+	  constructor(name, Promise) {
+	    this.schedule = this.schedule.bind(this);
+	    this.name = name;
+	    this.Promise = Promise;
+	    this._running = 0;
+	    this._queue = new DLList$2();
+	  }
+
+	  isEmpty() {
+	    return this._queue.length === 0;
+	  }
+
+	  async _tryToRun() {
+	    var args, cb, error, reject, resolve, returned, task;
+	    if ((this._running < 1) && this._queue.length > 0) {
+	      this._running++;
+	      ({task, args, resolve, reject} = this._queue.shift());
+	      cb = (await (async function() {
+	        try {
+	          returned = (await task(...args));
+	          return function() {
+	            return resolve(returned);
+	          };
+	        } catch (error1) {
+	          error = error1;
+	          return function() {
+	            return reject(error);
+	          };
+	        }
+	      })());
+	      this._running--;
+	      this._tryToRun();
+	      return cb();
+	    }
+	  }
+
+	  schedule(task, ...args) {
+	    var promise, reject, resolve;
+	    resolve = reject = null;
+	    promise = new this.Promise(function(_resolve, _reject) {
+	      resolve = _resolve;
+	      return reject = _reject;
+	    });
+	    this._queue.push({task, args, resolve, reject});
+	    this._tryToRun();
+	    return promise;
+	  }
+
+	};
+
+	var Sync_1 = Sync;
+
+	var version = "2.19.5";
+	var version$1 = {
+		version: version
+	};
+
+	var version$2 = /*#__PURE__*/Object.freeze({
+		version: version,
+		default: version$1
+	});
+
+	var require$$2 = () => console.log('You must import the full version of Bottleneck in order to use this feature.');
+
+	var require$$3 = () => console.log('You must import the full version of Bottleneck in order to use this feature.');
+
+	var require$$4 = () => console.log('You must import the full version of Bottleneck in order to use this feature.');
+
+	var Events$2, Group, IORedisConnection$1, RedisConnection$1, Scripts$1, parser$3;
+
+	parser$3 = parser;
+
+	Events$2 = Events_1;
+
+	RedisConnection$1 = require$$2;
+
+	IORedisConnection$1 = require$$3;
+
+	Scripts$1 = require$$4;
+
+	Group = (function() {
+	  class Group {
+	    constructor(limiterOptions = {}) {
+	      this.deleteKey = this.deleteKey.bind(this);
+	      this.limiterOptions = limiterOptions;
+	      parser$3.load(this.limiterOptions, this.defaults, this);
+	      this.Events = new Events$2(this);
+	      this.instances = {};
+	      this.Bottleneck = Bottleneck_1;
+	      this._startAutoCleanup();
+	      this.sharedConnection = this.connection != null;
+	      if (this.connection == null) {
+	        if (this.limiterOptions.datastore === "redis") {
+	          this.connection = new RedisConnection$1(Object.assign({}, this.limiterOptions, {Events: this.Events}));
+	        } else if (this.limiterOptions.datastore === "ioredis") {
+	          this.connection = new IORedisConnection$1(Object.assign({}, this.limiterOptions, {Events: this.Events}));
+	        }
+	      }
+	    }
+
+	    key(key = "") {
+	      var ref;
+	      return (ref = this.instances[key]) != null ? ref : (() => {
+	        var limiter;
+	        limiter = this.instances[key] = new this.Bottleneck(Object.assign(this.limiterOptions, {
+	          id: `${this.id}-${key}`,
+	          timeout: this.timeout,
+	          connection: this.connection
+	        }));
+	        this.Events.trigger("created", limiter, key);
+	        return limiter;
+	      })();
+	    }
+
+	    async deleteKey(key = "") {
+	      var deleted, instance;
+	      instance = this.instances[key];
+	      if (this.connection) {
+	        deleted = (await this.connection.__runCommand__(['del', ...Scripts$1.allKeys(`${this.id}-${key}`)]));
+	      }
+	      if (instance != null) {
+	        delete this.instances[key];
+	        await instance.disconnect();
+	      }
+	      return (instance != null) || deleted > 0;
+	    }
+
+	    limiters() {
+	      var k, ref, results, v;
+	      ref = this.instances;
+	      results = [];
+	      for (k in ref) {
+	        v = ref[k];
+	        results.push({
+	          key: k,
+	          limiter: v
+	        });
+	      }
+	      return results;
+	    }
+
+	    keys() {
+	      return Object.keys(this.instances);
+	    }
+
+	    async clusterKeys() {
+	      var cursor, end, found, i, k, keys, len, next, start;
+	      if (this.connection == null) {
+	        return this.Promise.resolve(this.keys());
+	      }
+	      keys = [];
+	      cursor = null;
+	      start = `b_${this.id}-`.length;
+	      end = "_settings".length;
+	      while (cursor !== 0) {
+	        [next, found] = (await this.connection.__runCommand__(["scan", cursor != null ? cursor : 0, "match", `b_${this.id}-*_settings`, "count", 10000]));
+	        cursor = ~~next;
+	        for (i = 0, len = found.length; i < len; i++) {
+	          k = found[i];
+	          keys.push(k.slice(start, -end));
+	        }
+	      }
+	      return keys;
+	    }
+
+	    _startAutoCleanup() {
+	      var base;
+	      clearInterval(this.interval);
+	      return typeof (base = (this.interval = setInterval(async() => {
+	        var e, k, ref, results, time, v;
+	        time = Date.now();
+	        ref = this.instances;
+	        results = [];
+	        for (k in ref) {
+	          v = ref[k];
+	          try {
+	            if ((await v._store.__groupCheck__(time))) {
+	              results.push(this.deleteKey(k));
+	            } else {
+	              results.push(void 0);
+	            }
+	          } catch (error) {
+	            e = error;
+	            results.push(v.Events.trigger("error", e));
+	          }
+	        }
+	        return results;
+	      }, this.timeout / 2))).unref === "function" ? base.unref() : void 0;
+	    }
+
+	    updateSettings(options = {}) {
+	      parser$3.overwrite(options, this.defaults, this);
+	      parser$3.overwrite(options, options, this.limiterOptions);
+	      if (options.timeout != null) {
+	        return this._startAutoCleanup();
+	      }
+	    }
+
+	    disconnect(flush = true) {
+	      var ref;
+	      if (!this.sharedConnection) {
+	        return (ref = this.connection) != null ? ref.disconnect(flush) : void 0;
+	      }
+	    }
+
+	  }
+	  Group.prototype.defaults = {
+	    timeout: 1000 * 60 * 5,
+	    connection: null,
+	    Promise: Promise,
+	    id: "group-key"
+	  };
+
+	  return Group;
+
+	}).call(commonjsGlobal);
+
+	var Group_1 = Group;
+
+	var Batcher, Events$3, parser$4;
+
+	parser$4 = parser;
+
+	Events$3 = Events_1;
+
+	Batcher = (function() {
+	  class Batcher {
+	    constructor(options = {}) {
+	      this.options = options;
+	      parser$4.load(this.options, this.defaults, this);
+	      this.Events = new Events$3(this);
+	      this._arr = [];
+	      this._resetPromise();
+	      this._lastFlush = Date.now();
+	    }
+
+	    _resetPromise() {
+	      return this._promise = new this.Promise((res, rej) => {
+	        return this._resolve = res;
+	      });
+	    }
+
+	    _flush() {
+	      clearTimeout(this._timeout);
+	      this._lastFlush = Date.now();
+	      this._resolve();
+	      this.Events.trigger("batch", this._arr);
+	      this._arr = [];
+	      return this._resetPromise();
+	    }
+
+	    add(data) {
+	      var ret;
+	      this._arr.push(data);
+	      ret = this._promise;
+	      if (this._arr.length === this.maxSize) {
+	        this._flush();
+	      } else if ((this.maxTime != null) && this._arr.length === 1) {
+	        this._timeout = setTimeout(() => {
+	          return this._flush();
+	        }, this.maxTime);
+	      }
+	      return ret;
+	    }
+
+	  }
+	  Batcher.prototype.defaults = {
+	    maxTime: null,
+	    maxSize: null,
+	    Promise: Promise
+	  };
+
+	  return Batcher;
+
+	}).call(commonjsGlobal);
+
+	var Batcher_1 = Batcher;
+
+	var require$$4$1 = () => console.log('You must import the full version of Bottleneck in order to use this feature.');
+
+	var require$$8 = getCjsExportFromNamespace(version$2);
+
+	var Bottleneck, DEFAULT_PRIORITY$1, Events$4, Job$1, LocalDatastore$1, NUM_PRIORITIES$1, Queues$1, RedisDatastore$1, States$1, Sync$1, parser$5,
+	  splice = [].splice;
+
+	NUM_PRIORITIES$1 = 10;
+
+	DEFAULT_PRIORITY$1 = 5;
+
+	parser$5 = parser;
+
+	Queues$1 = Queues_1;
+
+	Job$1 = Job_1;
+
+	LocalDatastore$1 = LocalDatastore_1;
+
+	RedisDatastore$1 = require$$4$1;
+
+	Events$4 = Events_1;
+
+	States$1 = States_1;
+
+	Sync$1 = Sync_1;
+
+	Bottleneck = (function() {
+	  class Bottleneck {
+	    constructor(options = {}, ...invalid) {
+	      var storeInstanceOptions, storeOptions;
+	      this._addToQueue = this._addToQueue.bind(this);
+	      this._validateOptions(options, invalid);
+	      parser$5.load(options, this.instanceDefaults, this);
+	      this._queues = new Queues$1(NUM_PRIORITIES$1);
+	      this._scheduled = {};
+	      this._states = new States$1(["RECEIVED", "QUEUED", "RUNNING", "EXECUTING"].concat(this.trackDoneStatus ? ["DONE"] : []));
+	      this._limiter = null;
+	      this.Events = new Events$4(this);
+	      this._submitLock = new Sync$1("submit", this.Promise);
+	      this._registerLock = new Sync$1("register", this.Promise);
+	      storeOptions = parser$5.load(options, this.storeDefaults, {});
+	      this._store = (function() {
+	        if (this.datastore === "redis" || this.datastore === "ioredis" || (this.connection != null)) {
+	          storeInstanceOptions = parser$5.load(options, this.redisStoreDefaults, {});
+	          return new RedisDatastore$1(this, storeOptions, storeInstanceOptions);
+	        } else if (this.datastore === "local") {
+	          storeInstanceOptions = parser$5.load(options, this.localStoreDefaults, {});
+	          return new LocalDatastore$1(this, storeOptions, storeInstanceOptions);
+	        } else {
+	          throw new Bottleneck.prototype.BottleneckError(`Invalid datastore type: ${this.datastore}`);
+	        }
+	      }).call(this);
+	      this._queues.on("leftzero", () => {
+	        var ref;
+	        return (ref = this._store.heartbeat) != null ? typeof ref.ref === "function" ? ref.ref() : void 0 : void 0;
+	      });
+	      this._queues.on("zero", () => {
+	        var ref;
+	        return (ref = this._store.heartbeat) != null ? typeof ref.unref === "function" ? ref.unref() : void 0 : void 0;
+	      });
+	    }
+
+	    _validateOptions(options, invalid) {
+	      if (!((options != null) && typeof options === "object" && invalid.length === 0)) {
+	        throw new Bottleneck.prototype.BottleneckError("Bottleneck v2 takes a single object argument. Refer to https://github.com/SGrondin/bottleneck#upgrading-to-v2 if you're upgrading from Bottleneck v1.");
+	      }
+	    }
+
+	    ready() {
+	      return this._store.ready;
+	    }
+
+	    clients() {
+	      return this._store.clients;
+	    }
+
+	    channel() {
+	      return `b_${this.id}`;
+	    }
+
+	    channel_client() {
+	      return `b_${this.id}_${this._store.clientId}`;
+	    }
+
+	    publish(message) {
+	      return this._store.__publish__(message);
+	    }
+
+	    disconnect(flush = true) {
+	      return this._store.__disconnect__(flush);
+	    }
+
+	    chain(_limiter) {
+	      this._limiter = _limiter;
+	      return this;
+	    }
+
+	    queued(priority) {
+	      return this._queues.queued(priority);
+	    }
+
+	    clusterQueued() {
+	      return this._store.__queued__();
+	    }
+
+	    empty() {
+	      return this.queued() === 0 && this._submitLock.isEmpty();
+	    }
+
+	    running() {
+	      return this._store.__running__();
+	    }
+
+	    done() {
+	      return this._store.__done__();
+	    }
+
+	    jobStatus(id) {
+	      return this._states.jobStatus(id);
+	    }
+
+	    jobs(status) {
+	      return this._states.statusJobs(status);
+	    }
+
+	    counts() {
+	      return this._states.statusCounts();
+	    }
+
+	    _randomIndex() {
+	      return Math.random().toString(36).slice(2);
+	    }
+
+	    check(weight = 1) {
+	      return this._store.__check__(weight);
+	    }
+
+	    _clearGlobalState(index) {
+	      if (this._scheduled[index] != null) {
+	        clearTimeout(this._scheduled[index].expiration);
+	        delete this._scheduled[index];
+	        return true;
+	      } else {
+	        return false;
+	      }
+	    }
+
+	    async _free(index, job, options, eventInfo) {
+	      var e, running;
+	      try {
+	        ({running} = (await this._store.__free__(index, options.weight)));
+	        this.Events.trigger("debug", `Freed ${options.id}`, eventInfo);
+	        if (running === 0 && this.empty()) {
+	          return this.Events.trigger("idle");
+	        }
+	      } catch (error1) {
+	        e = error1;
+	        return this.Events.trigger("error", e);
+	      }
+	    }
+
+	    _run(index, job, wait) {
+	      var clearGlobalState, free, run;
+	      job.doRun();
+	      clearGlobalState = this._clearGlobalState.bind(this, index);
+	      run = this._run.bind(this, index, job);
+	      free = this._free.bind(this, index, job);
+	      return this._scheduled[index] = {
+	        timeout: setTimeout(() => {
+	          return job.doExecute(this._limiter, clearGlobalState, run, free);
+	        }, wait),
+	        expiration: job.options.expiration != null ? setTimeout(function() {
+	          return job.doExpire(clearGlobalState, run, free);
+	        }, wait + job.options.expiration) : void 0,
+	        job: job
+	      };
+	    }
+
+	    _drainOne(capacity) {
+	      return this._registerLock.schedule(() => {
+	        var args, index, next, options, queue;
+	        if (this.queued() === 0) {
+	          return this.Promise.resolve(null);
+	        }
+	        queue = this._queues.getFirst();
+	        ({options, args} = next = queue.first());
+	        if ((capacity != null) && options.weight > capacity) {
+	          return this.Promise.resolve(null);
+	        }
+	        this.Events.trigger("debug", `Draining ${options.id}`, {args, options});
+	        index = this._randomIndex();
+	        return this._store.__register__(index, options.weight, options.expiration).then(({success, wait, reservoir}) => {
+	          var empty;
+	          this.Events.trigger("debug", `Drained ${options.id}`, {success, args, options});
+	          if (success) {
+	            queue.shift();
+	            empty = this.empty();
+	            if (empty) {
+	              this.Events.trigger("empty");
+	            }
+	            if (reservoir === 0) {
+	              this.Events.trigger("depleted", empty);
+	            }
+	            this._run(index, next, wait);
+	            return this.Promise.resolve(options.weight);
+	          } else {
+	            return this.Promise.resolve(null);
+	          }
+	        });
+	      });
+	    }
+
+	    _drainAll(capacity, total = 0) {
+	      return this._drainOne(capacity).then((drained) => {
+	        var newCapacity;
+	        if (drained != null) {
+	          newCapacity = capacity != null ? capacity - drained : capacity;
+	          return this._drainAll(newCapacity, total + drained);
+	        } else {
+	          return this.Promise.resolve(total);
+	        }
+	      }).catch((e) => {
+	        return this.Events.trigger("error", e);
+	      });
+	    }
+
+	    _dropAllQueued(message) {
+	      return this._queues.shiftAll(function(job) {
+	        return job.doDrop({message});
+	      });
+	    }
+
+	    stop(options = {}) {
+	      var done, waitForExecuting;
+	      options = parser$5.load(options, this.stopDefaults);
+	      waitForExecuting = (at) => {
+	        var finished;
+	        finished = () => {
+	          var counts;
+	          counts = this._states.counts;
+	          return (counts[0] + counts[1] + counts[2] + counts[3]) === at;
+	        };
+	        return new this.Promise((resolve, reject) => {
+	          if (finished()) {
+	            return resolve();
+	          } else {
+	            return this.on("done", () => {
+	              if (finished()) {
+	                this.removeAllListeners("done");
+	                return resolve();
+	              }
+	            });
+	          }
+	        });
+	      };
+	      done = options.dropWaitingJobs ? (this._run = function(index, next) {
+	        return next.doDrop({
+	          message: options.dropErrorMessage
+	        });
+	      }, this._drainOne = () => {
+	        return this.Promise.resolve(null);
+	      }, this._registerLock.schedule(() => {
+	        return this._submitLock.schedule(() => {
+	          var k, ref, v;
+	          ref = this._scheduled;
+	          for (k in ref) {
+	            v = ref[k];
+	            if (this.jobStatus(v.job.options.id) === "RUNNING") {
+	              clearTimeout(v.timeout);
+	              clearTimeout(v.expiration);
+	              v.job.doDrop({
+	                message: options.dropErrorMessage
+	              });
+	            }
+	          }
+	          this._dropAllQueued(options.dropErrorMessage);
+	          return waitForExecuting(0);
+	        });
+	      })) : this.schedule({
+	        priority: NUM_PRIORITIES$1 - 1,
+	        weight: 0
+	      }, () => {
+	        return waitForExecuting(1);
+	      });
+	      this._receive = function(job) {
+	        return job._reject(new Bottleneck.prototype.BottleneckError(options.enqueueErrorMessage));
+	      };
+	      this.stop = () => {
+	        return this.Promise.reject(new Bottleneck.prototype.BottleneckError("stop() has already been called"));
+	      };
+	      return done;
+	    }
+
+	    async _addToQueue(job) {
+	      var args, blocked, error, options, reachedHWM, shifted, strategy;
+	      ({args, options} = job);
+	      try {
+	        ({reachedHWM, blocked, strategy} = (await this._store.__submit__(this.queued(), options.weight)));
+	      } catch (error1) {
+	        error = error1;
+	        this.Events.trigger("debug", `Could not queue ${options.id}`, {args, options, error});
+	        job.doDrop({error});
+	        return false;
+	      }
+	      if (blocked) {
+	        job.doDrop();
+	        return true;
+	      } else if (reachedHWM) {
+	        shifted = strategy === Bottleneck.prototype.strategy.LEAK ? this._queues.shiftLastFrom(options.priority) : strategy === Bottleneck.prototype.strategy.OVERFLOW_PRIORITY ? this._queues.shiftLastFrom(options.priority + 1) : strategy === Bottleneck.prototype.strategy.OVERFLOW ? job : void 0;
+	        if (shifted != null) {
+	          shifted.doDrop();
+	        }
+	        if ((shifted == null) || strategy === Bottleneck.prototype.strategy.OVERFLOW) {
+	          if (shifted == null) {
+	            job.doDrop();
+	          }
+	          return reachedHWM;
+	        }
+	      }
+	      job.doQueue(reachedHWM, blocked);
+	      this._queues.push(job);
+	      await this._drainAll();
+	      return reachedHWM;
+	    }
+
+	    _receive(job) {
+	      if (this._states.jobStatus(job.options.id) != null) {
+	        job._reject(new Bottleneck.prototype.BottleneckError(`A job with the same id already exists (id=${job.options.id})`));
+	        return false;
+	      } else {
+	        job.doReceive();
+	        return this._submitLock.schedule(this._addToQueue, job);
+	      }
+	    }
+
+	    submit(...args) {
+	      var cb, fn, job, options, ref, ref1, task;
+	      if (typeof args[0] === "function") {
+	        ref = args, [fn, ...args] = ref, [cb] = splice.call(args, -1);
+	        options = parser$5.load({}, this.jobDefaults);
+	      } else {
+	        ref1 = args, [options, fn, ...args] = ref1, [cb] = splice.call(args, -1);
+	        options = parser$5.load(options, this.jobDefaults);
+	      }
+	      task = (...args) => {
+	        return new this.Promise(function(resolve, reject) {
+	          return fn(...args, function(...args) {
+	            return (args[0] != null ? reject : resolve)(args);
+	          });
+	        });
+	      };
+	      job = new Job$1(task, args, options, this.jobDefaults, this.rejectOnDrop, this.Events, this._states, this.Promise);
+	      job.promise.then(function(args) {
+	        return typeof cb === "function" ? cb(...args) : void 0;
+	      }).catch(function(args) {
+	        if (Array.isArray(args)) {
+	          return typeof cb === "function" ? cb(...args) : void 0;
+	        } else {
+	          return typeof cb === "function" ? cb(args) : void 0;
+	        }
+	      });
+	      return this._receive(job);
+	    }
+
+	    schedule(...args) {
+	      var job, options, task;
+	      if (typeof args[0] === "function") {
+	        [task, ...args] = args;
+	        options = {};
+	      } else {
+	        [options, task, ...args] = args;
+	      }
+	      job = new Job$1(task, args, options, this.jobDefaults, this.rejectOnDrop, this.Events, this._states, this.Promise);
+	      this._receive(job);
+	      return job.promise;
+	    }
+
+	    wrap(fn) {
+	      var schedule, wrapped;
+	      schedule = this.schedule.bind(this);
+	      wrapped = function(...args) {
+	        return schedule(fn.bind(this), ...args);
+	      };
+	      wrapped.withOptions = function(options, ...args) {
+	        return schedule(options, fn, ...args);
+	      };
+	      return wrapped;
+	    }
+
+	    async updateSettings(options = {}) {
+	      await this._store.__updateSettings__(parser$5.overwrite(options, this.storeDefaults));
+	      parser$5.overwrite(options, this.instanceDefaults, this);
+	      return this;
+	    }
+
+	    currentReservoir() {
+	      return this._store.__currentReservoir__();
+	    }
+
+	    incrementReservoir(incr = 0) {
+	      return this._store.__incrementReservoir__(incr);
+	    }
+
+	  }
+	  Bottleneck.default = Bottleneck;
+
+	  Bottleneck.Events = Events$4;
+
+	  Bottleneck.version = Bottleneck.prototype.version = require$$8.version;
+
+	  Bottleneck.strategy = Bottleneck.prototype.strategy = {
+	    LEAK: 1,
+	    OVERFLOW: 2,
+	    OVERFLOW_PRIORITY: 4,
+	    BLOCK: 3
+	  };
+
+	  Bottleneck.BottleneckError = Bottleneck.prototype.BottleneckError = BottleneckError_1;
+
+	  Bottleneck.Group = Bottleneck.prototype.Group = Group_1;
+
+	  Bottleneck.RedisConnection = Bottleneck.prototype.RedisConnection = require$$2;
+
+	  Bottleneck.IORedisConnection = Bottleneck.prototype.IORedisConnection = require$$3;
+
+	  Bottleneck.Batcher = Bottleneck.prototype.Batcher = Batcher_1;
+
+	  Bottleneck.prototype.jobDefaults = {
+	    priority: DEFAULT_PRIORITY$1,
+	    weight: 1,
+	    expiration: null,
+	    id: "<no-id>"
+	  };
+
+	  Bottleneck.prototype.storeDefaults = {
+	    maxConcurrent: null,
+	    minTime: 0,
+	    highWater: null,
+	    strategy: Bottleneck.prototype.strategy.LEAK,
+	    penalty: null,
+	    reservoir: null,
+	    reservoirRefreshInterval: null,
+	    reservoirRefreshAmount: null,
+	    reservoirIncreaseInterval: null,
+	    reservoirIncreaseAmount: null,
+	    reservoirIncreaseMaximum: null
+	  };
+
+	  Bottleneck.prototype.localStoreDefaults = {
+	    Promise: Promise,
+	    timeout: null,
+	    heartbeatInterval: 250
+	  };
+
+	  Bottleneck.prototype.redisStoreDefaults = {
+	    Promise: Promise,
+	    timeout: null,
+	    heartbeatInterval: 5000,
+	    clientTimeout: 10000,
+	    Redis: null,
+	    clientOptions: {},
+	    clusterNodes: null,
+	    clearDatastore: false,
+	    connection: null
+	  };
+
+	  Bottleneck.prototype.instanceDefaults = {
+	    datastore: "local",
+	    connection: null,
+	    id: "<no-id>",
+	    rejectOnDrop: true,
+	    trackDoneStatus: false,
+	    Promise: Promise
+	  };
+
+	  Bottleneck.prototype.stopDefaults = {
+	    enqueueErrorMessage: "This limiter has been stopped and cannot accept new jobs.",
+	    dropWaitingJobs: true,
+	    dropErrorMessage: "This limiter has been stopped."
+	  };
+
+	  return Bottleneck;
+
+	}).call(commonjsGlobal);
+
+	var Bottleneck_1 = Bottleneck;
+
+	var lib = Bottleneck_1;
+
+	return lib;
+
+})));
+
+
+/***/ }),
+
 /***/ 4730:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -31945,7 +33475,184 @@ module.exports = parseParams
 
 /***/ }),
 
-/***/ 5120:
+/***/ 1654:
+/***/ ((module) => {
+
+var __webpack_unused_export__;
+
+
+const NullObject = function NullObject () { }
+NullObject.prototype = Object.create(null)
+
+/**
+ * RegExp to match *( ";" parameter ) in RFC 7231 sec 3.1.1.1
+ *
+ * parameter     = token "=" ( token / quoted-string )
+ * token         = 1*tchar
+ * tchar         = "!" / "#" / "$" / "%" / "&" / "'" / "*"
+ *               / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~"
+ *               / DIGIT / ALPHA
+ *               ; any VCHAR, except delimiters
+ * quoted-string = DQUOTE *( qdtext / quoted-pair ) DQUOTE
+ * qdtext        = HTAB / SP / %x21 / %x23-5B / %x5D-7E / obs-text
+ * obs-text      = %x80-FF
+ * quoted-pair   = "\" ( HTAB / SP / VCHAR / obs-text )
+ */
+const paramRE = /; *([!#$%&'*+.^\w`|~-]+)=("(?:[\v\u0020\u0021\u0023-\u005b\u005d-\u007e\u0080-\u00ff]|\\[\v\u0020-\u00ff])*"|[!#$%&'*+.^\w`|~-]+) */gu
+
+/**
+ * RegExp to match quoted-pair in RFC 7230 sec 3.2.6
+ *
+ * quoted-pair = "\" ( HTAB / SP / VCHAR / obs-text )
+ * obs-text    = %x80-FF
+ */
+const quotedPairRE = /\\([\v\u0020-\u00ff])/gu
+
+/**
+ * RegExp to match type in RFC 7231 sec 3.1.1.1
+ *
+ * media-type = type "/" subtype
+ * type       = token
+ * subtype    = token
+ */
+const mediaTypeRE = /^[!#$%&'*+.^\w|~-]+\/[!#$%&'*+.^\w|~-]+$/u
+
+// default ContentType to prevent repeated object creation
+const defaultContentType = { type: '', parameters: new NullObject() }
+Object.freeze(defaultContentType.parameters)
+Object.freeze(defaultContentType)
+
+/**
+ * Parse media type to object.
+ *
+ * @param {string|object} header
+ * @return {Object}
+ * @public
+ */
+
+function parse (header) {
+  if (typeof header !== 'string') {
+    throw new TypeError('argument header is required and must be a string')
+  }
+
+  let index = header.indexOf(';')
+  const type = index !== -1
+    ? header.slice(0, index).trim()
+    : header.trim()
+
+  if (mediaTypeRE.test(type) === false) {
+    throw new TypeError('invalid media type')
+  }
+
+  const result = {
+    type: type.toLowerCase(),
+    parameters: new NullObject()
+  }
+
+  // parse parameters
+  if (index === -1) {
+    return result
+  }
+
+  let key
+  let match
+  let value
+
+  paramRE.lastIndex = index
+
+  while ((match = paramRE.exec(header))) {
+    if (match.index !== index) {
+      throw new TypeError('invalid parameter format')
+    }
+
+    index += match[0].length
+    key = match[1].toLowerCase()
+    value = match[2]
+
+    if (value[0] === '"') {
+      // remove quotes and escapes
+      value = value
+        .slice(1, value.length - 1)
+
+      quotedPairRE.test(value) && (value = value.replace(quotedPairRE, '$1'))
+    }
+
+    result.parameters[key] = value
+  }
+
+  if (index !== header.length) {
+    throw new TypeError('invalid parameter format')
+  }
+
+  return result
+}
+
+function safeParse (header) {
+  if (typeof header !== 'string') {
+    return defaultContentType
+  }
+
+  let index = header.indexOf(';')
+  const type = index !== -1
+    ? header.slice(0, index).trim()
+    : header.trim()
+
+  if (mediaTypeRE.test(type) === false) {
+    return defaultContentType
+  }
+
+  const result = {
+    type: type.toLowerCase(),
+    parameters: new NullObject()
+  }
+
+  // parse parameters
+  if (index === -1) {
+    return result
+  }
+
+  let key
+  let match
+  let value
+
+  paramRE.lastIndex = index
+
+  while ((match = paramRE.exec(header))) {
+    if (match.index !== index) {
+      return defaultContentType
+    }
+
+    index += match[0].length
+    key = match[1].toLowerCase()
+    value = match[2]
+
+    if (value[0] === '"') {
+      // remove quotes and escapes
+      value = value
+        .slice(1, value.length - 1)
+
+      quotedPairRE.test(value) && (value = value.replace(quotedPairRE, '$1'))
+    }
+
+    result.parameters[key] = value
+  }
+
+  if (index !== header.length) {
+    return defaultContentType
+  }
+
+  return result
+}
+
+__webpack_unused_export__ = { parse, safeParse }
+__webpack_unused_export__ = parse
+module.exports.xL = safeParse
+__webpack_unused_export__ = defaultContentType
+
+
+/***/ }),
+
+/***/ 7627:
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
 
 // ESM COMPAT FLAG
@@ -31953,153 +33660,16306 @@ __nccwpck_require__.r(__webpack_exports__);
 
 // EXPORTS
 __nccwpck_require__.d(__webpack_exports__, {
-  checkCurrentBranch: () => (/* binding */ checkCurrentBranch)
+  checkBranch: () => (/* reexport */ checkBranch)
 });
 
+;// CONCATENATED MODULE: ../issue-number-branch-core/dist/domain/extractors.js
+// Domain layer - Pure extraction functions
+/**
+ * Extracts issue numbers from a branch name
+ * @param branch - The branch name to extract from
+ * @returns Array of unique issue numbers found
+ */
+function extractIssueNumbers(branch) {
+    const numbers = new Set();
+    const regex = /\d{1,7}/g;
+    for (const match of branch.matchAll(regex)) {
+        numbers.add(Number(match[0]));
+    }
+    return Array.from(numbers);
+}
+//# sourceMappingURL=extractors.js.map
+;// CONCATENATED MODULE: ../issue-number-branch-core/dist/domain/parsers.js
+// Domain layer - Pure parsing functions
+/**
+ * Parses owner and repository from a Git remote URL
+ * @param url - The Git remote URL to parse
+ * @returns Object containing owner and repo
+ * @throws Error if URL format is not supported
+ */
+function parseGitRemoteUrl(url) {
+    // Handle HTTPS URLs (GitHub, GitHub Enterprise)
+    // Examples:
+    // - https://github.com/owner/repo.git
+    // - https://github.com/owner/repo
+    // - https://github.enterprise.com/owner/repo.git
+    const httpsMatch = /https?:\/\/[^/]+\/([^/]+)\/([^/.]+)(?:\.git)?$/i.exec(url);
+    if (httpsMatch?.[1] && httpsMatch?.[2]) {
+        return { owner: httpsMatch[1], repo: httpsMatch[2] };
+    }
+    // Handle SSH URLs
+    // Examples:
+    // - git@github.com:owner/repo.git
+    // - git@github.com:owner/repo
+    // - git@github.enterprise.com:owner/repo.git
+    const sshMatch = /git@[^:]+:([^/]+)\/([^/.]+)(?:\.git)?$/i.exec(url);
+    if (sshMatch?.[1] && sshMatch?.[2]) {
+        return { owner: sshMatch[1], repo: sshMatch[2] };
+    }
+    // Handle SSH protocol URLs
+    // Example: ssh://git@github.com/owner/repo.git
+    const sshProtocolMatch = /ssh:\/\/git@[^/]+\/([^/]+)\/([^/.]+)(?:\.git)?$/i.exec(url);
+    if (sshProtocolMatch?.[1] && sshProtocolMatch?.[2]) {
+        return { owner: sshProtocolMatch[1], repo: sshProtocolMatch[2] };
+    }
+    // If no pattern matches, throw an informative error
+    throw new Error(`Unable to parse owner and repository from remote URL: ${url}\n` +
+        "Supported formats:\n" +
+        "  - https://github.com/owner/repo[.git]\n" +
+        "  - git@github.com:owner/repo[.git]\n" +
+        "  - ssh://git@github.com/owner/repo[.git]");
+}
+//# sourceMappingURL=parsers.js.map
+// EXTERNAL MODULE: ../../../node_modules/micromatch/index.js
+var micromatch = __nccwpck_require__(7343);
+;// CONCATENATED MODULE: ../issue-number-branch-core/dist/domain/validators.js
+// Domain layer - Pure validation functions
+
+/**
+ * Validates if a branch should be excluded from validation
+ * @param branch - The branch name to check
+ * @param pattern - Glob pattern for exclusion
+ * @returns true if branch should be excluded
+ */
+function validateBranchExclusion(branch, pattern) {
+    if (!pattern)
+        return false;
+    return micromatch.isMatch(branch, pattern);
+}
+/**
+ * Validates if an issue state is allowed
+ * @param state - The issue state to check
+ * @param filter - Issue state filter ("all", "open", or "closed")
+ * @returns true if state is allowed
+ */
+function validateIssueState(state, filter) {
+    const normalizedState = state.toLowerCase();
+    if (filter === "all") {
+        return true;
+    }
+    return normalizedState === filter;
+}
+//# sourceMappingURL=validators.js.map
+;// CONCATENATED MODULE: ../../../node_modules/@t3-oss/env-core/dist/src-Bb3GbGAa.js
+//#region src/standard.ts
+function ensureSynchronous(value, message) {
+	if (value instanceof Promise) throw new Error(message);
+}
+function parseWithDictionary(dictionary, value) {
+	const result = {};
+	const issues = [];
+	for (const key in dictionary) {
+		const propResult = dictionary[key]["~standard"].validate(value[key]);
+		ensureSynchronous(propResult, `Validation must be synchronous, but ${key} returned a Promise.`);
+		if (propResult.issues) {
+			issues.push(...propResult.issues.map((issue) => ({
+				...issue,
+				message: issue.message,
+				path: [key, ...issue.path ?? []]
+			})));
+			continue;
+		}
+		result[key] = propResult.value;
+	}
+	if (issues.length) return { issues };
+	return { value: result };
+}
+
+//#endregion
+//#region src/index.ts
+/**
+* Create a new environment variable schema.
+*/
+function createEnv(opts) {
+	const runtimeEnv = opts.runtimeEnvStrict ?? opts.runtimeEnv ?? process.env;
+	const emptyStringAsUndefined = opts.emptyStringAsUndefined ?? false;
+	if (emptyStringAsUndefined) {
+		for (const [key, value] of Object.entries(runtimeEnv)) if (value === "") delete runtimeEnv[key];
+	}
+	const skip = !!opts.skipValidation;
+	if (skip) return runtimeEnv;
+	const _client = typeof opts.client === "object" ? opts.client : {};
+	const _server = typeof opts.server === "object" ? opts.server : {};
+	const _shared = typeof opts.shared === "object" ? opts.shared : {};
+	const isServer = opts.isServer ?? (typeof window === "undefined" || "Deno" in window);
+	const finalSchemaShape = isServer ? {
+		..._server,
+		..._shared,
+		..._client
+	} : {
+		..._client,
+		..._shared
+	};
+	const parsed = opts.createFinalSchema?.(finalSchemaShape, isServer)["~standard"].validate(runtimeEnv) ?? parseWithDictionary(finalSchemaShape, runtimeEnv);
+	ensureSynchronous(parsed, "Validation must be synchronous");
+	const onValidationError = opts.onValidationError ?? ((issues) => {
+		console.error("❌ Invalid environment variables:", issues);
+		throw new Error("Invalid environment variables");
+	});
+	const onInvalidAccess = opts.onInvalidAccess ?? (() => {
+		throw new Error("❌ Attempted to access a server-side environment variable on the client");
+	});
+	if (parsed.issues) return onValidationError(parsed.issues);
+	const isServerAccess = (prop) => {
+		if (!opts.clientPrefix) return true;
+		return !prop.startsWith(opts.clientPrefix) && !(prop in _shared);
+	};
+	const isValidServerAccess = (prop) => {
+		return isServer || !isServerAccess(prop);
+	};
+	const ignoreProp = (prop) => {
+		return prop === "__esModule" || prop === "$$typeof";
+	};
+	const extendedObj = (opts.extends ?? []).reduce((acc, curr) => {
+		return Object.assign(acc, curr);
+	}, {});
+	const fullObj = Object.assign(extendedObj, parsed.value);
+	const env = new Proxy(fullObj, { get(target, prop) {
+		if (typeof prop !== "string") return void 0;
+		if (ignoreProp(prop)) return void 0;
+		if (!isValidServerAccess(prop)) return onInvalidAccess(prop);
+		return Reflect.get(target, prop);
+	} });
+	return env;
+}
+
+//#endregion
+
+;// CONCATENATED MODULE: ../../../node_modules/valibot/dist/index.js
+// src/storages/globalConfig/globalConfig.ts
+var store;
+function setGlobalConfig(config2) {
+  store = { ...store, ...config2 };
+}
+// @__NO_SIDE_EFFECTS__
+function getGlobalConfig(config2) {
+  return {
+    lang: config2?.lang ?? store?.lang,
+    message: config2?.message,
+    abortEarly: config2?.abortEarly ?? store?.abortEarly,
+    abortPipeEarly: config2?.abortPipeEarly ?? store?.abortPipeEarly
+  };
+}
+function deleteGlobalConfig() {
+  store = void 0;
+}
+
+// src/storages/globalMessage/globalMessage.ts
+var store2;
+function setGlobalMessage(message2, lang) {
+  if (!store2) store2 = /* @__PURE__ */ new Map();
+  store2.set(lang, message2);
+}
+// @__NO_SIDE_EFFECTS__
+function getGlobalMessage(lang) {
+  return store2?.get(lang);
+}
+function deleteGlobalMessage(lang) {
+  store2?.delete(lang);
+}
+
+// src/storages/schemaMessage/schemaMessage.ts
+var store3;
+function setSchemaMessage(message2, lang) {
+  if (!store3) store3 = /* @__PURE__ */ new Map();
+  store3.set(lang, message2);
+}
+// @__NO_SIDE_EFFECTS__
+function getSchemaMessage(lang) {
+  return store3?.get(lang);
+}
+function deleteSchemaMessage(lang) {
+  store3?.delete(lang);
+}
+
+// src/storages/specificMessage/specificMessage.ts
+var store4;
+function setSpecificMessage(reference, message2, lang) {
+  if (!store4) store4 = /* @__PURE__ */ new Map();
+  if (!store4.get(reference)) store4.set(reference, /* @__PURE__ */ new Map());
+  store4.get(reference).set(lang, message2);
+}
+// @__NO_SIDE_EFFECTS__
+function getSpecificMessage(reference, lang) {
+  return store4?.get(reference)?.get(lang);
+}
+function deleteSpecificMessage(reference, lang) {
+  store4?.get(reference)?.delete(lang);
+}
+
+// src/utils/_stringify/_stringify.ts
+// @__NO_SIDE_EFFECTS__
+function _stringify(input) {
+  const type = typeof input;
+  if (type === "string") {
+    return `"${input}"`;
+  }
+  if (type === "number" || type === "bigint" || type === "boolean") {
+    return `${input}`;
+  }
+  if (type === "object" || type === "function") {
+    return (input && Object.getPrototypeOf(input)?.constructor?.name) ?? "null";
+  }
+  return type;
+}
+
+// src/utils/_addIssue/_addIssue.ts
+function _addIssue(context, label, dataset, config2, other) {
+  const input = other && "input" in other ? other.input : dataset.value;
+  const expected = other?.expected ?? context.expects ?? null;
+  const received = other?.received ?? _stringify(input);
+  const issue = {
+    kind: context.kind,
+    type: context.type,
+    input,
+    expected,
+    received,
+    message: `Invalid ${label}: ${expected ? `Expected ${expected} but r` : "R"}eceived ${received}`,
+    requirement: context.requirement,
+    path: other?.path,
+    issues: other?.issues,
+    lang: config2.lang,
+    abortEarly: config2.abortEarly,
+    abortPipeEarly: config2.abortPipeEarly
+  };
+  const isSchema = context.kind === "schema";
+  const message2 = other?.message ?? context.message ?? getSpecificMessage(context.reference, issue.lang) ?? (isSchema ? getSchemaMessage(issue.lang) : null) ?? config2.message ?? getGlobalMessage(issue.lang);
+  if (message2 !== void 0) {
+    issue.message = typeof message2 === "function" ? (
+      // @ts-expect-error
+      message2(issue)
+    ) : message2;
+  }
+  if (isSchema) {
+    dataset.typed = false;
+  }
+  if (dataset.issues) {
+    dataset.issues.push(issue);
+  } else {
+    dataset.issues = [issue];
+  }
+}
+
+// src/utils/_getByteCount/_getByteCount.ts
+var textEncoder;
+// @__NO_SIDE_EFFECTS__
+function _getByteCount(input) {
+  if (!textEncoder) {
+    textEncoder = new TextEncoder();
+  }
+  return textEncoder.encode(input).length;
+}
+
+// src/utils/_getGraphemeCount/_getGraphemeCount.ts
+var segmenter;
+// @__NO_SIDE_EFFECTS__
+function _getGraphemeCount(input) {
+  if (!segmenter) {
+    segmenter = new Intl.Segmenter();
+  }
+  const segments = segmenter.segment(input);
+  let count = 0;
+  for (const _ of segments) {
+    count++;
+  }
+  return count;
+}
+
+// src/utils/_getLastMetadata/_getLastMetadata.ts
+// @__NO_SIDE_EFFECTS__
+function _getLastMetadata(schema, type) {
+  if ("pipe" in schema) {
+    const nestedSchemas = [];
+    for (let index = schema.pipe.length - 1; index >= 0; index--) {
+      const item = schema.pipe[index];
+      if (item.kind === "schema" && "pipe" in item) {
+        nestedSchemas.push(item);
+      } else if (item.kind === "metadata" && item.type === type) {
+        return item[type];
+      }
+    }
+    for (const nestedSchema of nestedSchemas) {
+      const result = /* @__PURE__ */ _getLastMetadata(nestedSchema, type);
+      if (result !== void 0) {
+        return result;
+      }
+    }
+  }
+}
+
+// src/utils/_getStandardProps/_getStandardProps.ts
+// @__NO_SIDE_EFFECTS__
+function _getStandardProps(context) {
+  return {
+    version: 1,
+    vendor: "valibot",
+    validate(value2) {
+      return context["~run"]({ value: value2 }, getGlobalConfig());
+    }
+  };
+}
+
+// src/utils/_getWordCount/_getWordCount.ts
+var store5;
+// @__NO_SIDE_EFFECTS__
+function _getWordCount(locales, input) {
+  if (!store5) {
+    store5 = /* @__PURE__ */ new Map();
+  }
+  if (!store5.get(locales)) {
+    store5.set(locales, new Intl.Segmenter(locales, { granularity: "word" }));
+  }
+  const segments = store5.get(locales).segment(input);
+  let count = 0;
+  for (const segment of segments) {
+    if (segment.isWordLike) {
+      count++;
+    }
+  }
+  return count;
+}
+
+// src/utils/_isLuhnAlgo/_isLuhnAlgo.ts
+var NON_DIGIT_REGEX = /\D/gu;
+// @__NO_SIDE_EFFECTS__
+function _isLuhnAlgo(input) {
+  const number2 = input.replace(NON_DIGIT_REGEX, "");
+  let length2 = number2.length;
+  let bit = 1;
+  let sum = 0;
+  while (length2) {
+    const value2 = +number2[--length2];
+    bit ^= 1;
+    sum += bit ? [0, 2, 4, 6, 8, 1, 3, 5, 7, 9][value2] : value2;
+  }
+  return sum % 10 === 0;
+}
+
+// src/utils/_isValidObjectKey/_isValidObjectKey.ts
+// @__NO_SIDE_EFFECTS__
+function _isValidObjectKey(object2, key) {
+  return Object.hasOwn(object2, key) && key !== "__proto__" && key !== "prototype" && key !== "constructor";
+}
+
+// src/utils/_joinExpects/_joinExpects.ts
+// @__NO_SIDE_EFFECTS__
+function _joinExpects(values2, separator) {
+  const list = [...new Set(values2)];
+  if (list.length > 1) {
+    return `(${list.join(` ${separator} `)})`;
+  }
+  return list[0] ?? "never";
+}
+
+// src/utils/entriesFromList/entriesFromList.ts
+// @__NO_SIDE_EFFECTS__
+function entriesFromList(list, schema) {
+  const entries2 = {};
+  for (const key of list) {
+    entries2[key] = schema;
+  }
+  return entries2;
+}
+
+// src/utils/entriesFromObjects/entriesFromObjects.ts
+// @__NO_SIDE_EFFECTS__
+function entriesFromObjects(schemas) {
+  const entries2 = {};
+  for (const schema of schemas) {
+    Object.assign(entries2, schema.entries);
+  }
+  return entries2;
+}
+
+// src/utils/getDotPath/getDotPath.ts
+// @__NO_SIDE_EFFECTS__
+function getDotPath(issue) {
+  if (issue.path) {
+    let key = "";
+    for (const item of issue.path) {
+      if (typeof item.key === "string" || typeof item.key === "number") {
+        if (key) {
+          key += `.${item.key}`;
+        } else {
+          key += item.key;
+        }
+      } else {
+        return null;
+      }
+    }
+    return key;
+  }
+  return null;
+}
+
+// src/utils/isOfKind/isOfKind.ts
+// @__NO_SIDE_EFFECTS__
+function isOfKind(kind, object2) {
+  return object2.kind === kind;
+}
+
+// src/utils/isOfType/isOfType.ts
+// @__NO_SIDE_EFFECTS__
+function isOfType(type, object2) {
+  return object2.type === type;
+}
+
+// src/utils/isValiError/isValiError.ts
+// @__NO_SIDE_EFFECTS__
+function isValiError(error) {
+  return error instanceof ValiError;
+}
+
+// src/utils/ValiError/ValiError.ts
+var ValiError = class extends Error {
+  /**
+   * Creates a Valibot error with useful information.
+   *
+   * @param issues The error issues.
+   */
+  constructor(issues) {
+    super(issues[0].message);
+    this.name = "ValiError";
+    this.issues = issues;
+  }
+};
+
+// src/actions/args/args.ts
+// @__NO_SIDE_EFFECTS__
+function args(schema) {
+  return {
+    kind: "transformation",
+    type: "args",
+    reference: args,
+    async: false,
+    schema,
+    "~run"(dataset, config2) {
+      const func = dataset.value;
+      dataset.value = (...args_) => {
+        const argsDataset = this.schema["~run"]({ value: args_ }, config2);
+        if (argsDataset.issues) {
+          throw new ValiError(argsDataset.issues);
+        }
+        return func(...argsDataset.value);
+      };
+      return dataset;
+    }
+  };
+}
+
+// src/actions/args/argsAsync.ts
+// @__NO_SIDE_EFFECTS__
+function argsAsync(schema) {
+  return {
+    kind: "transformation",
+    type: "args",
+    reference: argsAsync,
+    async: false,
+    schema,
+    "~run"(dataset, config2) {
+      const func = dataset.value;
+      dataset.value = async (...args2) => {
+        const argsDataset = await schema["~run"]({ value: args2 }, config2);
+        if (argsDataset.issues) {
+          throw new ValiError(argsDataset.issues);
+        }
+        return func(...argsDataset.value);
+      };
+      return dataset;
+    }
+  };
+}
+
+// src/actions/await/awaitAsync.ts
+// @__NO_SIDE_EFFECTS__
+function awaitAsync() {
+  return {
+    kind: "transformation",
+    type: "await",
+    reference: awaitAsync,
+    async: true,
+    async "~run"(dataset) {
+      dataset.value = await dataset.value;
+      return dataset;
+    }
+  };
+}
+
+// src/regex.ts
+var BASE64_REGEX = /^(?:[\da-z+/]{4})*(?:[\da-z+/]{2}==|[\da-z+/]{3}=)?$/iu;
+var BIC_REGEX = /^[A-Z]{6}(?!00)[\dA-Z]{2}(?:[\dA-Z]{3})?$/u;
+var CUID2_REGEX = /^[a-z][\da-z]*$/u;
+var DECIMAL_REGEX = /^[+-]?(?:\d*\.)?\d+$/u;
+var DIGITS_REGEX = /^\d+$/u;
+var EMAIL_REGEX = /^[\w+-]+(?:\.[\w+-]+)*@[\da-z]+(?:[.-][\da-z]+)*\.[a-z]{2,}$/iu;
+var EMOJI_REGEX = (
+  // eslint-disable-next-line redos-detector/no-unsafe-regex, regexp/no-dupe-disjunctions -- false positives
+  /^(?:[\u{1F1E6}-\u{1F1FF}]{2}|\u{1F3F4}[\u{E0061}-\u{E007A}]{2}[\u{E0030}-\u{E0039}\u{E0061}-\u{E007A}]{1,3}\u{E007F}|(?:\p{Emoji}\uFE0F\u20E3?|\p{Emoji_Modifier_Base}\p{Emoji_Modifier}?|\p{Emoji_Presentation})(?:\u200D(?:\p{Emoji}\uFE0F\u20E3?|\p{Emoji_Modifier_Base}\p{Emoji_Modifier}?|\p{Emoji_Presentation}))*)+$/u
+);
+var HEXADECIMAL_REGEX = /^(?:0[hx])?[\da-fA-F]+$/u;
+var HEX_COLOR_REGEX = /^#(?:[\da-fA-F]{3,4}|[\da-fA-F]{6}|[\da-fA-F]{8})$/u;
+var IMEI_REGEX = /^\d{15}$|^\d{2}-\d{6}-\d{6}-\d$/u;
+var IPV4_REGEX = (
+  // eslint-disable-next-line redos-detector/no-unsafe-regex -- false positive
+  /^(?:(?:[1-9]|1\d|2[0-4])?\d|25[0-5])(?:\.(?:(?:[1-9]|1\d|2[0-4])?\d|25[0-5])){3}$/u
+);
+var IPV6_REGEX = /^(?:(?:[\da-f]{1,4}:){7}[\da-f]{1,4}|(?:[\da-f]{1,4}:){1,7}:|(?:[\da-f]{1,4}:){1,6}:[\da-f]{1,4}|(?:[\da-f]{1,4}:){1,5}(?::[\da-f]{1,4}){1,2}|(?:[\da-f]{1,4}:){1,4}(?::[\da-f]{1,4}){1,3}|(?:[\da-f]{1,4}:){1,3}(?::[\da-f]{1,4}){1,4}|(?:[\da-f]{1,4}:){1,2}(?::[\da-f]{1,4}){1,5}|[\da-f]{1,4}:(?::[\da-f]{1,4}){1,6}|:(?:(?::[\da-f]{1,4}){1,7}|:)|fe80:(?::[\da-f]{0,4}){0,4}%[\da-z]+|::(?:f{4}(?::0{1,4})?:)?(?:(?:25[0-5]|(?:2[0-4]|1?\d)?\d)\.){3}(?:25[0-5]|(?:2[0-4]|1?\d)?\d)|(?:[\da-f]{1,4}:){1,4}:(?:(?:25[0-5]|(?:2[0-4]|1?\d)?\d)\.){3}(?:25[0-5]|(?:2[0-4]|1?\d)?\d))$/iu;
+var IP_REGEX = /^(?:(?:[1-9]|1\d|2[0-4])?\d|25[0-5])(?:\.(?:(?:[1-9]|1\d|2[0-4])?\d|25[0-5])){3}$|^(?:(?:[\da-f]{1,4}:){7}[\da-f]{1,4}|(?:[\da-f]{1,4}:){1,7}:|(?:[\da-f]{1,4}:){1,6}:[\da-f]{1,4}|(?:[\da-f]{1,4}:){1,5}(?::[\da-f]{1,4}){1,2}|(?:[\da-f]{1,4}:){1,4}(?::[\da-f]{1,4}){1,3}|(?:[\da-f]{1,4}:){1,3}(?::[\da-f]{1,4}){1,4}|(?:[\da-f]{1,4}:){1,2}(?::[\da-f]{1,4}){1,5}|[\da-f]{1,4}:(?::[\da-f]{1,4}){1,6}|:(?:(?::[\da-f]{1,4}){1,7}|:)|fe80:(?::[\da-f]{0,4}){0,4}%[\da-z]+|::(?:f{4}(?::0{1,4})?:)?(?:(?:25[0-5]|(?:2[0-4]|1?\d)?\d)\.){3}(?:25[0-5]|(?:2[0-4]|1?\d)?\d)|(?:[\da-f]{1,4}:){1,4}:(?:(?:25[0-5]|(?:2[0-4]|1?\d)?\d)\.){3}(?:25[0-5]|(?:2[0-4]|1?\d)?\d))$/iu;
+var ISO_DATE_REGEX = /^\d{4}-(?:0[1-9]|1[0-2])-(?:[12]\d|0[1-9]|3[01])$/u;
+var ISO_DATE_TIME_REGEX = /^\d{4}-(?:0[1-9]|1[0-2])-(?:[12]\d|0[1-9]|3[01])[T ](?:0\d|1\d|2[0-3]):[0-5]\d$/u;
+var ISO_TIME_REGEX = /^(?:0\d|1\d|2[0-3]):[0-5]\d$/u;
+var ISO_TIME_SECOND_REGEX = /^(?:0\d|1\d|2[0-3])(?::[0-5]\d){2}$/u;
+var ISO_TIMESTAMP_REGEX = /^\d{4}-(?:0[1-9]|1[0-2])-(?:[12]\d|0[1-9]|3[01])[T ](?:0\d|1\d|2[0-3])(?::[0-5]\d){2}(?:\.\d{1,9})?(?:Z|[+-](?:0\d|1\d|2[0-3])(?::?[0-5]\d)?)$/u;
+var ISO_WEEK_REGEX = /^\d{4}-W(?:0[1-9]|[1-4]\d|5[0-3])$/u;
+var MAC48_REGEX = /^(?:[\da-f]{2}:){5}[\da-f]{2}$|^(?:[\da-f]{2}-){5}[\da-f]{2}$|^(?:[\da-f]{4}\.){2}[\da-f]{4}$/iu;
+var MAC64_REGEX = /^(?:[\da-f]{2}:){7}[\da-f]{2}$|^(?:[\da-f]{2}-){7}[\da-f]{2}$|^(?:[\da-f]{4}\.){3}[\da-f]{4}$|^(?:[\da-f]{4}:){3}[\da-f]{4}$/iu;
+var MAC_REGEX = /^(?:[\da-f]{2}:){5}[\da-f]{2}$|^(?:[\da-f]{2}-){5}[\da-f]{2}$|^(?:[\da-f]{4}\.){2}[\da-f]{4}$|^(?:[\da-f]{2}:){7}[\da-f]{2}$|^(?:[\da-f]{2}-){7}[\da-f]{2}$|^(?:[\da-f]{4}\.){3}[\da-f]{4}$|^(?:[\da-f]{4}:){3}[\da-f]{4}$/iu;
+var NANO_ID_REGEX = /^[\w-]+$/u;
+var OCTAL_REGEX = /^(?:0o)?[0-7]+$/u;
+var RFC_EMAIL_REGEX = (
+  // eslint-disable-next-line regexp/prefer-w, no-useless-escape, regexp/no-useless-escape, regexp/require-unicode-regexp
+  /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
+);
+var SLUG_REGEX = /^[\da-z]+(?:[-_][\da-z]+)*$/u;
+var ULID_REGEX = /^[\da-hjkmnp-tv-zA-HJKMNP-TV-Z]{26}$/u;
+var UUID_REGEX = /^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/iu;
+
+// src/actions/base64/base64.ts
+// @__NO_SIDE_EFFECTS__
+function base64(message2) {
+  return {
+    kind: "validation",
+    type: "base64",
+    reference: base64,
+    async: false,
+    expects: null,
+    requirement: BASE64_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "Base64", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/bic/bic.ts
+// @__NO_SIDE_EFFECTS__
+function bic(message2) {
+  return {
+    kind: "validation",
+    type: "bic",
+    reference: bic,
+    async: false,
+    expects: null,
+    requirement: BIC_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "BIC", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/brand/brand.ts
+// @__NO_SIDE_EFFECTS__
+function brand(name) {
+  return {
+    kind: "transformation",
+    type: "brand",
+    reference: brand,
+    async: false,
+    name,
+    "~run"(dataset) {
+      return dataset;
+    }
+  };
+}
+
+// src/actions/bytes/bytes.ts
+// @__NO_SIDE_EFFECTS__
+function bytes(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "bytes",
+    reference: bytes,
+    async: false,
+    expects: `${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed) {
+        const length2 = _getByteCount(dataset.value);
+        if (length2 !== this.requirement) {
+          _addIssue(this, "bytes", dataset, config2, {
+            received: `${length2}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/check/check.ts
+// @__NO_SIDE_EFFECTS__
+function check(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "check",
+    reference: check,
+    async: false,
+    expects: null,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement(dataset.value)) {
+        _addIssue(this, "input", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/check/checkAsync.ts
+// @__NO_SIDE_EFFECTS__
+function checkAsync(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "check",
+    reference: checkAsync,
+    async: true,
+    expects: null,
+    requirement,
+    message: message2,
+    async "~run"(dataset, config2) {
+      if (dataset.typed && !await this.requirement(dataset.value)) {
+        _addIssue(this, "input", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/checkItems/checkItems.ts
+// @__NO_SIDE_EFFECTS__
+function checkItems(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "check_items",
+    reference: checkItems,
+    async: false,
+    expects: null,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed) {
+        for (let index = 0; index < dataset.value.length; index++) {
+          const item = dataset.value[index];
+          if (!this.requirement(item, index, dataset.value)) {
+            _addIssue(this, "item", dataset, config2, {
+              input: item,
+              path: [
+                {
+                  type: "array",
+                  origin: "value",
+                  input: dataset.value,
+                  key: index,
+                  value: item
+                }
+              ]
+            });
+          }
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/checkItems/checkItemsAsync.ts
+// @__NO_SIDE_EFFECTS__
+function checkItemsAsync(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "check_items",
+    reference: checkItemsAsync,
+    async: true,
+    expects: null,
+    requirement,
+    message: message2,
+    async "~run"(dataset, config2) {
+      if (dataset.typed) {
+        const requirementResults = await Promise.all(
+          dataset.value.map(this.requirement)
+        );
+        for (let index = 0; index < dataset.value.length; index++) {
+          if (!requirementResults[index]) {
+            const item = dataset.value[index];
+            _addIssue(this, "item", dataset, config2, {
+              input: item,
+              path: [
+                {
+                  type: "array",
+                  origin: "value",
+                  input: dataset.value,
+                  key: index,
+                  value: item
+                }
+              ]
+            });
+          }
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/creditCard/creditCard.ts
+var CREDIT_CARD_REGEX = /^(?:\d{14,19}|\d{4}(?: \d{3,6}){2,4}|\d{4}(?:-\d{3,6}){2,4})$/u;
+var SANITIZE_REGEX = /[- ]/gu;
+var PROVIDER_REGEX_LIST = (/* unused pure expression or super */ null && ([
+  // American Express
+  /^3[47]\d{13}$/u,
+  // Diners Club
+  /^3(?:0[0-5]|[68]\d)\d{11,13}$/u,
+  // Discover
+  /^6(?:011|5\d{2})\d{12,15}$/u,
+  // JCB
+  /^(?:2131|1800|35\d{3})\d{11}$/u,
+  // Mastercard
+  // eslint-disable-next-line redos-detector/no-unsafe-regex
+  /^5[1-5]\d{2}|(?:222\d|22[3-9]\d|2[3-6]\d{2}|27[01]\d|2720)\d{12}$/u,
+  // UnionPay
+  /^(?:6[27]\d{14,17}|81\d{14,17})$/u,
+  // Visa
+  /^4\d{12}(?:\d{3,6})?$/u
+]));
+// @__NO_SIDE_EFFECTS__
+function creditCard(message2) {
+  return {
+    kind: "validation",
+    type: "credit_card",
+    reference: creditCard,
+    async: false,
+    expects: null,
+    requirement(input) {
+      let sanitized;
+      return CREDIT_CARD_REGEX.test(input) && // Remove any hyphens and blanks
+      (sanitized = input.replace(SANITIZE_REGEX, "")) && // Check if it matches a provider
+      PROVIDER_REGEX_LIST.some((regex2) => regex2.test(sanitized)) && // Check if passes luhn algorithm
+      _isLuhnAlgo(sanitized);
+    },
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement(dataset.value)) {
+        _addIssue(this, "credit card", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/cuid2/cuid2.ts
+// @__NO_SIDE_EFFECTS__
+function cuid2(message2) {
+  return {
+    kind: "validation",
+    type: "cuid2",
+    reference: cuid2,
+    async: false,
+    expects: null,
+    requirement: CUID2_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "Cuid2", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/decimal/decimal.ts
+// @__NO_SIDE_EFFECTS__
+function decimal(message2) {
+  return {
+    kind: "validation",
+    type: "decimal",
+    reference: decimal,
+    async: false,
+    expects: null,
+    requirement: DECIMAL_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "decimal", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/description/description.ts
+// @__NO_SIDE_EFFECTS__
+function description(description_) {
+  return {
+    kind: "metadata",
+    type: "description",
+    reference: description,
+    description: description_
+  };
+}
+
+// src/actions/digits/digits.ts
+// @__NO_SIDE_EFFECTS__
+function digits(message2) {
+  return {
+    kind: "validation",
+    type: "digits",
+    reference: digits,
+    async: false,
+    expects: null,
+    requirement: DIGITS_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "digits", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/email/email.ts
+// @__NO_SIDE_EFFECTS__
+function email(message2) {
+  return {
+    kind: "validation",
+    type: "email",
+    reference: email,
+    expects: null,
+    async: false,
+    requirement: EMAIL_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "email", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/emoji/emoji.ts
+// @__NO_SIDE_EFFECTS__
+function emoji(message2) {
+  return {
+    kind: "validation",
+    type: "emoji",
+    reference: emoji,
+    async: false,
+    expects: null,
+    requirement: EMOJI_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "emoji", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/empty/empty.ts
+// @__NO_SIDE_EFFECTS__
+function empty(message2) {
+  return {
+    kind: "validation",
+    type: "empty",
+    reference: empty,
+    async: false,
+    expects: "0",
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && dataset.value.length > 0) {
+        _addIssue(this, "length", dataset, config2, {
+          received: `${dataset.value.length}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/endsWith/endsWith.ts
+// @__NO_SIDE_EFFECTS__
+function endsWith(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "ends_with",
+    reference: endsWith,
+    async: false,
+    expects: `"${requirement}"`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !dataset.value.endsWith(this.requirement)) {
+        _addIssue(this, "end", dataset, config2, {
+          received: `"${dataset.value.slice(-this.requirement.length)}"`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/entries/entries.ts
+// @__NO_SIDE_EFFECTS__
+function entries(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "entries",
+    reference: entries,
+    async: false,
+    expects: `${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (!dataset.typed) return dataset;
+      const count = Object.keys(dataset.value).length;
+      if (dataset.typed && count !== this.requirement) {
+        _addIssue(this, "entries", dataset, config2, {
+          received: `${count}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/everyItem/everyItem.ts
+// @__NO_SIDE_EFFECTS__
+function everyItem(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "every_item",
+    reference: everyItem,
+    async: false,
+    expects: null,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !dataset.value.every(this.requirement)) {
+        _addIssue(this, "item", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/excludes/excludes.ts
+// @__NO_SIDE_EFFECTS__
+function excludes(requirement, message2) {
+  const received = _stringify(requirement);
+  return {
+    kind: "validation",
+    type: "excludes",
+    reference: excludes,
+    async: false,
+    expects: `!${received}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && dataset.value.includes(this.requirement)) {
+        _addIssue(this, "content", dataset, config2, { received });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/filterItems/filterItems.ts
+// @__NO_SIDE_EFFECTS__
+function filterItems(operation) {
+  return {
+    kind: "transformation",
+    type: "filter_items",
+    reference: filterItems,
+    async: false,
+    operation,
+    "~run"(dataset) {
+      dataset.value = dataset.value.filter(this.operation);
+      return dataset;
+    }
+  };
+}
+
+// src/actions/findItem/findItem.ts
+// @__NO_SIDE_EFFECTS__
+function findItem(operation) {
+  return {
+    kind: "transformation",
+    type: "find_item",
+    reference: findItem,
+    async: false,
+    operation,
+    "~run"(dataset) {
+      dataset.value = dataset.value.find(this.operation);
+      return dataset;
+    }
+  };
+}
+
+// src/actions/finite/finite.ts
+// @__NO_SIDE_EFFECTS__
+function finite(message2) {
+  return {
+    kind: "validation",
+    type: "finite",
+    reference: finite,
+    async: false,
+    expects: null,
+    requirement: Number.isFinite,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement(dataset.value)) {
+        _addIssue(this, "finite", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/flavor/flavor.ts
+// @__NO_SIDE_EFFECTS__
+function flavor(name) {
+  return {
+    kind: "transformation",
+    type: "flavor",
+    reference: flavor,
+    async: false,
+    name,
+    "~run"(dataset) {
+      return dataset;
+    }
+  };
+}
+
+// src/actions/graphemes/graphemes.ts
+// @__NO_SIDE_EFFECTS__
+function graphemes(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "graphemes",
+    reference: graphemes,
+    async: false,
+    expects: `${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed) {
+        const count = _getGraphemeCount(dataset.value);
+        if (count !== this.requirement) {
+          _addIssue(this, "graphemes", dataset, config2, {
+            received: `${count}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/gtValue/gtValue.ts
+// @__NO_SIDE_EFFECTS__
+function gtValue(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "gt_value",
+    reference: gtValue,
+    async: false,
+    expects: `>${requirement instanceof Date ? requirement.toJSON() : _stringify(requirement)}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !(dataset.value > this.requirement)) {
+        _addIssue(this, "value", dataset, config2, {
+          received: dataset.value instanceof Date ? dataset.value.toJSON() : _stringify(dataset.value)
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/hash/hash.ts
+var HASH_LENGTHS = {
+  md4: 32,
+  md5: 32,
+  sha1: 40,
+  sha256: 64,
+  sha384: 96,
+  sha512: 128,
+  ripemd128: 32,
+  ripemd160: 40,
+  tiger128: 32,
+  tiger160: 40,
+  tiger192: 48,
+  crc32: 8,
+  crc32b: 8,
+  adler32: 8
+};
+// @__NO_SIDE_EFFECTS__
+function hash(types, message2) {
+  return {
+    kind: "validation",
+    type: "hash",
+    reference: hash,
+    expects: null,
+    async: false,
+    requirement: RegExp(
+      types.map((type) => `^[a-f0-9]{${HASH_LENGTHS[type]}}$`).join("|"),
+      "iu"
+    ),
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "hash", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/hexadecimal/hexadecimal.ts
+// @__NO_SIDE_EFFECTS__
+function hexadecimal(message2) {
+  return {
+    kind: "validation",
+    type: "hexadecimal",
+    reference: hexadecimal,
+    async: false,
+    expects: null,
+    requirement: HEXADECIMAL_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "hexadecimal", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/hexColor/hexColor.ts
+// @__NO_SIDE_EFFECTS__
+function hexColor(message2) {
+  return {
+    kind: "validation",
+    type: "hex_color",
+    reference: hexColor,
+    async: false,
+    expects: null,
+    requirement: HEX_COLOR_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "hex color", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/imei/imei.ts
+// @__NO_SIDE_EFFECTS__
+function imei(message2) {
+  return {
+    kind: "validation",
+    type: "imei",
+    reference: imei,
+    async: false,
+    expects: null,
+    requirement(input) {
+      return IMEI_REGEX.test(input) && _isLuhnAlgo(input);
+    },
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement(dataset.value)) {
+        _addIssue(this, "IMEI", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/includes/includes.ts
+// @__NO_SIDE_EFFECTS__
+function includes(requirement, message2) {
+  const expects = _stringify(requirement);
+  return {
+    kind: "validation",
+    type: "includes",
+    reference: includes,
+    async: false,
+    expects,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !dataset.value.includes(this.requirement)) {
+        _addIssue(this, "content", dataset, config2, {
+          received: `!${expects}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/integer/integer.ts
+// @__NO_SIDE_EFFECTS__
+function integer(message2) {
+  return {
+    kind: "validation",
+    type: "integer",
+    reference: integer,
+    async: false,
+    expects: null,
+    requirement: Number.isInteger,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement(dataset.value)) {
+        _addIssue(this, "integer", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/ip/ip.ts
+// @__NO_SIDE_EFFECTS__
+function ip(message2) {
+  return {
+    kind: "validation",
+    type: "ip",
+    reference: ip,
+    async: false,
+    expects: null,
+    requirement: IP_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "IP", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/ipv4/ipv4.ts
+// @__NO_SIDE_EFFECTS__
+function ipv4(message2) {
+  return {
+    kind: "validation",
+    type: "ipv4",
+    reference: ipv4,
+    async: false,
+    expects: null,
+    requirement: IPV4_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "IPv4", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/ipv6/ipv6.ts
+// @__NO_SIDE_EFFECTS__
+function ipv6(message2) {
+  return {
+    kind: "validation",
+    type: "ipv6",
+    reference: ipv6,
+    async: false,
+    expects: null,
+    requirement: IPV6_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "IPv6", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/isoDate/isoDate.ts
+// @__NO_SIDE_EFFECTS__
+function isoDate(message2) {
+  return {
+    kind: "validation",
+    type: "iso_date",
+    reference: isoDate,
+    async: false,
+    expects: null,
+    requirement: ISO_DATE_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "date", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/isoDateTime/isoDateTime.ts
+// @__NO_SIDE_EFFECTS__
+function isoDateTime(message2) {
+  return {
+    kind: "validation",
+    type: "iso_date_time",
+    reference: isoDateTime,
+    async: false,
+    expects: null,
+    requirement: ISO_DATE_TIME_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "date-time", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/isoTime/isoTime.ts
+// @__NO_SIDE_EFFECTS__
+function isoTime(message2) {
+  return {
+    kind: "validation",
+    type: "iso_time",
+    reference: isoTime,
+    async: false,
+    expects: null,
+    requirement: ISO_TIME_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "time", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/isoTimeSecond/isoTimeSecond.ts
+// @__NO_SIDE_EFFECTS__
+function isoTimeSecond(message2) {
+  return {
+    kind: "validation",
+    type: "iso_time_second",
+    reference: isoTimeSecond,
+    async: false,
+    expects: null,
+    requirement: ISO_TIME_SECOND_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "time-second", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/isoTimestamp/isoTimestamp.ts
+// @__NO_SIDE_EFFECTS__
+function isoTimestamp(message2) {
+  return {
+    kind: "validation",
+    type: "iso_timestamp",
+    reference: isoTimestamp,
+    async: false,
+    expects: null,
+    requirement: ISO_TIMESTAMP_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "timestamp", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/isoWeek/isoWeek.ts
+// @__NO_SIDE_EFFECTS__
+function isoWeek(message2) {
+  return {
+    kind: "validation",
+    type: "iso_week",
+    reference: isoWeek,
+    async: false,
+    expects: null,
+    requirement: ISO_WEEK_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "week", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/length/length.ts
+// @__NO_SIDE_EFFECTS__
+function dist_length(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "length",
+    reference: dist_length,
+    async: false,
+    expects: `${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && dataset.value.length !== this.requirement) {
+        _addIssue(this, "length", dataset, config2, {
+          received: `${dataset.value.length}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/ltValue/ltValue.ts
+// @__NO_SIDE_EFFECTS__
+function ltValue(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "lt_value",
+    reference: ltValue,
+    async: false,
+    expects: `<${requirement instanceof Date ? requirement.toJSON() : _stringify(requirement)}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !(dataset.value < this.requirement)) {
+        _addIssue(this, "value", dataset, config2, {
+          received: dataset.value instanceof Date ? dataset.value.toJSON() : _stringify(dataset.value)
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/mac/mac.ts
+// @__NO_SIDE_EFFECTS__
+function mac(message2) {
+  return {
+    kind: "validation",
+    type: "mac",
+    reference: mac,
+    async: false,
+    expects: null,
+    requirement: MAC_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "MAC", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/mac48/mac48.ts
+// @__NO_SIDE_EFFECTS__
+function mac48(message2) {
+  return {
+    kind: "validation",
+    type: "mac48",
+    reference: mac48,
+    async: false,
+    expects: null,
+    requirement: MAC48_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "48-bit MAC", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/mac64/mac64.ts
+// @__NO_SIDE_EFFECTS__
+function mac64(message2) {
+  return {
+    kind: "validation",
+    type: "mac64",
+    reference: mac64,
+    async: false,
+    expects: null,
+    requirement: MAC64_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "64-bit MAC", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/mapItems/mapItems.ts
+// @__NO_SIDE_EFFECTS__
+function mapItems(operation) {
+  return {
+    kind: "transformation",
+    type: "map_items",
+    reference: mapItems,
+    async: false,
+    operation,
+    "~run"(dataset) {
+      dataset.value = dataset.value.map(this.operation);
+      return dataset;
+    }
+  };
+}
+
+// src/actions/maxBytes/maxBytes.ts
+// @__NO_SIDE_EFFECTS__
+function maxBytes(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "max_bytes",
+    reference: maxBytes,
+    async: false,
+    expects: `<=${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed) {
+        const length2 = _getByteCount(dataset.value);
+        if (length2 > this.requirement) {
+          _addIssue(this, "bytes", dataset, config2, {
+            received: `${length2}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/maxEntries/maxEntries.ts
+// @__NO_SIDE_EFFECTS__
+function maxEntries(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "max_entries",
+    reference: maxEntries,
+    async: false,
+    expects: `<=${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (!dataset.typed) return dataset;
+      const count = Object.keys(dataset.value).length;
+      if (dataset.typed && count > this.requirement) {
+        _addIssue(this, "entries", dataset, config2, {
+          received: `${count}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/maxGraphemes/maxGraphemes.ts
+// @__NO_SIDE_EFFECTS__
+function maxGraphemes(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "max_graphemes",
+    reference: maxGraphemes,
+    async: false,
+    expects: `<=${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed) {
+        const count = _getGraphemeCount(dataset.value);
+        if (count > this.requirement) {
+          _addIssue(this, "graphemes", dataset, config2, {
+            received: `${count}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/maxLength/maxLength.ts
+// @__NO_SIDE_EFFECTS__
+function maxLength(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "max_length",
+    reference: maxLength,
+    async: false,
+    expects: `<=${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && dataset.value.length > this.requirement) {
+        _addIssue(this, "length", dataset, config2, {
+          received: `${dataset.value.length}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/maxSize/maxSize.ts
+// @__NO_SIDE_EFFECTS__
+function maxSize(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "max_size",
+    reference: maxSize,
+    async: false,
+    expects: `<=${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && dataset.value.size > this.requirement) {
+        _addIssue(this, "size", dataset, config2, {
+          received: `${dataset.value.size}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/maxValue/maxValue.ts
+// @__NO_SIDE_EFFECTS__
+function maxValue(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "max_value",
+    reference: maxValue,
+    async: false,
+    expects: `<=${requirement instanceof Date ? requirement.toJSON() : _stringify(requirement)}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !(dataset.value <= this.requirement)) {
+        _addIssue(this, "value", dataset, config2, {
+          received: dataset.value instanceof Date ? dataset.value.toJSON() : _stringify(dataset.value)
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/maxWords/maxWords.ts
+// @__NO_SIDE_EFFECTS__
+function maxWords(locales, requirement, message2) {
+  return {
+    kind: "validation",
+    type: "max_words",
+    reference: maxWords,
+    async: false,
+    expects: `<=${requirement}`,
+    locales,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed) {
+        const count = _getWordCount(this.locales, dataset.value);
+        if (count > this.requirement) {
+          _addIssue(this, "words", dataset, config2, {
+            received: `${count}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/metadata/metadata.ts
+// @__NO_SIDE_EFFECTS__
+function metadata(metadata_) {
+  return {
+    kind: "metadata",
+    type: "metadata",
+    reference: metadata,
+    metadata: metadata_
+  };
+}
+
+// src/actions/mimeType/mimeType.ts
+// @__NO_SIDE_EFFECTS__
+function mimeType(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "mime_type",
+    reference: mimeType,
+    async: false,
+    expects: _joinExpects(
+      requirement.map((option) => `"${option}"`),
+      "|"
+    ),
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.includes(dataset.value.type)) {
+        _addIssue(this, "MIME type", dataset, config2, {
+          received: `"${dataset.value.type}"`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/minBytes/minBytes.ts
+// @__NO_SIDE_EFFECTS__
+function minBytes(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "min_bytes",
+    reference: minBytes,
+    async: false,
+    expects: `>=${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed) {
+        const length2 = _getByteCount(dataset.value);
+        if (length2 < this.requirement) {
+          _addIssue(this, "bytes", dataset, config2, {
+            received: `${length2}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/minEntries/minEntries.ts
+// @__NO_SIDE_EFFECTS__
+function minEntries(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "min_entries",
+    reference: minEntries,
+    async: false,
+    expects: `>=${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (!dataset.typed) return dataset;
+      const count = Object.keys(dataset.value).length;
+      if (dataset.typed && count < this.requirement) {
+        _addIssue(this, "entries", dataset, config2, {
+          received: `${count}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/minGraphemes/minGraphemes.ts
+// @__NO_SIDE_EFFECTS__
+function minGraphemes(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "min_graphemes",
+    reference: minGraphemes,
+    async: false,
+    expects: `>=${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed) {
+        const count = _getGraphemeCount(dataset.value);
+        if (count < this.requirement) {
+          _addIssue(this, "graphemes", dataset, config2, {
+            received: `${count}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/minLength/minLength.ts
+// @__NO_SIDE_EFFECTS__
+function minLength(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "min_length",
+    reference: minLength,
+    async: false,
+    expects: `>=${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && dataset.value.length < this.requirement) {
+        _addIssue(this, "length", dataset, config2, {
+          received: `${dataset.value.length}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/minSize/minSize.ts
+// @__NO_SIDE_EFFECTS__
+function minSize(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "min_size",
+    reference: minSize,
+    async: false,
+    expects: `>=${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && dataset.value.size < this.requirement) {
+        _addIssue(this, "size", dataset, config2, {
+          received: `${dataset.value.size}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/minValue/minValue.ts
+// @__NO_SIDE_EFFECTS__
+function minValue(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "min_value",
+    reference: minValue,
+    async: false,
+    expects: `>=${requirement instanceof Date ? requirement.toJSON() : _stringify(requirement)}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !(dataset.value >= this.requirement)) {
+        _addIssue(this, "value", dataset, config2, {
+          received: dataset.value instanceof Date ? dataset.value.toJSON() : _stringify(dataset.value)
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/minWords/minWords.ts
+// @__NO_SIDE_EFFECTS__
+function minWords(locales, requirement, message2) {
+  return {
+    kind: "validation",
+    type: "min_words",
+    reference: minWords,
+    async: false,
+    expects: `>=${requirement}`,
+    locales,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed) {
+        const count = _getWordCount(this.locales, dataset.value);
+        if (count < this.requirement) {
+          _addIssue(this, "words", dataset, config2, {
+            received: `${count}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/multipleOf/multipleOf.ts
+// @__NO_SIDE_EFFECTS__
+function multipleOf(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "multiple_of",
+    reference: multipleOf,
+    async: false,
+    expects: `%${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && dataset.value % this.requirement != 0) {
+        _addIssue(this, "multiple", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/nanoid/nanoid.ts
+// @__NO_SIDE_EFFECTS__
+function nanoid(message2) {
+  return {
+    kind: "validation",
+    type: "nanoid",
+    reference: nanoid,
+    async: false,
+    expects: null,
+    requirement: NANO_ID_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "Nano ID", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/nonEmpty/nonEmpty.ts
+// @__NO_SIDE_EFFECTS__
+function nonEmpty(message2) {
+  return {
+    kind: "validation",
+    type: "non_empty",
+    reference: nonEmpty,
+    async: false,
+    expects: "!0",
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && dataset.value.length === 0) {
+        _addIssue(this, "length", dataset, config2, {
+          received: "0"
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/normalize/normalize.ts
+// @__NO_SIDE_EFFECTS__
+function normalize(form) {
+  return {
+    kind: "transformation",
+    type: "normalize",
+    reference: normalize,
+    async: false,
+    form,
+    "~run"(dataset) {
+      dataset.value = dataset.value.normalize(this.form);
+      return dataset;
+    }
+  };
+}
+
+// src/actions/notBytes/notBytes.ts
+// @__NO_SIDE_EFFECTS__
+function notBytes(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "not_bytes",
+    reference: notBytes,
+    async: false,
+    expects: `!${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed) {
+        const length2 = _getByteCount(dataset.value);
+        if (length2 === this.requirement) {
+          _addIssue(this, "bytes", dataset, config2, {
+            received: `${length2}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/notEntries/notEntries.ts
+// @__NO_SIDE_EFFECTS__
+function notEntries(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "not_entries",
+    reference: notEntries,
+    async: false,
+    expects: `!${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (!dataset.typed) return dataset;
+      const count = Object.keys(dataset.value).length;
+      if (dataset.typed && count === this.requirement) {
+        _addIssue(this, "entries", dataset, config2, {
+          received: `${count}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/notGraphemes/notGraphemes.ts
+// @__NO_SIDE_EFFECTS__
+function notGraphemes(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "not_graphemes",
+    reference: notGraphemes,
+    async: false,
+    expects: `!${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed) {
+        const count = _getGraphemeCount(dataset.value);
+        if (count === this.requirement) {
+          _addIssue(this, "graphemes", dataset, config2, {
+            received: `${count}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/notLength/notLength.ts
+// @__NO_SIDE_EFFECTS__
+function notLength(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "not_length",
+    reference: notLength,
+    async: false,
+    expects: `!${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && dataset.value.length === this.requirement) {
+        _addIssue(this, "length", dataset, config2, {
+          received: `${dataset.value.length}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/notSize/notSize.ts
+// @__NO_SIDE_EFFECTS__
+function notSize(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "not_size",
+    reference: notSize,
+    async: false,
+    expects: `!${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && dataset.value.size === this.requirement) {
+        _addIssue(this, "size", dataset, config2, {
+          received: `${dataset.value.size}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/notValue/notValue.ts
+// @__NO_SIDE_EFFECTS__
+function notValue(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "not_value",
+    reference: notValue,
+    async: false,
+    expects: requirement instanceof Date ? `!${requirement.toJSON()}` : `!${_stringify(requirement)}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && this.requirement <= dataset.value && this.requirement >= dataset.value) {
+        _addIssue(this, "value", dataset, config2, {
+          received: dataset.value instanceof Date ? dataset.value.toJSON() : _stringify(dataset.value)
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/notValues/notValues.ts
+// @__NO_SIDE_EFFECTS__
+function notValues(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "not_values",
+    reference: notValues,
+    async: false,
+    expects: `!${_joinExpects(
+      requirement.map(
+        (value2) => value2 instanceof Date ? value2.toJSON() : _stringify(value2)
+      ),
+      "|"
+    )}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && this.requirement.some(
+        (value2) => value2 <= dataset.value && value2 >= dataset.value
+      )) {
+        _addIssue(this, "value", dataset, config2, {
+          received: dataset.value instanceof Date ? dataset.value.toJSON() : _stringify(dataset.value)
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/notWords/notWords.ts
+// @__NO_SIDE_EFFECTS__
+function notWords(locales, requirement, message2) {
+  return {
+    kind: "validation",
+    type: "not_words",
+    reference: notWords,
+    async: false,
+    expects: `!${requirement}`,
+    locales,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed) {
+        const count = _getWordCount(this.locales, dataset.value);
+        if (count === this.requirement) {
+          _addIssue(this, "words", dataset, config2, {
+            received: `${count}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/octal/octal.ts
+// @__NO_SIDE_EFFECTS__
+function octal(message2) {
+  return {
+    kind: "validation",
+    type: "octal",
+    reference: octal,
+    async: false,
+    expects: null,
+    requirement: OCTAL_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "octal", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/parseJson/parseJson.ts
+// @__NO_SIDE_EFFECTS__
+function parseJson(config2, message2) {
+  return {
+    kind: "transformation",
+    type: "parse_json",
+    reference: parseJson,
+    config: config2,
+    message: message2,
+    async: false,
+    "~run"(dataset, config3) {
+      try {
+        dataset.value = JSON.parse(dataset.value, this.config?.reviver);
+      } catch (error) {
+        if (error instanceof Error) {
+          _addIssue(this, "JSON", dataset, config3, {
+            received: `"${error.message}"`
+          });
+          dataset.typed = false;
+        } else {
+          throw error;
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/partialCheck/utils/_isPartiallyTyped/_isPartiallyTyped.ts
+// @__NO_SIDE_EFFECTS__
+function _isPartiallyTyped(dataset, paths) {
+  if (dataset.issues) {
+    for (const path of paths) {
+      for (const issue of dataset.issues) {
+        let typed = false;
+        const bound = Math.min(path.length, issue.path?.length ?? 0);
+        for (let index = 0; index < bound; index++) {
+          if (
+            // @ts-expect-error
+            path[index] !== issue.path[index].key && // @ts-expect-error
+            (path[index] !== "$" || issue.path[index].type !== "array")
+          ) {
+            typed = true;
+            break;
+          }
+        }
+        if (!typed) {
+          return false;
+        }
+      }
+    }
+  }
+  return true;
+}
+
+// src/actions/partialCheck/partialCheck.ts
+// @__NO_SIDE_EFFECTS__
+function partialCheck(paths, requirement, message2) {
+  return {
+    kind: "validation",
+    type: "partial_check",
+    reference: partialCheck,
+    async: false,
+    expects: null,
+    paths,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if ((dataset.typed || _isPartiallyTyped(dataset, paths)) && // @ts-expect-error
+      !this.requirement(dataset.value)) {
+        _addIssue(this, "input", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/partialCheck/partialCheckAsync.ts
+// @__NO_SIDE_EFFECTS__
+function partialCheckAsync(paths, requirement, message2) {
+  return {
+    kind: "validation",
+    type: "partial_check",
+    reference: partialCheckAsync,
+    async: true,
+    expects: null,
+    paths,
+    requirement,
+    message: message2,
+    async "~run"(dataset, config2) {
+      if ((dataset.typed || _isPartiallyTyped(dataset, paths)) && // @ts-expect-error
+      !await this.requirement(dataset.value)) {
+        _addIssue(this, "input", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/rawCheck/rawCheck.ts
+// @__NO_SIDE_EFFECTS__
+function rawCheck(action) {
+  return {
+    kind: "validation",
+    type: "raw_check",
+    reference: rawCheck,
+    async: false,
+    expects: null,
+    "~run"(dataset, config2) {
+      action({
+        dataset,
+        config: config2,
+        addIssue: (info) => _addIssue(this, info?.label ?? "input", dataset, config2, info)
+      });
+      return dataset;
+    }
+  };
+}
+
+// src/actions/rawCheck/rawCheckAsync.ts
+// @__NO_SIDE_EFFECTS__
+function rawCheckAsync(action) {
+  return {
+    kind: "validation",
+    type: "raw_check",
+    reference: rawCheckAsync,
+    async: true,
+    expects: null,
+    async "~run"(dataset, config2) {
+      await action({
+        dataset,
+        config: config2,
+        addIssue: (info) => _addIssue(this, info?.label ?? "input", dataset, config2, info)
+      });
+      return dataset;
+    }
+  };
+}
+
+// src/actions/rawTransform/rawTransform.ts
+// @__NO_SIDE_EFFECTS__
+function rawTransform(action) {
+  return {
+    kind: "transformation",
+    type: "raw_transform",
+    reference: rawTransform,
+    async: false,
+    "~run"(dataset, config2) {
+      const output = action({
+        dataset,
+        config: config2,
+        addIssue: (info) => _addIssue(this, info?.label ?? "input", dataset, config2, info),
+        NEVER: null
+      });
+      if (dataset.issues) {
+        dataset.typed = false;
+      } else {
+        dataset.value = output;
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/rawTransform/rawTransformAsync.ts
+// @__NO_SIDE_EFFECTS__
+function rawTransformAsync(action) {
+  return {
+    kind: "transformation",
+    type: "raw_transform",
+    reference: rawTransformAsync,
+    async: true,
+    async "~run"(dataset, config2) {
+      const output = await action({
+        dataset,
+        config: config2,
+        addIssue: (info) => _addIssue(this, info?.label ?? "input", dataset, config2, info),
+        NEVER: null
+      });
+      if (dataset.issues) {
+        dataset.typed = false;
+      } else {
+        dataset.value = output;
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/readonly/readonly.ts
+// @__NO_SIDE_EFFECTS__
+function readonly() {
+  return {
+    kind: "transformation",
+    type: "readonly",
+    reference: readonly,
+    async: false,
+    "~run"(dataset) {
+      return dataset;
+    }
+  };
+}
+
+// src/actions/reduceItems/reduceItems.ts
+// @__NO_SIDE_EFFECTS__
+function reduceItems(operation, initial) {
+  return {
+    kind: "transformation",
+    type: "reduce_items",
+    reference: reduceItems,
+    async: false,
+    operation,
+    initial,
+    "~run"(dataset) {
+      dataset.value = dataset.value.reduce(this.operation, this.initial);
+      return dataset;
+    }
+  };
+}
+
+// src/actions/regex/regex.ts
+// @__NO_SIDE_EFFECTS__
+function regex(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "regex",
+    reference: regex,
+    async: false,
+    expects: `${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "format", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/returns/returns.ts
+// @__NO_SIDE_EFFECTS__
+function returns(schema) {
+  return {
+    kind: "transformation",
+    type: "returns",
+    reference: returns,
+    async: false,
+    schema,
+    "~run"(dataset, config2) {
+      const func = dataset.value;
+      dataset.value = (...args_) => {
+        const returnsDataset = this.schema["~run"](
+          { value: func(...args_) },
+          config2
+        );
+        if (returnsDataset.issues) {
+          throw new ValiError(returnsDataset.issues);
+        }
+        return returnsDataset.value;
+      };
+      return dataset;
+    }
+  };
+}
+
+// src/actions/returns/returnsAsync.ts
+// @__NO_SIDE_EFFECTS__
+function returnsAsync(schema) {
+  return {
+    kind: "transformation",
+    type: "returns",
+    reference: returnsAsync,
+    async: false,
+    schema,
+    "~run"(dataset, config2) {
+      const func = dataset.value;
+      dataset.value = async (...args_) => {
+        const returnsDataset = await this.schema["~run"](
+          { value: await func(...args_) },
+          config2
+        );
+        if (returnsDataset.issues) {
+          throw new ValiError(returnsDataset.issues);
+        }
+        return returnsDataset.value;
+      };
+      return dataset;
+    }
+  };
+}
+
+// src/actions/rfcEmail/rfcEmail.ts
+// @__NO_SIDE_EFFECTS__
+function rfcEmail(message2) {
+  return {
+    kind: "validation",
+    type: "rfc_email",
+    reference: rfcEmail,
+    expects: null,
+    async: false,
+    requirement: RFC_EMAIL_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "email", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/safeInteger/safeInteger.ts
+// @__NO_SIDE_EFFECTS__
+function safeInteger(message2) {
+  return {
+    kind: "validation",
+    type: "safe_integer",
+    reference: safeInteger,
+    async: false,
+    expects: null,
+    requirement: Number.isSafeInteger,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement(dataset.value)) {
+        _addIssue(this, "safe integer", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/size/size.ts
+// @__NO_SIDE_EFFECTS__
+function size(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "size",
+    reference: size,
+    async: false,
+    expects: `${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && dataset.value.size !== this.requirement) {
+        _addIssue(this, "size", dataset, config2, {
+          received: `${dataset.value.size}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/slug/slug.ts
+// @__NO_SIDE_EFFECTS__
+function slug(message2) {
+  return {
+    kind: "validation",
+    type: "slug",
+    reference: slug,
+    async: false,
+    expects: null,
+    requirement: SLUG_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "slug", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/someItem/someItem.ts
+// @__NO_SIDE_EFFECTS__
+function someItem(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "some_item",
+    reference: someItem,
+    async: false,
+    expects: null,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !dataset.value.some(this.requirement)) {
+        _addIssue(this, "item", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/sortItems/sortItems.ts
+// @__NO_SIDE_EFFECTS__
+function sortItems(operation) {
+  return {
+    kind: "transformation",
+    type: "sort_items",
+    reference: sortItems,
+    async: false,
+    operation,
+    "~run"(dataset) {
+      dataset.value = dataset.value.sort(this.operation);
+      return dataset;
+    }
+  };
+}
+
+// src/actions/startsWith/startsWith.ts
+// @__NO_SIDE_EFFECTS__
+function startsWith(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "starts_with",
+    reference: startsWith,
+    async: false,
+    expects: `"${requirement}"`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !dataset.value.startsWith(this.requirement)) {
+        _addIssue(this, "start", dataset, config2, {
+          received: `"${dataset.value.slice(0, this.requirement.length)}"`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/stringifyJson/stringifyJson.ts
+// @__NO_SIDE_EFFECTS__
+function stringifyJson(config2, message2) {
+  return {
+    kind: "transformation",
+    type: "stringify_json",
+    reference: stringifyJson,
+    message: message2,
+    config: config2,
+    async: false,
+    "~run"(dataset, config3) {
+      try {
+        const output = JSON.stringify(
+          dataset.value,
+          // @ts-expect-error
+          this.config?.replacer,
+          this.config?.space
+        );
+        if (output === void 0) {
+          _addIssue(this, "JSON", dataset, config3);
+          dataset.typed = false;
+        }
+        dataset.value = output;
+      } catch (error) {
+        if (error instanceof Error) {
+          _addIssue(this, "JSON", dataset, config3, {
+            received: `"${error.message}"`
+          });
+          dataset.typed = false;
+        } else {
+          throw error;
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/title/title.ts
+// @__NO_SIDE_EFFECTS__
+function title(title_) {
+  return {
+    kind: "metadata",
+    type: "title",
+    reference: title,
+    title: title_
+  };
+}
+
+// src/actions/toLowerCase/toLowerCase.ts
+// @__NO_SIDE_EFFECTS__
+function toLowerCase() {
+  return {
+    kind: "transformation",
+    type: "to_lower_case",
+    reference: toLowerCase,
+    async: false,
+    "~run"(dataset) {
+      dataset.value = dataset.value.toLowerCase();
+      return dataset;
+    }
+  };
+}
+
+// src/actions/toMaxValue/toMaxValue.ts
+// @__NO_SIDE_EFFECTS__
+function toMaxValue(requirement) {
+  return {
+    kind: "transformation",
+    type: "to_max_value",
+    reference: toMaxValue,
+    async: false,
+    requirement,
+    "~run"(dataset) {
+      dataset.value = dataset.value > this.requirement ? this.requirement : dataset.value;
+      return dataset;
+    }
+  };
+}
+
+// src/actions/toMinValue/toMinValue.ts
+// @__NO_SIDE_EFFECTS__
+function toMinValue(requirement) {
+  return {
+    kind: "transformation",
+    type: "to_min_value",
+    reference: toMinValue,
+    async: false,
+    requirement,
+    "~run"(dataset) {
+      dataset.value = dataset.value < this.requirement ? this.requirement : dataset.value;
+      return dataset;
+    }
+  };
+}
+
+// src/actions/toUpperCase/toUpperCase.ts
+// @__NO_SIDE_EFFECTS__
+function toUpperCase() {
+  return {
+    kind: "transformation",
+    type: "to_upper_case",
+    reference: toUpperCase,
+    async: false,
+    "~run"(dataset) {
+      dataset.value = dataset.value.toUpperCase();
+      return dataset;
+    }
+  };
+}
+
+// src/actions/transform/transform.ts
+// @__NO_SIDE_EFFECTS__
+function transform(operation) {
+  return {
+    kind: "transformation",
+    type: "transform",
+    reference: transform,
+    async: false,
+    operation,
+    "~run"(dataset) {
+      dataset.value = this.operation(dataset.value);
+      return dataset;
+    }
+  };
+}
+
+// src/actions/transform/transformAsync.ts
+// @__NO_SIDE_EFFECTS__
+function transformAsync(operation) {
+  return {
+    kind: "transformation",
+    type: "transform",
+    reference: transformAsync,
+    async: true,
+    operation,
+    async "~run"(dataset) {
+      dataset.value = await this.operation(dataset.value);
+      return dataset;
+    }
+  };
+}
+
+// src/actions/trim/trim.ts
+// @__NO_SIDE_EFFECTS__
+function trim() {
+  return {
+    kind: "transformation",
+    type: "trim",
+    reference: trim,
+    async: false,
+    "~run"(dataset) {
+      dataset.value = dataset.value.trim();
+      return dataset;
+    }
+  };
+}
+
+// src/actions/trimEnd/trimEnd.ts
+// @__NO_SIDE_EFFECTS__
+function trimEnd() {
+  return {
+    kind: "transformation",
+    type: "trim_end",
+    reference: trimEnd,
+    async: false,
+    "~run"(dataset) {
+      dataset.value = dataset.value.trimEnd();
+      return dataset;
+    }
+  };
+}
+
+// src/actions/trimStart/trimStart.ts
+// @__NO_SIDE_EFFECTS__
+function trimStart() {
+  return {
+    kind: "transformation",
+    type: "trim_start",
+    reference: trimStart,
+    async: false,
+    "~run"(dataset) {
+      dataset.value = dataset.value.trimStart();
+      return dataset;
+    }
+  };
+}
+
+// src/actions/ulid/ulid.ts
+// @__NO_SIDE_EFFECTS__
+function ulid(message2) {
+  return {
+    kind: "validation",
+    type: "ulid",
+    reference: ulid,
+    async: false,
+    expects: null,
+    requirement: ULID_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "ULID", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/url/url.ts
+// @__NO_SIDE_EFFECTS__
+function url(message2) {
+  return {
+    kind: "validation",
+    type: "url",
+    reference: url,
+    async: false,
+    expects: null,
+    requirement(input) {
+      try {
+        new URL(input);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement(dataset.value)) {
+        _addIssue(this, "URL", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/uuid/uuid.ts
+// @__NO_SIDE_EFFECTS__
+function uuid(message2) {
+  return {
+    kind: "validation",
+    type: "uuid",
+    reference: uuid,
+    async: false,
+    expects: null,
+    requirement: UUID_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "UUID", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/value/value.ts
+// @__NO_SIDE_EFFECTS__
+function value(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "value",
+    reference: value,
+    async: false,
+    expects: requirement instanceof Date ? requirement.toJSON() : _stringify(requirement),
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !(this.requirement <= dataset.value && this.requirement >= dataset.value)) {
+        _addIssue(this, "value", dataset, config2, {
+          received: dataset.value instanceof Date ? dataset.value.toJSON() : _stringify(dataset.value)
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/values/values.ts
+// @__NO_SIDE_EFFECTS__
+function values(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "values",
+    reference: values,
+    async: false,
+    expects: `${_joinExpects(
+      requirement.map(
+        (value2) => value2 instanceof Date ? value2.toJSON() : _stringify(value2)
+      ),
+      "|"
+    )}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.some(
+        (value2) => value2 <= dataset.value && value2 >= dataset.value
+      )) {
+        _addIssue(this, "value", dataset, config2, {
+          received: dataset.value instanceof Date ? dataset.value.toJSON() : _stringify(dataset.value)
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/words/words.ts
+// @__NO_SIDE_EFFECTS__
+function words(locales, requirement, message2) {
+  return {
+    kind: "validation",
+    type: "words",
+    reference: words,
+    async: false,
+    expects: `${requirement}`,
+    locales,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed) {
+        const count = _getWordCount(this.locales, dataset.value);
+        if (count !== this.requirement) {
+          _addIssue(this, "words", dataset, config2, {
+            received: `${count}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/methods/assert/assert.ts
+function assert(schema, input) {
+  const issues = schema["~run"]({ value: input }, { abortEarly: true }).issues;
+  if (issues) {
+    throw new ValiError(issues);
+  }
+}
+
+// src/methods/config/config.ts
+// @__NO_SIDE_EFFECTS__
+function config(schema, config2) {
+  return {
+    ...schema,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config_) {
+      return schema["~run"](dataset, { ...config_, ...config2 });
+    }
+  };
+}
+
+// src/methods/getFallback/getFallback.ts
+// @__NO_SIDE_EFFECTS__
+function getFallback(schema, dataset, config2) {
+  return typeof schema.fallback === "function" ? (
+    // @ts-expect-error
+    schema.fallback(dataset, config2)
+  ) : (
+    // @ts-expect-error
+    schema.fallback
+  );
+}
+
+// src/methods/fallback/fallback.ts
+// @__NO_SIDE_EFFECTS__
+function fallback(schema, fallback2) {
+  return {
+    ...schema,
+    fallback: fallback2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const outputDataset = schema["~run"](dataset, config2);
+      return outputDataset.issues ? { typed: true, value: getFallback(this, outputDataset, config2) } : outputDataset;
+    }
+  };
+}
+
+// src/methods/fallback/fallbackAsync.ts
+// @__NO_SIDE_EFFECTS__
+function fallbackAsync(schema, fallback2) {
+  return {
+    ...schema,
+    fallback: fallback2,
+    async: true,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const outputDataset = await schema["~run"](dataset, config2);
+      return outputDataset.issues ? {
+        typed: true,
+        value: await getFallback(this, outputDataset, config2)
+      } : outputDataset;
+    }
+  };
+}
+
+// src/methods/flatten/flatten.ts
+// @__NO_SIDE_EFFECTS__
+function flatten(issues) {
+  const flatErrors = {};
+  for (const issue of issues) {
+    if (issue.path) {
+      const dotPath = getDotPath(issue);
+      if (dotPath) {
+        if (!flatErrors.nested) {
+          flatErrors.nested = {};
+        }
+        if (flatErrors.nested[dotPath]) {
+          flatErrors.nested[dotPath].push(issue.message);
+        } else {
+          flatErrors.nested[dotPath] = [issue.message];
+        }
+      } else {
+        if (flatErrors.other) {
+          flatErrors.other.push(issue.message);
+        } else {
+          flatErrors.other = [issue.message];
+        }
+      }
+    } else {
+      if (flatErrors.root) {
+        flatErrors.root.push(issue.message);
+      } else {
+        flatErrors.root = [issue.message];
+      }
+    }
+  }
+  return flatErrors;
+}
+
+// src/methods/forward/forward.ts
+// @__NO_SIDE_EFFECTS__
+function forward(action, path) {
+  return {
+    ...action,
+    "~run"(dataset, config2) {
+      const prevIssues = dataset.issues && [...dataset.issues];
+      dataset = action["~run"](dataset, config2);
+      if (dataset.issues) {
+        for (const issue of dataset.issues) {
+          if (!prevIssues?.includes(issue)) {
+            let pathInput = dataset.value;
+            for (const key of path) {
+              const pathValue = pathInput[key];
+              const pathItem = {
+                type: "unknown",
+                origin: "value",
+                input: pathInput,
+                key,
+                value: pathValue
+              };
+              if (issue.path) {
+                issue.path.push(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              if (!pathValue) {
+                break;
+              }
+              pathInput = pathValue;
+            }
+          }
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/methods/forward/forwardAsync.ts
+// @__NO_SIDE_EFFECTS__
+function forwardAsync(action, path) {
+  return {
+    ...action,
+    async: true,
+    async "~run"(dataset, config2) {
+      const prevIssues = dataset.issues && [...dataset.issues];
+      dataset = await action["~run"](dataset, config2);
+      if (dataset.issues) {
+        for (const issue of dataset.issues) {
+          if (!prevIssues?.includes(issue)) {
+            let pathInput = dataset.value;
+            for (const key of path) {
+              const pathValue = pathInput[key];
+              const pathItem = {
+                type: "unknown",
+                origin: "value",
+                input: pathInput,
+                key,
+                value: pathValue
+              };
+              if (issue.path) {
+                issue.path.push(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              if (!pathValue) {
+                break;
+              }
+              pathInput = pathValue;
+            }
+          }
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/methods/getDefault/getDefault.ts
+// @__NO_SIDE_EFFECTS__
+function getDefault(schema, dataset, config2) {
+  return typeof schema.default === "function" ? (
+    // @ts-expect-error
+    schema.default(dataset, config2)
+  ) : (
+    // @ts-expect-error
+    schema.default
+  );
+}
+
+// src/methods/getDefaults/getDefaults.ts
+// @__NO_SIDE_EFFECTS__
+function getDefaults(schema) {
+  if ("entries" in schema) {
+    const object2 = {};
+    for (const key in schema.entries) {
+      object2[key] = /* @__PURE__ */ getDefaults(schema.entries[key]);
+    }
+    return object2;
+  }
+  if ("items" in schema) {
+    return schema.items.map(getDefaults);
+  }
+  return getDefault(schema);
+}
+
+// src/methods/getDefaults/getDefaultsAsync.ts
+// @__NO_SIDE_EFFECTS__
+async function getDefaultsAsync(schema) {
+  if ("entries" in schema) {
+    return Object.fromEntries(
+      await Promise.all(
+        Object.entries(schema.entries).map(async ([key, value2]) => [
+          key,
+          await /* @__PURE__ */ getDefaultsAsync(value2)
+        ])
+      )
+    );
+  }
+  if ("items" in schema) {
+    return Promise.all(schema.items.map(getDefaultsAsync));
+  }
+  return getDefault(schema);
+}
+
+// src/methods/getDescription/getDescription.ts
+// @__NO_SIDE_EFFECTS__
+function getDescription(schema) {
+  return _getLastMetadata(schema, "description");
+}
+
+// src/methods/getFallbacks/getFallbacks.ts
+// @__NO_SIDE_EFFECTS__
+function getFallbacks(schema) {
+  if ("entries" in schema) {
+    const object2 = {};
+    for (const key in schema.entries) {
+      object2[key] = /* @__PURE__ */ getFallbacks(schema.entries[key]);
+    }
+    return object2;
+  }
+  if ("items" in schema) {
+    return schema.items.map(getFallbacks);
+  }
+  return getFallback(schema);
+}
+
+// src/methods/getFallbacks/getFallbacksAsync.ts
+// @__NO_SIDE_EFFECTS__
+async function getFallbacksAsync(schema) {
+  if ("entries" in schema) {
+    return Object.fromEntries(
+      await Promise.all(
+        Object.entries(schema.entries).map(async ([key, value2]) => [
+          key,
+          await /* @__PURE__ */ getFallbacksAsync(value2)
+        ])
+      )
+    );
+  }
+  if ("items" in schema) {
+    return Promise.all(schema.items.map(getFallbacksAsync));
+  }
+  return getFallback(schema);
+}
+
+// src/methods/getMetadata/getMetadata.ts
+// @__NO_SIDE_EFFECTS__
+function getMetadata(schema) {
+  const result = {};
+  function depthFirstMerge(schema2) {
+    if ("pipe" in schema2) {
+      for (const item of schema2.pipe) {
+        if (item.kind === "schema" && "pipe" in item) {
+          depthFirstMerge(item);
+        } else if (item.kind === "metadata" && item.type === "metadata") {
+          Object.assign(result, item.metadata);
+        }
+      }
+    }
+  }
+  depthFirstMerge(schema);
+  return result;
+}
+
+// src/methods/getTitle/getTitle.ts
+// @__NO_SIDE_EFFECTS__
+function getTitle(schema) {
+  return _getLastMetadata(schema, "title");
+}
+
+// src/methods/is/is.ts
+// @__NO_SIDE_EFFECTS__
+function is(schema, input) {
+  return !schema["~run"]({ value: input }, { abortEarly: true }).issues;
+}
+
+// src/schemas/any/any.ts
+// @__NO_SIDE_EFFECTS__
+function any() {
+  return {
+    kind: "schema",
+    type: "any",
+    reference: any,
+    expects: "any",
+    async: false,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset) {
+      dataset.typed = true;
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/array/array.ts
+// @__NO_SIDE_EFFECTS__
+function array(item, message2) {
+  return {
+    kind: "schema",
+    type: "array",
+    reference: array,
+    expects: "Array",
+    async: false,
+    item,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        for (let key = 0; key < input.length; key++) {
+          const value2 = input[key];
+          const itemDataset = this.item["~run"]({ value: value2 }, config2);
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/array/arrayAsync.ts
+// @__NO_SIDE_EFFECTS__
+function arrayAsync(item, message2) {
+  return {
+    kind: "schema",
+    type: "array",
+    reference: arrayAsync,
+    expects: "Array",
+    async: true,
+    item,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        const itemDatasets = await Promise.all(
+          input.map((value2) => this.item["~run"]({ value: value2 }, config2))
+        );
+        for (let key = 0; key < itemDatasets.length; key++) {
+          const itemDataset = itemDatasets[key];
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: input[key]
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/bigint/bigint.ts
+// @__NO_SIDE_EFFECTS__
+function bigint(message2) {
+  return {
+    kind: "schema",
+    type: "bigint",
+    reference: bigint,
+    expects: "bigint",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (typeof dataset.value === "bigint") {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/blob/blob.ts
+// @__NO_SIDE_EFFECTS__
+function blob(message2) {
+  return {
+    kind: "schema",
+    type: "blob",
+    reference: blob,
+    expects: "Blob",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value instanceof Blob) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/boolean/boolean.ts
+// @__NO_SIDE_EFFECTS__
+function dist_boolean(message2) {
+  return {
+    kind: "schema",
+    type: "boolean",
+    reference: dist_boolean,
+    expects: "boolean",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (typeof dataset.value === "boolean") {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/custom/custom.ts
+// @__NO_SIDE_EFFECTS__
+function custom(check2, message2) {
+  return {
+    kind: "schema",
+    type: "custom",
+    reference: custom,
+    expects: "unknown",
+    async: false,
+    check: check2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (this.check(dataset.value)) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/custom/customAsync.ts
+// @__NO_SIDE_EFFECTS__
+function customAsync(check2, message2) {
+  return {
+    kind: "schema",
+    type: "custom",
+    reference: customAsync,
+    expects: "unknown",
+    async: true,
+    check: check2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      if (await this.check(dataset.value)) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/date/date.ts
+// @__NO_SIDE_EFFECTS__
+function date(message2) {
+  return {
+    kind: "schema",
+    type: "date",
+    reference: date,
+    expects: "Date",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value instanceof Date) {
+        if (!isNaN(dataset.value)) {
+          dataset.typed = true;
+        } else {
+          _addIssue(this, "type", dataset, config2, {
+            received: '"Invalid Date"'
+          });
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/enum/enum.ts
+// @__NO_SIDE_EFFECTS__
+function enum_(enum__, message2) {
+  const options = [];
+  for (const key in enum__) {
+    if (`${+key}` !== key || typeof enum__[key] !== "string" || !Object.is(enum__[enum__[key]], +key)) {
+      options.push(enum__[key]);
+    }
+  }
+  return {
+    kind: "schema",
+    type: "enum",
+    reference: enum_,
+    expects: _joinExpects(options.map(_stringify), "|"),
+    async: false,
+    enum: enum__,
+    options,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (this.options.includes(dataset.value)) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/exactOptional/exactOptional.ts
+// @__NO_SIDE_EFFECTS__
+function exactOptional(wrapped, default_) {
+  return {
+    kind: "schema",
+    type: "exact_optional",
+    reference: exactOptional,
+    expects: wrapped.expects,
+    async: false,
+    wrapped,
+    default: default_,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      return this.wrapped["~run"](dataset, config2);
+    }
+  };
+}
+
+// src/schemas/exactOptional/exactOptionalAsync.ts
+// @__NO_SIDE_EFFECTS__
+function exactOptionalAsync(wrapped, default_) {
+  return {
+    kind: "schema",
+    type: "exact_optional",
+    reference: exactOptionalAsync,
+    expects: wrapped.expects,
+    async: true,
+    wrapped,
+    default: default_,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      return this.wrapped["~run"](dataset, config2);
+    }
+  };
+}
+
+// src/schemas/file/file.ts
+// @__NO_SIDE_EFFECTS__
+function file(message2) {
+  return {
+    kind: "schema",
+    type: "file",
+    reference: file,
+    expects: "File",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value instanceof File) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/function/function.ts
+// @__NO_SIDE_EFFECTS__
+function function_(message2) {
+  return {
+    kind: "schema",
+    type: "function",
+    reference: function_,
+    expects: "Function",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (typeof dataset.value === "function") {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/instance/instance.ts
+// @__NO_SIDE_EFFECTS__
+function instance(class_, message2) {
+  return {
+    kind: "schema",
+    type: "instance",
+    reference: instance,
+    expects: class_.name,
+    async: false,
+    class: class_,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value instanceof this.class) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/intersect/utils/_merge/_merge.ts
+// @__NO_SIDE_EFFECTS__
+function _merge(value1, value2) {
+  if (typeof value1 === typeof value2) {
+    if (value1 === value2 || value1 instanceof Date && value2 instanceof Date && +value1 === +value2) {
+      return { value: value1 };
+    }
+    if (value1 && value2 && value1.constructor === Object && value2.constructor === Object) {
+      for (const key in value2) {
+        if (key in value1) {
+          const dataset = /* @__PURE__ */ _merge(value1[key], value2[key]);
+          if (dataset.issue) {
+            return dataset;
+          }
+          value1[key] = dataset.value;
+        } else {
+          value1[key] = value2[key];
+        }
+      }
+      return { value: value1 };
+    }
+    if (Array.isArray(value1) && Array.isArray(value2)) {
+      if (value1.length === value2.length) {
+        for (let index = 0; index < value1.length; index++) {
+          const dataset = /* @__PURE__ */ _merge(value1[index], value2[index]);
+          if (dataset.issue) {
+            return dataset;
+          }
+          value1[index] = dataset.value;
+        }
+        return { value: value1 };
+      }
+    }
+  }
+  return { issue: true };
+}
+
+// src/schemas/intersect/intersect.ts
+// @__NO_SIDE_EFFECTS__
+function intersect(options, message2) {
+  return {
+    kind: "schema",
+    type: "intersect",
+    reference: intersect,
+    expects: _joinExpects(
+      options.map((option) => option.expects),
+      "&"
+    ),
+    async: false,
+    options,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (this.options.length) {
+        const input = dataset.value;
+        let outputs;
+        dataset.typed = true;
+        for (const schema of this.options) {
+          const optionDataset = schema["~run"]({ value: input }, config2);
+          if (optionDataset.issues) {
+            if (dataset.issues) {
+              dataset.issues.push(...optionDataset.issues);
+            } else {
+              dataset.issues = optionDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!optionDataset.typed) {
+            dataset.typed = false;
+          }
+          if (dataset.typed) {
+            if (outputs) {
+              outputs.push(optionDataset.value);
+            } else {
+              outputs = [optionDataset.value];
+            }
+          }
+        }
+        if (dataset.typed) {
+          dataset.value = outputs[0];
+          for (let index = 1; index < outputs.length; index++) {
+            const mergeDataset = _merge(dataset.value, outputs[index]);
+            if (mergeDataset.issue) {
+              _addIssue(this, "type", dataset, config2, {
+                received: "unknown"
+              });
+              break;
+            }
+            dataset.value = mergeDataset.value;
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/intersect/intersectAsync.ts
+// @__NO_SIDE_EFFECTS__
+function intersectAsync(options, message2) {
+  return {
+    kind: "schema",
+    type: "intersect",
+    reference: intersectAsync,
+    expects: _joinExpects(
+      options.map((option) => option.expects),
+      "&"
+    ),
+    async: true,
+    options,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      if (this.options.length) {
+        const input = dataset.value;
+        let outputs;
+        dataset.typed = true;
+        const optionDatasets = await Promise.all(
+          this.options.map((schema) => schema["~run"]({ value: input }, config2))
+        );
+        for (const optionDataset of optionDatasets) {
+          if (optionDataset.issues) {
+            if (dataset.issues) {
+              dataset.issues.push(...optionDataset.issues);
+            } else {
+              dataset.issues = optionDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!optionDataset.typed) {
+            dataset.typed = false;
+          }
+          if (dataset.typed) {
+            if (outputs) {
+              outputs.push(optionDataset.value);
+            } else {
+              outputs = [optionDataset.value];
+            }
+          }
+        }
+        if (dataset.typed) {
+          dataset.value = outputs[0];
+          for (let index = 1; index < outputs.length; index++) {
+            const mergeDataset = _merge(dataset.value, outputs[index]);
+            if (mergeDataset.issue) {
+              _addIssue(this, "type", dataset, config2, {
+                received: "unknown"
+              });
+              break;
+            }
+            dataset.value = mergeDataset.value;
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/lazy/lazy.ts
+// @__NO_SIDE_EFFECTS__
+function lazy(getter) {
+  return {
+    kind: "schema",
+    type: "lazy",
+    reference: lazy,
+    expects: "unknown",
+    async: false,
+    getter,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      return this.getter(dataset.value)["~run"](dataset, config2);
+    }
+  };
+}
+
+// src/schemas/lazy/lazyAsync.ts
+// @__NO_SIDE_EFFECTS__
+function lazyAsync(getter) {
+  return {
+    kind: "schema",
+    type: "lazy",
+    reference: lazyAsync,
+    expects: "unknown",
+    async: true,
+    getter,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      return (await this.getter(dataset.value))["~run"](dataset, config2);
+    }
+  };
+}
+
+// src/schemas/literal/literal.ts
+// @__NO_SIDE_EFFECTS__
+function literal(literal_, message2) {
+  return {
+    kind: "schema",
+    type: "literal",
+    reference: literal,
+    expects: _stringify(literal_),
+    async: false,
+    literal: literal_,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value === this.literal) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/looseObject/looseObject.ts
+// @__NO_SIDE_EFFECTS__
+function looseObject(entries2, message2) {
+  return {
+    kind: "schema",
+    type: "loose_object",
+    reference: looseObject,
+    expects: "Object",
+    async: false,
+    entries: entries2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        for (const key in this.entries) {
+          const valueSchema = this.entries[key];
+          if (key in input || (valueSchema.type === "exact_optional" || valueSchema.type === "optional" || valueSchema.type === "nullish") && // @ts-expect-error
+          valueSchema.default !== void 0) {
+            const value2 = key in input ? (
+              // @ts-expect-error
+              input[key]
+            ) : getDefault(valueSchema);
+            const valueDataset = valueSchema["~run"]({ value: value2 }, config2);
+            if (valueDataset.issues) {
+              const pathItem = {
+                type: "object",
+                origin: "value",
+                input,
+                key,
+                value: value2
+              };
+              for (const issue of valueDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = valueDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!valueDataset.typed) {
+              dataset.typed = false;
+            }
+            dataset.value[key] = valueDataset.value;
+          } else if (valueSchema.fallback !== void 0) {
+            dataset.value[key] = getFallback(valueSchema);
+          } else if (valueSchema.type !== "exact_optional" && valueSchema.type !== "optional" && valueSchema.type !== "nullish") {
+            _addIssue(this, "key", dataset, config2, {
+              input: void 0,
+              expected: `"${key}"`,
+              path: [
+                {
+                  type: "object",
+                  origin: "key",
+                  input,
+                  key,
+                  // @ts-expect-error
+                  value: input[key]
+                }
+              ]
+            });
+            if (config2.abortEarly) {
+              break;
+            }
+          }
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (const key in input) {
+            if (_isValidObjectKey(input, key) && !(key in this.entries)) {
+              dataset.value[key] = input[key];
+            }
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/looseObject/looseObjectAsync.ts
+// @__NO_SIDE_EFFECTS__
+function looseObjectAsync(entries2, message2) {
+  return {
+    kind: "schema",
+    type: "loose_object",
+    reference: looseObjectAsync,
+    expects: "Object",
+    async: true,
+    entries: entries2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        const valueDatasets = await Promise.all(
+          Object.entries(this.entries).map(async ([key, valueSchema]) => {
+            if (key in input || (valueSchema.type === "exact_optional" || valueSchema.type === "optional" || valueSchema.type === "nullish") && // @ts-expect-error
+            valueSchema.default !== void 0) {
+              const value2 = key in input ? (
+                // @ts-expect-error
+                input[key]
+              ) : await getDefault(valueSchema);
+              return [
+                key,
+                value2,
+                valueSchema,
+                await valueSchema["~run"]({ value: value2 }, config2)
+              ];
+            }
+            return [
+              key,
+              // @ts-expect-error
+              input[key],
+              valueSchema,
+              null
+            ];
+          })
+        );
+        for (const [key, value2, valueSchema, valueDataset] of valueDatasets) {
+          if (valueDataset) {
+            if (valueDataset.issues) {
+              const pathItem = {
+                type: "object",
+                origin: "value",
+                input,
+                key,
+                value: value2
+              };
+              for (const issue of valueDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = valueDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!valueDataset.typed) {
+              dataset.typed = false;
+            }
+            dataset.value[key] = valueDataset.value;
+          } else if (valueSchema.fallback !== void 0) {
+            dataset.value[key] = await getFallback(valueSchema);
+          } else if (valueSchema.type !== "exact_optional" && valueSchema.type !== "optional" && valueSchema.type !== "nullish") {
+            _addIssue(this, "key", dataset, config2, {
+              input: void 0,
+              expected: `"${key}"`,
+              path: [
+                {
+                  type: "object",
+                  origin: "key",
+                  input,
+                  key,
+                  value: value2
+                }
+              ]
+            });
+            if (config2.abortEarly) {
+              break;
+            }
+          }
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (const key in input) {
+            if (_isValidObjectKey(input, key) && !(key in this.entries)) {
+              dataset.value[key] = input[key];
+            }
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/looseTuple/looseTuple.ts
+// @__NO_SIDE_EFFECTS__
+function looseTuple(items, message2) {
+  return {
+    kind: "schema",
+    type: "loose_tuple",
+    reference: looseTuple,
+    expects: "Array",
+    async: false,
+    items,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        for (let key = 0; key < this.items.length; key++) {
+          const value2 = input[key];
+          const itemDataset = this.items[key]["~run"]({ value: value2 }, config2);
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (let key = this.items.length; key < input.length; key++) {
+            dataset.value.push(input[key]);
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/looseTuple/looseTupleAsync.ts
+// @__NO_SIDE_EFFECTS__
+function looseTupleAsync(items, message2) {
+  return {
+    kind: "schema",
+    type: "loose_tuple",
+    reference: looseTupleAsync,
+    expects: "Array",
+    async: true,
+    items,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        const itemDatasets = await Promise.all(
+          this.items.map(async (item, key) => {
+            const value2 = input[key];
+            return [key, value2, await item["~run"]({ value: value2 }, config2)];
+          })
+        );
+        for (const [key, value2, itemDataset] of itemDatasets) {
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (let key = this.items.length; key < input.length; key++) {
+            dataset.value.push(input[key]);
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/map/map.ts
+// @__NO_SIDE_EFFECTS__
+function map(key, value2, message2) {
+  return {
+    kind: "schema",
+    type: "map",
+    reference: map,
+    expects: "Map",
+    async: false,
+    key,
+    value: value2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input instanceof Map) {
+        dataset.typed = true;
+        dataset.value = /* @__PURE__ */ new Map();
+        for (const [inputKey, inputValue] of input) {
+          const keyDataset = this.key["~run"]({ value: inputKey }, config2);
+          if (keyDataset.issues) {
+            const pathItem = {
+              type: "map",
+              origin: "key",
+              input,
+              key: inputKey,
+              value: inputValue
+            };
+            for (const issue of keyDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = keyDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          const valueDataset = this.value["~run"](
+            { value: inputValue },
+            config2
+          );
+          if (valueDataset.issues) {
+            const pathItem = {
+              type: "map",
+              origin: "value",
+              input,
+              key: inputKey,
+              value: inputValue
+            };
+            for (const issue of valueDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = valueDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!keyDataset.typed || !valueDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.set(keyDataset.value, valueDataset.value);
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/map/mapAsync.ts
+// @__NO_SIDE_EFFECTS__
+function mapAsync(key, value2, message2) {
+  return {
+    kind: "schema",
+    type: "map",
+    reference: mapAsync,
+    expects: "Map",
+    async: true,
+    key,
+    value: value2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input instanceof Map) {
+        dataset.typed = true;
+        dataset.value = /* @__PURE__ */ new Map();
+        const datasets = await Promise.all(
+          [...input].map(
+            ([inputKey, inputValue]) => Promise.all([
+              inputKey,
+              inputValue,
+              this.key["~run"]({ value: inputKey }, config2),
+              this.value["~run"]({ value: inputValue }, config2)
+            ])
+          )
+        );
+        for (const [
+          inputKey,
+          inputValue,
+          keyDataset,
+          valueDataset
+        ] of datasets) {
+          if (keyDataset.issues) {
+            const pathItem = {
+              type: "map",
+              origin: "key",
+              input,
+              key: inputKey,
+              value: inputValue
+            };
+            for (const issue of keyDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = keyDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (valueDataset.issues) {
+            const pathItem = {
+              type: "map",
+              origin: "value",
+              input,
+              key: inputKey,
+              value: inputValue
+            };
+            for (const issue of valueDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = valueDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!keyDataset.typed || !valueDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.set(keyDataset.value, valueDataset.value);
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/nan/nan.ts
+// @__NO_SIDE_EFFECTS__
+function nan(message2) {
+  return {
+    kind: "schema",
+    type: "nan",
+    reference: nan,
+    expects: "NaN",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (Number.isNaN(dataset.value)) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/never/never.ts
+// @__NO_SIDE_EFFECTS__
+function never(message2) {
+  return {
+    kind: "schema",
+    type: "never",
+    reference: never,
+    expects: "never",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      _addIssue(this, "type", dataset, config2);
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/nonNullable/nonNullable.ts
+// @__NO_SIDE_EFFECTS__
+function nonNullable(wrapped, message2) {
+  return {
+    kind: "schema",
+    type: "non_nullable",
+    reference: nonNullable,
+    expects: "!null",
+    async: false,
+    wrapped,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value !== null) {
+        dataset = this.wrapped["~run"](dataset, config2);
+      }
+      if (dataset.value === null) {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/nonNullable/nonNullableAsync.ts
+// @__NO_SIDE_EFFECTS__
+function nonNullableAsync(wrapped, message2) {
+  return {
+    kind: "schema",
+    type: "non_nullable",
+    reference: nonNullableAsync,
+    expects: "!null",
+    async: true,
+    wrapped,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      if (dataset.value !== null) {
+        dataset = await this.wrapped["~run"](dataset, config2);
+      }
+      if (dataset.value === null) {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/nonNullish/nonNullish.ts
+// @__NO_SIDE_EFFECTS__
+function nonNullish(wrapped, message2) {
+  return {
+    kind: "schema",
+    type: "non_nullish",
+    reference: nonNullish,
+    expects: "(!null & !undefined)",
+    async: false,
+    wrapped,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (!(dataset.value === null || dataset.value === void 0)) {
+        dataset = this.wrapped["~run"](dataset, config2);
+      }
+      if (dataset.value === null || dataset.value === void 0) {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/nonNullish/nonNullishAsync.ts
+// @__NO_SIDE_EFFECTS__
+function nonNullishAsync(wrapped, message2) {
+  return {
+    kind: "schema",
+    type: "non_nullish",
+    reference: nonNullishAsync,
+    expects: "(!null & !undefined)",
+    async: true,
+    wrapped,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      if (!(dataset.value === null || dataset.value === void 0)) {
+        dataset = await this.wrapped["~run"](dataset, config2);
+      }
+      if (dataset.value === null || dataset.value === void 0) {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/nonOptional/nonOptional.ts
+// @__NO_SIDE_EFFECTS__
+function nonOptional(wrapped, message2) {
+  return {
+    kind: "schema",
+    type: "non_optional",
+    reference: nonOptional,
+    expects: "!undefined",
+    async: false,
+    wrapped,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value !== void 0) {
+        dataset = this.wrapped["~run"](dataset, config2);
+      }
+      if (dataset.value === void 0) {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/nonOptional/nonOptionalAsync.ts
+// @__NO_SIDE_EFFECTS__
+function nonOptionalAsync(wrapped, message2) {
+  return {
+    kind: "schema",
+    type: "non_optional",
+    reference: nonOptionalAsync,
+    expects: "!undefined",
+    async: true,
+    wrapped,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      if (dataset.value !== void 0) {
+        dataset = await this.wrapped["~run"](dataset, config2);
+      }
+      if (dataset.value === void 0) {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/null/null.ts
+// @__NO_SIDE_EFFECTS__
+function null_(message2) {
+  return {
+    kind: "schema",
+    type: "null",
+    reference: null_,
+    expects: "null",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value === null) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/nullable/nullable.ts
+// @__NO_SIDE_EFFECTS__
+function nullable(wrapped, default_) {
+  return {
+    kind: "schema",
+    type: "nullable",
+    reference: nullable,
+    expects: `(${wrapped.expects} | null)`,
+    async: false,
+    wrapped,
+    default: default_,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value === null) {
+        if (this.default !== void 0) {
+          dataset.value = getDefault(this, dataset, config2);
+        }
+        if (dataset.value === null) {
+          dataset.typed = true;
+          return dataset;
+        }
+      }
+      return this.wrapped["~run"](dataset, config2);
+    }
+  };
+}
+
+// src/schemas/nullable/nullableAsync.ts
+// @__NO_SIDE_EFFECTS__
+function nullableAsync(wrapped, default_) {
+  return {
+    kind: "schema",
+    type: "nullable",
+    reference: nullableAsync,
+    expects: `(${wrapped.expects} | null)`,
+    async: true,
+    wrapped,
+    default: default_,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      if (dataset.value === null) {
+        if (this.default !== void 0) {
+          dataset.value = await getDefault(this, dataset, config2);
+        }
+        if (dataset.value === null) {
+          dataset.typed = true;
+          return dataset;
+        }
+      }
+      return this.wrapped["~run"](dataset, config2);
+    }
+  };
+}
+
+// src/schemas/nullish/nullish.ts
+// @__NO_SIDE_EFFECTS__
+function nullish(wrapped, default_) {
+  return {
+    kind: "schema",
+    type: "nullish",
+    reference: nullish,
+    expects: `(${wrapped.expects} | null | undefined)`,
+    async: false,
+    wrapped,
+    default: default_,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value === null || dataset.value === void 0) {
+        if (this.default !== void 0) {
+          dataset.value = getDefault(this, dataset, config2);
+        }
+        if (dataset.value === null || dataset.value === void 0) {
+          dataset.typed = true;
+          return dataset;
+        }
+      }
+      return this.wrapped["~run"](dataset, config2);
+    }
+  };
+}
+
+// src/schemas/nullish/nullishAsync.ts
+// @__NO_SIDE_EFFECTS__
+function nullishAsync(wrapped, default_) {
+  return {
+    kind: "schema",
+    type: "nullish",
+    reference: nullishAsync,
+    expects: `(${wrapped.expects} | null | undefined)`,
+    async: true,
+    wrapped,
+    default: default_,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      if (dataset.value === null || dataset.value === void 0) {
+        if (this.default !== void 0) {
+          dataset.value = await getDefault(this, dataset, config2);
+        }
+        if (dataset.value === null || dataset.value === void 0) {
+          dataset.typed = true;
+          return dataset;
+        }
+      }
+      return this.wrapped["~run"](dataset, config2);
+    }
+  };
+}
+
+// src/schemas/number/number.ts
+// @__NO_SIDE_EFFECTS__
+function number(message2) {
+  return {
+    kind: "schema",
+    type: "number",
+    reference: number,
+    expects: "number",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (typeof dataset.value === "number" && !isNaN(dataset.value)) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/object/object.ts
+// @__NO_SIDE_EFFECTS__
+function object(entries2, message2) {
+  return {
+    kind: "schema",
+    type: "object",
+    reference: object,
+    expects: "Object",
+    async: false,
+    entries: entries2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        for (const key in this.entries) {
+          const valueSchema = this.entries[key];
+          if (key in input || (valueSchema.type === "exact_optional" || valueSchema.type === "optional" || valueSchema.type === "nullish") && // @ts-expect-error
+          valueSchema.default !== void 0) {
+            const value2 = key in input ? (
+              // @ts-expect-error
+              input[key]
+            ) : getDefault(valueSchema);
+            const valueDataset = valueSchema["~run"]({ value: value2 }, config2);
+            if (valueDataset.issues) {
+              const pathItem = {
+                type: "object",
+                origin: "value",
+                input,
+                key,
+                value: value2
+              };
+              for (const issue of valueDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = valueDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!valueDataset.typed) {
+              dataset.typed = false;
+            }
+            dataset.value[key] = valueDataset.value;
+          } else if (valueSchema.fallback !== void 0) {
+            dataset.value[key] = getFallback(valueSchema);
+          } else if (valueSchema.type !== "exact_optional" && valueSchema.type !== "optional" && valueSchema.type !== "nullish") {
+            _addIssue(this, "key", dataset, config2, {
+              input: void 0,
+              expected: `"${key}"`,
+              path: [
+                {
+                  type: "object",
+                  origin: "key",
+                  input,
+                  key,
+                  // @ts-expect-error
+                  value: input[key]
+                }
+              ]
+            });
+            if (config2.abortEarly) {
+              break;
+            }
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/object/objectAsync.ts
+// @__NO_SIDE_EFFECTS__
+function objectAsync(entries2, message2) {
+  return {
+    kind: "schema",
+    type: "object",
+    reference: objectAsync,
+    expects: "Object",
+    async: true,
+    entries: entries2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        const valueDatasets = await Promise.all(
+          Object.entries(this.entries).map(async ([key, valueSchema]) => {
+            if (key in input || (valueSchema.type === "exact_optional" || valueSchema.type === "optional" || valueSchema.type === "nullish") && // @ts-expect-error
+            valueSchema.default !== void 0) {
+              const value2 = key in input ? (
+                // @ts-expect-error
+                input[key]
+              ) : await getDefault(valueSchema);
+              return [
+                key,
+                value2,
+                valueSchema,
+                await valueSchema["~run"]({ value: value2 }, config2)
+              ];
+            }
+            return [
+              key,
+              // @ts-expect-error
+              input[key],
+              valueSchema,
+              null
+            ];
+          })
+        );
+        for (const [key, value2, valueSchema, valueDataset] of valueDatasets) {
+          if (valueDataset) {
+            if (valueDataset.issues) {
+              const pathItem = {
+                type: "object",
+                origin: "value",
+                input,
+                key,
+                value: value2
+              };
+              for (const issue of valueDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = valueDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!valueDataset.typed) {
+              dataset.typed = false;
+            }
+            dataset.value[key] = valueDataset.value;
+          } else if (valueSchema.fallback !== void 0) {
+            dataset.value[key] = await getFallback(valueSchema);
+          } else if (valueSchema.type !== "exact_optional" && valueSchema.type !== "optional" && valueSchema.type !== "nullish") {
+            _addIssue(this, "key", dataset, config2, {
+              input: void 0,
+              expected: `"${key}"`,
+              path: [
+                {
+                  type: "object",
+                  origin: "key",
+                  input,
+                  key,
+                  value: value2
+                }
+              ]
+            });
+            if (config2.abortEarly) {
+              break;
+            }
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/objectWithRest/objectWithRest.ts
+// @__NO_SIDE_EFFECTS__
+function objectWithRest(entries2, rest, message2) {
+  return {
+    kind: "schema",
+    type: "object_with_rest",
+    reference: objectWithRest,
+    expects: "Object",
+    async: false,
+    entries: entries2,
+    rest,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        for (const key in this.entries) {
+          const valueSchema = this.entries[key];
+          if (key in input || (valueSchema.type === "exact_optional" || valueSchema.type === "optional" || valueSchema.type === "nullish") && // @ts-expect-error
+          valueSchema.default !== void 0) {
+            const value2 = key in input ? (
+              // @ts-expect-error
+              input[key]
+            ) : getDefault(valueSchema);
+            const valueDataset = valueSchema["~run"]({ value: value2 }, config2);
+            if (valueDataset.issues) {
+              const pathItem = {
+                type: "object",
+                origin: "value",
+                input,
+                key,
+                value: value2
+              };
+              for (const issue of valueDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = valueDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!valueDataset.typed) {
+              dataset.typed = false;
+            }
+            dataset.value[key] = valueDataset.value;
+          } else if (valueSchema.fallback !== void 0) {
+            dataset.value[key] = getFallback(valueSchema);
+          } else if (valueSchema.type !== "exact_optional" && valueSchema.type !== "optional" && valueSchema.type !== "nullish") {
+            _addIssue(this, "key", dataset, config2, {
+              input: void 0,
+              expected: `"${key}"`,
+              path: [
+                {
+                  type: "object",
+                  origin: "key",
+                  input,
+                  key,
+                  // @ts-expect-error
+                  value: input[key]
+                }
+              ]
+            });
+            if (config2.abortEarly) {
+              break;
+            }
+          }
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (const key in input) {
+            if (_isValidObjectKey(input, key) && !(key in this.entries)) {
+              const valueDataset = this.rest["~run"](
+                // @ts-expect-error
+                { value: input[key] },
+                config2
+              );
+              if (valueDataset.issues) {
+                const pathItem = {
+                  type: "object",
+                  origin: "value",
+                  input,
+                  key,
+                  // @ts-expect-error
+                  value: input[key]
+                };
+                for (const issue of valueDataset.issues) {
+                  if (issue.path) {
+                    issue.path.unshift(pathItem);
+                  } else {
+                    issue.path = [pathItem];
+                  }
+                  dataset.issues?.push(issue);
+                }
+                if (!dataset.issues) {
+                  dataset.issues = valueDataset.issues;
+                }
+                if (config2.abortEarly) {
+                  dataset.typed = false;
+                  break;
+                }
+              }
+              if (!valueDataset.typed) {
+                dataset.typed = false;
+              }
+              dataset.value[key] = valueDataset.value;
+            }
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/objectWithRest/objectWithRestAsync.ts
+// @__NO_SIDE_EFFECTS__
+function objectWithRestAsync(entries2, rest, message2) {
+  return {
+    kind: "schema",
+    type: "object_with_rest",
+    reference: objectWithRestAsync,
+    expects: "Object",
+    async: true,
+    entries: entries2,
+    rest,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        const [normalDatasets, restDatasets] = await Promise.all([
+          // If key is present or its an optional schema with a default value,
+          // parse input of key or default value asynchronously
+          Promise.all(
+            Object.entries(this.entries).map(async ([key, valueSchema]) => {
+              if (key in input || (valueSchema.type === "exact_optional" || valueSchema.type === "optional" || valueSchema.type === "nullish") && // @ts-expect-error
+              valueSchema.default !== void 0) {
+                const value2 = key in input ? (
+                  // @ts-expect-error
+                  input[key]
+                ) : await getDefault(valueSchema);
+                return [
+                  key,
+                  value2,
+                  valueSchema,
+                  await valueSchema["~run"]({ value: value2 }, config2)
+                ];
+              }
+              return [
+                key,
+                // @ts-expect-error
+                input[key],
+                valueSchema,
+                null
+              ];
+            })
+          ),
+          // Parse other entries with rest schema asynchronously
+          // Hint: We exclude specific keys for security reasons
+          Promise.all(
+            Object.entries(input).filter(
+              ([key]) => _isValidObjectKey(input, key) && !(key in this.entries)
+            ).map(
+              async ([key, value2]) => [
+                key,
+                value2,
+                await this.rest["~run"]({ value: value2 }, config2)
+              ]
+            )
+          )
+        ]);
+        for (const [key, value2, valueSchema, valueDataset] of normalDatasets) {
+          if (valueDataset) {
+            if (valueDataset.issues) {
+              const pathItem = {
+                type: "object",
+                origin: "value",
+                input,
+                key,
+                value: value2
+              };
+              for (const issue of valueDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = valueDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!valueDataset.typed) {
+              dataset.typed = false;
+            }
+            dataset.value[key] = valueDataset.value;
+          } else if (valueSchema.fallback !== void 0) {
+            dataset.value[key] = await getFallback(valueSchema);
+          } else if (valueSchema.type !== "exact_optional" && valueSchema.type !== "optional" && valueSchema.type !== "nullish") {
+            _addIssue(this, "key", dataset, config2, {
+              input: void 0,
+              expected: `"${key}"`,
+              path: [
+                {
+                  type: "object",
+                  origin: "key",
+                  input,
+                  key,
+                  value: value2
+                }
+              ]
+            });
+            if (config2.abortEarly) {
+              break;
+            }
+          }
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (const [key, value2, valueDataset] of restDatasets) {
+            if (valueDataset.issues) {
+              const pathItem = {
+                type: "object",
+                origin: "value",
+                input,
+                key,
+                value: value2
+              };
+              for (const issue of valueDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = valueDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!valueDataset.typed) {
+              dataset.typed = false;
+            }
+            dataset.value[key] = valueDataset.value;
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/optional/optional.ts
+// @__NO_SIDE_EFFECTS__
+function optional(wrapped, default_) {
+  return {
+    kind: "schema",
+    type: "optional",
+    reference: optional,
+    expects: `(${wrapped.expects} | undefined)`,
+    async: false,
+    wrapped,
+    default: default_,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value === void 0) {
+        if (this.default !== void 0) {
+          dataset.value = getDefault(this, dataset, config2);
+        }
+        if (dataset.value === void 0) {
+          dataset.typed = true;
+          return dataset;
+        }
+      }
+      return this.wrapped["~run"](dataset, config2);
+    }
+  };
+}
+
+// src/schemas/optional/optionalAsync.ts
+// @__NO_SIDE_EFFECTS__
+function optionalAsync(wrapped, default_) {
+  return {
+    kind: "schema",
+    type: "optional",
+    reference: optionalAsync,
+    expects: `(${wrapped.expects} | undefined)`,
+    async: true,
+    wrapped,
+    default: default_,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      if (dataset.value === void 0) {
+        if (this.default !== void 0) {
+          dataset.value = await getDefault(this, dataset, config2);
+        }
+        if (dataset.value === void 0) {
+          dataset.typed = true;
+          return dataset;
+        }
+      }
+      return this.wrapped["~run"](dataset, config2);
+    }
+  };
+}
+
+// src/schemas/picklist/picklist.ts
+// @__NO_SIDE_EFFECTS__
+function picklist(options, message2) {
+  return {
+    kind: "schema",
+    type: "picklist",
+    reference: picklist,
+    expects: _joinExpects(options.map(_stringify), "|"),
+    async: false,
+    options,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (this.options.includes(dataset.value)) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/promise/promise.ts
+// @__NO_SIDE_EFFECTS__
+function promise(message2) {
+  return {
+    kind: "schema",
+    type: "promise",
+    reference: promise,
+    expects: "Promise",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value instanceof Promise) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/record/record.ts
+// @__NO_SIDE_EFFECTS__
+function record(key, value2, message2) {
+  return {
+    kind: "schema",
+    type: "record",
+    reference: record,
+    expects: "Object",
+    async: false,
+    key,
+    value: value2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        for (const entryKey in input) {
+          if (_isValidObjectKey(input, entryKey)) {
+            const entryValue = input[entryKey];
+            const keyDataset = this.key["~run"]({ value: entryKey }, config2);
+            if (keyDataset.issues) {
+              const pathItem = {
+                type: "object",
+                origin: "key",
+                input,
+                key: entryKey,
+                value: entryValue
+              };
+              for (const issue of keyDataset.issues) {
+                issue.path = [pathItem];
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = keyDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            const valueDataset = this.value["~run"](
+              { value: entryValue },
+              config2
+            );
+            if (valueDataset.issues) {
+              const pathItem = {
+                type: "object",
+                origin: "value",
+                input,
+                key: entryKey,
+                value: entryValue
+              };
+              for (const issue of valueDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = valueDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!keyDataset.typed || !valueDataset.typed) {
+              dataset.typed = false;
+            }
+            if (keyDataset.typed) {
+              dataset.value[keyDataset.value] = valueDataset.value;
+            }
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/record/recordAsync.ts
+// @__NO_SIDE_EFFECTS__
+function recordAsync(key, value2, message2) {
+  return {
+    kind: "schema",
+    type: "record",
+    reference: recordAsync,
+    expects: "Object",
+    async: true,
+    key,
+    value: value2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        const datasets = await Promise.all(
+          Object.entries(input).filter(([key2]) => _isValidObjectKey(input, key2)).map(
+            ([entryKey, entryValue]) => Promise.all([
+              entryKey,
+              entryValue,
+              this.key["~run"]({ value: entryKey }, config2),
+              this.value["~run"]({ value: entryValue }, config2)
+            ])
+          )
+        );
+        for (const [
+          entryKey,
+          entryValue,
+          keyDataset,
+          valueDataset
+        ] of datasets) {
+          if (keyDataset.issues) {
+            const pathItem = {
+              type: "object",
+              origin: "key",
+              input,
+              key: entryKey,
+              value: entryValue
+            };
+            for (const issue of keyDataset.issues) {
+              issue.path = [pathItem];
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = keyDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (valueDataset.issues) {
+            const pathItem = {
+              type: "object",
+              origin: "value",
+              input,
+              key: entryKey,
+              value: entryValue
+            };
+            for (const issue of valueDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = valueDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!keyDataset.typed || !valueDataset.typed) {
+            dataset.typed = false;
+          }
+          if (keyDataset.typed) {
+            dataset.value[keyDataset.value] = valueDataset.value;
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/set/set.ts
+// @__NO_SIDE_EFFECTS__
+function set(value2, message2) {
+  return {
+    kind: "schema",
+    type: "set",
+    reference: set,
+    expects: "Set",
+    async: false,
+    value: value2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input instanceof Set) {
+        dataset.typed = true;
+        dataset.value = /* @__PURE__ */ new Set();
+        for (const inputValue of input) {
+          const valueDataset = this.value["~run"](
+            { value: inputValue },
+            config2
+          );
+          if (valueDataset.issues) {
+            const pathItem = {
+              type: "set",
+              origin: "value",
+              input,
+              key: null,
+              value: inputValue
+            };
+            for (const issue of valueDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = valueDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!valueDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.add(valueDataset.value);
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/set/setAsync.ts
+// @__NO_SIDE_EFFECTS__
+function setAsync(value2, message2) {
+  return {
+    kind: "schema",
+    type: "set",
+    reference: setAsync,
+    expects: "Set",
+    async: true,
+    value: value2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input instanceof Set) {
+        dataset.typed = true;
+        dataset.value = /* @__PURE__ */ new Set();
+        const valueDatasets = await Promise.all(
+          [...input].map(
+            async (inputValue) => [
+              inputValue,
+              await this.value["~run"]({ value: inputValue }, config2)
+            ]
+          )
+        );
+        for (const [inputValue, valueDataset] of valueDatasets) {
+          if (valueDataset.issues) {
+            const pathItem = {
+              type: "set",
+              origin: "value",
+              input,
+              key: null,
+              value: inputValue
+            };
+            for (const issue of valueDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = valueDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!valueDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.add(valueDataset.value);
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/strictObject/strictObject.ts
+// @__NO_SIDE_EFFECTS__
+function strictObject(entries2, message2) {
+  return {
+    kind: "schema",
+    type: "strict_object",
+    reference: strictObject,
+    expects: "Object",
+    async: false,
+    entries: entries2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        for (const key in this.entries) {
+          const valueSchema = this.entries[key];
+          if (key in input || (valueSchema.type === "exact_optional" || valueSchema.type === "optional" || valueSchema.type === "nullish") && // @ts-expect-error
+          valueSchema.default !== void 0) {
+            const value2 = key in input ? (
+              // @ts-expect-error
+              input[key]
+            ) : getDefault(valueSchema);
+            const valueDataset = valueSchema["~run"]({ value: value2 }, config2);
+            if (valueDataset.issues) {
+              const pathItem = {
+                type: "object",
+                origin: "value",
+                input,
+                key,
+                value: value2
+              };
+              for (const issue of valueDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = valueDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!valueDataset.typed) {
+              dataset.typed = false;
+            }
+            dataset.value[key] = valueDataset.value;
+          } else if (valueSchema.fallback !== void 0) {
+            dataset.value[key] = getFallback(valueSchema);
+          } else if (valueSchema.type !== "exact_optional" && valueSchema.type !== "optional" && valueSchema.type !== "nullish") {
+            _addIssue(this, "key", dataset, config2, {
+              input: void 0,
+              expected: `"${key}"`,
+              path: [
+                {
+                  type: "object",
+                  origin: "key",
+                  input,
+                  key,
+                  // @ts-expect-error
+                  value: input[key]
+                }
+              ]
+            });
+            if (config2.abortEarly) {
+              break;
+            }
+          }
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (const key in input) {
+            if (!(key in this.entries)) {
+              _addIssue(this, "key", dataset, config2, {
+                input: key,
+                expected: "never",
+                path: [
+                  {
+                    type: "object",
+                    origin: "key",
+                    input,
+                    key,
+                    // @ts-expect-error
+                    value: input[key]
+                  }
+                ]
+              });
+              break;
+            }
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/strictObject/strictObjectAsync.ts
+// @__NO_SIDE_EFFECTS__
+function strictObjectAsync(entries2, message2) {
+  return {
+    kind: "schema",
+    type: "strict_object",
+    reference: strictObjectAsync,
+    expects: "Object",
+    async: true,
+    entries: entries2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        const valueDatasets = await Promise.all(
+          Object.entries(this.entries).map(async ([key, valueSchema]) => {
+            if (key in input || (valueSchema.type === "exact_optional" || valueSchema.type === "optional" || valueSchema.type === "nullish") && // @ts-expect-error
+            valueSchema.default !== void 0) {
+              const value2 = key in input ? (
+                // @ts-expect-error
+                input[key]
+              ) : await getDefault(valueSchema);
+              return [
+                key,
+                value2,
+                valueSchema,
+                await valueSchema["~run"]({ value: value2 }, config2)
+              ];
+            }
+            return [
+              key,
+              // @ts-expect-error
+              input[key],
+              valueSchema,
+              null
+            ];
+          })
+        );
+        for (const [key, value2, valueSchema, valueDataset] of valueDatasets) {
+          if (valueDataset) {
+            if (valueDataset.issues) {
+              const pathItem = {
+                type: "object",
+                origin: "value",
+                input,
+                key,
+                value: value2
+              };
+              for (const issue of valueDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = valueDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!valueDataset.typed) {
+              dataset.typed = false;
+            }
+            dataset.value[key] = valueDataset.value;
+          } else if (valueSchema.fallback !== void 0) {
+            dataset.value[key] = await getFallback(valueSchema);
+          } else if (valueSchema.type !== "exact_optional" && valueSchema.type !== "optional" && valueSchema.type !== "nullish") {
+            _addIssue(this, "key", dataset, config2, {
+              input: void 0,
+              expected: `"${key}"`,
+              path: [
+                {
+                  type: "object",
+                  origin: "key",
+                  input,
+                  key,
+                  value: value2
+                }
+              ]
+            });
+            if (config2.abortEarly) {
+              break;
+            }
+          }
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (const key in input) {
+            if (!(key in this.entries)) {
+              _addIssue(this, "key", dataset, config2, {
+                input: key,
+                expected: "never",
+                path: [
+                  {
+                    type: "object",
+                    origin: "key",
+                    input,
+                    key,
+                    // @ts-expect-error
+                    value: input[key]
+                  }
+                ]
+              });
+              break;
+            }
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/strictTuple/strictTuple.ts
+// @__NO_SIDE_EFFECTS__
+function strictTuple(items, message2) {
+  return {
+    kind: "schema",
+    type: "strict_tuple",
+    reference: strictTuple,
+    expects: "Array",
+    async: false,
+    items,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        for (let key = 0; key < this.items.length; key++) {
+          const value2 = input[key];
+          const itemDataset = this.items[key]["~run"]({ value: value2 }, config2);
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+        if (!(dataset.issues && config2.abortEarly) && this.items.length < input.length) {
+          _addIssue(this, "type", dataset, config2, {
+            input: input[this.items.length],
+            expected: "never",
+            path: [
+              {
+                type: "array",
+                origin: "value",
+                input,
+                key: this.items.length,
+                value: input[this.items.length]
+              }
+            ]
+          });
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/strictTuple/strictTupleAsync.ts
+// @__NO_SIDE_EFFECTS__
+function strictTupleAsync(items, message2) {
+  return {
+    kind: "schema",
+    type: "strict_tuple",
+    reference: strictTupleAsync,
+    expects: "Array",
+    async: true,
+    items,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        const itemDatasets = await Promise.all(
+          this.items.map(async (item, key) => {
+            const value2 = input[key];
+            return [key, value2, await item["~run"]({ value: value2 }, config2)];
+          })
+        );
+        for (const [key, value2, itemDataset] of itemDatasets) {
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+        if (!(dataset.issues && config2.abortEarly) && this.items.length < input.length) {
+          _addIssue(this, "type", dataset, config2, {
+            input: input[this.items.length],
+            expected: "never",
+            path: [
+              {
+                type: "array",
+                origin: "value",
+                input,
+                key: this.items.length,
+                value: input[this.items.length]
+              }
+            ]
+          });
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/string/string.ts
+// @__NO_SIDE_EFFECTS__
+function string(message2) {
+  return {
+    kind: "schema",
+    type: "string",
+    reference: string,
+    expects: "string",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (typeof dataset.value === "string") {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/symbol/symbol.ts
+// @__NO_SIDE_EFFECTS__
+function symbol(message2) {
+  return {
+    kind: "schema",
+    type: "symbol",
+    reference: symbol,
+    expects: "symbol",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (typeof dataset.value === "symbol") {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/tuple/tuple.ts
+// @__NO_SIDE_EFFECTS__
+function tuple(items, message2) {
+  return {
+    kind: "schema",
+    type: "tuple",
+    reference: tuple,
+    expects: "Array",
+    async: false,
+    items,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        for (let key = 0; key < this.items.length; key++) {
+          const value2 = input[key];
+          const itemDataset = this.items[key]["~run"]({ value: value2 }, config2);
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/tuple/tupleAsync.ts
+// @__NO_SIDE_EFFECTS__
+function tupleAsync(items, message2) {
+  return {
+    kind: "schema",
+    type: "tuple",
+    reference: tupleAsync,
+    expects: "Array",
+    async: true,
+    items,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        const itemDatasets = await Promise.all(
+          this.items.map(async (item, key) => {
+            const value2 = input[key];
+            return [key, value2, await item["~run"]({ value: value2 }, config2)];
+          })
+        );
+        for (const [key, value2, itemDataset] of itemDatasets) {
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/tupleWithRest/tupleWithRest.ts
+// @__NO_SIDE_EFFECTS__
+function tupleWithRest(items, rest, message2) {
+  return {
+    kind: "schema",
+    type: "tuple_with_rest",
+    reference: tupleWithRest,
+    expects: "Array",
+    async: false,
+    items,
+    rest,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        for (let key = 0; key < this.items.length; key++) {
+          const value2 = input[key];
+          const itemDataset = this.items[key]["~run"]({ value: value2 }, config2);
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (let key = this.items.length; key < input.length; key++) {
+            const value2 = input[key];
+            const itemDataset = this.rest["~run"]({ value: value2 }, config2);
+            if (itemDataset.issues) {
+              const pathItem = {
+                type: "array",
+                origin: "value",
+                input,
+                key,
+                value: value2
+              };
+              for (const issue of itemDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = itemDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!itemDataset.typed) {
+              dataset.typed = false;
+            }
+            dataset.value.push(itemDataset.value);
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/tupleWithRest/tupleWithRestAsync.ts
+// @__NO_SIDE_EFFECTS__
+function tupleWithRestAsync(items, rest, message2) {
+  return {
+    kind: "schema",
+    type: "tuple_with_rest",
+    reference: tupleWithRestAsync,
+    expects: "Array",
+    async: true,
+    items,
+    rest,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        const [normalDatasets, restDatasets] = await Promise.all([
+          // Parse schema of each normal item
+          Promise.all(
+            this.items.map(async (item, key) => {
+              const value2 = input[key];
+              return [
+                key,
+                value2,
+                await item["~run"]({ value: value2 }, config2)
+              ];
+            })
+          ),
+          // Parse other items with rest schema
+          Promise.all(
+            input.slice(this.items.length).map(async (value2, key) => {
+              return [
+                key + this.items.length,
+                value2,
+                await this.rest["~run"]({ value: value2 }, config2)
+              ];
+            })
+          )
+        ]);
+        for (const [key, value2, itemDataset] of normalDatasets) {
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (const [key, value2, itemDataset] of restDatasets) {
+            if (itemDataset.issues) {
+              const pathItem = {
+                type: "array",
+                origin: "value",
+                input,
+                key,
+                value: value2
+              };
+              for (const issue of itemDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = itemDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!itemDataset.typed) {
+              dataset.typed = false;
+            }
+            dataset.value.push(itemDataset.value);
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/undefined/undefined.ts
+// @__NO_SIDE_EFFECTS__
+function undefined_(message2) {
+  return {
+    kind: "schema",
+    type: "undefined",
+    reference: undefined_,
+    expects: "undefined",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value === void 0) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/undefinedable/undefinedable.ts
+// @__NO_SIDE_EFFECTS__
+function undefinedable(wrapped, default_) {
+  return {
+    kind: "schema",
+    type: "undefinedable",
+    reference: undefinedable,
+    expects: `(${wrapped.expects} | undefined)`,
+    async: false,
+    wrapped,
+    default: default_,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value === void 0) {
+        if (this.default !== void 0) {
+          dataset.value = getDefault(this, dataset, config2);
+        }
+        if (dataset.value === void 0) {
+          dataset.typed = true;
+          return dataset;
+        }
+      }
+      return this.wrapped["~run"](dataset, config2);
+    }
+  };
+}
+
+// src/schemas/undefinedable/undefinedableAsync.ts
+// @__NO_SIDE_EFFECTS__
+function undefinedableAsync(wrapped, default_) {
+  return {
+    kind: "schema",
+    type: "undefinedable",
+    reference: undefinedableAsync,
+    expects: `(${wrapped.expects} | undefined)`,
+    async: true,
+    wrapped,
+    default: default_,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      if (dataset.value === void 0) {
+        if (this.default !== void 0) {
+          dataset.value = await getDefault(this, dataset, config2);
+        }
+        if (dataset.value === void 0) {
+          dataset.typed = true;
+          return dataset;
+        }
+      }
+      return this.wrapped["~run"](dataset, config2);
+    }
+  };
+}
+
+// src/schemas/union/utils/_subIssues/_subIssues.ts
+// @__NO_SIDE_EFFECTS__
+function _subIssues(datasets) {
+  let issues;
+  if (datasets) {
+    for (const dataset of datasets) {
+      if (issues) {
+        issues.push(...dataset.issues);
+      } else {
+        issues = dataset.issues;
+      }
+    }
+  }
+  return issues;
+}
+
+// src/schemas/union/union.ts
+// @__NO_SIDE_EFFECTS__
+function union(options, message2) {
+  return {
+    kind: "schema",
+    type: "union",
+    reference: union,
+    expects: _joinExpects(
+      options.map((option) => option.expects),
+      "|"
+    ),
+    async: false,
+    options,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      let validDataset;
+      let typedDatasets;
+      let untypedDatasets;
+      for (const schema of this.options) {
+        const optionDataset = schema["~run"]({ value: dataset.value }, config2);
+        if (optionDataset.typed) {
+          if (optionDataset.issues) {
+            if (typedDatasets) {
+              typedDatasets.push(optionDataset);
+            } else {
+              typedDatasets = [optionDataset];
+            }
+          } else {
+            validDataset = optionDataset;
+            break;
+          }
+        } else {
+          if (untypedDatasets) {
+            untypedDatasets.push(optionDataset);
+          } else {
+            untypedDatasets = [optionDataset];
+          }
+        }
+      }
+      if (validDataset) {
+        return validDataset;
+      }
+      if (typedDatasets) {
+        if (typedDatasets.length === 1) {
+          return typedDatasets[0];
+        }
+        _addIssue(this, "type", dataset, config2, {
+          issues: _subIssues(typedDatasets)
+        });
+        dataset.typed = true;
+      } else if (untypedDatasets?.length === 1) {
+        return untypedDatasets[0];
+      } else {
+        _addIssue(this, "type", dataset, config2, {
+          issues: _subIssues(untypedDatasets)
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/union/unionAsync.ts
+// @__NO_SIDE_EFFECTS__
+function unionAsync(options, message2) {
+  return {
+    kind: "schema",
+    type: "union",
+    reference: unionAsync,
+    expects: _joinExpects(
+      options.map((option) => option.expects),
+      "|"
+    ),
+    async: true,
+    options,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      let validDataset;
+      let typedDatasets;
+      let untypedDatasets;
+      for (const schema of this.options) {
+        const optionDataset = await schema["~run"](
+          { value: dataset.value },
+          config2
+        );
+        if (optionDataset.typed) {
+          if (optionDataset.issues) {
+            if (typedDatasets) {
+              typedDatasets.push(optionDataset);
+            } else {
+              typedDatasets = [optionDataset];
+            }
+          } else {
+            validDataset = optionDataset;
+            break;
+          }
+        } else {
+          if (untypedDatasets) {
+            untypedDatasets.push(optionDataset);
+          } else {
+            untypedDatasets = [optionDataset];
+          }
+        }
+      }
+      if (validDataset) {
+        return validDataset;
+      }
+      if (typedDatasets) {
+        if (typedDatasets.length === 1) {
+          return typedDatasets[0];
+        }
+        _addIssue(this, "type", dataset, config2, {
+          issues: _subIssues(typedDatasets)
+        });
+        dataset.typed = true;
+      } else if (untypedDatasets?.length === 1) {
+        return untypedDatasets[0];
+      } else {
+        _addIssue(this, "type", dataset, config2, {
+          issues: _subIssues(untypedDatasets)
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/unknown/unknown.ts
+// @__NO_SIDE_EFFECTS__
+function unknown() {
+  return {
+    kind: "schema",
+    type: "unknown",
+    reference: unknown,
+    expects: "unknown",
+    async: false,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset) {
+      dataset.typed = true;
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/variant/variant.ts
+// @__NO_SIDE_EFFECTS__
+function variant(key, options, message2) {
+  return {
+    kind: "schema",
+    type: "variant",
+    reference: variant,
+    expects: "Object",
+    async: false,
+    key,
+    options,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        let outputDataset;
+        let maxDiscriminatorPriority = 0;
+        let invalidDiscriminatorKey = this.key;
+        let expectedDiscriminators = [];
+        const parseOptions = (variant2, allKeys) => {
+          for (const schema of variant2.options) {
+            if (schema.type === "variant") {
+              parseOptions(schema, new Set(allKeys).add(schema.key));
+            } else {
+              let keysAreValid = true;
+              let currentPriority = 0;
+              for (const currentKey of allKeys) {
+                const discriminatorSchema = schema.entries[currentKey];
+                if (currentKey in input ? discriminatorSchema["~run"](
+                  // @ts-expect-error
+                  { typed: false, value: input[currentKey] },
+                  { abortEarly: true }
+                ).issues : discriminatorSchema.type !== "exact_optional" && discriminatorSchema.type !== "optional" && discriminatorSchema.type !== "nullish") {
+                  keysAreValid = false;
+                  if (invalidDiscriminatorKey !== currentKey && (maxDiscriminatorPriority < currentPriority || maxDiscriminatorPriority === currentPriority && currentKey in input && !(invalidDiscriminatorKey in input))) {
+                    maxDiscriminatorPriority = currentPriority;
+                    invalidDiscriminatorKey = currentKey;
+                    expectedDiscriminators = [];
+                  }
+                  if (invalidDiscriminatorKey === currentKey) {
+                    expectedDiscriminators.push(
+                      schema.entries[currentKey].expects
+                    );
+                  }
+                  break;
+                }
+                currentPriority++;
+              }
+              if (keysAreValid) {
+                const optionDataset = schema["~run"]({ value: input }, config2);
+                if (!outputDataset || !outputDataset.typed && optionDataset.typed) {
+                  outputDataset = optionDataset;
+                }
+              }
+            }
+            if (outputDataset && !outputDataset.issues) {
+              break;
+            }
+          }
+        };
+        parseOptions(this, /* @__PURE__ */ new Set([this.key]));
+        if (outputDataset) {
+          return outputDataset;
+        }
+        _addIssue(this, "type", dataset, config2, {
+          // @ts-expect-error
+          input: input[invalidDiscriminatorKey],
+          expected: _joinExpects(expectedDiscriminators, "|"),
+          path: [
+            {
+              type: "object",
+              origin: "value",
+              input,
+              key: invalidDiscriminatorKey,
+              // @ts-expect-error
+              value: input[invalidDiscriminatorKey]
+            }
+          ]
+        });
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/variant/variantAsync.ts
+// @__NO_SIDE_EFFECTS__
+function variantAsync(key, options, message2) {
+  return {
+    kind: "schema",
+    type: "variant",
+    reference: variantAsync,
+    expects: "Object",
+    async: true,
+    key,
+    options,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        let outputDataset;
+        let maxDiscriminatorPriority = 0;
+        let invalidDiscriminatorKey = this.key;
+        let expectedDiscriminators = [];
+        const parseOptions = async (variant2, allKeys) => {
+          for (const schema of variant2.options) {
+            if (schema.type === "variant") {
+              await parseOptions(schema, new Set(allKeys).add(schema.key));
+            } else {
+              let keysAreValid = true;
+              let currentPriority = 0;
+              for (const currentKey of allKeys) {
+                const discriminatorSchema = schema.entries[currentKey];
+                if (currentKey in input ? (await discriminatorSchema["~run"](
+                  // @ts-expect-error
+                  { typed: false, value: input[currentKey] },
+                  { abortEarly: true }
+                )).issues : discriminatorSchema.type !== "exact_optional" && discriminatorSchema.type !== "optional" && discriminatorSchema.type !== "nullish") {
+                  keysAreValid = false;
+                  if (invalidDiscriminatorKey !== currentKey && (maxDiscriminatorPriority < currentPriority || maxDiscriminatorPriority === currentPriority && currentKey in input && !(invalidDiscriminatorKey in input))) {
+                    maxDiscriminatorPriority = currentPriority;
+                    invalidDiscriminatorKey = currentKey;
+                    expectedDiscriminators = [];
+                  }
+                  if (invalidDiscriminatorKey === currentKey) {
+                    expectedDiscriminators.push(
+                      schema.entries[currentKey].expects
+                    );
+                  }
+                  break;
+                }
+                currentPriority++;
+              }
+              if (keysAreValid) {
+                const optionDataset = await schema["~run"](
+                  { value: input },
+                  config2
+                );
+                if (!outputDataset || !outputDataset.typed && optionDataset.typed) {
+                  outputDataset = optionDataset;
+                }
+              }
+            }
+            if (outputDataset && !outputDataset.issues) {
+              break;
+            }
+          }
+        };
+        await parseOptions(this, /* @__PURE__ */ new Set([this.key]));
+        if (outputDataset) {
+          return outputDataset;
+        }
+        _addIssue(this, "type", dataset, config2, {
+          // @ts-expect-error
+          input: input[invalidDiscriminatorKey],
+          expected: _joinExpects(expectedDiscriminators, "|"),
+          path: [
+            {
+              type: "object",
+              origin: "value",
+              input,
+              key: invalidDiscriminatorKey,
+              // @ts-expect-error
+              value: input[invalidDiscriminatorKey]
+            }
+          ]
+        });
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/void/void.ts
+// @__NO_SIDE_EFFECTS__
+function void_(message2) {
+  return {
+    kind: "schema",
+    type: "void",
+    reference: void_,
+    expects: "void",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value === void 0) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/methods/keyof/keyof.ts
+// @__NO_SIDE_EFFECTS__
+function keyof(schema, message2) {
+  return picklist(Object.keys(schema.entries), message2);
+}
+
+// src/methods/message/message.ts
+// @__NO_SIDE_EFFECTS__
+function message(schema, message_) {
+  return {
+    ...schema,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      return schema["~run"](dataset, { ...config2, message: message_ });
+    }
+  };
+}
+
+// src/methods/omit/omit.ts
+// @__NO_SIDE_EFFECTS__
+function omit(schema, keys) {
+  const entries2 = {
+    ...schema.entries
+  };
+  for (const key of keys) {
+    delete entries2[key];
+  }
+  return {
+    ...schema,
+    entries: entries2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    }
+  };
+}
+
+// src/methods/parse/parse.ts
+function parse(schema, input, config2) {
+  const dataset = schema["~run"]({ value: input }, getGlobalConfig(config2));
+  if (dataset.issues) {
+    throw new ValiError(dataset.issues);
+  }
+  return dataset.value;
+}
+
+// src/methods/parse/parseAsync.ts
+async function parseAsync(schema, input, config2) {
+  const dataset = await schema["~run"](
+    { value: input },
+    getGlobalConfig(config2)
+  );
+  if (dataset.issues) {
+    throw new ValiError(dataset.issues);
+  }
+  return dataset.value;
+}
+
+// src/methods/parser/parser.ts
+// @__NO_SIDE_EFFECTS__
+function parser(schema, config2) {
+  const func = (input) => parse(schema, input, config2);
+  func.schema = schema;
+  func.config = config2;
+  return func;
+}
+
+// src/methods/parser/parserAsync.ts
+// @__NO_SIDE_EFFECTS__
+function parserAsync(schema, config2) {
+  const func = (input) => parseAsync(schema, input, config2);
+  func.schema = schema;
+  func.config = config2;
+  return func;
+}
+
+// src/methods/partial/partial.ts
+// @__NO_SIDE_EFFECTS__
+function partial(schema, keys) {
+  const entries2 = {};
+  for (const key in schema.entries) {
+    entries2[key] = !keys || keys.includes(key) ? optional(schema.entries[key]) : schema.entries[key];
+  }
+  return {
+    ...schema,
+    entries: entries2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    }
+  };
+}
+
+// src/methods/partial/partialAsync.ts
+// @__NO_SIDE_EFFECTS__
+function partialAsync(schema, keys) {
+  const entries2 = {};
+  for (const key in schema.entries) {
+    entries2[key] = !keys || keys.includes(key) ? optionalAsync(schema.entries[key]) : schema.entries[key];
+  }
+  return {
+    ...schema,
+    entries: entries2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    }
+  };
+}
+
+// src/methods/pick/pick.ts
+// @__NO_SIDE_EFFECTS__
+function pick(schema, keys) {
+  const entries2 = {};
+  for (const key of keys) {
+    entries2[key] = schema.entries[key];
+  }
+  return {
+    ...schema,
+    entries: entries2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    }
+  };
+}
+
+// src/methods/pipe/pipe.ts
+// @__NO_SIDE_EFFECTS__
+function pipe(...pipe2) {
+  return {
+    ...pipe2[0],
+    pipe: pipe2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      for (const item of pipe2) {
+        if (item.kind !== "metadata") {
+          if (dataset.issues && (item.kind === "schema" || item.kind === "transformation")) {
+            dataset.typed = false;
+            break;
+          }
+          if (!dataset.issues || !config2.abortEarly && !config2.abortPipeEarly) {
+            dataset = item["~run"](dataset, config2);
+          }
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/methods/pipe/pipeAsync.ts
+// @__NO_SIDE_EFFECTS__
+function pipeAsync(...pipe2) {
+  return {
+    ...pipe2[0],
+    pipe: pipe2,
+    async: true,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      for (const item of pipe2) {
+        if (item.kind !== "metadata") {
+          if (dataset.issues && (item.kind === "schema" || item.kind === "transformation")) {
+            dataset.typed = false;
+            break;
+          }
+          if (!dataset.issues || !config2.abortEarly && !config2.abortPipeEarly) {
+            dataset = await item["~run"](dataset, config2);
+          }
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/methods/required/required.ts
+// @__NO_SIDE_EFFECTS__
+function required(schema, arg2, arg3) {
+  const keys = Array.isArray(arg2) ? arg2 : void 0;
+  const message2 = Array.isArray(arg2) ? arg3 : arg2;
+  const entries2 = {};
+  for (const key in schema.entries) {
+    entries2[key] = !keys || keys.includes(key) ? nonOptional(schema.entries[key], message2) : schema.entries[key];
+  }
+  return {
+    ...schema,
+    entries: entries2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    }
+  };
+}
+
+// src/methods/required/requiredAsync.ts
+// @__NO_SIDE_EFFECTS__
+function requiredAsync(schema, arg2, arg3) {
+  const keys = Array.isArray(arg2) ? arg2 : void 0;
+  const message2 = Array.isArray(arg2) ? arg3 : arg2;
+  const entries2 = {};
+  for (const key in schema.entries) {
+    entries2[key] = !keys || keys.includes(key) ? nonOptionalAsync(schema.entries[key], message2) : schema.entries[key];
+  }
+  return {
+    ...schema,
+    entries: entries2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    }
+  };
+}
+
+// src/methods/safeParse/safeParse.ts
+// @__NO_SIDE_EFFECTS__
+function safeParse(schema, input, config2) {
+  const dataset = schema["~run"]({ value: input }, getGlobalConfig(config2));
+  return {
+    typed: dataset.typed,
+    success: !dataset.issues,
+    output: dataset.value,
+    issues: dataset.issues
+  };
+}
+
+// src/methods/safeParse/safeParseAsync.ts
+// @__NO_SIDE_EFFECTS__
+async function safeParseAsync(schema, input, config2) {
+  const dataset = await schema["~run"](
+    { value: input },
+    getGlobalConfig(config2)
+  );
+  return {
+    typed: dataset.typed,
+    success: !dataset.issues,
+    output: dataset.value,
+    issues: dataset.issues
+  };
+}
+
+// src/methods/safeParser/safeParser.ts
+// @__NO_SIDE_EFFECTS__
+function safeParser(schema, config2) {
+  const func = (input) => safeParse(schema, input, config2);
+  func.schema = schema;
+  func.config = config2;
+  return func;
+}
+
+// src/methods/safeParser/safeParserAsync.ts
+// @__NO_SIDE_EFFECTS__
+function safeParserAsync(schema, config2) {
+  const func = (input) => safeParseAsync(schema, input, config2);
+  func.schema = schema;
+  func.config = config2;
+  return func;
+}
+
+// src/methods/summarize/summarize.ts
+// @__NO_SIDE_EFFECTS__
+function summarize(issues) {
+  let summary = "";
+  for (const issue of issues) {
+    if (summary) {
+      summary += "\n";
+    }
+    summary += `\xD7 ${issue.message}`;
+    const dotPath = getDotPath(issue);
+    if (dotPath) {
+      summary += `
+  \u2192 at ${dotPath}`;
+    }
+  }
+  return summary;
+}
+
+// src/methods/unwrap/unwrap.ts
+// @__NO_SIDE_EFFECTS__
+function unwrap(schema) {
+  return schema.wrapped;
+}
+
+
+;// CONCATENATED MODULE: ../issue-number-branch-core/dist/infrastructure/config.js
+// Infrastructure layer - Configuration management
+
+
+// Define environment variables using @t3-oss/env-core with Valibot
+const env = createEnv({
+    server: {
+        GITHUB_TOKEN: optional(string()),
+        GH_TOKEN: optional(string()),
+        GITHUB_API_URL: optional(pipe(string(), url())),
+        GITHUB_SERVER_URL: optional(pipe(string(), url())),
+    },
+    runtimeEnv: process.env,
+});
+/**
+ * Configuration singleton for the application
+ */
+class Config {
+    static instance = null;
+    constructor() { }
+    static getInstance() {
+        if (!Config.instance) {
+            Config.instance = new Config();
+        }
+        return Config.instance;
+    }
+    getGitHubToken() {
+        // Check GITHUB_TOKEN first, then fall back to GH_TOKEN
+        return env.GITHUB_TOKEN ?? env.GH_TOKEN;
+    }
+    getGitHubApiUrl() {
+        // Priority order:
+        // 1. GITHUB_API_URL (direct API URL)
+        // 2. GITHUB_SERVER_URL (GitHub Enterprise Server URL - needs /api/v3 suffix)
+        // 3. Default to GitHub.com API
+        if (env.GITHUB_API_URL) {
+            // Remove trailing slashes
+            return env.GITHUB_API_URL.replace(/\/+$/, "");
+        }
+        if (env.GITHUB_SERVER_URL) {
+            // GitHub Enterprise Server API endpoint format
+            const serverUrl = env.GITHUB_SERVER_URL.replace(/\/+$/, "");
+            return `${serverUrl}/api/v3`;
+        }
+        // Default to GitHub.com
+        return "https://api.github.com";
+    }
+    getDefaults() {
+        return {
+            excludePattern: "{main,master,develop}",
+            issueState: "all",
+        };
+    }
+    // For testing purposes
+    static resetInstance() {
+        Config.instance = null;
+    }
+}
+//# sourceMappingURL=config.js.map
 ;// CONCATENATED MODULE: external "node:child_process"
 const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:child_process");
 // EXTERNAL MODULE: external "node:util"
 var external_node_util_ = __nccwpck_require__(7975);
-// EXTERNAL MODULE: ../../../node_modules/micromatch/index.js
-var micromatch = __nccwpck_require__(7343);
-;// CONCATENATED MODULE: ../issue-number-branch-core/dist/index.js
-// Pure functions only (no I/O operations)
-
-/** @public */
-function isExcluded(branch, excludeGlob) {
-    const patterns = excludeGlob
-        .split("|")
-        .map((s) => s.trim())
-        .filter(Boolean);
-    if (patterns.length === 0)
-        return false;
-    return micromatch.isMatch(branch, patterns);
-}
-/** @public */
-function extractIssueNumbers(branch) {
-    const set = new Set();
-    const re = /\d{1,7}/g;
-    for (const m of branch.matchAll(re)) {
-        set.add(Number(m[0]));
-    }
-    return [...set];
-}
-// TODO: Add more detailed error handling
-// TODO: Consider supporting JIRA format (ABC-123) in future versions
-//# sourceMappingURL=index.js.map
-;// CONCATENATED MODULE: ../issue-number-branch-api/dist/index.js
-// Use case boundary: CLI/Action should only use this API
-
+;// CONCATENATED MODULE: ../issue-number-branch-core/dist/infrastructure/git-client.js
+// Infrastructure layer - Git operations
 
 
 const execFile = (0,external_node_util_.promisify)(external_node_child_process_namespaceObject.execFile);
-/** @public */
-async function checkCurrentBranch(opts = {}) {
-    const excludeGlob = opts.excludeGlob ?? "main|master|develop";
-    const allowed = new Set(opts.allowedStates ?? ["open", "closed"]);
-    const token = opts.token ??
-        // biome-ignore lint/complexity/useLiteralKeys: TODO: Fix TypeScript strict mode compatibility with noPropertyAccessFromIndexSignature
-        process.env["GITHUB_TOKEN"] ??
-        // biome-ignore lint/complexity/useLiteralKeys: TODO: Fix TypeScript strict mode compatibility with noPropertyAccessFromIndexSignature
-        process.env["GH_TOKEN"] ??
-        undefined;
+/**
+ * GitClient provides access to local Git repository information
+ */
+class GitClient {
+    /**
+     * Execute a git command
+     * @param args - Arguments to pass to git
+     * @returns Command output
+     */
+    async execute(args) {
+        try {
+            const { stdout } = await execFile("git", args);
+            return stdout;
+        }
+        catch (error) {
+            // Improve error messages for common git failures
+            const gitError = error;
+            if (gitError.code === "ENOENT") {
+                throw new Error("Git is not installed or not in PATH");
+            }
+            if (gitError.stderr?.includes("not a git repository")) {
+                throw new Error("Not in a git repository");
+            }
+            // Re-throw with original error for debugging
+            throw new Error(`Git command failed: ${gitError.message ?? String(error)}`);
+        }
+    }
+    /**
+     * Get the current branch name
+     * @returns Current branch name
+     */
+    async getCurrentBranch() {
+        const branch = await this.execute(["rev-parse", "--abbrev-ref", "HEAD"]);
+        return branch.trim();
+    }
+    /**
+     * Get the remote URL for origin
+     * @returns Remote URL
+     */
+    async getRemoteUrl() {
+        try {
+            const url = await this.execute(["config", "--get", "remote.origin.url"]);
+            return url.trim();
+        }
+        catch (error) {
+            // Provide helpful error message when no remote is configured
+            const gitError = error;
+            if (gitError.message?.includes("exit code 1")) {
+                throw new Error("No remote 'origin' configured for this repository");
+            }
+            throw error;
+        }
+    }
+}
+//# sourceMappingURL=git-client.js.map
+// EXTERNAL MODULE: ../../../node_modules/bottleneck/light.js
+var light = __nccwpck_require__(7605);
+;// CONCATENATED MODULE: ../../../node_modules/@octokit/request-error/dist-src/index.js
+class RequestError extends Error {
+  name;
+  /**
+   * http status code
+   */
+  status;
+  /**
+   * Request options that lead to the error.
+   */
+  request;
+  /**
+   * Response object if a response was received
+   */
+  response;
+  constructor(message, statusCode, options) {
+    super(message);
+    this.name = "HttpError";
+    this.status = Number.parseInt(statusCode);
+    if (Number.isNaN(this.status)) {
+      this.status = 0;
+    }
+    if ("response" in options) {
+      this.response = options.response;
+    }
+    const requestCopy = Object.assign({}, options.request);
+    if (options.request.headers.authorization) {
+      requestCopy.headers = Object.assign({}, options.request.headers, {
+        authorization: options.request.headers.authorization.replace(
+          /(?<! ) .*$/,
+          " [REDACTED]"
+        )
+      });
+    }
+    requestCopy.url = requestCopy.url.replace(/\bclient_secret=\w+/g, "client_secret=[REDACTED]").replace(/\baccess_token=\w+/g, "access_token=[REDACTED]");
+    this.request = requestCopy;
+  }
+}
+
+
+;// CONCATENATED MODULE: ../../../node_modules/@octokit/plugin-retry/dist-bundle/index.js
+// pkg/dist-src/version.js
+var VERSION = "0.0.0-development";
+
+// pkg/dist-src/error-request.js
+async function errorRequest(state, octokit, error, options) {
+  if (!error.request || !error.request.request) {
+    throw error;
+  }
+  if (error.status >= 400 && !state.doNotRetry.includes(error.status)) {
+    const retries = options.request.retries != null ? options.request.retries : state.retries;
+    const retryAfter = Math.pow((options.request.retryCount || 0) + 1, 2);
+    throw octokit.retry.retryRequest(error, retries, retryAfter);
+  }
+  throw error;
+}
+
+// pkg/dist-src/wrap-request.js
+
+
+async function wrapRequest(state, octokit, request, options) {
+  const limiter = new light();
+  limiter.on("failed", function(error, info) {
+    const maxRetries = ~~error.request.request.retries;
+    const after = ~~error.request.request.retryAfter;
+    options.request.retryCount = info.retryCount + 1;
+    if (maxRetries > info.retryCount) {
+      return after * state.retryAfterBaseValue;
+    }
+  });
+  return limiter.schedule(
+    requestWithGraphqlErrorHandling.bind(null, state, octokit, request),
+    options
+  );
+}
+async function requestWithGraphqlErrorHandling(state, octokit, request, options) {
+  const response = await request(request, options);
+  if (response.data && response.data.errors && response.data.errors.length > 0 && /Something went wrong while executing your query/.test(
+    response.data.errors[0].message
+  )) {
+    const error = new RequestError(response.data.errors[0].message, 500, {
+      request: options,
+      response
+    });
+    return errorRequest(state, octokit, error, options);
+  }
+  return response;
+}
+
+// pkg/dist-src/index.js
+function retry(octokit, octokitOptions) {
+  const state = Object.assign(
+    {
+      enabled: true,
+      retryAfterBaseValue: 1e3,
+      doNotRetry: [400, 401, 403, 404, 410, 422, 451],
+      retries: 3
+    },
+    octokitOptions.retry
+  );
+  if (state.enabled) {
+    octokit.hook.error("request", errorRequest.bind(null, state, octokit));
+    octokit.hook.wrap("request", wrapRequest.bind(null, state, octokit));
+  }
+  return {
+    retry: {
+      retryRequest: (error, retries, retryAfter) => {
+        error.request.request = Object.assign({}, error.request.request, {
+          retries,
+          retryAfter
+        });
+        return error;
+      }
+    }
+  };
+}
+retry.VERSION = VERSION;
+
+
+;// CONCATENATED MODULE: ../../../node_modules/@octokit/plugin-throttling/dist-bundle/index.js
+// pkg/dist-src/index.js
+
+
+// pkg/dist-src/version.js
+var dist_bundle_VERSION = "0.0.0-development";
+
+// pkg/dist-src/wrap-request.js
+var noop = () => Promise.resolve();
+function dist_bundle_wrapRequest(state, request, options) {
+  return state.retryLimiter.schedule(doRequest, state, request, options);
+}
+async function doRequest(state, request, options) {
+  const { pathname } = new URL(options.url, "http://github.test");
+  const isAuth = isAuthRequest(options.method, pathname);
+  const isWrite = !isAuth && options.method !== "GET" && options.method !== "HEAD";
+  const isSearch = options.method === "GET" && pathname.startsWith("/search/");
+  const isGraphQL = pathname.startsWith("/graphql");
+  const retryCount = ~~request.retryCount;
+  const jobOptions = retryCount > 0 ? { priority: 0, weight: 0 } : {};
+  if (state.clustering) {
+    jobOptions.expiration = 1e3 * 60;
+  }
+  if (isWrite || isGraphQL) {
+    await state.write.key(state.id).schedule(jobOptions, noop);
+  }
+  if (isWrite && state.triggersNotification(pathname)) {
+    await state.notifications.key(state.id).schedule(jobOptions, noop);
+  }
+  if (isSearch) {
+    await state.search.key(state.id).schedule(jobOptions, noop);
+  }
+  const req = (isAuth ? state.auth : state.global).key(state.id).schedule(jobOptions, request, options);
+  if (isGraphQL) {
+    const res = await req;
+    if (res.data.errors != null && res.data.errors.some((error) => error.type === "RATE_LIMITED")) {
+      const error = Object.assign(new Error("GraphQL Rate Limit Exceeded"), {
+        response: res,
+        data: res.data
+      });
+      throw error;
+    }
+  }
+  return req;
+}
+function isAuthRequest(method, pathname) {
+  return method === "PATCH" && // https://docs.github.com/en/rest/apps/apps?apiVersion=2022-11-28#create-a-scoped-access-token
+  /^\/applications\/[^/]+\/token\/scoped$/.test(pathname) || method === "POST" && // https://docs.github.com/en/rest/apps/oauth-applications?apiVersion=2022-11-28#reset-a-token
+  (/^\/applications\/[^/]+\/token$/.test(pathname) || // https://docs.github.com/en/rest/apps/apps?apiVersion=2022-11-28#create-an-installation-access-token-for-an-app
+  /^\/app\/installations\/[^/]+\/access_tokens$/.test(pathname) || // https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps
+  pathname === "/login/oauth/access_token");
+}
+
+// pkg/dist-src/generated/triggers-notification-paths.js
+var triggers_notification_paths_default = [
+  "/orgs/{org}/invitations",
+  "/orgs/{org}/invitations/{invitation_id}",
+  "/orgs/{org}/teams/{team_slug}/discussions",
+  "/orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments",
+  "/repos/{owner}/{repo}/collaborators/{username}",
+  "/repos/{owner}/{repo}/commits/{commit_sha}/comments",
+  "/repos/{owner}/{repo}/issues",
+  "/repos/{owner}/{repo}/issues/{issue_number}/comments",
+  "/repos/{owner}/{repo}/issues/{issue_number}/sub_issue",
+  "/repos/{owner}/{repo}/issues/{issue_number}/sub_issues/priority",
+  "/repos/{owner}/{repo}/pulls",
+  "/repos/{owner}/{repo}/pulls/{pull_number}/comments",
+  "/repos/{owner}/{repo}/pulls/{pull_number}/comments/{comment_id}/replies",
+  "/repos/{owner}/{repo}/pulls/{pull_number}/merge",
+  "/repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers",
+  "/repos/{owner}/{repo}/pulls/{pull_number}/reviews",
+  "/repos/{owner}/{repo}/releases",
+  "/teams/{team_id}/discussions",
+  "/teams/{team_id}/discussions/{discussion_number}/comments"
+];
+
+// pkg/dist-src/route-matcher.js
+function routeMatcher(paths) {
+  const regexes = paths.map(
+    (path) => path.split("/").map((c) => c.startsWith("{") ? "(?:.+?)" : c).join("/")
+  );
+  const regex2 = `^(?:${regexes.map((r) => `(?:${r})`).join("|")})[^/]*$`;
+  return new RegExp(regex2, "i");
+}
+
+// pkg/dist-src/index.js
+var dist_bundle_regex = routeMatcher(triggers_notification_paths_default);
+var triggersNotification = dist_bundle_regex.test.bind(dist_bundle_regex);
+var groups = {};
+var createGroups = function(Bottleneck, common) {
+  groups.global = new Bottleneck.Group({
+    id: "octokit-global",
+    maxConcurrent: 10,
+    ...common
+  });
+  groups.auth = new Bottleneck.Group({
+    id: "octokit-auth",
+    maxConcurrent: 1,
+    ...common
+  });
+  groups.search = new Bottleneck.Group({
+    id: "octokit-search",
+    maxConcurrent: 1,
+    minTime: 2e3,
+    ...common
+  });
+  groups.write = new Bottleneck.Group({
+    id: "octokit-write",
+    maxConcurrent: 1,
+    minTime: 1e3,
+    ...common
+  });
+  groups.notifications = new Bottleneck.Group({
+    id: "octokit-notifications",
+    maxConcurrent: 1,
+    minTime: 3e3,
+    ...common
+  });
+};
+function throttling(octokit, octokitOptions) {
+  const {
+    enabled = true,
+    Bottleneck = light,
+    id = "no-id",
+    timeout = 1e3 * 60 * 2,
+    // Redis TTL: 2 minutes
+    connection
+  } = octokitOptions.throttle || {};
+  if (!enabled) {
+    return {};
+  }
+  const common = { timeout };
+  if (typeof connection !== "undefined") {
+    common.connection = connection;
+  }
+  if (groups.global == null) {
+    createGroups(Bottleneck, common);
+  }
+  const state = Object.assign(
+    {
+      clustering: connection != null,
+      triggersNotification,
+      fallbackSecondaryRateRetryAfter: 60,
+      retryAfterBaseValue: 1e3,
+      retryLimiter: new Bottleneck(),
+      id,
+      ...groups
+    },
+    octokitOptions.throttle
+  );
+  if (typeof state.onSecondaryRateLimit !== "function" || typeof state.onRateLimit !== "function") {
+    throw new Error(`octokit/plugin-throttling error:
+        You must pass the onSecondaryRateLimit and onRateLimit error handlers.
+        See https://octokit.github.io/rest.js/#throttling
+
+        const octokit = new Octokit({
+          throttle: {
+            onSecondaryRateLimit: (retryAfter, options) => {/* ... */},
+            onRateLimit: (retryAfter, options) => {/* ... */}
+          }
+        })
+    `);
+  }
+  const events = {};
+  const emitter = new Bottleneck.Events(events);
+  events.on("secondary-limit", state.onSecondaryRateLimit);
+  events.on("rate-limit", state.onRateLimit);
+  events.on(
+    "error",
+    (e) => octokit.log.warn("Error in throttling-plugin limit handler", e)
+  );
+  state.retryLimiter.on("failed", async function(error, info) {
+    const [state2, request, options] = info.args;
+    const { pathname } = new URL(options.url, "http://github.test");
+    const shouldRetryGraphQL = pathname.startsWith("/graphql") && error.status !== 401;
+    if (!(shouldRetryGraphQL || error.status === 403 || error.status === 429)) {
+      return;
+    }
+    const retryCount = ~~request.retryCount;
+    request.retryCount = retryCount;
+    options.request.retryCount = retryCount;
+    const { wantRetry, retryAfter = 0 } = await async function() {
+      if (/\bsecondary rate\b/i.test(error.message)) {
+        const retryAfter2 = Number(error.response.headers["retry-after"]) || state2.fallbackSecondaryRateRetryAfter;
+        const wantRetry2 = await emitter.trigger(
+          "secondary-limit",
+          retryAfter2,
+          options,
+          octokit,
+          retryCount
+        );
+        return { wantRetry: wantRetry2, retryAfter: retryAfter2 };
+      }
+      if (error.response.headers != null && error.response.headers["x-ratelimit-remaining"] === "0" || (error.response.data?.errors ?? []).some(
+        (error2) => error2.type === "RATE_LIMITED"
+      )) {
+        const rateLimitReset = new Date(
+          ~~error.response.headers["x-ratelimit-reset"] * 1e3
+        ).getTime();
+        const retryAfter2 = Math.max(
+          // Add one second so we retry _after_ the reset time
+          // https://docs.github.com/en/rest/overview/resources-in-the-rest-api?apiVersion=2022-11-28#exceeding-the-rate-limit
+          Math.ceil((rateLimitReset - Date.now()) / 1e3) + 1,
+          0
+        );
+        const wantRetry2 = await emitter.trigger(
+          "rate-limit",
+          retryAfter2,
+          options,
+          octokit,
+          retryCount
+        );
+        return { wantRetry: wantRetry2, retryAfter: retryAfter2 };
+      }
+      return {};
+    }();
+    if (wantRetry) {
+      request.retryCount++;
+      return retryAfter * state2.retryAfterBaseValue;
+    }
+  });
+  octokit.hook.wrap("request", dist_bundle_wrapRequest.bind(null, state));
+  return {};
+}
+throttling.VERSION = dist_bundle_VERSION;
+throttling.triggersNotification = triggersNotification;
+
+
+;// CONCATENATED MODULE: ../../../node_modules/universal-user-agent/index.js
+function getUserAgent() {
+  if (typeof navigator === "object" && "userAgent" in navigator) {
+    return navigator.userAgent;
+  }
+
+  if (typeof process === "object" && process.version !== undefined) {
+    return `Node.js/${process.version.substr(1)} (${process.platform}; ${
+      process.arch
+    })`;
+  }
+
+  return "<environment undetectable>";
+}
+
+;// CONCATENATED MODULE: ../../../node_modules/before-after-hook/lib/register.js
+// @ts-check
+
+function register(state, name, method, options) {
+  if (typeof method !== "function") {
+    throw new Error("method for before hook must be a function");
+  }
+
+  if (!options) {
+    options = {};
+  }
+
+  if (Array.isArray(name)) {
+    return name.reverse().reduce((callback, name) => {
+      return register.bind(null, state, name, callback, options);
+    }, method)();
+  }
+
+  return Promise.resolve().then(() => {
+    if (!state.registry[name]) {
+      return method(options);
+    }
+
+    return state.registry[name].reduce((method, registered) => {
+      return registered.hook.bind(null, method, options);
+    }, method)();
+  });
+}
+
+;// CONCATENATED MODULE: ../../../node_modules/before-after-hook/lib/add.js
+// @ts-check
+
+function addHook(state, kind, name, hook) {
+  const orig = hook;
+  if (!state.registry[name]) {
+    state.registry[name] = [];
+  }
+
+  if (kind === "before") {
+    hook = (method, options) => {
+      return Promise.resolve()
+        .then(orig.bind(null, options))
+        .then(method.bind(null, options));
+    };
+  }
+
+  if (kind === "after") {
+    hook = (method, options) => {
+      let result;
+      return Promise.resolve()
+        .then(method.bind(null, options))
+        .then((result_) => {
+          result = result_;
+          return orig(result, options);
+        })
+        .then(() => {
+          return result;
+        });
+    };
+  }
+
+  if (kind === "error") {
+    hook = (method, options) => {
+      return Promise.resolve()
+        .then(method.bind(null, options))
+        .catch((error) => {
+          return orig(error, options);
+        });
+    };
+  }
+
+  state.registry[name].push({
+    hook: hook,
+    orig: orig,
+  });
+}
+
+;// CONCATENATED MODULE: ../../../node_modules/before-after-hook/lib/remove.js
+// @ts-check
+
+function removeHook(state, name, method) {
+  if (!state.registry[name]) {
+    return;
+  }
+
+  const index = state.registry[name]
+    .map((registered) => {
+      return registered.orig;
+    })
+    .indexOf(method);
+
+  if (index === -1) {
+    return;
+  }
+
+  state.registry[name].splice(index, 1);
+}
+
+;// CONCATENATED MODULE: ../../../node_modules/before-after-hook/index.js
+// @ts-check
+
+
+
+
+
+// bind with array of arguments: https://stackoverflow.com/a/21792913
+const bind = Function.bind;
+const bindable = bind.bind(bind);
+
+function bindApi(hook, state, name) {
+  const removeHookRef = bindable(removeHook, null).apply(
+    null,
+    name ? [state, name] : [state]
+  );
+  hook.api = { remove: removeHookRef };
+  hook.remove = removeHookRef;
+  ["before", "error", "after", "wrap"].forEach((kind) => {
+    const args = name ? [state, kind, name] : [state, kind];
+    hook[kind] = hook.api[kind] = bindable(addHook, null).apply(null, args);
+  });
+}
+
+function Singular() {
+  const singularHookName = Symbol("Singular");
+  const singularHookState = {
+    registry: {},
+  };
+  const singularHook = register.bind(null, singularHookState, singularHookName);
+  bindApi(singularHook, singularHookState, singularHookName);
+  return singularHook;
+}
+
+function Collection() {
+  const state = {
+    registry: {},
+  };
+
+  const hook = register.bind(null, state);
+  bindApi(hook, state);
+
+  return hook;
+}
+
+/* harmony default export */ const before_after_hook = ({ Singular, Collection });
+
+;// CONCATENATED MODULE: ../../../node_modules/@octokit/endpoint/dist-bundle/index.js
+// pkg/dist-src/defaults.js
+
+
+// pkg/dist-src/version.js
+var endpoint_dist_bundle_VERSION = "0.0.0-development";
+
+// pkg/dist-src/defaults.js
+var userAgent = `octokit-endpoint.js/${endpoint_dist_bundle_VERSION} ${getUserAgent()}`;
+var DEFAULTS = {
+  method: "GET",
+  baseUrl: "https://api.github.com",
+  headers: {
+    accept: "application/vnd.github.v3+json",
+    "user-agent": userAgent
+  },
+  mediaType: {
+    format: ""
+  }
+};
+
+// pkg/dist-src/util/lowercase-keys.js
+function lowercaseKeys(object) {
+  if (!object) {
+    return {};
+  }
+  return Object.keys(object).reduce((newObj, key) => {
+    newObj[key.toLowerCase()] = object[key];
+    return newObj;
+  }, {});
+}
+
+// pkg/dist-src/util/is-plain-object.js
+function isPlainObject(value) {
+  if (typeof value !== "object" || value === null) return false;
+  if (Object.prototype.toString.call(value) !== "[object Object]") return false;
+  const proto = Object.getPrototypeOf(value);
+  if (proto === null) return true;
+  const Ctor = Object.prototype.hasOwnProperty.call(proto, "constructor") && proto.constructor;
+  return typeof Ctor === "function" && Ctor instanceof Ctor && Function.prototype.call(Ctor) === Function.prototype.call(value);
+}
+
+// pkg/dist-src/util/merge-deep.js
+function mergeDeep(defaults, options) {
+  const result = Object.assign({}, defaults);
+  Object.keys(options).forEach((key) => {
+    if (isPlainObject(options[key])) {
+      if (!(key in defaults)) Object.assign(result, { [key]: options[key] });
+      else result[key] = mergeDeep(defaults[key], options[key]);
+    } else {
+      Object.assign(result, { [key]: options[key] });
+    }
+  });
+  return result;
+}
+
+// pkg/dist-src/util/remove-undefined-properties.js
+function removeUndefinedProperties(obj) {
+  for (const key in obj) {
+    if (obj[key] === void 0) {
+      delete obj[key];
+    }
+  }
+  return obj;
+}
+
+// pkg/dist-src/merge.js
+function merge(defaults, route, options) {
+  if (typeof route === "string") {
+    let [method, url] = route.split(" ");
+    options = Object.assign(url ? { method, url } : { url: method }, options);
+  } else {
+    options = Object.assign({}, route);
+  }
+  options.headers = lowercaseKeys(options.headers);
+  removeUndefinedProperties(options);
+  removeUndefinedProperties(options.headers);
+  const mergedOptions = mergeDeep(defaults || {}, options);
+  if (options.url === "/graphql") {
+    if (defaults && defaults.mediaType.previews?.length) {
+      mergedOptions.mediaType.previews = defaults.mediaType.previews.filter(
+        (preview) => !mergedOptions.mediaType.previews.includes(preview)
+      ).concat(mergedOptions.mediaType.previews);
+    }
+    mergedOptions.mediaType.previews = (mergedOptions.mediaType.previews || []).map((preview) => preview.replace(/-preview/, ""));
+  }
+  return mergedOptions;
+}
+
+// pkg/dist-src/util/add-query-parameters.js
+function addQueryParameters(url, parameters) {
+  const separator = /\?/.test(url) ? "&" : "?";
+  const names = Object.keys(parameters);
+  if (names.length === 0) {
+    return url;
+  }
+  return url + separator + names.map((name) => {
+    if (name === "q") {
+      return "q=" + parameters.q.split("+").map(encodeURIComponent).join("+");
+    }
+    return `${name}=${encodeURIComponent(parameters[name])}`;
+  }).join("&");
+}
+
+// pkg/dist-src/util/extract-url-variable-names.js
+var urlVariableRegex = /\{[^{}}]+\}/g;
+function removeNonChars(variableName) {
+  return variableName.replace(/(?:^\W+)|(?:(?<!\W)\W+$)/g, "").split(/,/);
+}
+function extractUrlVariableNames(url) {
+  const matches = url.match(urlVariableRegex);
+  if (!matches) {
+    return [];
+  }
+  return matches.map(removeNonChars).reduce((a, b) => a.concat(b), []);
+}
+
+// pkg/dist-src/util/omit.js
+function dist_bundle_omit(object, keysToOmit) {
+  const result = { __proto__: null };
+  for (const key of Object.keys(object)) {
+    if (keysToOmit.indexOf(key) === -1) {
+      result[key] = object[key];
+    }
+  }
+  return result;
+}
+
+// pkg/dist-src/util/url-template.js
+function encodeReserved(str) {
+  return str.split(/(%[0-9A-Fa-f]{2})/g).map(function(part) {
+    if (!/%[0-9A-Fa-f]/.test(part)) {
+      part = encodeURI(part).replace(/%5B/g, "[").replace(/%5D/g, "]");
+    }
+    return part;
+  }).join("");
+}
+function encodeUnreserved(str) {
+  return encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
+    return "%" + c.charCodeAt(0).toString(16).toUpperCase();
+  });
+}
+function encodeValue(operator, value, key) {
+  value = operator === "+" || operator === "#" ? encodeReserved(value) : encodeUnreserved(value);
+  if (key) {
+    return encodeUnreserved(key) + "=" + value;
+  } else {
+    return value;
+  }
+}
+function isDefined(value) {
+  return value !== void 0 && value !== null;
+}
+function isKeyOperator(operator) {
+  return operator === ";" || operator === "&" || operator === "?";
+}
+function getValues(context, operator, key, modifier) {
+  var value = context[key], result = [];
+  if (isDefined(value) && value !== "") {
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+      value = value.toString();
+      if (modifier && modifier !== "*") {
+        value = value.substring(0, parseInt(modifier, 10));
+      }
+      result.push(
+        encodeValue(operator, value, isKeyOperator(operator) ? key : "")
+      );
+    } else {
+      if (modifier === "*") {
+        if (Array.isArray(value)) {
+          value.filter(isDefined).forEach(function(value2) {
+            result.push(
+              encodeValue(operator, value2, isKeyOperator(operator) ? key : "")
+            );
+          });
+        } else {
+          Object.keys(value).forEach(function(k) {
+            if (isDefined(value[k])) {
+              result.push(encodeValue(operator, value[k], k));
+            }
+          });
+        }
+      } else {
+        const tmp = [];
+        if (Array.isArray(value)) {
+          value.filter(isDefined).forEach(function(value2) {
+            tmp.push(encodeValue(operator, value2));
+          });
+        } else {
+          Object.keys(value).forEach(function(k) {
+            if (isDefined(value[k])) {
+              tmp.push(encodeUnreserved(k));
+              tmp.push(encodeValue(operator, value[k].toString()));
+            }
+          });
+        }
+        if (isKeyOperator(operator)) {
+          result.push(encodeUnreserved(key) + "=" + tmp.join(","));
+        } else if (tmp.length !== 0) {
+          result.push(tmp.join(","));
+        }
+      }
+    }
+  } else {
+    if (operator === ";") {
+      if (isDefined(value)) {
+        result.push(encodeUnreserved(key));
+      }
+    } else if (value === "" && (operator === "&" || operator === "?")) {
+      result.push(encodeUnreserved(key) + "=");
+    } else if (value === "") {
+      result.push("");
+    }
+  }
+  return result;
+}
+function parseUrl(template) {
+  return {
+    expand: expand.bind(null, template)
+  };
+}
+function expand(template, context) {
+  var operators = ["+", "#", ".", "/", ";", "?", "&"];
+  template = template.replace(
+    /\{([^\{\}]+)\}|([^\{\}]+)/g,
+    function(_, expression, literal) {
+      if (expression) {
+        let operator = "";
+        const values = [];
+        if (operators.indexOf(expression.charAt(0)) !== -1) {
+          operator = expression.charAt(0);
+          expression = expression.substr(1);
+        }
+        expression.split(/,/g).forEach(function(variable) {
+          var tmp = /([^:\*]*)(?::(\d+)|(\*))?/.exec(variable);
+          values.push(getValues(context, operator, tmp[1], tmp[2] || tmp[3]));
+        });
+        if (operator && operator !== "+") {
+          var separator = ",";
+          if (operator === "?") {
+            separator = "&";
+          } else if (operator !== "#") {
+            separator = operator;
+          }
+          return (values.length !== 0 ? operator : "") + values.join(separator);
+        } else {
+          return values.join(",");
+        }
+      } else {
+        return encodeReserved(literal);
+      }
+    }
+  );
+  if (template === "/") {
+    return template;
+  } else {
+    return template.replace(/\/$/, "");
+  }
+}
+
+// pkg/dist-src/parse.js
+function dist_bundle_parse(options) {
+  let method = options.method.toUpperCase();
+  let url = (options.url || "/").replace(/:([a-z]\w+)/g, "{$1}");
+  let headers = Object.assign({}, options.headers);
+  let body;
+  let parameters = dist_bundle_omit(options, [
+    "method",
+    "baseUrl",
+    "url",
+    "headers",
+    "request",
+    "mediaType"
+  ]);
+  const urlVariableNames = extractUrlVariableNames(url);
+  url = parseUrl(url).expand(parameters);
+  if (!/^http/.test(url)) {
+    url = options.baseUrl + url;
+  }
+  const omittedParameters = Object.keys(options).filter((option) => urlVariableNames.includes(option)).concat("baseUrl");
+  const remainingParameters = dist_bundle_omit(parameters, omittedParameters);
+  const isBinaryRequest = /application\/octet-stream/i.test(headers.accept);
+  if (!isBinaryRequest) {
+    if (options.mediaType.format) {
+      headers.accept = headers.accept.split(/,/).map(
+        (format) => format.replace(
+          /application\/vnd(\.\w+)(\.v3)?(\.\w+)?(\+json)?$/,
+          `application/vnd$1$2.${options.mediaType.format}`
+        )
+      ).join(",");
+    }
+    if (url.endsWith("/graphql")) {
+      if (options.mediaType.previews?.length) {
+        const previewsFromAcceptHeader = headers.accept.match(/(?<![\w-])[\w-]+(?=-preview)/g) || [];
+        headers.accept = previewsFromAcceptHeader.concat(options.mediaType.previews).map((preview) => {
+          const format = options.mediaType.format ? `.${options.mediaType.format}` : "+json";
+          return `application/vnd.github.${preview}-preview${format}`;
+        }).join(",");
+      }
+    }
+  }
+  if (["GET", "HEAD"].includes(method)) {
+    url = addQueryParameters(url, remainingParameters);
+  } else {
+    if ("data" in remainingParameters) {
+      body = remainingParameters.data;
+    } else {
+      if (Object.keys(remainingParameters).length) {
+        body = remainingParameters;
+      }
+    }
+  }
+  if (!headers["content-type"] && typeof body !== "undefined") {
+    headers["content-type"] = "application/json; charset=utf-8";
+  }
+  if (["PATCH", "PUT"].includes(method) && typeof body === "undefined") {
+    body = "";
+  }
+  return Object.assign(
+    { method, url, headers },
+    typeof body !== "undefined" ? { body } : null,
+    options.request ? { request: options.request } : null
+  );
+}
+
+// pkg/dist-src/endpoint-with-defaults.js
+function endpointWithDefaults(defaults, route, options) {
+  return dist_bundle_parse(merge(defaults, route, options));
+}
+
+// pkg/dist-src/with-defaults.js
+function withDefaults(oldDefaults, newDefaults) {
+  const DEFAULTS2 = merge(oldDefaults, newDefaults);
+  const endpoint2 = endpointWithDefaults.bind(null, DEFAULTS2);
+  return Object.assign(endpoint2, {
+    DEFAULTS: DEFAULTS2,
+    defaults: withDefaults.bind(null, DEFAULTS2),
+    merge: merge.bind(null, DEFAULTS2),
+    parse: dist_bundle_parse
+  });
+}
+
+// pkg/dist-src/index.js
+var endpoint = withDefaults(null, DEFAULTS);
+
+
+// EXTERNAL MODULE: ../../../node_modules/fast-content-type-parse/index.js
+var fast_content_type_parse = __nccwpck_require__(1654);
+;// CONCATENATED MODULE: ../../../node_modules/@octokit/request/dist-bundle/index.js
+// pkg/dist-src/index.js
+
+
+// pkg/dist-src/defaults.js
+
+
+// pkg/dist-src/version.js
+var request_dist_bundle_VERSION = "10.0.3";
+
+// pkg/dist-src/defaults.js
+var defaults_default = {
+  headers: {
+    "user-agent": `octokit-request.js/${request_dist_bundle_VERSION} ${getUserAgent()}`
+  }
+};
+
+// pkg/dist-src/fetch-wrapper.js
+
+
+// pkg/dist-src/is-plain-object.js
+function dist_bundle_isPlainObject(value) {
+  if (typeof value !== "object" || value === null) return false;
+  if (Object.prototype.toString.call(value) !== "[object Object]") return false;
+  const proto = Object.getPrototypeOf(value);
+  if (proto === null) return true;
+  const Ctor = Object.prototype.hasOwnProperty.call(proto, "constructor") && proto.constructor;
+  return typeof Ctor === "function" && Ctor instanceof Ctor && Function.prototype.call(Ctor) === Function.prototype.call(value);
+}
+
+// pkg/dist-src/fetch-wrapper.js
+
+async function fetchWrapper(requestOptions) {
+  const fetch = requestOptions.request?.fetch || globalThis.fetch;
+  if (!fetch) {
+    throw new Error(
+      "fetch is not set. Please pass a fetch implementation as new Octokit({ request: { fetch }}). Learn more at https://github.com/octokit/octokit.js/#fetch-missing"
+    );
+  }
+  const log = requestOptions.request?.log || console;
+  const parseSuccessResponseBody = requestOptions.request?.parseSuccessResponseBody !== false;
+  const body = dist_bundle_isPlainObject(requestOptions.body) || Array.isArray(requestOptions.body) ? JSON.stringify(requestOptions.body) : requestOptions.body;
+  const requestHeaders = Object.fromEntries(
+    Object.entries(requestOptions.headers).map(([name, value]) => [
+      name,
+      String(value)
+    ])
+  );
+  let fetchResponse;
+  try {
+    fetchResponse = await fetch(requestOptions.url, {
+      method: requestOptions.method,
+      body,
+      redirect: requestOptions.request?.redirect,
+      headers: requestHeaders,
+      signal: requestOptions.request?.signal,
+      // duplex must be set if request.body is ReadableStream or Async Iterables.
+      // See https://fetch.spec.whatwg.org/#dom-requestinit-duplex.
+      ...requestOptions.body && { duplex: "half" }
+    });
+  } catch (error) {
+    let message = "Unknown Error";
+    if (error instanceof Error) {
+      if (error.name === "AbortError") {
+        error.status = 500;
+        throw error;
+      }
+      message = error.message;
+      if (error.name === "TypeError" && "cause" in error) {
+        if (error.cause instanceof Error) {
+          message = error.cause.message;
+        } else if (typeof error.cause === "string") {
+          message = error.cause;
+        }
+      }
+    }
+    const requestError = new RequestError(message, 500, {
+      request: requestOptions
+    });
+    requestError.cause = error;
+    throw requestError;
+  }
+  const status = fetchResponse.status;
+  const url = fetchResponse.url;
+  const responseHeaders = {};
+  for (const [key, value] of fetchResponse.headers) {
+    responseHeaders[key] = value;
+  }
+  const octokitResponse = {
+    url,
+    status,
+    headers: responseHeaders,
+    data: ""
+  };
+  if ("deprecation" in responseHeaders) {
+    const matches = responseHeaders.link && responseHeaders.link.match(/<([^<>]+)>; rel="deprecation"/);
+    const deprecationLink = matches && matches.pop();
+    log.warn(
+      `[@octokit/request] "${requestOptions.method} ${requestOptions.url}" is deprecated. It is scheduled to be removed on ${responseHeaders.sunset}${deprecationLink ? `. See ${deprecationLink}` : ""}`
+    );
+  }
+  if (status === 204 || status === 205) {
+    return octokitResponse;
+  }
+  if (requestOptions.method === "HEAD") {
+    if (status < 400) {
+      return octokitResponse;
+    }
+    throw new RequestError(fetchResponse.statusText, status, {
+      response: octokitResponse,
+      request: requestOptions
+    });
+  }
+  if (status === 304) {
+    octokitResponse.data = await getResponseData(fetchResponse);
+    throw new RequestError("Not modified", status, {
+      response: octokitResponse,
+      request: requestOptions
+    });
+  }
+  if (status >= 400) {
+    octokitResponse.data = await getResponseData(fetchResponse);
+    throw new RequestError(toErrorMessage(octokitResponse.data), status, {
+      response: octokitResponse,
+      request: requestOptions
+    });
+  }
+  octokitResponse.data = parseSuccessResponseBody ? await getResponseData(fetchResponse) : fetchResponse.body;
+  return octokitResponse;
+}
+async function getResponseData(response) {
+  const contentType = response.headers.get("content-type");
+  if (!contentType) {
+    return response.text().catch(() => "");
+  }
+  const mimetype = (0,fast_content_type_parse/* safeParse */.xL)(contentType);
+  if (isJSONResponse(mimetype)) {
+    let text = "";
     try {
-        const branch = (await git(["rev-parse", "--abbrev-ref", "HEAD"])).trim();
-        // 1) Check exclusion
-        if (isExcluded(branch, excludeGlob)) {
+      text = await response.text();
+      return JSON.parse(text);
+    } catch (err) {
+      return text;
+    }
+  } else if (mimetype.type.startsWith("text/") || mimetype.parameters.charset?.toLowerCase() === "utf-8") {
+    return response.text().catch(() => "");
+  } else {
+    return response.arrayBuffer().catch(() => new ArrayBuffer(0));
+  }
+}
+function isJSONResponse(mimetype) {
+  return mimetype.type === "application/json" || mimetype.type === "application/scim+json";
+}
+function toErrorMessage(data) {
+  if (typeof data === "string") {
+    return data;
+  }
+  if (data instanceof ArrayBuffer) {
+    return "Unknown error";
+  }
+  if ("message" in data) {
+    const suffix = "documentation_url" in data ? ` - ${data.documentation_url}` : "";
+    return Array.isArray(data.errors) ? `${data.message}: ${data.errors.map((v) => JSON.stringify(v)).join(", ")}${suffix}` : `${data.message}${suffix}`;
+  }
+  return `Unknown error: ${JSON.stringify(data)}`;
+}
+
+// pkg/dist-src/with-defaults.js
+function dist_bundle_withDefaults(oldEndpoint, newDefaults) {
+  const endpoint2 = oldEndpoint.defaults(newDefaults);
+  const newApi = function(route, parameters) {
+    const endpointOptions = endpoint2.merge(route, parameters);
+    if (!endpointOptions.request || !endpointOptions.request.hook) {
+      return fetchWrapper(endpoint2.parse(endpointOptions));
+    }
+    const request2 = (route2, parameters2) => {
+      return fetchWrapper(
+        endpoint2.parse(endpoint2.merge(route2, parameters2))
+      );
+    };
+    Object.assign(request2, {
+      endpoint: endpoint2,
+      defaults: dist_bundle_withDefaults.bind(null, endpoint2)
+    });
+    return endpointOptions.request.hook(request2, endpointOptions);
+  };
+  return Object.assign(newApi, {
+    endpoint: endpoint2,
+    defaults: dist_bundle_withDefaults.bind(null, endpoint2)
+  });
+}
+
+// pkg/dist-src/index.js
+var dist_bundle_request = dist_bundle_withDefaults(endpoint, defaults_default);
+
+
+;// CONCATENATED MODULE: ../../../node_modules/@octokit/graphql/dist-bundle/index.js
+// pkg/dist-src/index.js
+
+
+
+// pkg/dist-src/version.js
+var graphql_dist_bundle_VERSION = "0.0.0-development";
+
+// pkg/dist-src/with-defaults.js
+
+
+// pkg/dist-src/graphql.js
+
+
+// pkg/dist-src/error.js
+function _buildMessageForResponseErrors(data) {
+  return `Request failed due to following response errors:
+` + data.errors.map((e) => ` - ${e.message}`).join("\n");
+}
+var GraphqlResponseError = class extends Error {
+  constructor(request2, headers, response) {
+    super(_buildMessageForResponseErrors(response));
+    this.request = request2;
+    this.headers = headers;
+    this.response = response;
+    this.errors = response.errors;
+    this.data = response.data;
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, this.constructor);
+    }
+  }
+  name = "GraphqlResponseError";
+  errors;
+  data;
+};
+
+// pkg/dist-src/graphql.js
+var NON_VARIABLE_OPTIONS = [
+  "method",
+  "baseUrl",
+  "url",
+  "headers",
+  "request",
+  "query",
+  "mediaType",
+  "operationName"
+];
+var FORBIDDEN_VARIABLE_OPTIONS = ["query", "method", "url"];
+var GHES_V3_SUFFIX_REGEX = /\/api\/v3\/?$/;
+function graphql(request2, query, options) {
+  if (options) {
+    if (typeof query === "string" && "query" in options) {
+      return Promise.reject(
+        new Error(`[@octokit/graphql] "query" cannot be used as variable name`)
+      );
+    }
+    for (const key in options) {
+      if (!FORBIDDEN_VARIABLE_OPTIONS.includes(key)) continue;
+      return Promise.reject(
+        new Error(
+          `[@octokit/graphql] "${key}" cannot be used as variable name`
+        )
+      );
+    }
+  }
+  const parsedOptions = typeof query === "string" ? Object.assign({ query }, options) : query;
+  const requestOptions = Object.keys(
+    parsedOptions
+  ).reduce((result, key) => {
+    if (NON_VARIABLE_OPTIONS.includes(key)) {
+      result[key] = parsedOptions[key];
+      return result;
+    }
+    if (!result.variables) {
+      result.variables = {};
+    }
+    result.variables[key] = parsedOptions[key];
+    return result;
+  }, {});
+  const baseUrl = parsedOptions.baseUrl || request2.endpoint.DEFAULTS.baseUrl;
+  if (GHES_V3_SUFFIX_REGEX.test(baseUrl)) {
+    requestOptions.url = baseUrl.replace(GHES_V3_SUFFIX_REGEX, "/api/graphql");
+  }
+  return request2(requestOptions).then((response) => {
+    if (response.data.errors) {
+      const headers = {};
+      for (const key of Object.keys(response.headers)) {
+        headers[key] = response.headers[key];
+      }
+      throw new GraphqlResponseError(
+        requestOptions,
+        headers,
+        response.data
+      );
+    }
+    return response.data.data;
+  });
+}
+
+// pkg/dist-src/with-defaults.js
+function graphql_dist_bundle_withDefaults(request2, newDefaults) {
+  const newRequest = request2.defaults(newDefaults);
+  const newApi = (query, options) => {
+    return graphql(newRequest, query, options);
+  };
+  return Object.assign(newApi, {
+    defaults: graphql_dist_bundle_withDefaults.bind(null, newRequest),
+    endpoint: newRequest.endpoint
+  });
+}
+
+// pkg/dist-src/index.js
+var graphql2 = graphql_dist_bundle_withDefaults(dist_bundle_request, {
+  headers: {
+    "user-agent": `octokit-graphql.js/${graphql_dist_bundle_VERSION} ${getUserAgent()}`
+  },
+  method: "POST",
+  url: "/graphql"
+});
+function withCustomRequest(customRequest) {
+  return graphql_dist_bundle_withDefaults(customRequest, {
+    method: "POST",
+    url: "/graphql"
+  });
+}
+
+
+;// CONCATENATED MODULE: ../../../node_modules/@octokit/auth-token/dist-bundle/index.js
+// pkg/dist-src/is-jwt.js
+var b64url = "(?:[a-zA-Z0-9_-]+)";
+var sep = "\\.";
+var jwtRE = new RegExp(`^${b64url}${sep}${b64url}${sep}${b64url}$`);
+var isJWT = jwtRE.test.bind(jwtRE);
+
+// pkg/dist-src/auth.js
+async function auth(token) {
+  const isApp = isJWT(token);
+  const isInstallation = token.startsWith("v1.") || token.startsWith("ghs_");
+  const isUserToServer = token.startsWith("ghu_");
+  const tokenType = isApp ? "app" : isInstallation ? "installation" : isUserToServer ? "user-to-server" : "oauth";
+  return {
+    type: "token",
+    token,
+    tokenType
+  };
+}
+
+// pkg/dist-src/with-authorization-prefix.js
+function withAuthorizationPrefix(token) {
+  if (token.split(/\./).length === 3) {
+    return `bearer ${token}`;
+  }
+  return `token ${token}`;
+}
+
+// pkg/dist-src/hook.js
+async function hook(token, request, route, parameters) {
+  const endpoint = request.endpoint.merge(
+    route,
+    parameters
+  );
+  endpoint.headers.authorization = withAuthorizationPrefix(token);
+  return request(endpoint);
+}
+
+// pkg/dist-src/index.js
+var createTokenAuth = function createTokenAuth2(token) {
+  if (!token) {
+    throw new Error("[@octokit/auth-token] No token passed to createTokenAuth");
+  }
+  if (typeof token !== "string") {
+    throw new Error(
+      "[@octokit/auth-token] Token passed to createTokenAuth is not a string"
+    );
+  }
+  token = token.replace(/^(token|bearer) +/i, "");
+  return Object.assign(auth.bind(null, token), {
+    hook: hook.bind(null, token)
+  });
+};
+
+
+;// CONCATENATED MODULE: ../../../node_modules/@octokit/core/dist-src/version.js
+const version_VERSION = "7.0.3";
+
+
+;// CONCATENATED MODULE: ../../../node_modules/@octokit/core/dist-src/index.js
+
+
+
+
+
+
+const dist_src_noop = () => {
+};
+const consoleWarn = console.warn.bind(console);
+const consoleError = console.error.bind(console);
+function createLogger(logger = {}) {
+  if (typeof logger.debug !== "function") {
+    logger.debug = dist_src_noop;
+  }
+  if (typeof logger.info !== "function") {
+    logger.info = dist_src_noop;
+  }
+  if (typeof logger.warn !== "function") {
+    logger.warn = consoleWarn;
+  }
+  if (typeof logger.error !== "function") {
+    logger.error = consoleError;
+  }
+  return logger;
+}
+const userAgentTrail = `octokit-core.js/${version_VERSION} ${getUserAgent()}`;
+class dist_src_Octokit {
+  static VERSION = version_VERSION;
+  static defaults(defaults) {
+    const OctokitWithDefaults = class extends this {
+      constructor(...args) {
+        const options = args[0] || {};
+        if (typeof defaults === "function") {
+          super(defaults(options));
+          return;
+        }
+        super(
+          Object.assign(
+            {},
+            defaults,
+            options,
+            options.userAgent && defaults.userAgent ? {
+              userAgent: `${options.userAgent} ${defaults.userAgent}`
+            } : null
+          )
+        );
+      }
+    };
+    return OctokitWithDefaults;
+  }
+  static plugins = [];
+  /**
+   * Attach a plugin (or many) to your Octokit instance.
+   *
+   * @example
+   * const API = Octokit.plugin(plugin1, plugin2, plugin3, ...)
+   */
+  static plugin(...newPlugins) {
+    const currentPlugins = this.plugins;
+    const NewOctokit = class extends this {
+      static plugins = currentPlugins.concat(
+        newPlugins.filter((plugin) => !currentPlugins.includes(plugin))
+      );
+    };
+    return NewOctokit;
+  }
+  constructor(options = {}) {
+    const hook = new before_after_hook.Collection();
+    const requestDefaults = {
+      baseUrl: dist_bundle_request.endpoint.DEFAULTS.baseUrl,
+      headers: {},
+      request: Object.assign({}, options.request, {
+        // @ts-ignore internal usage only, no need to type
+        hook: hook.bind(null, "request")
+      }),
+      mediaType: {
+        previews: [],
+        format: ""
+      }
+    };
+    requestDefaults.headers["user-agent"] = options.userAgent ? `${options.userAgent} ${userAgentTrail}` : userAgentTrail;
+    if (options.baseUrl) {
+      requestDefaults.baseUrl = options.baseUrl;
+    }
+    if (options.previews) {
+      requestDefaults.mediaType.previews = options.previews;
+    }
+    if (options.timeZone) {
+      requestDefaults.headers["time-zone"] = options.timeZone;
+    }
+    this.request = dist_bundle_request.defaults(requestDefaults);
+    this.graphql = withCustomRequest(this.request).defaults(requestDefaults);
+    this.log = createLogger(options.log);
+    this.hook = hook;
+    if (!options.authStrategy) {
+      if (!options.auth) {
+        this.auth = async () => ({
+          type: "unauthenticated"
+        });
+      } else {
+        const auth = createTokenAuth(options.auth);
+        hook.wrap("request", auth.hook);
+        this.auth = auth;
+      }
+    } else {
+      const { authStrategy, ...otherOptions } = options;
+      const auth = authStrategy(
+        Object.assign(
+          {
+            request: this.request,
+            log: this.log,
+            // we pass the current octokit instance as well as its constructor options
+            // to allow for authentication strategies that return a new octokit instance
+            // that shares the same internal state as the current one. The original
+            // requirement for this was the "event-octokit" authentication strategy
+            // of https://github.com/probot/octokit-auth-probot.
+            octokit: this,
+            octokitOptions: otherOptions
+          },
+          options.auth
+        )
+      );
+      hook.wrap("request", auth.hook);
+      this.auth = auth;
+    }
+    const classConstructor = this.constructor;
+    for (let i = 0; i < classConstructor.plugins.length; ++i) {
+      Object.assign(this, classConstructor.plugins[i](this, options));
+    }
+  }
+  // assigned during constructor
+  request;
+  graphql;
+  log;
+  hook;
+  // TODO: type `octokit.auth` based on passed options.authStrategy
+  auth;
+}
+
+
+;// CONCATENATED MODULE: ../../../node_modules/@octokit/plugin-paginate-rest/dist-bundle/index.js
+// pkg/dist-src/version.js
+var plugin_paginate_rest_dist_bundle_VERSION = "0.0.0-development";
+
+// pkg/dist-src/normalize-paginated-list-response.js
+function normalizePaginatedListResponse(response) {
+  if (!response.data) {
+    return {
+      ...response,
+      data: []
+    };
+  }
+  const responseNeedsNormalization = ("total_count" in response.data || "total_commits" in response.data) && !("url" in response.data);
+  if (!responseNeedsNormalization) return response;
+  const incompleteResults = response.data.incomplete_results;
+  const repositorySelection = response.data.repository_selection;
+  const totalCount = response.data.total_count;
+  const totalCommits = response.data.total_commits;
+  delete response.data.incomplete_results;
+  delete response.data.repository_selection;
+  delete response.data.total_count;
+  delete response.data.total_commits;
+  const namespaceKey = Object.keys(response.data)[0];
+  const data = response.data[namespaceKey];
+  response.data = data;
+  if (typeof incompleteResults !== "undefined") {
+    response.data.incomplete_results = incompleteResults;
+  }
+  if (typeof repositorySelection !== "undefined") {
+    response.data.repository_selection = repositorySelection;
+  }
+  response.data.total_count = totalCount;
+  response.data.total_commits = totalCommits;
+  return response;
+}
+
+// pkg/dist-src/iterator.js
+function iterator(octokit, route, parameters) {
+  const options = typeof route === "function" ? route.endpoint(parameters) : octokit.request.endpoint(route, parameters);
+  const requestMethod = typeof route === "function" ? route : octokit.request;
+  const method = options.method;
+  const headers = options.headers;
+  let url = options.url;
+  return {
+    [Symbol.asyncIterator]: () => ({
+      async next() {
+        if (!url) return { done: true };
+        try {
+          const response = await requestMethod({ method, url, headers });
+          const normalizedResponse = normalizePaginatedListResponse(response);
+          url = ((normalizedResponse.headers.link || "").match(
+            /<([^<>]+)>;\s*rel="next"/
+          ) || [])[1];
+          if (!url && "total_commits" in normalizedResponse.data) {
+            const parsedUrl = new URL(normalizedResponse.url);
+            const params = parsedUrl.searchParams;
+            const page = parseInt(params.get("page") || "1", 10);
+            const per_page = parseInt(params.get("per_page") || "250", 10);
+            if (page * per_page < normalizedResponse.data.total_commits) {
+              params.set("page", String(page + 1));
+              url = parsedUrl.toString();
+            }
+          }
+          return { value: normalizedResponse };
+        } catch (error) {
+          if (error.status !== 409) throw error;
+          url = "";
+          return {
+            value: {
+              status: 200,
+              headers: {},
+              data: []
+            }
+          };
+        }
+      }
+    })
+  };
+}
+
+// pkg/dist-src/paginate.js
+function paginate(octokit, route, parameters, mapFn) {
+  if (typeof parameters === "function") {
+    mapFn = parameters;
+    parameters = void 0;
+  }
+  return gather(
+    octokit,
+    [],
+    iterator(octokit, route, parameters)[Symbol.asyncIterator](),
+    mapFn
+  );
+}
+function gather(octokit, results, iterator2, mapFn) {
+  return iterator2.next().then((result) => {
+    if (result.done) {
+      return results;
+    }
+    let earlyExit = false;
+    function done() {
+      earlyExit = true;
+    }
+    results = results.concat(
+      mapFn ? mapFn(result.value, done) : result.value.data
+    );
+    if (earlyExit) {
+      return results;
+    }
+    return gather(octokit, results, iterator2, mapFn);
+  });
+}
+
+// pkg/dist-src/compose-paginate.js
+var composePaginateRest = Object.assign(paginate, {
+  iterator
+});
+
+// pkg/dist-src/generated/paginating-endpoints.js
+var paginatingEndpoints = (/* unused pure expression or super */ null && ([
+  "GET /advisories",
+  "GET /app/hook/deliveries",
+  "GET /app/installation-requests",
+  "GET /app/installations",
+  "GET /assignments/{assignment_id}/accepted_assignments",
+  "GET /classrooms",
+  "GET /classrooms/{classroom_id}/assignments",
+  "GET /enterprises/{enterprise}/code-security/configurations",
+  "GET /enterprises/{enterprise}/code-security/configurations/{configuration_id}/repositories",
+  "GET /enterprises/{enterprise}/dependabot/alerts",
+  "GET /enterprises/{enterprise}/secret-scanning/alerts",
+  "GET /events",
+  "GET /gists",
+  "GET /gists/public",
+  "GET /gists/starred",
+  "GET /gists/{gist_id}/comments",
+  "GET /gists/{gist_id}/commits",
+  "GET /gists/{gist_id}/forks",
+  "GET /installation/repositories",
+  "GET /issues",
+  "GET /licenses",
+  "GET /marketplace_listing/plans",
+  "GET /marketplace_listing/plans/{plan_id}/accounts",
+  "GET /marketplace_listing/stubbed/plans",
+  "GET /marketplace_listing/stubbed/plans/{plan_id}/accounts",
+  "GET /networks/{owner}/{repo}/events",
+  "GET /notifications",
+  "GET /organizations",
+  "GET /orgs/{org}/actions/cache/usage-by-repository",
+  "GET /orgs/{org}/actions/hosted-runners",
+  "GET /orgs/{org}/actions/permissions/repositories",
+  "GET /orgs/{org}/actions/runner-groups",
+  "GET /orgs/{org}/actions/runner-groups/{runner_group_id}/hosted-runners",
+  "GET /orgs/{org}/actions/runner-groups/{runner_group_id}/repositories",
+  "GET /orgs/{org}/actions/runner-groups/{runner_group_id}/runners",
+  "GET /orgs/{org}/actions/runners",
+  "GET /orgs/{org}/actions/secrets",
+  "GET /orgs/{org}/actions/secrets/{secret_name}/repositories",
+  "GET /orgs/{org}/actions/variables",
+  "GET /orgs/{org}/actions/variables/{name}/repositories",
+  "GET /orgs/{org}/attestations/{subject_digest}",
+  "GET /orgs/{org}/blocks",
+  "GET /orgs/{org}/campaigns",
+  "GET /orgs/{org}/code-scanning/alerts",
+  "GET /orgs/{org}/code-security/configurations",
+  "GET /orgs/{org}/code-security/configurations/{configuration_id}/repositories",
+  "GET /orgs/{org}/codespaces",
+  "GET /orgs/{org}/codespaces/secrets",
+  "GET /orgs/{org}/codespaces/secrets/{secret_name}/repositories",
+  "GET /orgs/{org}/copilot/billing/seats",
+  "GET /orgs/{org}/copilot/metrics",
+  "GET /orgs/{org}/dependabot/alerts",
+  "GET /orgs/{org}/dependabot/secrets",
+  "GET /orgs/{org}/dependabot/secrets/{secret_name}/repositories",
+  "GET /orgs/{org}/events",
+  "GET /orgs/{org}/failed_invitations",
+  "GET /orgs/{org}/hooks",
+  "GET /orgs/{org}/hooks/{hook_id}/deliveries",
+  "GET /orgs/{org}/insights/api/route-stats/{actor_type}/{actor_id}",
+  "GET /orgs/{org}/insights/api/subject-stats",
+  "GET /orgs/{org}/insights/api/user-stats/{user_id}",
+  "GET /orgs/{org}/installations",
+  "GET /orgs/{org}/invitations",
+  "GET /orgs/{org}/invitations/{invitation_id}/teams",
+  "GET /orgs/{org}/issues",
+  "GET /orgs/{org}/members",
+  "GET /orgs/{org}/members/{username}/codespaces",
+  "GET /orgs/{org}/migrations",
+  "GET /orgs/{org}/migrations/{migration_id}/repositories",
+  "GET /orgs/{org}/organization-roles/{role_id}/teams",
+  "GET /orgs/{org}/organization-roles/{role_id}/users",
+  "GET /orgs/{org}/outside_collaborators",
+  "GET /orgs/{org}/packages",
+  "GET /orgs/{org}/packages/{package_type}/{package_name}/versions",
+  "GET /orgs/{org}/personal-access-token-requests",
+  "GET /orgs/{org}/personal-access-token-requests/{pat_request_id}/repositories",
+  "GET /orgs/{org}/personal-access-tokens",
+  "GET /orgs/{org}/personal-access-tokens/{pat_id}/repositories",
+  "GET /orgs/{org}/private-registries",
+  "GET /orgs/{org}/projects",
+  "GET /orgs/{org}/properties/values",
+  "GET /orgs/{org}/public_members",
+  "GET /orgs/{org}/repos",
+  "GET /orgs/{org}/rulesets",
+  "GET /orgs/{org}/rulesets/rule-suites",
+  "GET /orgs/{org}/rulesets/{ruleset_id}/history",
+  "GET /orgs/{org}/secret-scanning/alerts",
+  "GET /orgs/{org}/security-advisories",
+  "GET /orgs/{org}/settings/network-configurations",
+  "GET /orgs/{org}/team/{team_slug}/copilot/metrics",
+  "GET /orgs/{org}/teams",
+  "GET /orgs/{org}/teams/{team_slug}/discussions",
+  "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments",
+  "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions",
+  "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions",
+  "GET /orgs/{org}/teams/{team_slug}/invitations",
+  "GET /orgs/{org}/teams/{team_slug}/members",
+  "GET /orgs/{org}/teams/{team_slug}/projects",
+  "GET /orgs/{org}/teams/{team_slug}/repos",
+  "GET /orgs/{org}/teams/{team_slug}/teams",
+  "GET /projects/columns/{column_id}/cards",
+  "GET /projects/{project_id}/collaborators",
+  "GET /projects/{project_id}/columns",
+  "GET /repos/{owner}/{repo}/actions/artifacts",
+  "GET /repos/{owner}/{repo}/actions/caches",
+  "GET /repos/{owner}/{repo}/actions/organization-secrets",
+  "GET /repos/{owner}/{repo}/actions/organization-variables",
+  "GET /repos/{owner}/{repo}/actions/runners",
+  "GET /repos/{owner}/{repo}/actions/runs",
+  "GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts",
+  "GET /repos/{owner}/{repo}/actions/runs/{run_id}/attempts/{attempt_number}/jobs",
+  "GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs",
+  "GET /repos/{owner}/{repo}/actions/secrets",
+  "GET /repos/{owner}/{repo}/actions/variables",
+  "GET /repos/{owner}/{repo}/actions/workflows",
+  "GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs",
+  "GET /repos/{owner}/{repo}/activity",
+  "GET /repos/{owner}/{repo}/assignees",
+  "GET /repos/{owner}/{repo}/attestations/{subject_digest}",
+  "GET /repos/{owner}/{repo}/branches",
+  "GET /repos/{owner}/{repo}/check-runs/{check_run_id}/annotations",
+  "GET /repos/{owner}/{repo}/check-suites/{check_suite_id}/check-runs",
+  "GET /repos/{owner}/{repo}/code-scanning/alerts",
+  "GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}/instances",
+  "GET /repos/{owner}/{repo}/code-scanning/analyses",
+  "GET /repos/{owner}/{repo}/codespaces",
+  "GET /repos/{owner}/{repo}/codespaces/devcontainers",
+  "GET /repos/{owner}/{repo}/codespaces/secrets",
+  "GET /repos/{owner}/{repo}/collaborators",
+  "GET /repos/{owner}/{repo}/comments",
+  "GET /repos/{owner}/{repo}/comments/{comment_id}/reactions",
+  "GET /repos/{owner}/{repo}/commits",
+  "GET /repos/{owner}/{repo}/commits/{commit_sha}/comments",
+  "GET /repos/{owner}/{repo}/commits/{commit_sha}/pulls",
+  "GET /repos/{owner}/{repo}/commits/{ref}/check-runs",
+  "GET /repos/{owner}/{repo}/commits/{ref}/check-suites",
+  "GET /repos/{owner}/{repo}/commits/{ref}/status",
+  "GET /repos/{owner}/{repo}/commits/{ref}/statuses",
+  "GET /repos/{owner}/{repo}/compare/{basehead}",
+  "GET /repos/{owner}/{repo}/compare/{base}...{head}",
+  "GET /repos/{owner}/{repo}/contributors",
+  "GET /repos/{owner}/{repo}/dependabot/alerts",
+  "GET /repos/{owner}/{repo}/dependabot/secrets",
+  "GET /repos/{owner}/{repo}/deployments",
+  "GET /repos/{owner}/{repo}/deployments/{deployment_id}/statuses",
+  "GET /repos/{owner}/{repo}/environments",
+  "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment-branch-policies",
+  "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment_protection_rules/apps",
+  "GET /repos/{owner}/{repo}/environments/{environment_name}/secrets",
+  "GET /repos/{owner}/{repo}/environments/{environment_name}/variables",
+  "GET /repos/{owner}/{repo}/events",
+  "GET /repos/{owner}/{repo}/forks",
+  "GET /repos/{owner}/{repo}/hooks",
+  "GET /repos/{owner}/{repo}/hooks/{hook_id}/deliveries",
+  "GET /repos/{owner}/{repo}/invitations",
+  "GET /repos/{owner}/{repo}/issues",
+  "GET /repos/{owner}/{repo}/issues/comments",
+  "GET /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions",
+  "GET /repos/{owner}/{repo}/issues/events",
+  "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
+  "GET /repos/{owner}/{repo}/issues/{issue_number}/events",
+  "GET /repos/{owner}/{repo}/issues/{issue_number}/labels",
+  "GET /repos/{owner}/{repo}/issues/{issue_number}/reactions",
+  "GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues",
+  "GET /repos/{owner}/{repo}/issues/{issue_number}/timeline",
+  "GET /repos/{owner}/{repo}/keys",
+  "GET /repos/{owner}/{repo}/labels",
+  "GET /repos/{owner}/{repo}/milestones",
+  "GET /repos/{owner}/{repo}/milestones/{milestone_number}/labels",
+  "GET /repos/{owner}/{repo}/notifications",
+  "GET /repos/{owner}/{repo}/pages/builds",
+  "GET /repos/{owner}/{repo}/projects",
+  "GET /repos/{owner}/{repo}/pulls",
+  "GET /repos/{owner}/{repo}/pulls/comments",
+  "GET /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions",
+  "GET /repos/{owner}/{repo}/pulls/{pull_number}/comments",
+  "GET /repos/{owner}/{repo}/pulls/{pull_number}/commits",
+  "GET /repos/{owner}/{repo}/pulls/{pull_number}/files",
+  "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews",
+  "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/comments",
+  "GET /repos/{owner}/{repo}/releases",
+  "GET /repos/{owner}/{repo}/releases/{release_id}/assets",
+  "GET /repos/{owner}/{repo}/releases/{release_id}/reactions",
+  "GET /repos/{owner}/{repo}/rules/branches/{branch}",
+  "GET /repos/{owner}/{repo}/rulesets",
+  "GET /repos/{owner}/{repo}/rulesets/rule-suites",
+  "GET /repos/{owner}/{repo}/rulesets/{ruleset_id}/history",
+  "GET /repos/{owner}/{repo}/secret-scanning/alerts",
+  "GET /repos/{owner}/{repo}/secret-scanning/alerts/{alert_number}/locations",
+  "GET /repos/{owner}/{repo}/security-advisories",
+  "GET /repos/{owner}/{repo}/stargazers",
+  "GET /repos/{owner}/{repo}/subscribers",
+  "GET /repos/{owner}/{repo}/tags",
+  "GET /repos/{owner}/{repo}/teams",
+  "GET /repos/{owner}/{repo}/topics",
+  "GET /repositories",
+  "GET /search/code",
+  "GET /search/commits",
+  "GET /search/issues",
+  "GET /search/labels",
+  "GET /search/repositories",
+  "GET /search/topics",
+  "GET /search/users",
+  "GET /teams/{team_id}/discussions",
+  "GET /teams/{team_id}/discussions/{discussion_number}/comments",
+  "GET /teams/{team_id}/discussions/{discussion_number}/comments/{comment_number}/reactions",
+  "GET /teams/{team_id}/discussions/{discussion_number}/reactions",
+  "GET /teams/{team_id}/invitations",
+  "GET /teams/{team_id}/members",
+  "GET /teams/{team_id}/projects",
+  "GET /teams/{team_id}/repos",
+  "GET /teams/{team_id}/teams",
+  "GET /user/blocks",
+  "GET /user/codespaces",
+  "GET /user/codespaces/secrets",
+  "GET /user/emails",
+  "GET /user/followers",
+  "GET /user/following",
+  "GET /user/gpg_keys",
+  "GET /user/installations",
+  "GET /user/installations/{installation_id}/repositories",
+  "GET /user/issues",
+  "GET /user/keys",
+  "GET /user/marketplace_purchases",
+  "GET /user/marketplace_purchases/stubbed",
+  "GET /user/memberships/orgs",
+  "GET /user/migrations",
+  "GET /user/migrations/{migration_id}/repositories",
+  "GET /user/orgs",
+  "GET /user/packages",
+  "GET /user/packages/{package_type}/{package_name}/versions",
+  "GET /user/public_emails",
+  "GET /user/repos",
+  "GET /user/repository_invitations",
+  "GET /user/social_accounts",
+  "GET /user/ssh_signing_keys",
+  "GET /user/starred",
+  "GET /user/subscriptions",
+  "GET /user/teams",
+  "GET /users",
+  "GET /users/{username}/attestations/{subject_digest}",
+  "GET /users/{username}/events",
+  "GET /users/{username}/events/orgs/{org}",
+  "GET /users/{username}/events/public",
+  "GET /users/{username}/followers",
+  "GET /users/{username}/following",
+  "GET /users/{username}/gists",
+  "GET /users/{username}/gpg_keys",
+  "GET /users/{username}/keys",
+  "GET /users/{username}/orgs",
+  "GET /users/{username}/packages",
+  "GET /users/{username}/projects",
+  "GET /users/{username}/received_events",
+  "GET /users/{username}/received_events/public",
+  "GET /users/{username}/repos",
+  "GET /users/{username}/social_accounts",
+  "GET /users/{username}/ssh_signing_keys",
+  "GET /users/{username}/starred",
+  "GET /users/{username}/subscriptions"
+]));
+
+// pkg/dist-src/paginating-endpoints.js
+function isPaginatingEndpoint(arg) {
+  if (typeof arg === "string") {
+    return paginatingEndpoints.includes(arg);
+  } else {
+    return false;
+  }
+}
+
+// pkg/dist-src/index.js
+function paginateRest(octokit) {
+  return {
+    paginate: Object.assign(paginate.bind(null, octokit), {
+      iterator: iterator.bind(null, octokit)
+    })
+  };
+}
+paginateRest.VERSION = plugin_paginate_rest_dist_bundle_VERSION;
+
+
+;// CONCATENATED MODULE: ../../../node_modules/@octokit/plugin-paginate-graphql/dist-bundle/index.js
+// pkg/dist-src/errors.js
+var generateMessage = (path, cursorValue) => `The cursor at "${path.join(
+  ","
+)}" did not change its value "${cursorValue}" after a page transition. Please make sure your that your query is set up correctly.`;
+var MissingCursorChange = class extends Error {
+  constructor(pageInfo, cursorValue) {
+    super(generateMessage(pageInfo.pathInQuery, cursorValue));
+    this.pageInfo = pageInfo;
+    this.cursorValue = cursorValue;
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, this.constructor);
+    }
+  }
+  name = "MissingCursorChangeError";
+};
+var MissingPageInfo = class extends Error {
+  constructor(response) {
+    super(
+      `No pageInfo property found in response. Please make sure to specify the pageInfo in your query. Response-Data: ${JSON.stringify(
+        response,
+        null,
+        2
+      )}`
+    );
+    this.response = response;
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, this.constructor);
+    }
+  }
+  name = "MissingPageInfo";
+};
+
+// pkg/dist-src/object-helpers.js
+var isObject = (value) => Object.prototype.toString.call(value) === "[object Object]";
+function findPaginatedResourcePath(responseData) {
+  const paginatedResourcePath = deepFindPathToProperty(
+    responseData,
+    "pageInfo"
+  );
+  if (paginatedResourcePath.length === 0) {
+    throw new MissingPageInfo(responseData);
+  }
+  return paginatedResourcePath;
+}
+var deepFindPathToProperty = (object, searchProp, path = []) => {
+  for (const key of Object.keys(object)) {
+    const currentPath = [...path, key];
+    const currentValue = object[key];
+    if (isObject(currentValue)) {
+      if (currentValue.hasOwnProperty(searchProp)) {
+        return currentPath;
+      }
+      const result = deepFindPathToProperty(
+        currentValue,
+        searchProp,
+        currentPath
+      );
+      if (result.length > 0) {
+        return result;
+      }
+    }
+  }
+  return [];
+};
+var get = (object, path) => {
+  return path.reduce((current, nextProperty) => current[nextProperty], object);
+};
+var dist_bundle_set = (object, path, mutator) => {
+  const lastProperty = path[path.length - 1];
+  const parentPath = [...path].slice(0, -1);
+  const parent = get(object, parentPath);
+  if (typeof mutator === "function") {
+    parent[lastProperty] = mutator(parent[lastProperty]);
+  } else {
+    parent[lastProperty] = mutator;
+  }
+};
+
+// pkg/dist-src/extract-page-info.js
+var extractPageInfos = (responseData) => {
+  const pageInfoPath = findPaginatedResourcePath(responseData);
+  return {
+    pathInQuery: pageInfoPath,
+    pageInfo: get(responseData, [...pageInfoPath, "pageInfo"])
+  };
+};
+
+// pkg/dist-src/page-info.js
+var isForwardSearch = (givenPageInfo) => {
+  return givenPageInfo.hasOwnProperty("hasNextPage");
+};
+var getCursorFrom = (pageInfo) => isForwardSearch(pageInfo) ? pageInfo.endCursor : pageInfo.startCursor;
+var hasAnotherPage = (pageInfo) => isForwardSearch(pageInfo) ? pageInfo.hasNextPage : pageInfo.hasPreviousPage;
+
+// pkg/dist-src/iterator.js
+var createIterator = (octokit) => {
+  return (query, initialParameters = {}) => {
+    let nextPageExists = true;
+    let parameters = { ...initialParameters };
+    return {
+      [Symbol.asyncIterator]: () => ({
+        async next() {
+          if (!nextPageExists) return { done: true, value: {} };
+          const response = await octokit.graphql(
+            query,
+            parameters
+          );
+          const pageInfoContext = extractPageInfos(response);
+          const nextCursorValue = getCursorFrom(pageInfoContext.pageInfo);
+          nextPageExists = hasAnotherPage(pageInfoContext.pageInfo);
+          if (nextPageExists && nextCursorValue === parameters.cursor) {
+            throw new MissingCursorChange(pageInfoContext, nextCursorValue);
+          }
+          parameters = {
+            ...parameters,
+            cursor: nextCursorValue
+          };
+          return { done: false, value: response };
+        }
+      })
+    };
+  };
+};
+
+// pkg/dist-src/merge-responses.js
+var mergeResponses = (response1, response2) => {
+  if (Object.keys(response1).length === 0) {
+    return Object.assign(response1, response2);
+  }
+  const path = findPaginatedResourcePath(response1);
+  const nodesPath = [...path, "nodes"];
+  const newNodes = get(response2, nodesPath);
+  if (newNodes) {
+    dist_bundle_set(response1, nodesPath, (values) => {
+      return [...values, ...newNodes];
+    });
+  }
+  const edgesPath = [...path, "edges"];
+  const newEdges = get(response2, edgesPath);
+  if (newEdges) {
+    dist_bundle_set(response1, edgesPath, (values) => {
+      return [...values, ...newEdges];
+    });
+  }
+  const pageInfoPath = [...path, "pageInfo"];
+  dist_bundle_set(response1, pageInfoPath, get(response2, pageInfoPath));
+  return response1;
+};
+
+// pkg/dist-src/paginate.js
+var createPaginate = (octokit) => {
+  const iterator = createIterator(octokit);
+  return async (query, initialParameters = {}) => {
+    let mergedResponse = {};
+    for await (const response of iterator(
+      query,
+      initialParameters
+    )) {
+      mergedResponse = mergeResponses(mergedResponse, response);
+    }
+    return mergedResponse;
+  };
+};
+
+// pkg/dist-src/version.js
+var plugin_paginate_graphql_dist_bundle_VERSION = "0.0.0-development";
+
+// pkg/dist-src/index.js
+function paginateGraphQL(octokit) {
+  return {
+    graphql: Object.assign(octokit.graphql, {
+      paginate: Object.assign(createPaginate(octokit), {
+        iterator: createIterator(octokit)
+      })
+    })
+  };
+}
+
+
+;// CONCATENATED MODULE: ../../../node_modules/@octokit/plugin-rest-endpoint-methods/dist-src/version.js
+const dist_src_version_VERSION = "16.0.0";
+
+//# sourceMappingURL=version.js.map
+
+;// CONCATENATED MODULE: ../../../node_modules/@octokit/plugin-rest-endpoint-methods/dist-src/generated/endpoints.js
+const Endpoints = {
+  actions: {
+    addCustomLabelsToSelfHostedRunnerForOrg: [
+      "POST /orgs/{org}/actions/runners/{runner_id}/labels"
+    ],
+    addCustomLabelsToSelfHostedRunnerForRepo: [
+      "POST /repos/{owner}/{repo}/actions/runners/{runner_id}/labels"
+    ],
+    addRepoAccessToSelfHostedRunnerGroupInOrg: [
+      "PUT /orgs/{org}/actions/runner-groups/{runner_group_id}/repositories/{repository_id}"
+    ],
+    addSelectedRepoToOrgSecret: [
+      "PUT /orgs/{org}/actions/secrets/{secret_name}/repositories/{repository_id}"
+    ],
+    addSelectedRepoToOrgVariable: [
+      "PUT /orgs/{org}/actions/variables/{name}/repositories/{repository_id}"
+    ],
+    approveWorkflowRun: [
+      "POST /repos/{owner}/{repo}/actions/runs/{run_id}/approve"
+    ],
+    cancelWorkflowRun: [
+      "POST /repos/{owner}/{repo}/actions/runs/{run_id}/cancel"
+    ],
+    createEnvironmentVariable: [
+      "POST /repos/{owner}/{repo}/environments/{environment_name}/variables"
+    ],
+    createHostedRunnerForOrg: ["POST /orgs/{org}/actions/hosted-runners"],
+    createOrUpdateEnvironmentSecret: [
+      "PUT /repos/{owner}/{repo}/environments/{environment_name}/secrets/{secret_name}"
+    ],
+    createOrUpdateOrgSecret: ["PUT /orgs/{org}/actions/secrets/{secret_name}"],
+    createOrUpdateRepoSecret: [
+      "PUT /repos/{owner}/{repo}/actions/secrets/{secret_name}"
+    ],
+    createOrgVariable: ["POST /orgs/{org}/actions/variables"],
+    createRegistrationTokenForOrg: [
+      "POST /orgs/{org}/actions/runners/registration-token"
+    ],
+    createRegistrationTokenForRepo: [
+      "POST /repos/{owner}/{repo}/actions/runners/registration-token"
+    ],
+    createRemoveTokenForOrg: ["POST /orgs/{org}/actions/runners/remove-token"],
+    createRemoveTokenForRepo: [
+      "POST /repos/{owner}/{repo}/actions/runners/remove-token"
+    ],
+    createRepoVariable: ["POST /repos/{owner}/{repo}/actions/variables"],
+    createWorkflowDispatch: [
+      "POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches"
+    ],
+    deleteActionsCacheById: [
+      "DELETE /repos/{owner}/{repo}/actions/caches/{cache_id}"
+    ],
+    deleteActionsCacheByKey: [
+      "DELETE /repos/{owner}/{repo}/actions/caches{?key,ref}"
+    ],
+    deleteArtifact: [
+      "DELETE /repos/{owner}/{repo}/actions/artifacts/{artifact_id}"
+    ],
+    deleteEnvironmentSecret: [
+      "DELETE /repos/{owner}/{repo}/environments/{environment_name}/secrets/{secret_name}"
+    ],
+    deleteEnvironmentVariable: [
+      "DELETE /repos/{owner}/{repo}/environments/{environment_name}/variables/{name}"
+    ],
+    deleteHostedRunnerForOrg: [
+      "DELETE /orgs/{org}/actions/hosted-runners/{hosted_runner_id}"
+    ],
+    deleteOrgSecret: ["DELETE /orgs/{org}/actions/secrets/{secret_name}"],
+    deleteOrgVariable: ["DELETE /orgs/{org}/actions/variables/{name}"],
+    deleteRepoSecret: [
+      "DELETE /repos/{owner}/{repo}/actions/secrets/{secret_name}"
+    ],
+    deleteRepoVariable: [
+      "DELETE /repos/{owner}/{repo}/actions/variables/{name}"
+    ],
+    deleteSelfHostedRunnerFromOrg: [
+      "DELETE /orgs/{org}/actions/runners/{runner_id}"
+    ],
+    deleteSelfHostedRunnerFromRepo: [
+      "DELETE /repos/{owner}/{repo}/actions/runners/{runner_id}"
+    ],
+    deleteWorkflowRun: ["DELETE /repos/{owner}/{repo}/actions/runs/{run_id}"],
+    deleteWorkflowRunLogs: [
+      "DELETE /repos/{owner}/{repo}/actions/runs/{run_id}/logs"
+    ],
+    disableSelectedRepositoryGithubActionsOrganization: [
+      "DELETE /orgs/{org}/actions/permissions/repositories/{repository_id}"
+    ],
+    disableWorkflow: [
+      "PUT /repos/{owner}/{repo}/actions/workflows/{workflow_id}/disable"
+    ],
+    downloadArtifact: [
+      "GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}"
+    ],
+    downloadJobLogsForWorkflowRun: [
+      "GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs"
+    ],
+    downloadWorkflowRunAttemptLogs: [
+      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/attempts/{attempt_number}/logs"
+    ],
+    downloadWorkflowRunLogs: [
+      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/logs"
+    ],
+    enableSelectedRepositoryGithubActionsOrganization: [
+      "PUT /orgs/{org}/actions/permissions/repositories/{repository_id}"
+    ],
+    enableWorkflow: [
+      "PUT /repos/{owner}/{repo}/actions/workflows/{workflow_id}/enable"
+    ],
+    forceCancelWorkflowRun: [
+      "POST /repos/{owner}/{repo}/actions/runs/{run_id}/force-cancel"
+    ],
+    generateRunnerJitconfigForOrg: [
+      "POST /orgs/{org}/actions/runners/generate-jitconfig"
+    ],
+    generateRunnerJitconfigForRepo: [
+      "POST /repos/{owner}/{repo}/actions/runners/generate-jitconfig"
+    ],
+    getActionsCacheList: ["GET /repos/{owner}/{repo}/actions/caches"],
+    getActionsCacheUsage: ["GET /repos/{owner}/{repo}/actions/cache/usage"],
+    getActionsCacheUsageByRepoForOrg: [
+      "GET /orgs/{org}/actions/cache/usage-by-repository"
+    ],
+    getActionsCacheUsageForOrg: ["GET /orgs/{org}/actions/cache/usage"],
+    getAllowedActionsOrganization: [
+      "GET /orgs/{org}/actions/permissions/selected-actions"
+    ],
+    getAllowedActionsRepository: [
+      "GET /repos/{owner}/{repo}/actions/permissions/selected-actions"
+    ],
+    getArtifact: ["GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}"],
+    getCustomOidcSubClaimForRepo: [
+      "GET /repos/{owner}/{repo}/actions/oidc/customization/sub"
+    ],
+    getEnvironmentPublicKey: [
+      "GET /repos/{owner}/{repo}/environments/{environment_name}/secrets/public-key"
+    ],
+    getEnvironmentSecret: [
+      "GET /repos/{owner}/{repo}/environments/{environment_name}/secrets/{secret_name}"
+    ],
+    getEnvironmentVariable: [
+      "GET /repos/{owner}/{repo}/environments/{environment_name}/variables/{name}"
+    ],
+    getGithubActionsDefaultWorkflowPermissionsOrganization: [
+      "GET /orgs/{org}/actions/permissions/workflow"
+    ],
+    getGithubActionsDefaultWorkflowPermissionsRepository: [
+      "GET /repos/{owner}/{repo}/actions/permissions/workflow"
+    ],
+    getGithubActionsPermissionsOrganization: [
+      "GET /orgs/{org}/actions/permissions"
+    ],
+    getGithubActionsPermissionsRepository: [
+      "GET /repos/{owner}/{repo}/actions/permissions"
+    ],
+    getHostedRunnerForOrg: [
+      "GET /orgs/{org}/actions/hosted-runners/{hosted_runner_id}"
+    ],
+    getHostedRunnersGithubOwnedImagesForOrg: [
+      "GET /orgs/{org}/actions/hosted-runners/images/github-owned"
+    ],
+    getHostedRunnersLimitsForOrg: [
+      "GET /orgs/{org}/actions/hosted-runners/limits"
+    ],
+    getHostedRunnersMachineSpecsForOrg: [
+      "GET /orgs/{org}/actions/hosted-runners/machine-sizes"
+    ],
+    getHostedRunnersPartnerImagesForOrg: [
+      "GET /orgs/{org}/actions/hosted-runners/images/partner"
+    ],
+    getHostedRunnersPlatformsForOrg: [
+      "GET /orgs/{org}/actions/hosted-runners/platforms"
+    ],
+    getJobForWorkflowRun: ["GET /repos/{owner}/{repo}/actions/jobs/{job_id}"],
+    getOrgPublicKey: ["GET /orgs/{org}/actions/secrets/public-key"],
+    getOrgSecret: ["GET /orgs/{org}/actions/secrets/{secret_name}"],
+    getOrgVariable: ["GET /orgs/{org}/actions/variables/{name}"],
+    getPendingDeploymentsForRun: [
+      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/pending_deployments"
+    ],
+    getRepoPermissions: [
+      "GET /repos/{owner}/{repo}/actions/permissions",
+      {},
+      { renamed: ["actions", "getGithubActionsPermissionsRepository"] }
+    ],
+    getRepoPublicKey: ["GET /repos/{owner}/{repo}/actions/secrets/public-key"],
+    getRepoSecret: ["GET /repos/{owner}/{repo}/actions/secrets/{secret_name}"],
+    getRepoVariable: ["GET /repos/{owner}/{repo}/actions/variables/{name}"],
+    getReviewsForRun: [
+      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/approvals"
+    ],
+    getSelfHostedRunnerForOrg: ["GET /orgs/{org}/actions/runners/{runner_id}"],
+    getSelfHostedRunnerForRepo: [
+      "GET /repos/{owner}/{repo}/actions/runners/{runner_id}"
+    ],
+    getWorkflow: ["GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}"],
+    getWorkflowAccessToRepository: [
+      "GET /repos/{owner}/{repo}/actions/permissions/access"
+    ],
+    getWorkflowRun: ["GET /repos/{owner}/{repo}/actions/runs/{run_id}"],
+    getWorkflowRunAttempt: [
+      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/attempts/{attempt_number}"
+    ],
+    getWorkflowRunUsage: [
+      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/timing"
+    ],
+    getWorkflowUsage: [
+      "GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/timing"
+    ],
+    listArtifactsForRepo: ["GET /repos/{owner}/{repo}/actions/artifacts"],
+    listEnvironmentSecrets: [
+      "GET /repos/{owner}/{repo}/environments/{environment_name}/secrets"
+    ],
+    listEnvironmentVariables: [
+      "GET /repos/{owner}/{repo}/environments/{environment_name}/variables"
+    ],
+    listGithubHostedRunnersInGroupForOrg: [
+      "GET /orgs/{org}/actions/runner-groups/{runner_group_id}/hosted-runners"
+    ],
+    listHostedRunnersForOrg: ["GET /orgs/{org}/actions/hosted-runners"],
+    listJobsForWorkflowRun: [
+      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs"
+    ],
+    listJobsForWorkflowRunAttempt: [
+      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/attempts/{attempt_number}/jobs"
+    ],
+    listLabelsForSelfHostedRunnerForOrg: [
+      "GET /orgs/{org}/actions/runners/{runner_id}/labels"
+    ],
+    listLabelsForSelfHostedRunnerForRepo: [
+      "GET /repos/{owner}/{repo}/actions/runners/{runner_id}/labels"
+    ],
+    listOrgSecrets: ["GET /orgs/{org}/actions/secrets"],
+    listOrgVariables: ["GET /orgs/{org}/actions/variables"],
+    listRepoOrganizationSecrets: [
+      "GET /repos/{owner}/{repo}/actions/organization-secrets"
+    ],
+    listRepoOrganizationVariables: [
+      "GET /repos/{owner}/{repo}/actions/organization-variables"
+    ],
+    listRepoSecrets: ["GET /repos/{owner}/{repo}/actions/secrets"],
+    listRepoVariables: ["GET /repos/{owner}/{repo}/actions/variables"],
+    listRepoWorkflows: ["GET /repos/{owner}/{repo}/actions/workflows"],
+    listRunnerApplicationsForOrg: ["GET /orgs/{org}/actions/runners/downloads"],
+    listRunnerApplicationsForRepo: [
+      "GET /repos/{owner}/{repo}/actions/runners/downloads"
+    ],
+    listSelectedReposForOrgSecret: [
+      "GET /orgs/{org}/actions/secrets/{secret_name}/repositories"
+    ],
+    listSelectedReposForOrgVariable: [
+      "GET /orgs/{org}/actions/variables/{name}/repositories"
+    ],
+    listSelectedRepositoriesEnabledGithubActionsOrganization: [
+      "GET /orgs/{org}/actions/permissions/repositories"
+    ],
+    listSelfHostedRunnersForOrg: ["GET /orgs/{org}/actions/runners"],
+    listSelfHostedRunnersForRepo: ["GET /repos/{owner}/{repo}/actions/runners"],
+    listWorkflowRunArtifacts: [
+      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts"
+    ],
+    listWorkflowRuns: [
+      "GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs"
+    ],
+    listWorkflowRunsForRepo: ["GET /repos/{owner}/{repo}/actions/runs"],
+    reRunJobForWorkflowRun: [
+      "POST /repos/{owner}/{repo}/actions/jobs/{job_id}/rerun"
+    ],
+    reRunWorkflow: ["POST /repos/{owner}/{repo}/actions/runs/{run_id}/rerun"],
+    reRunWorkflowFailedJobs: [
+      "POST /repos/{owner}/{repo}/actions/runs/{run_id}/rerun-failed-jobs"
+    ],
+    removeAllCustomLabelsFromSelfHostedRunnerForOrg: [
+      "DELETE /orgs/{org}/actions/runners/{runner_id}/labels"
+    ],
+    removeAllCustomLabelsFromSelfHostedRunnerForRepo: [
+      "DELETE /repos/{owner}/{repo}/actions/runners/{runner_id}/labels"
+    ],
+    removeCustomLabelFromSelfHostedRunnerForOrg: [
+      "DELETE /orgs/{org}/actions/runners/{runner_id}/labels/{name}"
+    ],
+    removeCustomLabelFromSelfHostedRunnerForRepo: [
+      "DELETE /repos/{owner}/{repo}/actions/runners/{runner_id}/labels/{name}"
+    ],
+    removeSelectedRepoFromOrgSecret: [
+      "DELETE /orgs/{org}/actions/secrets/{secret_name}/repositories/{repository_id}"
+    ],
+    removeSelectedRepoFromOrgVariable: [
+      "DELETE /orgs/{org}/actions/variables/{name}/repositories/{repository_id}"
+    ],
+    reviewCustomGatesForRun: [
+      "POST /repos/{owner}/{repo}/actions/runs/{run_id}/deployment_protection_rule"
+    ],
+    reviewPendingDeploymentsForRun: [
+      "POST /repos/{owner}/{repo}/actions/runs/{run_id}/pending_deployments"
+    ],
+    setAllowedActionsOrganization: [
+      "PUT /orgs/{org}/actions/permissions/selected-actions"
+    ],
+    setAllowedActionsRepository: [
+      "PUT /repos/{owner}/{repo}/actions/permissions/selected-actions"
+    ],
+    setCustomLabelsForSelfHostedRunnerForOrg: [
+      "PUT /orgs/{org}/actions/runners/{runner_id}/labels"
+    ],
+    setCustomLabelsForSelfHostedRunnerForRepo: [
+      "PUT /repos/{owner}/{repo}/actions/runners/{runner_id}/labels"
+    ],
+    setCustomOidcSubClaimForRepo: [
+      "PUT /repos/{owner}/{repo}/actions/oidc/customization/sub"
+    ],
+    setGithubActionsDefaultWorkflowPermissionsOrganization: [
+      "PUT /orgs/{org}/actions/permissions/workflow"
+    ],
+    setGithubActionsDefaultWorkflowPermissionsRepository: [
+      "PUT /repos/{owner}/{repo}/actions/permissions/workflow"
+    ],
+    setGithubActionsPermissionsOrganization: [
+      "PUT /orgs/{org}/actions/permissions"
+    ],
+    setGithubActionsPermissionsRepository: [
+      "PUT /repos/{owner}/{repo}/actions/permissions"
+    ],
+    setSelectedReposForOrgSecret: [
+      "PUT /orgs/{org}/actions/secrets/{secret_name}/repositories"
+    ],
+    setSelectedReposForOrgVariable: [
+      "PUT /orgs/{org}/actions/variables/{name}/repositories"
+    ],
+    setSelectedRepositoriesEnabledGithubActionsOrganization: [
+      "PUT /orgs/{org}/actions/permissions/repositories"
+    ],
+    setWorkflowAccessToRepository: [
+      "PUT /repos/{owner}/{repo}/actions/permissions/access"
+    ],
+    updateEnvironmentVariable: [
+      "PATCH /repos/{owner}/{repo}/environments/{environment_name}/variables/{name}"
+    ],
+    updateHostedRunnerForOrg: [
+      "PATCH /orgs/{org}/actions/hosted-runners/{hosted_runner_id}"
+    ],
+    updateOrgVariable: ["PATCH /orgs/{org}/actions/variables/{name}"],
+    updateRepoVariable: [
+      "PATCH /repos/{owner}/{repo}/actions/variables/{name}"
+    ]
+  },
+  activity: {
+    checkRepoIsStarredByAuthenticatedUser: ["GET /user/starred/{owner}/{repo}"],
+    deleteRepoSubscription: ["DELETE /repos/{owner}/{repo}/subscription"],
+    deleteThreadSubscription: [
+      "DELETE /notifications/threads/{thread_id}/subscription"
+    ],
+    getFeeds: ["GET /feeds"],
+    getRepoSubscription: ["GET /repos/{owner}/{repo}/subscription"],
+    getThread: ["GET /notifications/threads/{thread_id}"],
+    getThreadSubscriptionForAuthenticatedUser: [
+      "GET /notifications/threads/{thread_id}/subscription"
+    ],
+    listEventsForAuthenticatedUser: ["GET /users/{username}/events"],
+    listNotificationsForAuthenticatedUser: ["GET /notifications"],
+    listOrgEventsForAuthenticatedUser: [
+      "GET /users/{username}/events/orgs/{org}"
+    ],
+    listPublicEvents: ["GET /events"],
+    listPublicEventsForRepoNetwork: ["GET /networks/{owner}/{repo}/events"],
+    listPublicEventsForUser: ["GET /users/{username}/events/public"],
+    listPublicOrgEvents: ["GET /orgs/{org}/events"],
+    listReceivedEventsForUser: ["GET /users/{username}/received_events"],
+    listReceivedPublicEventsForUser: [
+      "GET /users/{username}/received_events/public"
+    ],
+    listRepoEvents: ["GET /repos/{owner}/{repo}/events"],
+    listRepoNotificationsForAuthenticatedUser: [
+      "GET /repos/{owner}/{repo}/notifications"
+    ],
+    listReposStarredByAuthenticatedUser: ["GET /user/starred"],
+    listReposStarredByUser: ["GET /users/{username}/starred"],
+    listReposWatchedByUser: ["GET /users/{username}/subscriptions"],
+    listStargazersForRepo: ["GET /repos/{owner}/{repo}/stargazers"],
+    listWatchedReposForAuthenticatedUser: ["GET /user/subscriptions"],
+    listWatchersForRepo: ["GET /repos/{owner}/{repo}/subscribers"],
+    markNotificationsAsRead: ["PUT /notifications"],
+    markRepoNotificationsAsRead: ["PUT /repos/{owner}/{repo}/notifications"],
+    markThreadAsDone: ["DELETE /notifications/threads/{thread_id}"],
+    markThreadAsRead: ["PATCH /notifications/threads/{thread_id}"],
+    setRepoSubscription: ["PUT /repos/{owner}/{repo}/subscription"],
+    setThreadSubscription: [
+      "PUT /notifications/threads/{thread_id}/subscription"
+    ],
+    starRepoForAuthenticatedUser: ["PUT /user/starred/{owner}/{repo}"],
+    unstarRepoForAuthenticatedUser: ["DELETE /user/starred/{owner}/{repo}"]
+  },
+  apps: {
+    addRepoToInstallation: [
+      "PUT /user/installations/{installation_id}/repositories/{repository_id}",
+      {},
+      { renamed: ["apps", "addRepoToInstallationForAuthenticatedUser"] }
+    ],
+    addRepoToInstallationForAuthenticatedUser: [
+      "PUT /user/installations/{installation_id}/repositories/{repository_id}"
+    ],
+    checkToken: ["POST /applications/{client_id}/token"],
+    createFromManifest: ["POST /app-manifests/{code}/conversions"],
+    createInstallationAccessToken: [
+      "POST /app/installations/{installation_id}/access_tokens"
+    ],
+    deleteAuthorization: ["DELETE /applications/{client_id}/grant"],
+    deleteInstallation: ["DELETE /app/installations/{installation_id}"],
+    deleteToken: ["DELETE /applications/{client_id}/token"],
+    getAuthenticated: ["GET /app"],
+    getBySlug: ["GET /apps/{app_slug}"],
+    getInstallation: ["GET /app/installations/{installation_id}"],
+    getOrgInstallation: ["GET /orgs/{org}/installation"],
+    getRepoInstallation: ["GET /repos/{owner}/{repo}/installation"],
+    getSubscriptionPlanForAccount: [
+      "GET /marketplace_listing/accounts/{account_id}"
+    ],
+    getSubscriptionPlanForAccountStubbed: [
+      "GET /marketplace_listing/stubbed/accounts/{account_id}"
+    ],
+    getUserInstallation: ["GET /users/{username}/installation"],
+    getWebhookConfigForApp: ["GET /app/hook/config"],
+    getWebhookDelivery: ["GET /app/hook/deliveries/{delivery_id}"],
+    listAccountsForPlan: ["GET /marketplace_listing/plans/{plan_id}/accounts"],
+    listAccountsForPlanStubbed: [
+      "GET /marketplace_listing/stubbed/plans/{plan_id}/accounts"
+    ],
+    listInstallationReposForAuthenticatedUser: [
+      "GET /user/installations/{installation_id}/repositories"
+    ],
+    listInstallationRequestsForAuthenticatedApp: [
+      "GET /app/installation-requests"
+    ],
+    listInstallations: ["GET /app/installations"],
+    listInstallationsForAuthenticatedUser: ["GET /user/installations"],
+    listPlans: ["GET /marketplace_listing/plans"],
+    listPlansStubbed: ["GET /marketplace_listing/stubbed/plans"],
+    listReposAccessibleToInstallation: ["GET /installation/repositories"],
+    listSubscriptionsForAuthenticatedUser: ["GET /user/marketplace_purchases"],
+    listSubscriptionsForAuthenticatedUserStubbed: [
+      "GET /user/marketplace_purchases/stubbed"
+    ],
+    listWebhookDeliveries: ["GET /app/hook/deliveries"],
+    redeliverWebhookDelivery: [
+      "POST /app/hook/deliveries/{delivery_id}/attempts"
+    ],
+    removeRepoFromInstallation: [
+      "DELETE /user/installations/{installation_id}/repositories/{repository_id}",
+      {},
+      { renamed: ["apps", "removeRepoFromInstallationForAuthenticatedUser"] }
+    ],
+    removeRepoFromInstallationForAuthenticatedUser: [
+      "DELETE /user/installations/{installation_id}/repositories/{repository_id}"
+    ],
+    resetToken: ["PATCH /applications/{client_id}/token"],
+    revokeInstallationAccessToken: ["DELETE /installation/token"],
+    scopeToken: ["POST /applications/{client_id}/token/scoped"],
+    suspendInstallation: ["PUT /app/installations/{installation_id}/suspended"],
+    unsuspendInstallation: [
+      "DELETE /app/installations/{installation_id}/suspended"
+    ],
+    updateWebhookConfigForApp: ["PATCH /app/hook/config"]
+  },
+  billing: {
+    getGithubActionsBillingOrg: ["GET /orgs/{org}/settings/billing/actions"],
+    getGithubActionsBillingUser: [
+      "GET /users/{username}/settings/billing/actions"
+    ],
+    getGithubBillingUsageReportOrg: [
+      "GET /organizations/{org}/settings/billing/usage"
+    ],
+    getGithubBillingUsageReportUser: [
+      "GET /users/{username}/settings/billing/usage"
+    ],
+    getGithubPackagesBillingOrg: ["GET /orgs/{org}/settings/billing/packages"],
+    getGithubPackagesBillingUser: [
+      "GET /users/{username}/settings/billing/packages"
+    ],
+    getSharedStorageBillingOrg: [
+      "GET /orgs/{org}/settings/billing/shared-storage"
+    ],
+    getSharedStorageBillingUser: [
+      "GET /users/{username}/settings/billing/shared-storage"
+    ]
+  },
+  campaigns: {
+    createCampaign: ["POST /orgs/{org}/campaigns"],
+    deleteCampaign: ["DELETE /orgs/{org}/campaigns/{campaign_number}"],
+    getCampaignSummary: ["GET /orgs/{org}/campaigns/{campaign_number}"],
+    listOrgCampaigns: ["GET /orgs/{org}/campaigns"],
+    updateCampaign: ["PATCH /orgs/{org}/campaigns/{campaign_number}"]
+  },
+  checks: {
+    create: ["POST /repos/{owner}/{repo}/check-runs"],
+    createSuite: ["POST /repos/{owner}/{repo}/check-suites"],
+    get: ["GET /repos/{owner}/{repo}/check-runs/{check_run_id}"],
+    getSuite: ["GET /repos/{owner}/{repo}/check-suites/{check_suite_id}"],
+    listAnnotations: [
+      "GET /repos/{owner}/{repo}/check-runs/{check_run_id}/annotations"
+    ],
+    listForRef: ["GET /repos/{owner}/{repo}/commits/{ref}/check-runs"],
+    listForSuite: [
+      "GET /repos/{owner}/{repo}/check-suites/{check_suite_id}/check-runs"
+    ],
+    listSuitesForRef: ["GET /repos/{owner}/{repo}/commits/{ref}/check-suites"],
+    rerequestRun: [
+      "POST /repos/{owner}/{repo}/check-runs/{check_run_id}/rerequest"
+    ],
+    rerequestSuite: [
+      "POST /repos/{owner}/{repo}/check-suites/{check_suite_id}/rerequest"
+    ],
+    setSuitesPreferences: [
+      "PATCH /repos/{owner}/{repo}/check-suites/preferences"
+    ],
+    update: ["PATCH /repos/{owner}/{repo}/check-runs/{check_run_id}"]
+  },
+  codeScanning: {
+    commitAutofix: [
+      "POST /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}/autofix/commits"
+    ],
+    createAutofix: [
+      "POST /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}/autofix"
+    ],
+    createVariantAnalysis: [
+      "POST /repos/{owner}/{repo}/code-scanning/codeql/variant-analyses"
+    ],
+    deleteAnalysis: [
+      "DELETE /repos/{owner}/{repo}/code-scanning/analyses/{analysis_id}{?confirm_delete}"
+    ],
+    deleteCodeqlDatabase: [
+      "DELETE /repos/{owner}/{repo}/code-scanning/codeql/databases/{language}"
+    ],
+    getAlert: [
+      "GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}",
+      {},
+      { renamedParameters: { alert_id: "alert_number" } }
+    ],
+    getAnalysis: [
+      "GET /repos/{owner}/{repo}/code-scanning/analyses/{analysis_id}"
+    ],
+    getAutofix: [
+      "GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}/autofix"
+    ],
+    getCodeqlDatabase: [
+      "GET /repos/{owner}/{repo}/code-scanning/codeql/databases/{language}"
+    ],
+    getDefaultSetup: ["GET /repos/{owner}/{repo}/code-scanning/default-setup"],
+    getSarif: ["GET /repos/{owner}/{repo}/code-scanning/sarifs/{sarif_id}"],
+    getVariantAnalysis: [
+      "GET /repos/{owner}/{repo}/code-scanning/codeql/variant-analyses/{codeql_variant_analysis_id}"
+    ],
+    getVariantAnalysisRepoTask: [
+      "GET /repos/{owner}/{repo}/code-scanning/codeql/variant-analyses/{codeql_variant_analysis_id}/repos/{repo_owner}/{repo_name}"
+    ],
+    listAlertInstances: [
+      "GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}/instances"
+    ],
+    listAlertsForOrg: ["GET /orgs/{org}/code-scanning/alerts"],
+    listAlertsForRepo: ["GET /repos/{owner}/{repo}/code-scanning/alerts"],
+    listAlertsInstances: [
+      "GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}/instances",
+      {},
+      { renamed: ["codeScanning", "listAlertInstances"] }
+    ],
+    listCodeqlDatabases: [
+      "GET /repos/{owner}/{repo}/code-scanning/codeql/databases"
+    ],
+    listRecentAnalyses: ["GET /repos/{owner}/{repo}/code-scanning/analyses"],
+    updateAlert: [
+      "PATCH /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}"
+    ],
+    updateDefaultSetup: [
+      "PATCH /repos/{owner}/{repo}/code-scanning/default-setup"
+    ],
+    uploadSarif: ["POST /repos/{owner}/{repo}/code-scanning/sarifs"]
+  },
+  codeSecurity: {
+    attachConfiguration: [
+      "POST /orgs/{org}/code-security/configurations/{configuration_id}/attach"
+    ],
+    attachEnterpriseConfiguration: [
+      "POST /enterprises/{enterprise}/code-security/configurations/{configuration_id}/attach"
+    ],
+    createConfiguration: ["POST /orgs/{org}/code-security/configurations"],
+    createConfigurationForEnterprise: [
+      "POST /enterprises/{enterprise}/code-security/configurations"
+    ],
+    deleteConfiguration: [
+      "DELETE /orgs/{org}/code-security/configurations/{configuration_id}"
+    ],
+    deleteConfigurationForEnterprise: [
+      "DELETE /enterprises/{enterprise}/code-security/configurations/{configuration_id}"
+    ],
+    detachConfiguration: [
+      "DELETE /orgs/{org}/code-security/configurations/detach"
+    ],
+    getConfiguration: [
+      "GET /orgs/{org}/code-security/configurations/{configuration_id}"
+    ],
+    getConfigurationForRepository: [
+      "GET /repos/{owner}/{repo}/code-security-configuration"
+    ],
+    getConfigurationsForEnterprise: [
+      "GET /enterprises/{enterprise}/code-security/configurations"
+    ],
+    getConfigurationsForOrg: ["GET /orgs/{org}/code-security/configurations"],
+    getDefaultConfigurations: [
+      "GET /orgs/{org}/code-security/configurations/defaults"
+    ],
+    getDefaultConfigurationsForEnterprise: [
+      "GET /enterprises/{enterprise}/code-security/configurations/defaults"
+    ],
+    getRepositoriesForConfiguration: [
+      "GET /orgs/{org}/code-security/configurations/{configuration_id}/repositories"
+    ],
+    getRepositoriesForEnterpriseConfiguration: [
+      "GET /enterprises/{enterprise}/code-security/configurations/{configuration_id}/repositories"
+    ],
+    getSingleConfigurationForEnterprise: [
+      "GET /enterprises/{enterprise}/code-security/configurations/{configuration_id}"
+    ],
+    setConfigurationAsDefault: [
+      "PUT /orgs/{org}/code-security/configurations/{configuration_id}/defaults"
+    ],
+    setConfigurationAsDefaultForEnterprise: [
+      "PUT /enterprises/{enterprise}/code-security/configurations/{configuration_id}/defaults"
+    ],
+    updateConfiguration: [
+      "PATCH /orgs/{org}/code-security/configurations/{configuration_id}"
+    ],
+    updateEnterpriseConfiguration: [
+      "PATCH /enterprises/{enterprise}/code-security/configurations/{configuration_id}"
+    ]
+  },
+  codesOfConduct: {
+    getAllCodesOfConduct: ["GET /codes_of_conduct"],
+    getConductCode: ["GET /codes_of_conduct/{key}"]
+  },
+  codespaces: {
+    addRepositoryForSecretForAuthenticatedUser: [
+      "PUT /user/codespaces/secrets/{secret_name}/repositories/{repository_id}"
+    ],
+    addSelectedRepoToOrgSecret: [
+      "PUT /orgs/{org}/codespaces/secrets/{secret_name}/repositories/{repository_id}"
+    ],
+    checkPermissionsForDevcontainer: [
+      "GET /repos/{owner}/{repo}/codespaces/permissions_check"
+    ],
+    codespaceMachinesForAuthenticatedUser: [
+      "GET /user/codespaces/{codespace_name}/machines"
+    ],
+    createForAuthenticatedUser: ["POST /user/codespaces"],
+    createOrUpdateOrgSecret: [
+      "PUT /orgs/{org}/codespaces/secrets/{secret_name}"
+    ],
+    createOrUpdateRepoSecret: [
+      "PUT /repos/{owner}/{repo}/codespaces/secrets/{secret_name}"
+    ],
+    createOrUpdateSecretForAuthenticatedUser: [
+      "PUT /user/codespaces/secrets/{secret_name}"
+    ],
+    createWithPrForAuthenticatedUser: [
+      "POST /repos/{owner}/{repo}/pulls/{pull_number}/codespaces"
+    ],
+    createWithRepoForAuthenticatedUser: [
+      "POST /repos/{owner}/{repo}/codespaces"
+    ],
+    deleteForAuthenticatedUser: ["DELETE /user/codespaces/{codespace_name}"],
+    deleteFromOrganization: [
+      "DELETE /orgs/{org}/members/{username}/codespaces/{codespace_name}"
+    ],
+    deleteOrgSecret: ["DELETE /orgs/{org}/codespaces/secrets/{secret_name}"],
+    deleteRepoSecret: [
+      "DELETE /repos/{owner}/{repo}/codespaces/secrets/{secret_name}"
+    ],
+    deleteSecretForAuthenticatedUser: [
+      "DELETE /user/codespaces/secrets/{secret_name}"
+    ],
+    exportForAuthenticatedUser: [
+      "POST /user/codespaces/{codespace_name}/exports"
+    ],
+    getCodespacesForUserInOrg: [
+      "GET /orgs/{org}/members/{username}/codespaces"
+    ],
+    getExportDetailsForAuthenticatedUser: [
+      "GET /user/codespaces/{codespace_name}/exports/{export_id}"
+    ],
+    getForAuthenticatedUser: ["GET /user/codespaces/{codespace_name}"],
+    getOrgPublicKey: ["GET /orgs/{org}/codespaces/secrets/public-key"],
+    getOrgSecret: ["GET /orgs/{org}/codespaces/secrets/{secret_name}"],
+    getPublicKeyForAuthenticatedUser: [
+      "GET /user/codespaces/secrets/public-key"
+    ],
+    getRepoPublicKey: [
+      "GET /repos/{owner}/{repo}/codespaces/secrets/public-key"
+    ],
+    getRepoSecret: [
+      "GET /repos/{owner}/{repo}/codespaces/secrets/{secret_name}"
+    ],
+    getSecretForAuthenticatedUser: [
+      "GET /user/codespaces/secrets/{secret_name}"
+    ],
+    listDevcontainersInRepositoryForAuthenticatedUser: [
+      "GET /repos/{owner}/{repo}/codespaces/devcontainers"
+    ],
+    listForAuthenticatedUser: ["GET /user/codespaces"],
+    listInOrganization: [
+      "GET /orgs/{org}/codespaces",
+      {},
+      { renamedParameters: { org_id: "org" } }
+    ],
+    listInRepositoryForAuthenticatedUser: [
+      "GET /repos/{owner}/{repo}/codespaces"
+    ],
+    listOrgSecrets: ["GET /orgs/{org}/codespaces/secrets"],
+    listRepoSecrets: ["GET /repos/{owner}/{repo}/codespaces/secrets"],
+    listRepositoriesForSecretForAuthenticatedUser: [
+      "GET /user/codespaces/secrets/{secret_name}/repositories"
+    ],
+    listSecretsForAuthenticatedUser: ["GET /user/codespaces/secrets"],
+    listSelectedReposForOrgSecret: [
+      "GET /orgs/{org}/codespaces/secrets/{secret_name}/repositories"
+    ],
+    preFlightWithRepoForAuthenticatedUser: [
+      "GET /repos/{owner}/{repo}/codespaces/new"
+    ],
+    publishForAuthenticatedUser: [
+      "POST /user/codespaces/{codespace_name}/publish"
+    ],
+    removeRepositoryForSecretForAuthenticatedUser: [
+      "DELETE /user/codespaces/secrets/{secret_name}/repositories/{repository_id}"
+    ],
+    removeSelectedRepoFromOrgSecret: [
+      "DELETE /orgs/{org}/codespaces/secrets/{secret_name}/repositories/{repository_id}"
+    ],
+    repoMachinesForAuthenticatedUser: [
+      "GET /repos/{owner}/{repo}/codespaces/machines"
+    ],
+    setRepositoriesForSecretForAuthenticatedUser: [
+      "PUT /user/codespaces/secrets/{secret_name}/repositories"
+    ],
+    setSelectedReposForOrgSecret: [
+      "PUT /orgs/{org}/codespaces/secrets/{secret_name}/repositories"
+    ],
+    startForAuthenticatedUser: ["POST /user/codespaces/{codespace_name}/start"],
+    stopForAuthenticatedUser: ["POST /user/codespaces/{codespace_name}/stop"],
+    stopInOrganization: [
+      "POST /orgs/{org}/members/{username}/codespaces/{codespace_name}/stop"
+    ],
+    updateForAuthenticatedUser: ["PATCH /user/codespaces/{codespace_name}"]
+  },
+  copilot: {
+    addCopilotSeatsForTeams: [
+      "POST /orgs/{org}/copilot/billing/selected_teams"
+    ],
+    addCopilotSeatsForUsers: [
+      "POST /orgs/{org}/copilot/billing/selected_users"
+    ],
+    cancelCopilotSeatAssignmentForTeams: [
+      "DELETE /orgs/{org}/copilot/billing/selected_teams"
+    ],
+    cancelCopilotSeatAssignmentForUsers: [
+      "DELETE /orgs/{org}/copilot/billing/selected_users"
+    ],
+    copilotMetricsForOrganization: ["GET /orgs/{org}/copilot/metrics"],
+    copilotMetricsForTeam: ["GET /orgs/{org}/team/{team_slug}/copilot/metrics"],
+    getCopilotOrganizationDetails: ["GET /orgs/{org}/copilot/billing"],
+    getCopilotSeatDetailsForUser: [
+      "GET /orgs/{org}/members/{username}/copilot"
+    ],
+    listCopilotSeats: ["GET /orgs/{org}/copilot/billing/seats"]
+  },
+  credentials: { revoke: ["POST /credentials/revoke"] },
+  dependabot: {
+    addSelectedRepoToOrgSecret: [
+      "PUT /orgs/{org}/dependabot/secrets/{secret_name}/repositories/{repository_id}"
+    ],
+    createOrUpdateOrgSecret: [
+      "PUT /orgs/{org}/dependabot/secrets/{secret_name}"
+    ],
+    createOrUpdateRepoSecret: [
+      "PUT /repos/{owner}/{repo}/dependabot/secrets/{secret_name}"
+    ],
+    deleteOrgSecret: ["DELETE /orgs/{org}/dependabot/secrets/{secret_name}"],
+    deleteRepoSecret: [
+      "DELETE /repos/{owner}/{repo}/dependabot/secrets/{secret_name}"
+    ],
+    getAlert: ["GET /repos/{owner}/{repo}/dependabot/alerts/{alert_number}"],
+    getOrgPublicKey: ["GET /orgs/{org}/dependabot/secrets/public-key"],
+    getOrgSecret: ["GET /orgs/{org}/dependabot/secrets/{secret_name}"],
+    getRepoPublicKey: [
+      "GET /repos/{owner}/{repo}/dependabot/secrets/public-key"
+    ],
+    getRepoSecret: [
+      "GET /repos/{owner}/{repo}/dependabot/secrets/{secret_name}"
+    ],
+    listAlertsForEnterprise: [
+      "GET /enterprises/{enterprise}/dependabot/alerts"
+    ],
+    listAlertsForOrg: ["GET /orgs/{org}/dependabot/alerts"],
+    listAlertsForRepo: ["GET /repos/{owner}/{repo}/dependabot/alerts"],
+    listOrgSecrets: ["GET /orgs/{org}/dependabot/secrets"],
+    listRepoSecrets: ["GET /repos/{owner}/{repo}/dependabot/secrets"],
+    listSelectedReposForOrgSecret: [
+      "GET /orgs/{org}/dependabot/secrets/{secret_name}/repositories"
+    ],
+    removeSelectedRepoFromOrgSecret: [
+      "DELETE /orgs/{org}/dependabot/secrets/{secret_name}/repositories/{repository_id}"
+    ],
+    setSelectedReposForOrgSecret: [
+      "PUT /orgs/{org}/dependabot/secrets/{secret_name}/repositories"
+    ],
+    updateAlert: [
+      "PATCH /repos/{owner}/{repo}/dependabot/alerts/{alert_number}"
+    ]
+  },
+  dependencyGraph: {
+    createRepositorySnapshot: [
+      "POST /repos/{owner}/{repo}/dependency-graph/snapshots"
+    ],
+    diffRange: [
+      "GET /repos/{owner}/{repo}/dependency-graph/compare/{basehead}"
+    ],
+    exportSbom: ["GET /repos/{owner}/{repo}/dependency-graph/sbom"]
+  },
+  emojis: { get: ["GET /emojis"] },
+  gists: {
+    checkIsStarred: ["GET /gists/{gist_id}/star"],
+    create: ["POST /gists"],
+    createComment: ["POST /gists/{gist_id}/comments"],
+    delete: ["DELETE /gists/{gist_id}"],
+    deleteComment: ["DELETE /gists/{gist_id}/comments/{comment_id}"],
+    fork: ["POST /gists/{gist_id}/forks"],
+    get: ["GET /gists/{gist_id}"],
+    getComment: ["GET /gists/{gist_id}/comments/{comment_id}"],
+    getRevision: ["GET /gists/{gist_id}/{sha}"],
+    list: ["GET /gists"],
+    listComments: ["GET /gists/{gist_id}/comments"],
+    listCommits: ["GET /gists/{gist_id}/commits"],
+    listForUser: ["GET /users/{username}/gists"],
+    listForks: ["GET /gists/{gist_id}/forks"],
+    listPublic: ["GET /gists/public"],
+    listStarred: ["GET /gists/starred"],
+    star: ["PUT /gists/{gist_id}/star"],
+    unstar: ["DELETE /gists/{gist_id}/star"],
+    update: ["PATCH /gists/{gist_id}"],
+    updateComment: ["PATCH /gists/{gist_id}/comments/{comment_id}"]
+  },
+  git: {
+    createBlob: ["POST /repos/{owner}/{repo}/git/blobs"],
+    createCommit: ["POST /repos/{owner}/{repo}/git/commits"],
+    createRef: ["POST /repos/{owner}/{repo}/git/refs"],
+    createTag: ["POST /repos/{owner}/{repo}/git/tags"],
+    createTree: ["POST /repos/{owner}/{repo}/git/trees"],
+    deleteRef: ["DELETE /repos/{owner}/{repo}/git/refs/{ref}"],
+    getBlob: ["GET /repos/{owner}/{repo}/git/blobs/{file_sha}"],
+    getCommit: ["GET /repos/{owner}/{repo}/git/commits/{commit_sha}"],
+    getRef: ["GET /repos/{owner}/{repo}/git/ref/{ref}"],
+    getTag: ["GET /repos/{owner}/{repo}/git/tags/{tag_sha}"],
+    getTree: ["GET /repos/{owner}/{repo}/git/trees/{tree_sha}"],
+    listMatchingRefs: ["GET /repos/{owner}/{repo}/git/matching-refs/{ref}"],
+    updateRef: ["PATCH /repos/{owner}/{repo}/git/refs/{ref}"]
+  },
+  gitignore: {
+    getAllTemplates: ["GET /gitignore/templates"],
+    getTemplate: ["GET /gitignore/templates/{name}"]
+  },
+  hostedCompute: {
+    createNetworkConfigurationForOrg: [
+      "POST /orgs/{org}/settings/network-configurations"
+    ],
+    deleteNetworkConfigurationFromOrg: [
+      "DELETE /orgs/{org}/settings/network-configurations/{network_configuration_id}"
+    ],
+    getNetworkConfigurationForOrg: [
+      "GET /orgs/{org}/settings/network-configurations/{network_configuration_id}"
+    ],
+    getNetworkSettingsForOrg: [
+      "GET /orgs/{org}/settings/network-settings/{network_settings_id}"
+    ],
+    listNetworkConfigurationsForOrg: [
+      "GET /orgs/{org}/settings/network-configurations"
+    ],
+    updateNetworkConfigurationForOrg: [
+      "PATCH /orgs/{org}/settings/network-configurations/{network_configuration_id}"
+    ]
+  },
+  interactions: {
+    getRestrictionsForAuthenticatedUser: ["GET /user/interaction-limits"],
+    getRestrictionsForOrg: ["GET /orgs/{org}/interaction-limits"],
+    getRestrictionsForRepo: ["GET /repos/{owner}/{repo}/interaction-limits"],
+    getRestrictionsForYourPublicRepos: [
+      "GET /user/interaction-limits",
+      {},
+      { renamed: ["interactions", "getRestrictionsForAuthenticatedUser"] }
+    ],
+    removeRestrictionsForAuthenticatedUser: ["DELETE /user/interaction-limits"],
+    removeRestrictionsForOrg: ["DELETE /orgs/{org}/interaction-limits"],
+    removeRestrictionsForRepo: [
+      "DELETE /repos/{owner}/{repo}/interaction-limits"
+    ],
+    removeRestrictionsForYourPublicRepos: [
+      "DELETE /user/interaction-limits",
+      {},
+      { renamed: ["interactions", "removeRestrictionsForAuthenticatedUser"] }
+    ],
+    setRestrictionsForAuthenticatedUser: ["PUT /user/interaction-limits"],
+    setRestrictionsForOrg: ["PUT /orgs/{org}/interaction-limits"],
+    setRestrictionsForRepo: ["PUT /repos/{owner}/{repo}/interaction-limits"],
+    setRestrictionsForYourPublicRepos: [
+      "PUT /user/interaction-limits",
+      {},
+      { renamed: ["interactions", "setRestrictionsForAuthenticatedUser"] }
+    ]
+  },
+  issues: {
+    addAssignees: [
+      "POST /repos/{owner}/{repo}/issues/{issue_number}/assignees"
+    ],
+    addLabels: ["POST /repos/{owner}/{repo}/issues/{issue_number}/labels"],
+    addSubIssue: [
+      "POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues"
+    ],
+    checkUserCanBeAssigned: ["GET /repos/{owner}/{repo}/assignees/{assignee}"],
+    checkUserCanBeAssignedToIssue: [
+      "GET /repos/{owner}/{repo}/issues/{issue_number}/assignees/{assignee}"
+    ],
+    create: ["POST /repos/{owner}/{repo}/issues"],
+    createComment: [
+      "POST /repos/{owner}/{repo}/issues/{issue_number}/comments"
+    ],
+    createLabel: ["POST /repos/{owner}/{repo}/labels"],
+    createMilestone: ["POST /repos/{owner}/{repo}/milestones"],
+    deleteComment: [
+      "DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}"
+    ],
+    deleteLabel: ["DELETE /repos/{owner}/{repo}/labels/{name}"],
+    deleteMilestone: [
+      "DELETE /repos/{owner}/{repo}/milestones/{milestone_number}"
+    ],
+    get: ["GET /repos/{owner}/{repo}/issues/{issue_number}"],
+    getComment: ["GET /repos/{owner}/{repo}/issues/comments/{comment_id}"],
+    getEvent: ["GET /repos/{owner}/{repo}/issues/events/{event_id}"],
+    getLabel: ["GET /repos/{owner}/{repo}/labels/{name}"],
+    getMilestone: ["GET /repos/{owner}/{repo}/milestones/{milestone_number}"],
+    list: ["GET /issues"],
+    listAssignees: ["GET /repos/{owner}/{repo}/assignees"],
+    listComments: ["GET /repos/{owner}/{repo}/issues/{issue_number}/comments"],
+    listCommentsForRepo: ["GET /repos/{owner}/{repo}/issues/comments"],
+    listEvents: ["GET /repos/{owner}/{repo}/issues/{issue_number}/events"],
+    listEventsForRepo: ["GET /repos/{owner}/{repo}/issues/events"],
+    listEventsForTimeline: [
+      "GET /repos/{owner}/{repo}/issues/{issue_number}/timeline"
+    ],
+    listForAuthenticatedUser: ["GET /user/issues"],
+    listForOrg: ["GET /orgs/{org}/issues"],
+    listForRepo: ["GET /repos/{owner}/{repo}/issues"],
+    listLabelsForMilestone: [
+      "GET /repos/{owner}/{repo}/milestones/{milestone_number}/labels"
+    ],
+    listLabelsForRepo: ["GET /repos/{owner}/{repo}/labels"],
+    listLabelsOnIssue: [
+      "GET /repos/{owner}/{repo}/issues/{issue_number}/labels"
+    ],
+    listMilestones: ["GET /repos/{owner}/{repo}/milestones"],
+    listSubIssues: [
+      "GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues"
+    ],
+    lock: ["PUT /repos/{owner}/{repo}/issues/{issue_number}/lock"],
+    removeAllLabels: [
+      "DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels"
+    ],
+    removeAssignees: [
+      "DELETE /repos/{owner}/{repo}/issues/{issue_number}/assignees"
+    ],
+    removeLabel: [
+      "DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}"
+    ],
+    removeSubIssue: [
+      "DELETE /repos/{owner}/{repo}/issues/{issue_number}/sub_issue"
+    ],
+    reprioritizeSubIssue: [
+      "PATCH /repos/{owner}/{repo}/issues/{issue_number}/sub_issues/priority"
+    ],
+    setLabels: ["PUT /repos/{owner}/{repo}/issues/{issue_number}/labels"],
+    unlock: ["DELETE /repos/{owner}/{repo}/issues/{issue_number}/lock"],
+    update: ["PATCH /repos/{owner}/{repo}/issues/{issue_number}"],
+    updateComment: ["PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}"],
+    updateLabel: ["PATCH /repos/{owner}/{repo}/labels/{name}"],
+    updateMilestone: [
+      "PATCH /repos/{owner}/{repo}/milestones/{milestone_number}"
+    ]
+  },
+  licenses: {
+    get: ["GET /licenses/{license}"],
+    getAllCommonlyUsed: ["GET /licenses"],
+    getForRepo: ["GET /repos/{owner}/{repo}/license"]
+  },
+  markdown: {
+    render: ["POST /markdown"],
+    renderRaw: [
+      "POST /markdown/raw",
+      { headers: { "content-type": "text/plain; charset=utf-8" } }
+    ]
+  },
+  meta: {
+    get: ["GET /meta"],
+    getAllVersions: ["GET /versions"],
+    getOctocat: ["GET /octocat"],
+    getZen: ["GET /zen"],
+    root: ["GET /"]
+  },
+  migrations: {
+    deleteArchiveForAuthenticatedUser: [
+      "DELETE /user/migrations/{migration_id}/archive"
+    ],
+    deleteArchiveForOrg: [
+      "DELETE /orgs/{org}/migrations/{migration_id}/archive"
+    ],
+    downloadArchiveForOrg: [
+      "GET /orgs/{org}/migrations/{migration_id}/archive"
+    ],
+    getArchiveForAuthenticatedUser: [
+      "GET /user/migrations/{migration_id}/archive"
+    ],
+    getStatusForAuthenticatedUser: ["GET /user/migrations/{migration_id}"],
+    getStatusForOrg: ["GET /orgs/{org}/migrations/{migration_id}"],
+    listForAuthenticatedUser: ["GET /user/migrations"],
+    listForOrg: ["GET /orgs/{org}/migrations"],
+    listReposForAuthenticatedUser: [
+      "GET /user/migrations/{migration_id}/repositories"
+    ],
+    listReposForOrg: ["GET /orgs/{org}/migrations/{migration_id}/repositories"],
+    listReposForUser: [
+      "GET /user/migrations/{migration_id}/repositories",
+      {},
+      { renamed: ["migrations", "listReposForAuthenticatedUser"] }
+    ],
+    startForAuthenticatedUser: ["POST /user/migrations"],
+    startForOrg: ["POST /orgs/{org}/migrations"],
+    unlockRepoForAuthenticatedUser: [
+      "DELETE /user/migrations/{migration_id}/repos/{repo_name}/lock"
+    ],
+    unlockRepoForOrg: [
+      "DELETE /orgs/{org}/migrations/{migration_id}/repos/{repo_name}/lock"
+    ]
+  },
+  oidc: {
+    getOidcCustomSubTemplateForOrg: [
+      "GET /orgs/{org}/actions/oidc/customization/sub"
+    ],
+    updateOidcCustomSubTemplateForOrg: [
+      "PUT /orgs/{org}/actions/oidc/customization/sub"
+    ]
+  },
+  orgs: {
+    addSecurityManagerTeam: [
+      "PUT /orgs/{org}/security-managers/teams/{team_slug}",
+      {},
+      {
+        deprecated: "octokit.rest.orgs.addSecurityManagerTeam() is deprecated, see https://docs.github.com/rest/orgs/security-managers#add-a-security-manager-team"
+      }
+    ],
+    assignTeamToOrgRole: [
+      "PUT /orgs/{org}/organization-roles/teams/{team_slug}/{role_id}"
+    ],
+    assignUserToOrgRole: [
+      "PUT /orgs/{org}/organization-roles/users/{username}/{role_id}"
+    ],
+    blockUser: ["PUT /orgs/{org}/blocks/{username}"],
+    cancelInvitation: ["DELETE /orgs/{org}/invitations/{invitation_id}"],
+    checkBlockedUser: ["GET /orgs/{org}/blocks/{username}"],
+    checkMembershipForUser: ["GET /orgs/{org}/members/{username}"],
+    checkPublicMembershipForUser: ["GET /orgs/{org}/public_members/{username}"],
+    convertMemberToOutsideCollaborator: [
+      "PUT /orgs/{org}/outside_collaborators/{username}"
+    ],
+    createInvitation: ["POST /orgs/{org}/invitations"],
+    createIssueType: ["POST /orgs/{org}/issue-types"],
+    createOrUpdateCustomProperties: ["PATCH /orgs/{org}/properties/schema"],
+    createOrUpdateCustomPropertiesValuesForRepos: [
+      "PATCH /orgs/{org}/properties/values"
+    ],
+    createOrUpdateCustomProperty: [
+      "PUT /orgs/{org}/properties/schema/{custom_property_name}"
+    ],
+    createWebhook: ["POST /orgs/{org}/hooks"],
+    delete: ["DELETE /orgs/{org}"],
+    deleteIssueType: ["DELETE /orgs/{org}/issue-types/{issue_type_id}"],
+    deleteWebhook: ["DELETE /orgs/{org}/hooks/{hook_id}"],
+    enableOrDisableSecurityProductOnAllOrgRepos: [
+      "POST /orgs/{org}/{security_product}/{enablement}",
+      {},
+      {
+        deprecated: "octokit.rest.orgs.enableOrDisableSecurityProductOnAllOrgRepos() is deprecated, see https://docs.github.com/rest/orgs/orgs#enable-or-disable-a-security-feature-for-an-organization"
+      }
+    ],
+    get: ["GET /orgs/{org}"],
+    getAllCustomProperties: ["GET /orgs/{org}/properties/schema"],
+    getCustomProperty: [
+      "GET /orgs/{org}/properties/schema/{custom_property_name}"
+    ],
+    getMembershipForAuthenticatedUser: ["GET /user/memberships/orgs/{org}"],
+    getMembershipForUser: ["GET /orgs/{org}/memberships/{username}"],
+    getOrgRole: ["GET /orgs/{org}/organization-roles/{role_id}"],
+    getOrgRulesetHistory: ["GET /orgs/{org}/rulesets/{ruleset_id}/history"],
+    getOrgRulesetVersion: [
+      "GET /orgs/{org}/rulesets/{ruleset_id}/history/{version_id}"
+    ],
+    getWebhook: ["GET /orgs/{org}/hooks/{hook_id}"],
+    getWebhookConfigForOrg: ["GET /orgs/{org}/hooks/{hook_id}/config"],
+    getWebhookDelivery: [
+      "GET /orgs/{org}/hooks/{hook_id}/deliveries/{delivery_id}"
+    ],
+    list: ["GET /organizations"],
+    listAppInstallations: ["GET /orgs/{org}/installations"],
+    listAttestations: ["GET /orgs/{org}/attestations/{subject_digest}"],
+    listBlockedUsers: ["GET /orgs/{org}/blocks"],
+    listCustomPropertiesValuesForRepos: ["GET /orgs/{org}/properties/values"],
+    listFailedInvitations: ["GET /orgs/{org}/failed_invitations"],
+    listForAuthenticatedUser: ["GET /user/orgs"],
+    listForUser: ["GET /users/{username}/orgs"],
+    listInvitationTeams: ["GET /orgs/{org}/invitations/{invitation_id}/teams"],
+    listIssueTypes: ["GET /orgs/{org}/issue-types"],
+    listMembers: ["GET /orgs/{org}/members"],
+    listMembershipsForAuthenticatedUser: ["GET /user/memberships/orgs"],
+    listOrgRoleTeams: ["GET /orgs/{org}/organization-roles/{role_id}/teams"],
+    listOrgRoleUsers: ["GET /orgs/{org}/organization-roles/{role_id}/users"],
+    listOrgRoles: ["GET /orgs/{org}/organization-roles"],
+    listOrganizationFineGrainedPermissions: [
+      "GET /orgs/{org}/organization-fine-grained-permissions"
+    ],
+    listOutsideCollaborators: ["GET /orgs/{org}/outside_collaborators"],
+    listPatGrantRepositories: [
+      "GET /orgs/{org}/personal-access-tokens/{pat_id}/repositories"
+    ],
+    listPatGrantRequestRepositories: [
+      "GET /orgs/{org}/personal-access-token-requests/{pat_request_id}/repositories"
+    ],
+    listPatGrantRequests: ["GET /orgs/{org}/personal-access-token-requests"],
+    listPatGrants: ["GET /orgs/{org}/personal-access-tokens"],
+    listPendingInvitations: ["GET /orgs/{org}/invitations"],
+    listPublicMembers: ["GET /orgs/{org}/public_members"],
+    listSecurityManagerTeams: [
+      "GET /orgs/{org}/security-managers",
+      {},
+      {
+        deprecated: "octokit.rest.orgs.listSecurityManagerTeams() is deprecated, see https://docs.github.com/rest/orgs/security-managers#list-security-manager-teams"
+      }
+    ],
+    listWebhookDeliveries: ["GET /orgs/{org}/hooks/{hook_id}/deliveries"],
+    listWebhooks: ["GET /orgs/{org}/hooks"],
+    pingWebhook: ["POST /orgs/{org}/hooks/{hook_id}/pings"],
+    redeliverWebhookDelivery: [
+      "POST /orgs/{org}/hooks/{hook_id}/deliveries/{delivery_id}/attempts"
+    ],
+    removeCustomProperty: [
+      "DELETE /orgs/{org}/properties/schema/{custom_property_name}"
+    ],
+    removeMember: ["DELETE /orgs/{org}/members/{username}"],
+    removeMembershipForUser: ["DELETE /orgs/{org}/memberships/{username}"],
+    removeOutsideCollaborator: [
+      "DELETE /orgs/{org}/outside_collaborators/{username}"
+    ],
+    removePublicMembershipForAuthenticatedUser: [
+      "DELETE /orgs/{org}/public_members/{username}"
+    ],
+    removeSecurityManagerTeam: [
+      "DELETE /orgs/{org}/security-managers/teams/{team_slug}",
+      {},
+      {
+        deprecated: "octokit.rest.orgs.removeSecurityManagerTeam() is deprecated, see https://docs.github.com/rest/orgs/security-managers#remove-a-security-manager-team"
+      }
+    ],
+    reviewPatGrantRequest: [
+      "POST /orgs/{org}/personal-access-token-requests/{pat_request_id}"
+    ],
+    reviewPatGrantRequestsInBulk: [
+      "POST /orgs/{org}/personal-access-token-requests"
+    ],
+    revokeAllOrgRolesTeam: [
+      "DELETE /orgs/{org}/organization-roles/teams/{team_slug}"
+    ],
+    revokeAllOrgRolesUser: [
+      "DELETE /orgs/{org}/organization-roles/users/{username}"
+    ],
+    revokeOrgRoleTeam: [
+      "DELETE /orgs/{org}/organization-roles/teams/{team_slug}/{role_id}"
+    ],
+    revokeOrgRoleUser: [
+      "DELETE /orgs/{org}/organization-roles/users/{username}/{role_id}"
+    ],
+    setMembershipForUser: ["PUT /orgs/{org}/memberships/{username}"],
+    setPublicMembershipForAuthenticatedUser: [
+      "PUT /orgs/{org}/public_members/{username}"
+    ],
+    unblockUser: ["DELETE /orgs/{org}/blocks/{username}"],
+    update: ["PATCH /orgs/{org}"],
+    updateIssueType: ["PUT /orgs/{org}/issue-types/{issue_type_id}"],
+    updateMembershipForAuthenticatedUser: [
+      "PATCH /user/memberships/orgs/{org}"
+    ],
+    updatePatAccess: ["POST /orgs/{org}/personal-access-tokens/{pat_id}"],
+    updatePatAccesses: ["POST /orgs/{org}/personal-access-tokens"],
+    updateWebhook: ["PATCH /orgs/{org}/hooks/{hook_id}"],
+    updateWebhookConfigForOrg: ["PATCH /orgs/{org}/hooks/{hook_id}/config"]
+  },
+  packages: {
+    deletePackageForAuthenticatedUser: [
+      "DELETE /user/packages/{package_type}/{package_name}"
+    ],
+    deletePackageForOrg: [
+      "DELETE /orgs/{org}/packages/{package_type}/{package_name}"
+    ],
+    deletePackageForUser: [
+      "DELETE /users/{username}/packages/{package_type}/{package_name}"
+    ],
+    deletePackageVersionForAuthenticatedUser: [
+      "DELETE /user/packages/{package_type}/{package_name}/versions/{package_version_id}"
+    ],
+    deletePackageVersionForOrg: [
+      "DELETE /orgs/{org}/packages/{package_type}/{package_name}/versions/{package_version_id}"
+    ],
+    deletePackageVersionForUser: [
+      "DELETE /users/{username}/packages/{package_type}/{package_name}/versions/{package_version_id}"
+    ],
+    getAllPackageVersionsForAPackageOwnedByAnOrg: [
+      "GET /orgs/{org}/packages/{package_type}/{package_name}/versions",
+      {},
+      { renamed: ["packages", "getAllPackageVersionsForPackageOwnedByOrg"] }
+    ],
+    getAllPackageVersionsForAPackageOwnedByTheAuthenticatedUser: [
+      "GET /user/packages/{package_type}/{package_name}/versions",
+      {},
+      {
+        renamed: [
+          "packages",
+          "getAllPackageVersionsForPackageOwnedByAuthenticatedUser"
+        ]
+      }
+    ],
+    getAllPackageVersionsForPackageOwnedByAuthenticatedUser: [
+      "GET /user/packages/{package_type}/{package_name}/versions"
+    ],
+    getAllPackageVersionsForPackageOwnedByOrg: [
+      "GET /orgs/{org}/packages/{package_type}/{package_name}/versions"
+    ],
+    getAllPackageVersionsForPackageOwnedByUser: [
+      "GET /users/{username}/packages/{package_type}/{package_name}/versions"
+    ],
+    getPackageForAuthenticatedUser: [
+      "GET /user/packages/{package_type}/{package_name}"
+    ],
+    getPackageForOrganization: [
+      "GET /orgs/{org}/packages/{package_type}/{package_name}"
+    ],
+    getPackageForUser: [
+      "GET /users/{username}/packages/{package_type}/{package_name}"
+    ],
+    getPackageVersionForAuthenticatedUser: [
+      "GET /user/packages/{package_type}/{package_name}/versions/{package_version_id}"
+    ],
+    getPackageVersionForOrganization: [
+      "GET /orgs/{org}/packages/{package_type}/{package_name}/versions/{package_version_id}"
+    ],
+    getPackageVersionForUser: [
+      "GET /users/{username}/packages/{package_type}/{package_name}/versions/{package_version_id}"
+    ],
+    listDockerMigrationConflictingPackagesForAuthenticatedUser: [
+      "GET /user/docker/conflicts"
+    ],
+    listDockerMigrationConflictingPackagesForOrganization: [
+      "GET /orgs/{org}/docker/conflicts"
+    ],
+    listDockerMigrationConflictingPackagesForUser: [
+      "GET /users/{username}/docker/conflicts"
+    ],
+    listPackagesForAuthenticatedUser: ["GET /user/packages"],
+    listPackagesForOrganization: ["GET /orgs/{org}/packages"],
+    listPackagesForUser: ["GET /users/{username}/packages"],
+    restorePackageForAuthenticatedUser: [
+      "POST /user/packages/{package_type}/{package_name}/restore{?token}"
+    ],
+    restorePackageForOrg: [
+      "POST /orgs/{org}/packages/{package_type}/{package_name}/restore{?token}"
+    ],
+    restorePackageForUser: [
+      "POST /users/{username}/packages/{package_type}/{package_name}/restore{?token}"
+    ],
+    restorePackageVersionForAuthenticatedUser: [
+      "POST /user/packages/{package_type}/{package_name}/versions/{package_version_id}/restore"
+    ],
+    restorePackageVersionForOrg: [
+      "POST /orgs/{org}/packages/{package_type}/{package_name}/versions/{package_version_id}/restore"
+    ],
+    restorePackageVersionForUser: [
+      "POST /users/{username}/packages/{package_type}/{package_name}/versions/{package_version_id}/restore"
+    ]
+  },
+  privateRegistries: {
+    createOrgPrivateRegistry: ["POST /orgs/{org}/private-registries"],
+    deleteOrgPrivateRegistry: [
+      "DELETE /orgs/{org}/private-registries/{secret_name}"
+    ],
+    getOrgPrivateRegistry: ["GET /orgs/{org}/private-registries/{secret_name}"],
+    getOrgPublicKey: ["GET /orgs/{org}/private-registries/public-key"],
+    listOrgPrivateRegistries: ["GET /orgs/{org}/private-registries"],
+    updateOrgPrivateRegistry: [
+      "PATCH /orgs/{org}/private-registries/{secret_name}"
+    ]
+  },
+  pulls: {
+    checkIfMerged: ["GET /repos/{owner}/{repo}/pulls/{pull_number}/merge"],
+    create: ["POST /repos/{owner}/{repo}/pulls"],
+    createReplyForReviewComment: [
+      "POST /repos/{owner}/{repo}/pulls/{pull_number}/comments/{comment_id}/replies"
+    ],
+    createReview: ["POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews"],
+    createReviewComment: [
+      "POST /repos/{owner}/{repo}/pulls/{pull_number}/comments"
+    ],
+    deletePendingReview: [
+      "DELETE /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}"
+    ],
+    deleteReviewComment: [
+      "DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}"
+    ],
+    dismissReview: [
+      "PUT /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/dismissals"
+    ],
+    get: ["GET /repos/{owner}/{repo}/pulls/{pull_number}"],
+    getReview: [
+      "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}"
+    ],
+    getReviewComment: ["GET /repos/{owner}/{repo}/pulls/comments/{comment_id}"],
+    list: ["GET /repos/{owner}/{repo}/pulls"],
+    listCommentsForReview: [
+      "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/comments"
+    ],
+    listCommits: ["GET /repos/{owner}/{repo}/pulls/{pull_number}/commits"],
+    listFiles: ["GET /repos/{owner}/{repo}/pulls/{pull_number}/files"],
+    listRequestedReviewers: [
+      "GET /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers"
+    ],
+    listReviewComments: [
+      "GET /repos/{owner}/{repo}/pulls/{pull_number}/comments"
+    ],
+    listReviewCommentsForRepo: ["GET /repos/{owner}/{repo}/pulls/comments"],
+    listReviews: ["GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews"],
+    merge: ["PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge"],
+    removeRequestedReviewers: [
+      "DELETE /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers"
+    ],
+    requestReviewers: [
+      "POST /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers"
+    ],
+    submitReview: [
+      "POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/events"
+    ],
+    update: ["PATCH /repos/{owner}/{repo}/pulls/{pull_number}"],
+    updateBranch: [
+      "PUT /repos/{owner}/{repo}/pulls/{pull_number}/update-branch"
+    ],
+    updateReview: [
+      "PUT /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}"
+    ],
+    updateReviewComment: [
+      "PATCH /repos/{owner}/{repo}/pulls/comments/{comment_id}"
+    ]
+  },
+  rateLimit: { get: ["GET /rate_limit"] },
+  reactions: {
+    createForCommitComment: [
+      "POST /repos/{owner}/{repo}/comments/{comment_id}/reactions"
+    ],
+    createForIssue: [
+      "POST /repos/{owner}/{repo}/issues/{issue_number}/reactions"
+    ],
+    createForIssueComment: [
+      "POST /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions"
+    ],
+    createForPullRequestReviewComment: [
+      "POST /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions"
+    ],
+    createForRelease: [
+      "POST /repos/{owner}/{repo}/releases/{release_id}/reactions"
+    ],
+    createForTeamDiscussionCommentInOrg: [
+      "POST /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions"
+    ],
+    createForTeamDiscussionInOrg: [
+      "POST /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions"
+    ],
+    deleteForCommitComment: [
+      "DELETE /repos/{owner}/{repo}/comments/{comment_id}/reactions/{reaction_id}"
+    ],
+    deleteForIssue: [
+      "DELETE /repos/{owner}/{repo}/issues/{issue_number}/reactions/{reaction_id}"
+    ],
+    deleteForIssueComment: [
+      "DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions/{reaction_id}"
+    ],
+    deleteForPullRequestComment: [
+      "DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions/{reaction_id}"
+    ],
+    deleteForRelease: [
+      "DELETE /repos/{owner}/{repo}/releases/{release_id}/reactions/{reaction_id}"
+    ],
+    deleteForTeamDiscussion: [
+      "DELETE /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions/{reaction_id}"
+    ],
+    deleteForTeamDiscussionComment: [
+      "DELETE /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions/{reaction_id}"
+    ],
+    listForCommitComment: [
+      "GET /repos/{owner}/{repo}/comments/{comment_id}/reactions"
+    ],
+    listForIssue: ["GET /repos/{owner}/{repo}/issues/{issue_number}/reactions"],
+    listForIssueComment: [
+      "GET /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions"
+    ],
+    listForPullRequestReviewComment: [
+      "GET /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions"
+    ],
+    listForRelease: [
+      "GET /repos/{owner}/{repo}/releases/{release_id}/reactions"
+    ],
+    listForTeamDiscussionCommentInOrg: [
+      "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions"
+    ],
+    listForTeamDiscussionInOrg: [
+      "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions"
+    ]
+  },
+  repos: {
+    acceptInvitation: [
+      "PATCH /user/repository_invitations/{invitation_id}",
+      {},
+      { renamed: ["repos", "acceptInvitationForAuthenticatedUser"] }
+    ],
+    acceptInvitationForAuthenticatedUser: [
+      "PATCH /user/repository_invitations/{invitation_id}"
+    ],
+    addAppAccessRestrictions: [
+      "POST /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/apps",
+      {},
+      { mapToData: "apps" }
+    ],
+    addCollaborator: ["PUT /repos/{owner}/{repo}/collaborators/{username}"],
+    addStatusCheckContexts: [
+      "POST /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks/contexts",
+      {},
+      { mapToData: "contexts" }
+    ],
+    addTeamAccessRestrictions: [
+      "POST /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/teams",
+      {},
+      { mapToData: "teams" }
+    ],
+    addUserAccessRestrictions: [
+      "POST /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/users",
+      {},
+      { mapToData: "users" }
+    ],
+    cancelPagesDeployment: [
+      "POST /repos/{owner}/{repo}/pages/deployments/{pages_deployment_id}/cancel"
+    ],
+    checkAutomatedSecurityFixes: [
+      "GET /repos/{owner}/{repo}/automated-security-fixes"
+    ],
+    checkCollaborator: ["GET /repos/{owner}/{repo}/collaborators/{username}"],
+    checkPrivateVulnerabilityReporting: [
+      "GET /repos/{owner}/{repo}/private-vulnerability-reporting"
+    ],
+    checkVulnerabilityAlerts: [
+      "GET /repos/{owner}/{repo}/vulnerability-alerts"
+    ],
+    codeownersErrors: ["GET /repos/{owner}/{repo}/codeowners/errors"],
+    compareCommits: ["GET /repos/{owner}/{repo}/compare/{base}...{head}"],
+    compareCommitsWithBasehead: [
+      "GET /repos/{owner}/{repo}/compare/{basehead}"
+    ],
+    createAttestation: ["POST /repos/{owner}/{repo}/attestations"],
+    createAutolink: ["POST /repos/{owner}/{repo}/autolinks"],
+    createCommitComment: [
+      "POST /repos/{owner}/{repo}/commits/{commit_sha}/comments"
+    ],
+    createCommitSignatureProtection: [
+      "POST /repos/{owner}/{repo}/branches/{branch}/protection/required_signatures"
+    ],
+    createCommitStatus: ["POST /repos/{owner}/{repo}/statuses/{sha}"],
+    createDeployKey: ["POST /repos/{owner}/{repo}/keys"],
+    createDeployment: ["POST /repos/{owner}/{repo}/deployments"],
+    createDeploymentBranchPolicy: [
+      "POST /repos/{owner}/{repo}/environments/{environment_name}/deployment-branch-policies"
+    ],
+    createDeploymentProtectionRule: [
+      "POST /repos/{owner}/{repo}/environments/{environment_name}/deployment_protection_rules"
+    ],
+    createDeploymentStatus: [
+      "POST /repos/{owner}/{repo}/deployments/{deployment_id}/statuses"
+    ],
+    createDispatchEvent: ["POST /repos/{owner}/{repo}/dispatches"],
+    createForAuthenticatedUser: ["POST /user/repos"],
+    createFork: ["POST /repos/{owner}/{repo}/forks"],
+    createInOrg: ["POST /orgs/{org}/repos"],
+    createOrUpdateCustomPropertiesValues: [
+      "PATCH /repos/{owner}/{repo}/properties/values"
+    ],
+    createOrUpdateEnvironment: [
+      "PUT /repos/{owner}/{repo}/environments/{environment_name}"
+    ],
+    createOrUpdateFileContents: ["PUT /repos/{owner}/{repo}/contents/{path}"],
+    createOrgRuleset: ["POST /orgs/{org}/rulesets"],
+    createPagesDeployment: ["POST /repos/{owner}/{repo}/pages/deployments"],
+    createPagesSite: ["POST /repos/{owner}/{repo}/pages"],
+    createRelease: ["POST /repos/{owner}/{repo}/releases"],
+    createRepoRuleset: ["POST /repos/{owner}/{repo}/rulesets"],
+    createUsingTemplate: [
+      "POST /repos/{template_owner}/{template_repo}/generate"
+    ],
+    createWebhook: ["POST /repos/{owner}/{repo}/hooks"],
+    declineInvitation: [
+      "DELETE /user/repository_invitations/{invitation_id}",
+      {},
+      { renamed: ["repos", "declineInvitationForAuthenticatedUser"] }
+    ],
+    declineInvitationForAuthenticatedUser: [
+      "DELETE /user/repository_invitations/{invitation_id}"
+    ],
+    delete: ["DELETE /repos/{owner}/{repo}"],
+    deleteAccessRestrictions: [
+      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/restrictions"
+    ],
+    deleteAdminBranchProtection: [
+      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/enforce_admins"
+    ],
+    deleteAnEnvironment: [
+      "DELETE /repos/{owner}/{repo}/environments/{environment_name}"
+    ],
+    deleteAutolink: ["DELETE /repos/{owner}/{repo}/autolinks/{autolink_id}"],
+    deleteBranchProtection: [
+      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection"
+    ],
+    deleteCommitComment: ["DELETE /repos/{owner}/{repo}/comments/{comment_id}"],
+    deleteCommitSignatureProtection: [
+      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/required_signatures"
+    ],
+    deleteDeployKey: ["DELETE /repos/{owner}/{repo}/keys/{key_id}"],
+    deleteDeployment: [
+      "DELETE /repos/{owner}/{repo}/deployments/{deployment_id}"
+    ],
+    deleteDeploymentBranchPolicy: [
+      "DELETE /repos/{owner}/{repo}/environments/{environment_name}/deployment-branch-policies/{branch_policy_id}"
+    ],
+    deleteFile: ["DELETE /repos/{owner}/{repo}/contents/{path}"],
+    deleteInvitation: [
+      "DELETE /repos/{owner}/{repo}/invitations/{invitation_id}"
+    ],
+    deleteOrgRuleset: ["DELETE /orgs/{org}/rulesets/{ruleset_id}"],
+    deletePagesSite: ["DELETE /repos/{owner}/{repo}/pages"],
+    deletePullRequestReviewProtection: [
+      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/required_pull_request_reviews"
+    ],
+    deleteRelease: ["DELETE /repos/{owner}/{repo}/releases/{release_id}"],
+    deleteReleaseAsset: [
+      "DELETE /repos/{owner}/{repo}/releases/assets/{asset_id}"
+    ],
+    deleteRepoRuleset: ["DELETE /repos/{owner}/{repo}/rulesets/{ruleset_id}"],
+    deleteWebhook: ["DELETE /repos/{owner}/{repo}/hooks/{hook_id}"],
+    disableAutomatedSecurityFixes: [
+      "DELETE /repos/{owner}/{repo}/automated-security-fixes"
+    ],
+    disableDeploymentProtectionRule: [
+      "DELETE /repos/{owner}/{repo}/environments/{environment_name}/deployment_protection_rules/{protection_rule_id}"
+    ],
+    disablePrivateVulnerabilityReporting: [
+      "DELETE /repos/{owner}/{repo}/private-vulnerability-reporting"
+    ],
+    disableVulnerabilityAlerts: [
+      "DELETE /repos/{owner}/{repo}/vulnerability-alerts"
+    ],
+    downloadArchive: [
+      "GET /repos/{owner}/{repo}/zipball/{ref}",
+      {},
+      { renamed: ["repos", "downloadZipballArchive"] }
+    ],
+    downloadTarballArchive: ["GET /repos/{owner}/{repo}/tarball/{ref}"],
+    downloadZipballArchive: ["GET /repos/{owner}/{repo}/zipball/{ref}"],
+    enableAutomatedSecurityFixes: [
+      "PUT /repos/{owner}/{repo}/automated-security-fixes"
+    ],
+    enablePrivateVulnerabilityReporting: [
+      "PUT /repos/{owner}/{repo}/private-vulnerability-reporting"
+    ],
+    enableVulnerabilityAlerts: [
+      "PUT /repos/{owner}/{repo}/vulnerability-alerts"
+    ],
+    generateReleaseNotes: [
+      "POST /repos/{owner}/{repo}/releases/generate-notes"
+    ],
+    get: ["GET /repos/{owner}/{repo}"],
+    getAccessRestrictions: [
+      "GET /repos/{owner}/{repo}/branches/{branch}/protection/restrictions"
+    ],
+    getAdminBranchProtection: [
+      "GET /repos/{owner}/{repo}/branches/{branch}/protection/enforce_admins"
+    ],
+    getAllDeploymentProtectionRules: [
+      "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment_protection_rules"
+    ],
+    getAllEnvironments: ["GET /repos/{owner}/{repo}/environments"],
+    getAllStatusCheckContexts: [
+      "GET /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks/contexts"
+    ],
+    getAllTopics: ["GET /repos/{owner}/{repo}/topics"],
+    getAppsWithAccessToProtectedBranch: [
+      "GET /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/apps"
+    ],
+    getAutolink: ["GET /repos/{owner}/{repo}/autolinks/{autolink_id}"],
+    getBranch: ["GET /repos/{owner}/{repo}/branches/{branch}"],
+    getBranchProtection: [
+      "GET /repos/{owner}/{repo}/branches/{branch}/protection"
+    ],
+    getBranchRules: ["GET /repos/{owner}/{repo}/rules/branches/{branch}"],
+    getClones: ["GET /repos/{owner}/{repo}/traffic/clones"],
+    getCodeFrequencyStats: ["GET /repos/{owner}/{repo}/stats/code_frequency"],
+    getCollaboratorPermissionLevel: [
+      "GET /repos/{owner}/{repo}/collaborators/{username}/permission"
+    ],
+    getCombinedStatusForRef: ["GET /repos/{owner}/{repo}/commits/{ref}/status"],
+    getCommit: ["GET /repos/{owner}/{repo}/commits/{ref}"],
+    getCommitActivityStats: ["GET /repos/{owner}/{repo}/stats/commit_activity"],
+    getCommitComment: ["GET /repos/{owner}/{repo}/comments/{comment_id}"],
+    getCommitSignatureProtection: [
+      "GET /repos/{owner}/{repo}/branches/{branch}/protection/required_signatures"
+    ],
+    getCommunityProfileMetrics: ["GET /repos/{owner}/{repo}/community/profile"],
+    getContent: ["GET /repos/{owner}/{repo}/contents/{path}"],
+    getContributorsStats: ["GET /repos/{owner}/{repo}/stats/contributors"],
+    getCustomDeploymentProtectionRule: [
+      "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment_protection_rules/{protection_rule_id}"
+    ],
+    getCustomPropertiesValues: ["GET /repos/{owner}/{repo}/properties/values"],
+    getDeployKey: ["GET /repos/{owner}/{repo}/keys/{key_id}"],
+    getDeployment: ["GET /repos/{owner}/{repo}/deployments/{deployment_id}"],
+    getDeploymentBranchPolicy: [
+      "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment-branch-policies/{branch_policy_id}"
+    ],
+    getDeploymentStatus: [
+      "GET /repos/{owner}/{repo}/deployments/{deployment_id}/statuses/{status_id}"
+    ],
+    getEnvironment: [
+      "GET /repos/{owner}/{repo}/environments/{environment_name}"
+    ],
+    getLatestPagesBuild: ["GET /repos/{owner}/{repo}/pages/builds/latest"],
+    getLatestRelease: ["GET /repos/{owner}/{repo}/releases/latest"],
+    getOrgRuleSuite: ["GET /orgs/{org}/rulesets/rule-suites/{rule_suite_id}"],
+    getOrgRuleSuites: ["GET /orgs/{org}/rulesets/rule-suites"],
+    getOrgRuleset: ["GET /orgs/{org}/rulesets/{ruleset_id}"],
+    getOrgRulesets: ["GET /orgs/{org}/rulesets"],
+    getPages: ["GET /repos/{owner}/{repo}/pages"],
+    getPagesBuild: ["GET /repos/{owner}/{repo}/pages/builds/{build_id}"],
+    getPagesDeployment: [
+      "GET /repos/{owner}/{repo}/pages/deployments/{pages_deployment_id}"
+    ],
+    getPagesHealthCheck: ["GET /repos/{owner}/{repo}/pages/health"],
+    getParticipationStats: ["GET /repos/{owner}/{repo}/stats/participation"],
+    getPullRequestReviewProtection: [
+      "GET /repos/{owner}/{repo}/branches/{branch}/protection/required_pull_request_reviews"
+    ],
+    getPunchCardStats: ["GET /repos/{owner}/{repo}/stats/punch_card"],
+    getReadme: ["GET /repos/{owner}/{repo}/readme"],
+    getReadmeInDirectory: ["GET /repos/{owner}/{repo}/readme/{dir}"],
+    getRelease: ["GET /repos/{owner}/{repo}/releases/{release_id}"],
+    getReleaseAsset: ["GET /repos/{owner}/{repo}/releases/assets/{asset_id}"],
+    getReleaseByTag: ["GET /repos/{owner}/{repo}/releases/tags/{tag}"],
+    getRepoRuleSuite: [
+      "GET /repos/{owner}/{repo}/rulesets/rule-suites/{rule_suite_id}"
+    ],
+    getRepoRuleSuites: ["GET /repos/{owner}/{repo}/rulesets/rule-suites"],
+    getRepoRuleset: ["GET /repos/{owner}/{repo}/rulesets/{ruleset_id}"],
+    getRepoRulesetHistory: [
+      "GET /repos/{owner}/{repo}/rulesets/{ruleset_id}/history"
+    ],
+    getRepoRulesetVersion: [
+      "GET /repos/{owner}/{repo}/rulesets/{ruleset_id}/history/{version_id}"
+    ],
+    getRepoRulesets: ["GET /repos/{owner}/{repo}/rulesets"],
+    getStatusChecksProtection: [
+      "GET /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks"
+    ],
+    getTeamsWithAccessToProtectedBranch: [
+      "GET /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/teams"
+    ],
+    getTopPaths: ["GET /repos/{owner}/{repo}/traffic/popular/paths"],
+    getTopReferrers: ["GET /repos/{owner}/{repo}/traffic/popular/referrers"],
+    getUsersWithAccessToProtectedBranch: [
+      "GET /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/users"
+    ],
+    getViews: ["GET /repos/{owner}/{repo}/traffic/views"],
+    getWebhook: ["GET /repos/{owner}/{repo}/hooks/{hook_id}"],
+    getWebhookConfigForRepo: [
+      "GET /repos/{owner}/{repo}/hooks/{hook_id}/config"
+    ],
+    getWebhookDelivery: [
+      "GET /repos/{owner}/{repo}/hooks/{hook_id}/deliveries/{delivery_id}"
+    ],
+    listActivities: ["GET /repos/{owner}/{repo}/activity"],
+    listAttestations: [
+      "GET /repos/{owner}/{repo}/attestations/{subject_digest}"
+    ],
+    listAutolinks: ["GET /repos/{owner}/{repo}/autolinks"],
+    listBranches: ["GET /repos/{owner}/{repo}/branches"],
+    listBranchesForHeadCommit: [
+      "GET /repos/{owner}/{repo}/commits/{commit_sha}/branches-where-head"
+    ],
+    listCollaborators: ["GET /repos/{owner}/{repo}/collaborators"],
+    listCommentsForCommit: [
+      "GET /repos/{owner}/{repo}/commits/{commit_sha}/comments"
+    ],
+    listCommitCommentsForRepo: ["GET /repos/{owner}/{repo}/comments"],
+    listCommitStatusesForRef: [
+      "GET /repos/{owner}/{repo}/commits/{ref}/statuses"
+    ],
+    listCommits: ["GET /repos/{owner}/{repo}/commits"],
+    listContributors: ["GET /repos/{owner}/{repo}/contributors"],
+    listCustomDeploymentRuleIntegrations: [
+      "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment_protection_rules/apps"
+    ],
+    listDeployKeys: ["GET /repos/{owner}/{repo}/keys"],
+    listDeploymentBranchPolicies: [
+      "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment-branch-policies"
+    ],
+    listDeploymentStatuses: [
+      "GET /repos/{owner}/{repo}/deployments/{deployment_id}/statuses"
+    ],
+    listDeployments: ["GET /repos/{owner}/{repo}/deployments"],
+    listForAuthenticatedUser: ["GET /user/repos"],
+    listForOrg: ["GET /orgs/{org}/repos"],
+    listForUser: ["GET /users/{username}/repos"],
+    listForks: ["GET /repos/{owner}/{repo}/forks"],
+    listInvitations: ["GET /repos/{owner}/{repo}/invitations"],
+    listInvitationsForAuthenticatedUser: ["GET /user/repository_invitations"],
+    listLanguages: ["GET /repos/{owner}/{repo}/languages"],
+    listPagesBuilds: ["GET /repos/{owner}/{repo}/pages/builds"],
+    listPublic: ["GET /repositories"],
+    listPullRequestsAssociatedWithCommit: [
+      "GET /repos/{owner}/{repo}/commits/{commit_sha}/pulls"
+    ],
+    listReleaseAssets: [
+      "GET /repos/{owner}/{repo}/releases/{release_id}/assets"
+    ],
+    listReleases: ["GET /repos/{owner}/{repo}/releases"],
+    listTags: ["GET /repos/{owner}/{repo}/tags"],
+    listTeams: ["GET /repos/{owner}/{repo}/teams"],
+    listWebhookDeliveries: [
+      "GET /repos/{owner}/{repo}/hooks/{hook_id}/deliveries"
+    ],
+    listWebhooks: ["GET /repos/{owner}/{repo}/hooks"],
+    merge: ["POST /repos/{owner}/{repo}/merges"],
+    mergeUpstream: ["POST /repos/{owner}/{repo}/merge-upstream"],
+    pingWebhook: ["POST /repos/{owner}/{repo}/hooks/{hook_id}/pings"],
+    redeliverWebhookDelivery: [
+      "POST /repos/{owner}/{repo}/hooks/{hook_id}/deliveries/{delivery_id}/attempts"
+    ],
+    removeAppAccessRestrictions: [
+      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/apps",
+      {},
+      { mapToData: "apps" }
+    ],
+    removeCollaborator: [
+      "DELETE /repos/{owner}/{repo}/collaborators/{username}"
+    ],
+    removeStatusCheckContexts: [
+      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks/contexts",
+      {},
+      { mapToData: "contexts" }
+    ],
+    removeStatusCheckProtection: [
+      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks"
+    ],
+    removeTeamAccessRestrictions: [
+      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/teams",
+      {},
+      { mapToData: "teams" }
+    ],
+    removeUserAccessRestrictions: [
+      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/users",
+      {},
+      { mapToData: "users" }
+    ],
+    renameBranch: ["POST /repos/{owner}/{repo}/branches/{branch}/rename"],
+    replaceAllTopics: ["PUT /repos/{owner}/{repo}/topics"],
+    requestPagesBuild: ["POST /repos/{owner}/{repo}/pages/builds"],
+    setAdminBranchProtection: [
+      "POST /repos/{owner}/{repo}/branches/{branch}/protection/enforce_admins"
+    ],
+    setAppAccessRestrictions: [
+      "PUT /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/apps",
+      {},
+      { mapToData: "apps" }
+    ],
+    setStatusCheckContexts: [
+      "PUT /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks/contexts",
+      {},
+      { mapToData: "contexts" }
+    ],
+    setTeamAccessRestrictions: [
+      "PUT /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/teams",
+      {},
+      { mapToData: "teams" }
+    ],
+    setUserAccessRestrictions: [
+      "PUT /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/users",
+      {},
+      { mapToData: "users" }
+    ],
+    testPushWebhook: ["POST /repos/{owner}/{repo}/hooks/{hook_id}/tests"],
+    transfer: ["POST /repos/{owner}/{repo}/transfer"],
+    update: ["PATCH /repos/{owner}/{repo}"],
+    updateBranchProtection: [
+      "PUT /repos/{owner}/{repo}/branches/{branch}/protection"
+    ],
+    updateCommitComment: ["PATCH /repos/{owner}/{repo}/comments/{comment_id}"],
+    updateDeploymentBranchPolicy: [
+      "PUT /repos/{owner}/{repo}/environments/{environment_name}/deployment-branch-policies/{branch_policy_id}"
+    ],
+    updateInformationAboutPagesSite: ["PUT /repos/{owner}/{repo}/pages"],
+    updateInvitation: [
+      "PATCH /repos/{owner}/{repo}/invitations/{invitation_id}"
+    ],
+    updateOrgRuleset: ["PUT /orgs/{org}/rulesets/{ruleset_id}"],
+    updatePullRequestReviewProtection: [
+      "PATCH /repos/{owner}/{repo}/branches/{branch}/protection/required_pull_request_reviews"
+    ],
+    updateRelease: ["PATCH /repos/{owner}/{repo}/releases/{release_id}"],
+    updateReleaseAsset: [
+      "PATCH /repos/{owner}/{repo}/releases/assets/{asset_id}"
+    ],
+    updateRepoRuleset: ["PUT /repos/{owner}/{repo}/rulesets/{ruleset_id}"],
+    updateStatusCheckPotection: [
+      "PATCH /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks",
+      {},
+      { renamed: ["repos", "updateStatusCheckProtection"] }
+    ],
+    updateStatusCheckProtection: [
+      "PATCH /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks"
+    ],
+    updateWebhook: ["PATCH /repos/{owner}/{repo}/hooks/{hook_id}"],
+    updateWebhookConfigForRepo: [
+      "PATCH /repos/{owner}/{repo}/hooks/{hook_id}/config"
+    ],
+    uploadReleaseAsset: [
+      "POST /repos/{owner}/{repo}/releases/{release_id}/assets{?name,label}",
+      { baseUrl: "https://uploads.github.com" }
+    ]
+  },
+  search: {
+    code: ["GET /search/code"],
+    commits: ["GET /search/commits"],
+    issuesAndPullRequests: [
+      "GET /search/issues",
+      {},
+      {
+        deprecated: "octokit.rest.search.issuesAndPullRequests() is deprecated, see https://docs.github.com/rest/search/search#search-issues-and-pull-requests"
+      }
+    ],
+    labels: ["GET /search/labels"],
+    repos: ["GET /search/repositories"],
+    topics: ["GET /search/topics"],
+    users: ["GET /search/users"]
+  },
+  secretScanning: {
+    createPushProtectionBypass: [
+      "POST /repos/{owner}/{repo}/secret-scanning/push-protection-bypasses"
+    ],
+    getAlert: [
+      "GET /repos/{owner}/{repo}/secret-scanning/alerts/{alert_number}"
+    ],
+    getScanHistory: ["GET /repos/{owner}/{repo}/secret-scanning/scan-history"],
+    listAlertsForEnterprise: [
+      "GET /enterprises/{enterprise}/secret-scanning/alerts"
+    ],
+    listAlertsForOrg: ["GET /orgs/{org}/secret-scanning/alerts"],
+    listAlertsForRepo: ["GET /repos/{owner}/{repo}/secret-scanning/alerts"],
+    listLocationsForAlert: [
+      "GET /repos/{owner}/{repo}/secret-scanning/alerts/{alert_number}/locations"
+    ],
+    updateAlert: [
+      "PATCH /repos/{owner}/{repo}/secret-scanning/alerts/{alert_number}"
+    ]
+  },
+  securityAdvisories: {
+    createFork: [
+      "POST /repos/{owner}/{repo}/security-advisories/{ghsa_id}/forks"
+    ],
+    createPrivateVulnerabilityReport: [
+      "POST /repos/{owner}/{repo}/security-advisories/reports"
+    ],
+    createRepositoryAdvisory: [
+      "POST /repos/{owner}/{repo}/security-advisories"
+    ],
+    createRepositoryAdvisoryCveRequest: [
+      "POST /repos/{owner}/{repo}/security-advisories/{ghsa_id}/cve"
+    ],
+    getGlobalAdvisory: ["GET /advisories/{ghsa_id}"],
+    getRepositoryAdvisory: [
+      "GET /repos/{owner}/{repo}/security-advisories/{ghsa_id}"
+    ],
+    listGlobalAdvisories: ["GET /advisories"],
+    listOrgRepositoryAdvisories: ["GET /orgs/{org}/security-advisories"],
+    listRepositoryAdvisories: ["GET /repos/{owner}/{repo}/security-advisories"],
+    updateRepositoryAdvisory: [
+      "PATCH /repos/{owner}/{repo}/security-advisories/{ghsa_id}"
+    ]
+  },
+  teams: {
+    addOrUpdateMembershipForUserInOrg: [
+      "PUT /orgs/{org}/teams/{team_slug}/memberships/{username}"
+    ],
+    addOrUpdateRepoPermissionsInOrg: [
+      "PUT /orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}"
+    ],
+    checkPermissionsForRepoInOrg: [
+      "GET /orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}"
+    ],
+    create: ["POST /orgs/{org}/teams"],
+    createDiscussionCommentInOrg: [
+      "POST /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments"
+    ],
+    createDiscussionInOrg: ["POST /orgs/{org}/teams/{team_slug}/discussions"],
+    deleteDiscussionCommentInOrg: [
+      "DELETE /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}"
+    ],
+    deleteDiscussionInOrg: [
+      "DELETE /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}"
+    ],
+    deleteInOrg: ["DELETE /orgs/{org}/teams/{team_slug}"],
+    getByName: ["GET /orgs/{org}/teams/{team_slug}"],
+    getDiscussionCommentInOrg: [
+      "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}"
+    ],
+    getDiscussionInOrg: [
+      "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}"
+    ],
+    getMembershipForUserInOrg: [
+      "GET /orgs/{org}/teams/{team_slug}/memberships/{username}"
+    ],
+    list: ["GET /orgs/{org}/teams"],
+    listChildInOrg: ["GET /orgs/{org}/teams/{team_slug}/teams"],
+    listDiscussionCommentsInOrg: [
+      "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments"
+    ],
+    listDiscussionsInOrg: ["GET /orgs/{org}/teams/{team_slug}/discussions"],
+    listForAuthenticatedUser: ["GET /user/teams"],
+    listMembersInOrg: ["GET /orgs/{org}/teams/{team_slug}/members"],
+    listPendingInvitationsInOrg: [
+      "GET /orgs/{org}/teams/{team_slug}/invitations"
+    ],
+    listReposInOrg: ["GET /orgs/{org}/teams/{team_slug}/repos"],
+    removeMembershipForUserInOrg: [
+      "DELETE /orgs/{org}/teams/{team_slug}/memberships/{username}"
+    ],
+    removeRepoInOrg: [
+      "DELETE /orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}"
+    ],
+    updateDiscussionCommentInOrg: [
+      "PATCH /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}"
+    ],
+    updateDiscussionInOrg: [
+      "PATCH /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}"
+    ],
+    updateInOrg: ["PATCH /orgs/{org}/teams/{team_slug}"]
+  },
+  users: {
+    addEmailForAuthenticated: [
+      "POST /user/emails",
+      {},
+      { renamed: ["users", "addEmailForAuthenticatedUser"] }
+    ],
+    addEmailForAuthenticatedUser: ["POST /user/emails"],
+    addSocialAccountForAuthenticatedUser: ["POST /user/social_accounts"],
+    block: ["PUT /user/blocks/{username}"],
+    checkBlocked: ["GET /user/blocks/{username}"],
+    checkFollowingForUser: ["GET /users/{username}/following/{target_user}"],
+    checkPersonIsFollowedByAuthenticated: ["GET /user/following/{username}"],
+    createGpgKeyForAuthenticated: [
+      "POST /user/gpg_keys",
+      {},
+      { renamed: ["users", "createGpgKeyForAuthenticatedUser"] }
+    ],
+    createGpgKeyForAuthenticatedUser: ["POST /user/gpg_keys"],
+    createPublicSshKeyForAuthenticated: [
+      "POST /user/keys",
+      {},
+      { renamed: ["users", "createPublicSshKeyForAuthenticatedUser"] }
+    ],
+    createPublicSshKeyForAuthenticatedUser: ["POST /user/keys"],
+    createSshSigningKeyForAuthenticatedUser: ["POST /user/ssh_signing_keys"],
+    deleteEmailForAuthenticated: [
+      "DELETE /user/emails",
+      {},
+      { renamed: ["users", "deleteEmailForAuthenticatedUser"] }
+    ],
+    deleteEmailForAuthenticatedUser: ["DELETE /user/emails"],
+    deleteGpgKeyForAuthenticated: [
+      "DELETE /user/gpg_keys/{gpg_key_id}",
+      {},
+      { renamed: ["users", "deleteGpgKeyForAuthenticatedUser"] }
+    ],
+    deleteGpgKeyForAuthenticatedUser: ["DELETE /user/gpg_keys/{gpg_key_id}"],
+    deletePublicSshKeyForAuthenticated: [
+      "DELETE /user/keys/{key_id}",
+      {},
+      { renamed: ["users", "deletePublicSshKeyForAuthenticatedUser"] }
+    ],
+    deletePublicSshKeyForAuthenticatedUser: ["DELETE /user/keys/{key_id}"],
+    deleteSocialAccountForAuthenticatedUser: ["DELETE /user/social_accounts"],
+    deleteSshSigningKeyForAuthenticatedUser: [
+      "DELETE /user/ssh_signing_keys/{ssh_signing_key_id}"
+    ],
+    follow: ["PUT /user/following/{username}"],
+    getAuthenticated: ["GET /user"],
+    getById: ["GET /user/{account_id}"],
+    getByUsername: ["GET /users/{username}"],
+    getContextForUser: ["GET /users/{username}/hovercard"],
+    getGpgKeyForAuthenticated: [
+      "GET /user/gpg_keys/{gpg_key_id}",
+      {},
+      { renamed: ["users", "getGpgKeyForAuthenticatedUser"] }
+    ],
+    getGpgKeyForAuthenticatedUser: ["GET /user/gpg_keys/{gpg_key_id}"],
+    getPublicSshKeyForAuthenticated: [
+      "GET /user/keys/{key_id}",
+      {},
+      { renamed: ["users", "getPublicSshKeyForAuthenticatedUser"] }
+    ],
+    getPublicSshKeyForAuthenticatedUser: ["GET /user/keys/{key_id}"],
+    getSshSigningKeyForAuthenticatedUser: [
+      "GET /user/ssh_signing_keys/{ssh_signing_key_id}"
+    ],
+    list: ["GET /users"],
+    listAttestations: ["GET /users/{username}/attestations/{subject_digest}"],
+    listBlockedByAuthenticated: [
+      "GET /user/blocks",
+      {},
+      { renamed: ["users", "listBlockedByAuthenticatedUser"] }
+    ],
+    listBlockedByAuthenticatedUser: ["GET /user/blocks"],
+    listEmailsForAuthenticated: [
+      "GET /user/emails",
+      {},
+      { renamed: ["users", "listEmailsForAuthenticatedUser"] }
+    ],
+    listEmailsForAuthenticatedUser: ["GET /user/emails"],
+    listFollowedByAuthenticated: [
+      "GET /user/following",
+      {},
+      { renamed: ["users", "listFollowedByAuthenticatedUser"] }
+    ],
+    listFollowedByAuthenticatedUser: ["GET /user/following"],
+    listFollowersForAuthenticatedUser: ["GET /user/followers"],
+    listFollowersForUser: ["GET /users/{username}/followers"],
+    listFollowingForUser: ["GET /users/{username}/following"],
+    listGpgKeysForAuthenticated: [
+      "GET /user/gpg_keys",
+      {},
+      { renamed: ["users", "listGpgKeysForAuthenticatedUser"] }
+    ],
+    listGpgKeysForAuthenticatedUser: ["GET /user/gpg_keys"],
+    listGpgKeysForUser: ["GET /users/{username}/gpg_keys"],
+    listPublicEmailsForAuthenticated: [
+      "GET /user/public_emails",
+      {},
+      { renamed: ["users", "listPublicEmailsForAuthenticatedUser"] }
+    ],
+    listPublicEmailsForAuthenticatedUser: ["GET /user/public_emails"],
+    listPublicKeysForUser: ["GET /users/{username}/keys"],
+    listPublicSshKeysForAuthenticated: [
+      "GET /user/keys",
+      {},
+      { renamed: ["users", "listPublicSshKeysForAuthenticatedUser"] }
+    ],
+    listPublicSshKeysForAuthenticatedUser: ["GET /user/keys"],
+    listSocialAccountsForAuthenticatedUser: ["GET /user/social_accounts"],
+    listSocialAccountsForUser: ["GET /users/{username}/social_accounts"],
+    listSshSigningKeysForAuthenticatedUser: ["GET /user/ssh_signing_keys"],
+    listSshSigningKeysForUser: ["GET /users/{username}/ssh_signing_keys"],
+    setPrimaryEmailVisibilityForAuthenticated: [
+      "PATCH /user/email/visibility",
+      {},
+      { renamed: ["users", "setPrimaryEmailVisibilityForAuthenticatedUser"] }
+    ],
+    setPrimaryEmailVisibilityForAuthenticatedUser: [
+      "PATCH /user/email/visibility"
+    ],
+    unblock: ["DELETE /user/blocks/{username}"],
+    unfollow: ["DELETE /user/following/{username}"],
+    updateAuthenticated: ["PATCH /user"]
+  }
+};
+var endpoints_default = Endpoints;
+
+//# sourceMappingURL=endpoints.js.map
+
+;// CONCATENATED MODULE: ../../../node_modules/@octokit/plugin-rest-endpoint-methods/dist-src/endpoints-to-methods.js
+
+const endpointMethodsMap = /* @__PURE__ */ new Map();
+for (const [scope, endpoints] of Object.entries(endpoints_default)) {
+  for (const [methodName, endpoint] of Object.entries(endpoints)) {
+    const [route, defaults, decorations] = endpoint;
+    const [method, url] = route.split(/ /);
+    const endpointDefaults = Object.assign(
+      {
+        method,
+        url
+      },
+      defaults
+    );
+    if (!endpointMethodsMap.has(scope)) {
+      endpointMethodsMap.set(scope, /* @__PURE__ */ new Map());
+    }
+    endpointMethodsMap.get(scope).set(methodName, {
+      scope,
+      methodName,
+      endpointDefaults,
+      decorations
+    });
+  }
+}
+const handler = {
+  has({ scope }, methodName) {
+    return endpointMethodsMap.get(scope).has(methodName);
+  },
+  getOwnPropertyDescriptor(target, methodName) {
+    return {
+      value: this.get(target, methodName),
+      // ensures method is in the cache
+      configurable: true,
+      writable: true,
+      enumerable: true
+    };
+  },
+  defineProperty(target, methodName, descriptor) {
+    Object.defineProperty(target.cache, methodName, descriptor);
+    return true;
+  },
+  deleteProperty(target, methodName) {
+    delete target.cache[methodName];
+    return true;
+  },
+  ownKeys({ scope }) {
+    return [...endpointMethodsMap.get(scope).keys()];
+  },
+  set(target, methodName, value) {
+    return target.cache[methodName] = value;
+  },
+  get({ octokit, scope, cache }, methodName) {
+    if (cache[methodName]) {
+      return cache[methodName];
+    }
+    const method = endpointMethodsMap.get(scope).get(methodName);
+    if (!method) {
+      return void 0;
+    }
+    const { endpointDefaults, decorations } = method;
+    if (decorations) {
+      cache[methodName] = decorate(
+        octokit,
+        scope,
+        methodName,
+        endpointDefaults,
+        decorations
+      );
+    } else {
+      cache[methodName] = octokit.request.defaults(endpointDefaults);
+    }
+    return cache[methodName];
+  }
+};
+function endpointsToMethods(octokit) {
+  const newMethods = {};
+  for (const scope of endpointMethodsMap.keys()) {
+    newMethods[scope] = new Proxy({ octokit, scope, cache: {} }, handler);
+  }
+  return newMethods;
+}
+function decorate(octokit, scope, methodName, defaults, decorations) {
+  const requestWithDefaults = octokit.request.defaults(defaults);
+  function withDecorations(...args) {
+    let options = requestWithDefaults.endpoint.merge(...args);
+    if (decorations.mapToData) {
+      options = Object.assign({}, options, {
+        data: options[decorations.mapToData],
+        [decorations.mapToData]: void 0
+      });
+      return requestWithDefaults(options);
+    }
+    if (decorations.renamed) {
+      const [newScope, newMethodName] = decorations.renamed;
+      octokit.log.warn(
+        `octokit.${scope}.${methodName}() has been renamed to octokit.${newScope}.${newMethodName}()`
+      );
+    }
+    if (decorations.deprecated) {
+      octokit.log.warn(decorations.deprecated);
+    }
+    if (decorations.renamedParameters) {
+      const options2 = requestWithDefaults.endpoint.merge(...args);
+      for (const [name, alias] of Object.entries(
+        decorations.renamedParameters
+      )) {
+        if (name in options2) {
+          octokit.log.warn(
+            `"${name}" parameter is deprecated for "octokit.${scope}.${methodName}()". Use "${alias}" instead`
+          );
+          if (!(alias in options2)) {
+            options2[alias] = options2[name];
+          }
+          delete options2[name];
+        }
+      }
+      return requestWithDefaults(options2);
+    }
+    return requestWithDefaults(...args);
+  }
+  return Object.assign(withDecorations, requestWithDefaults);
+}
+
+//# sourceMappingURL=endpoints-to-methods.js.map
+
+;// CONCATENATED MODULE: ../../../node_modules/@octokit/plugin-rest-endpoint-methods/dist-src/index.js
+
+
+function restEndpointMethods(octokit) {
+  const api = endpointsToMethods(octokit);
+  return {
+    rest: api
+  };
+}
+restEndpointMethods.VERSION = dist_src_version_VERSION;
+function legacyRestEndpointMethods(octokit) {
+  const api = endpointsToMethods(octokit);
+  return {
+    ...api,
+    rest: api
+  };
+}
+legacyRestEndpointMethods.VERSION = dist_src_version_VERSION;
+
+//# sourceMappingURL=index.js.map
+
+;// CONCATENATED MODULE: ../../../node_modules/@octokit/oauth-authorization-url/dist-src/index.js
+function oauthAuthorizationUrl(options) {
+  const clientType = options.clientType || "oauth-app";
+  const baseUrl = options.baseUrl || "https://github.com";
+  const result = {
+    clientType,
+    allowSignup: options.allowSignup === false ? false : true,
+    clientId: options.clientId,
+    login: options.login || null,
+    redirectUrl: options.redirectUrl || null,
+    state: options.state || Math.random().toString(36).substr(2),
+    url: ""
+  };
+  if (clientType === "oauth-app") {
+    const scopes = "scopes" in options ? options.scopes : [];
+    result.scopes = typeof scopes === "string" ? scopes.split(/[,\s]+/).filter(Boolean) : scopes;
+  }
+  result.url = urlBuilderAuthorize(`${baseUrl}/login/oauth/authorize`, result);
+  return result;
+}
+function urlBuilderAuthorize(base, options) {
+  const map = {
+    allowSignup: "allow_signup",
+    clientId: "client_id",
+    login: "login",
+    redirectUrl: "redirect_uri",
+    scopes: "scope",
+    state: "state"
+  };
+  let url = base;
+  Object.keys(map).filter((k) => options[k] !== null).filter((k) => {
+    if (k !== "scopes") return true;
+    if (options.clientType === "github-app") return false;
+    return !Array.isArray(options[k]) || options[k].length > 0;
+  }).map((key) => [map[key], `${options[key]}`]).forEach(([key, value], index) => {
+    url += index === 0 ? `?` : "&";
+    url += `${key}=${encodeURIComponent(value)}`;
+  });
+  return url;
+}
+
+
+;// CONCATENATED MODULE: ../../../node_modules/@octokit/oauth-methods/dist-bundle/index.js
+// pkg/dist-src/version.js
+var oauth_methods_dist_bundle_VERSION = "0.0.0-development";
+
+// pkg/dist-src/get-web-flow-authorization-url.js
+
+
+
+// pkg/dist-src/utils.js
+
+function requestToOAuthBaseUrl(request) {
+  const endpointDefaults = request.endpoint.DEFAULTS;
+  return /^https:\/\/(api\.)?github\.com$/.test(endpointDefaults.baseUrl) ? "https://github.com" : endpointDefaults.baseUrl.replace("/api/v3", "");
+}
+async function oauthRequest(request, route, parameters) {
+  const withOAuthParameters = {
+    baseUrl: requestToOAuthBaseUrl(request),
+    headers: {
+      accept: "application/json"
+    },
+    ...parameters
+  };
+  const response = await request(route, withOAuthParameters);
+  if ("error" in response.data) {
+    const error = new RequestError(
+      `${response.data.error_description} (${response.data.error}, ${response.data.error_uri})`,
+      400,
+      {
+        request: request.endpoint.merge(
+          route,
+          withOAuthParameters
+        )
+      }
+    );
+    error.response = response;
+    throw error;
+  }
+  return response;
+}
+
+// pkg/dist-src/get-web-flow-authorization-url.js
+function getWebFlowAuthorizationUrl({
+  request = dist_bundle_request,
+  ...options
+}) {
+  const baseUrl = requestToOAuthBaseUrl(request);
+  return oauthAuthorizationUrl({
+    ...options,
+    baseUrl
+  });
+}
+
+// pkg/dist-src/exchange-web-flow-code.js
+
+async function exchangeWebFlowCode(options) {
+  const request = options.request || dist_bundle_request;
+  const response = await oauthRequest(
+    request,
+    "POST /login/oauth/access_token",
+    {
+      client_id: options.clientId,
+      client_secret: options.clientSecret,
+      code: options.code,
+      redirect_uri: options.redirectUrl
+    }
+  );
+  const authentication = {
+    clientType: options.clientType,
+    clientId: options.clientId,
+    clientSecret: options.clientSecret,
+    token: response.data.access_token,
+    scopes: response.data.scope.split(/\s+/).filter(Boolean)
+  };
+  if (options.clientType === "github-app") {
+    if ("refresh_token" in response.data) {
+      const apiTimeInMs = new Date(response.headers.date).getTime();
+      authentication.refreshToken = response.data.refresh_token, authentication.expiresAt = toTimestamp(
+        apiTimeInMs,
+        response.data.expires_in
+      ), authentication.refreshTokenExpiresAt = toTimestamp(
+        apiTimeInMs,
+        response.data.refresh_token_expires_in
+      );
+    }
+    delete authentication.scopes;
+  }
+  return { ...response, authentication };
+}
+function toTimestamp(apiTimeInMs, expirationInSeconds) {
+  return new Date(apiTimeInMs + expirationInSeconds * 1e3).toISOString();
+}
+
+// pkg/dist-src/create-device-code.js
+
+async function createDeviceCode(options) {
+  const request = options.request || dist_bundle_request;
+  const parameters = {
+    client_id: options.clientId
+  };
+  if ("scopes" in options && Array.isArray(options.scopes)) {
+    parameters.scope = options.scopes.join(" ");
+  }
+  return oauthRequest(request, "POST /login/device/code", parameters);
+}
+
+// pkg/dist-src/exchange-device-code.js
+
+async function exchangeDeviceCode(options) {
+  const request = options.request || dist_bundle_request;
+  const response = await oauthRequest(
+    request,
+    "POST /login/oauth/access_token",
+    {
+      client_id: options.clientId,
+      device_code: options.code,
+      grant_type: "urn:ietf:params:oauth:grant-type:device_code"
+    }
+  );
+  const authentication = {
+    clientType: options.clientType,
+    clientId: options.clientId,
+    token: response.data.access_token,
+    scopes: response.data.scope.split(/\s+/).filter(Boolean)
+  };
+  if ("clientSecret" in options) {
+    authentication.clientSecret = options.clientSecret;
+  }
+  if (options.clientType === "github-app") {
+    if ("refresh_token" in response.data) {
+      const apiTimeInMs = new Date(response.headers.date).getTime();
+      authentication.refreshToken = response.data.refresh_token, authentication.expiresAt = toTimestamp2(
+        apiTimeInMs,
+        response.data.expires_in
+      ), authentication.refreshTokenExpiresAt = toTimestamp2(
+        apiTimeInMs,
+        response.data.refresh_token_expires_in
+      );
+    }
+    delete authentication.scopes;
+  }
+  return { ...response, authentication };
+}
+function toTimestamp2(apiTimeInMs, expirationInSeconds) {
+  return new Date(apiTimeInMs + expirationInSeconds * 1e3).toISOString();
+}
+
+// pkg/dist-src/check-token.js
+
+async function checkToken(options) {
+  const request = options.request || dist_bundle_request;
+  const response = await request("POST /applications/{client_id}/token", {
+    headers: {
+      authorization: `basic ${btoa(
+        `${options.clientId}:${options.clientSecret}`
+      )}`
+    },
+    client_id: options.clientId,
+    access_token: options.token
+  });
+  const authentication = {
+    clientType: options.clientType,
+    clientId: options.clientId,
+    clientSecret: options.clientSecret,
+    token: options.token,
+    scopes: response.data.scopes
+  };
+  if (response.data.expires_at)
+    authentication.expiresAt = response.data.expires_at;
+  if (options.clientType === "github-app") {
+    delete authentication.scopes;
+  }
+  return { ...response, authentication };
+}
+
+// pkg/dist-src/refresh-token.js
+
+async function refreshToken(options) {
+  const request = options.request || dist_bundle_request;
+  const response = await oauthRequest(
+    request,
+    "POST /login/oauth/access_token",
+    {
+      client_id: options.clientId,
+      client_secret: options.clientSecret,
+      grant_type: "refresh_token",
+      refresh_token: options.refreshToken
+    }
+  );
+  const apiTimeInMs = new Date(response.headers.date).getTime();
+  const authentication = {
+    clientType: "github-app",
+    clientId: options.clientId,
+    clientSecret: options.clientSecret,
+    token: response.data.access_token,
+    refreshToken: response.data.refresh_token,
+    expiresAt: toTimestamp3(apiTimeInMs, response.data.expires_in),
+    refreshTokenExpiresAt: toTimestamp3(
+      apiTimeInMs,
+      response.data.refresh_token_expires_in
+    )
+  };
+  return { ...response, authentication };
+}
+function toTimestamp3(apiTimeInMs, expirationInSeconds) {
+  return new Date(apiTimeInMs + expirationInSeconds * 1e3).toISOString();
+}
+
+// pkg/dist-src/scope-token.js
+
+async function scopeToken(options) {
+  const {
+    request: optionsRequest,
+    clientType,
+    clientId,
+    clientSecret,
+    token,
+    ...requestOptions
+  } = options;
+  const request = options.request || dist_bundle_request;
+  const response = await request(
+    "POST /applications/{client_id}/token/scoped",
+    {
+      headers: {
+        authorization: `basic ${btoa(`${clientId}:${clientSecret}`)}`
+      },
+      client_id: clientId,
+      access_token: token,
+      ...requestOptions
+    }
+  );
+  const authentication = Object.assign(
+    {
+      clientType,
+      clientId,
+      clientSecret,
+      token: response.data.token
+    },
+    response.data.expires_at ? { expiresAt: response.data.expires_at } : {}
+  );
+  return { ...response, authentication };
+}
+
+// pkg/dist-src/reset-token.js
+
+async function resetToken(options) {
+  const request = options.request || dist_bundle_request;
+  const auth = btoa(`${options.clientId}:${options.clientSecret}`);
+  const response = await request(
+    "PATCH /applications/{client_id}/token",
+    {
+      headers: {
+        authorization: `basic ${auth}`
+      },
+      client_id: options.clientId,
+      access_token: options.token
+    }
+  );
+  const authentication = {
+    clientType: options.clientType,
+    clientId: options.clientId,
+    clientSecret: options.clientSecret,
+    token: response.data.token,
+    scopes: response.data.scopes
+  };
+  if (response.data.expires_at)
+    authentication.expiresAt = response.data.expires_at;
+  if (options.clientType === "github-app") {
+    delete authentication.scopes;
+  }
+  return { ...response, authentication };
+}
+
+// pkg/dist-src/delete-token.js
+
+async function deleteToken(options) {
+  const request = options.request || dist_bundle_request;
+  const auth = btoa(`${options.clientId}:${options.clientSecret}`);
+  return request(
+    "DELETE /applications/{client_id}/token",
+    {
+      headers: {
+        authorization: `basic ${auth}`
+      },
+      client_id: options.clientId,
+      access_token: options.token
+    }
+  );
+}
+
+// pkg/dist-src/delete-authorization.js
+
+async function deleteAuthorization(options) {
+  const request = options.request || dist_bundle_request;
+  const auth = btoa(`${options.clientId}:${options.clientSecret}`);
+  return request(
+    "DELETE /applications/{client_id}/grant",
+    {
+      headers: {
+        authorization: `basic ${auth}`
+      },
+      client_id: options.clientId,
+      access_token: options.token
+    }
+  );
+}
+
+
+;// CONCATENATED MODULE: ../../../node_modules/@octokit/auth-oauth-device/dist-bundle/index.js
+// pkg/dist-src/index.js
+
+
+
+// pkg/dist-src/get-oauth-access-token.js
+
+async function getOAuthAccessToken(state, options) {
+  const cachedAuthentication = getCachedAuthentication(state, options.auth);
+  if (cachedAuthentication) return cachedAuthentication;
+  const { data: verification } = await createDeviceCode({
+    clientType: state.clientType,
+    clientId: state.clientId,
+    request: options.request || state.request,
+    // @ts-expect-error the extra code to make TS happy is not worth it
+    scopes: options.auth.scopes || state.scopes
+  });
+  await state.onVerification(verification);
+  const authentication = await waitForAccessToken(
+    options.request || state.request,
+    state.clientId,
+    state.clientType,
+    verification
+  );
+  state.authentication = authentication;
+  return authentication;
+}
+function getCachedAuthentication(state, auth2) {
+  if (auth2.refresh === true) return false;
+  if (!state.authentication) return false;
+  if (state.clientType === "github-app") {
+    return state.authentication;
+  }
+  const authentication = state.authentication;
+  const newScope = ("scopes" in auth2 && auth2.scopes || state.scopes).join(
+    " "
+  );
+  const currentScope = authentication.scopes.join(" ");
+  return newScope === currentScope ? authentication : false;
+}
+async function wait(seconds) {
+  await new Promise((resolve) => setTimeout(resolve, seconds * 1e3));
+}
+async function waitForAccessToken(request, clientId, clientType, verification) {
+  try {
+    const options = {
+      clientId,
+      request,
+      code: verification.device_code
+    };
+    const { authentication } = clientType === "oauth-app" ? await exchangeDeviceCode({
+      ...options,
+      clientType: "oauth-app"
+    }) : await exchangeDeviceCode({
+      ...options,
+      clientType: "github-app"
+    });
+    return {
+      type: "token",
+      tokenType: "oauth",
+      ...authentication
+    };
+  } catch (error) {
+    if (!error.response) throw error;
+    const errorType = error.response.data.error;
+    if (errorType === "authorization_pending") {
+      await wait(verification.interval);
+      return waitForAccessToken(request, clientId, clientType, verification);
+    }
+    if (errorType === "slow_down") {
+      await wait(verification.interval + 7);
+      return waitForAccessToken(request, clientId, clientType, verification);
+    }
+    throw error;
+  }
+}
+
+// pkg/dist-src/auth.js
+async function dist_bundle_auth(state, authOptions) {
+  return getOAuthAccessToken(state, {
+    auth: authOptions
+  });
+}
+
+// pkg/dist-src/hook.js
+async function dist_bundle_hook(state, request, route, parameters) {
+  let endpoint = request.endpoint.merge(
+    route,
+    parameters
+  );
+  if (/\/login\/(oauth\/access_token|device\/code)$/.test(endpoint.url)) {
+    return request(endpoint);
+  }
+  const { token } = await getOAuthAccessToken(state, {
+    request,
+    auth: { type: "oauth" }
+  });
+  endpoint.headers.authorization = `token ${token}`;
+  return request(endpoint);
+}
+
+// pkg/dist-src/version.js
+var auth_oauth_device_dist_bundle_VERSION = "0.0.0-development";
+
+// pkg/dist-src/index.js
+function createOAuthDeviceAuth(options) {
+  const requestWithDefaults = options.request || dist_bundle_request.defaults({
+    headers: {
+      "user-agent": `octokit-auth-oauth-device.js/${auth_oauth_device_dist_bundle_VERSION} ${getUserAgent()}`
+    }
+  });
+  const { request = requestWithDefaults, ...otherOptions } = options;
+  const state = options.clientType === "github-app" ? {
+    ...otherOptions,
+    clientType: "github-app",
+    request
+  } : {
+    ...otherOptions,
+    clientType: "oauth-app",
+    request,
+    scopes: options.scopes || []
+  };
+  if (!options.clientId) {
+    throw new Error(
+      '[@octokit/auth-oauth-device] "clientId" option must be set (https://github.com/octokit/auth-oauth-device.js#usage)'
+    );
+  }
+  if (!options.onVerification) {
+    throw new Error(
+      '[@octokit/auth-oauth-device] "onVerification" option must be a function (https://github.com/octokit/auth-oauth-device.js#usage)'
+    );
+  }
+  return Object.assign(dist_bundle_auth.bind(null, state), {
+    hook: dist_bundle_hook.bind(null, state)
+  });
+}
+
+
+;// CONCATENATED MODULE: ../../../node_modules/@octokit/auth-oauth-user/dist-bundle/index.js
+// pkg/dist-src/index.js
+
+
+
+// pkg/dist-src/version.js
+var auth_oauth_user_dist_bundle_VERSION = "0.0.0-development";
+
+// pkg/dist-src/get-authentication.js
+
+
+async function getAuthentication(state) {
+  if ("code" in state.strategyOptions) {
+    const { authentication } = await exchangeWebFlowCode({
+      clientId: state.clientId,
+      clientSecret: state.clientSecret,
+      clientType: state.clientType,
+      onTokenCreated: state.onTokenCreated,
+      ...state.strategyOptions,
+      request: state.request
+    });
+    return {
+      type: "token",
+      tokenType: "oauth",
+      ...authentication
+    };
+  }
+  if ("onVerification" in state.strategyOptions) {
+    const deviceAuth = createOAuthDeviceAuth({
+      clientType: state.clientType,
+      clientId: state.clientId,
+      onTokenCreated: state.onTokenCreated,
+      ...state.strategyOptions,
+      request: state.request
+    });
+    const authentication = await deviceAuth({
+      type: "oauth"
+    });
+    return {
+      clientSecret: state.clientSecret,
+      ...authentication
+    };
+  }
+  if ("token" in state.strategyOptions) {
+    return {
+      type: "token",
+      tokenType: "oauth",
+      clientId: state.clientId,
+      clientSecret: state.clientSecret,
+      clientType: state.clientType,
+      onTokenCreated: state.onTokenCreated,
+      ...state.strategyOptions
+    };
+  }
+  throw new Error("[@octokit/auth-oauth-user] Invalid strategy options");
+}
+
+// pkg/dist-src/auth.js
+
+async function auth_oauth_user_dist_bundle_auth(state, options = {}) {
+  if (!state.authentication) {
+    state.authentication = state.clientType === "oauth-app" ? await getAuthentication(state) : await getAuthentication(state);
+  }
+  if (state.authentication.invalid) {
+    throw new Error("[@octokit/auth-oauth-user] Token is invalid");
+  }
+  const currentAuthentication = state.authentication;
+  if ("expiresAt" in currentAuthentication) {
+    if (options.type === "refresh" || new Date(currentAuthentication.expiresAt) < /* @__PURE__ */ new Date()) {
+      const { authentication } = await refreshToken({
+        clientType: "github-app",
+        clientId: state.clientId,
+        clientSecret: state.clientSecret,
+        refreshToken: currentAuthentication.refreshToken,
+        request: state.request
+      });
+      state.authentication = {
+        tokenType: "oauth",
+        type: "token",
+        ...authentication
+      };
+    }
+  }
+  if (options.type === "refresh") {
+    if (state.clientType === "oauth-app") {
+      throw new Error(
+        "[@octokit/auth-oauth-user] OAuth Apps do not support expiring tokens"
+      );
+    }
+    if (!currentAuthentication.hasOwnProperty("expiresAt")) {
+      throw new Error("[@octokit/auth-oauth-user] Refresh token missing");
+    }
+    await state.onTokenCreated?.(state.authentication, {
+      type: options.type
+    });
+  }
+  if (options.type === "check" || options.type === "reset") {
+    const method = options.type === "check" ? checkToken : resetToken;
+    try {
+      const { authentication } = await method({
+        // @ts-expect-error making TS happy would require unnecessary code so no
+        clientType: state.clientType,
+        clientId: state.clientId,
+        clientSecret: state.clientSecret,
+        token: state.authentication.token,
+        request: state.request
+      });
+      state.authentication = {
+        tokenType: "oauth",
+        type: "token",
+        // @ts-expect-error TBD
+        ...authentication
+      };
+      if (options.type === "reset") {
+        await state.onTokenCreated?.(state.authentication, {
+          type: options.type
+        });
+      }
+      return state.authentication;
+    } catch (error) {
+      if (error.status === 404) {
+        error.message = "[@octokit/auth-oauth-user] Token is invalid";
+        state.authentication.invalid = true;
+      }
+      throw error;
+    }
+  }
+  if (options.type === "delete" || options.type === "deleteAuthorization") {
+    const method = options.type === "delete" ? deleteToken : deleteAuthorization;
+    try {
+      await method({
+        // @ts-expect-error making TS happy would require unnecessary code so no
+        clientType: state.clientType,
+        clientId: state.clientId,
+        clientSecret: state.clientSecret,
+        token: state.authentication.token,
+        request: state.request
+      });
+    } catch (error) {
+      if (error.status !== 404) throw error;
+    }
+    state.authentication.invalid = true;
+    return state.authentication;
+  }
+  return state.authentication;
+}
+
+// pkg/dist-src/requires-basic-auth.js
+var ROUTES_REQUIRING_BASIC_AUTH = /\/applications\/[^/]+\/(token|grant)s?/;
+function requiresBasicAuth(url) {
+  return url && ROUTES_REQUIRING_BASIC_AUTH.test(url);
+}
+
+// pkg/dist-src/hook.js
+async function auth_oauth_user_dist_bundle_hook(state, request, route, parameters = {}) {
+  const endpoint = request.endpoint.merge(
+    route,
+    parameters
+  );
+  if (/\/login\/(oauth\/access_token|device\/code)$/.test(endpoint.url)) {
+    return request(endpoint);
+  }
+  if (requiresBasicAuth(endpoint.url)) {
+    const credentials = btoa(`${state.clientId}:${state.clientSecret}`);
+    endpoint.headers.authorization = `basic ${credentials}`;
+    return request(endpoint);
+  }
+  const { token } = state.clientType === "oauth-app" ? await auth_oauth_user_dist_bundle_auth({ ...state, request }) : await auth_oauth_user_dist_bundle_auth({ ...state, request });
+  endpoint.headers.authorization = "token " + token;
+  return request(endpoint);
+}
+
+// pkg/dist-src/index.js
+function createOAuthUserAuth({
+  clientId,
+  clientSecret,
+  clientType = "oauth-app",
+  request = dist_bundle_request.defaults({
+    headers: {
+      "user-agent": `octokit-auth-oauth-app.js/${auth_oauth_user_dist_bundle_VERSION} ${getUserAgent()}`
+    }
+  }),
+  onTokenCreated,
+  ...strategyOptions
+}) {
+  const state = Object.assign({
+    clientType,
+    clientId,
+    clientSecret,
+    onTokenCreated,
+    strategyOptions,
+    request
+  });
+  return Object.assign(auth_oauth_user_dist_bundle_auth.bind(null, state), {
+    // @ts-expect-error not worth the extra code needed to appease TS
+    hook: auth_oauth_user_dist_bundle_hook.bind(null, state)
+  });
+}
+createOAuthUserAuth.VERSION = auth_oauth_user_dist_bundle_VERSION;
+
+
+;// CONCATENATED MODULE: ../../../node_modules/@octokit/auth-oauth-app/dist-bundle/index.js
+// pkg/dist-src/index.js
+
+
+
+// pkg/dist-src/auth.js
+
+async function auth_oauth_app_dist_bundle_auth(state, authOptions) {
+  if (authOptions.type === "oauth-app") {
+    return {
+      type: "oauth-app",
+      clientId: state.clientId,
+      clientSecret: state.clientSecret,
+      clientType: state.clientType,
+      headers: {
+        authorization: `basic ${btoa(
+          `${state.clientId}:${state.clientSecret}`
+        )}`
+      }
+    };
+  }
+  if ("factory" in authOptions) {
+    const { type, ...options } = {
+      ...authOptions,
+      ...state
+    };
+    return authOptions.factory(options);
+  }
+  const common = {
+    clientId: state.clientId,
+    clientSecret: state.clientSecret,
+    request: state.request,
+    ...authOptions
+  };
+  const userAuth = state.clientType === "oauth-app" ? await createOAuthUserAuth({
+    ...common,
+    clientType: state.clientType
+  }) : await createOAuthUserAuth({
+    ...common,
+    clientType: state.clientType
+  });
+  return userAuth();
+}
+
+// pkg/dist-src/hook.js
+
+async function auth_oauth_app_dist_bundle_hook(state, request2, route, parameters) {
+  let endpoint = request2.endpoint.merge(
+    route,
+    parameters
+  );
+  if (/\/login\/(oauth\/access_token|device\/code)$/.test(endpoint.url)) {
+    return request2(endpoint);
+  }
+  if (state.clientType === "github-app" && !requiresBasicAuth(endpoint.url)) {
+    throw new Error(
+      `[@octokit/auth-oauth-app] GitHub Apps cannot use their client ID/secret for basic authentication for endpoints other than "/applications/{client_id}/**". "${endpoint.method} ${endpoint.url}" is not supported.`
+    );
+  }
+  const credentials = btoa(`${state.clientId}:${state.clientSecret}`);
+  endpoint.headers.authorization = `basic ${credentials}`;
+  try {
+    return await request2(endpoint);
+  } catch (error) {
+    if (error.status !== 401) throw error;
+    error.message = `[@octokit/auth-oauth-app] "${endpoint.method} ${endpoint.url}" does not support clientId/clientSecret basic authentication.`;
+    throw error;
+  }
+}
+
+// pkg/dist-src/version.js
+var auth_oauth_app_dist_bundle_VERSION = "0.0.0-development";
+
+// pkg/dist-src/index.js
+
+function createOAuthAppAuth(options) {
+  const state = Object.assign(
+    {
+      request: dist_bundle_request.defaults({
+        headers: {
+          "user-agent": `octokit-auth-oauth-app.js/${auth_oauth_app_dist_bundle_VERSION} ${getUserAgent()}`
+        }
+      }),
+      clientType: "oauth-app"
+    },
+    options
+  );
+  return Object.assign(auth_oauth_app_dist_bundle_auth.bind(null, state), {
+    hook: auth_oauth_app_dist_bundle_hook.bind(null, state)
+  });
+}
+
+
+;// CONCATENATED MODULE: ../../../node_modules/universal-github-app-jwt/lib/utils.js
+// we don't @ts-check here because it chokes on atob and btoa which are available in all modern JS runtime environments
+
+/**
+ * @param {string} privateKey
+ * @returns {boolean}
+ */
+function isPkcs1(privateKey) {
+  return privateKey.includes("-----BEGIN RSA PRIVATE KEY-----");
+}
+
+/**
+ * @param {string} privateKey
+ * @returns {boolean}
+ */
+function isOpenSsh(privateKey) {
+  return privateKey.includes("-----BEGIN OPENSSH PRIVATE KEY-----");
+}
+
+/**
+ * @param {string} str
+ * @returns {ArrayBuffer}
+ */
+function string2ArrayBuffer(str) {
+  const buf = new ArrayBuffer(str.length);
+  const bufView = new Uint8Array(buf);
+  for (let i = 0, strLen = str.length; i < strLen; i++) {
+    bufView[i] = str.charCodeAt(i);
+  }
+  return buf;
+}
+
+/**
+ * @param {string} pem
+ * @returns {ArrayBuffer}
+ */
+function getDERfromPEM(pem) {
+  const pemB64 = pem
+    .trim()
+    .split("\n")
+    .slice(1, -1) // Remove the --- BEGIN / END PRIVATE KEY ---
+    .join("");
+
+  const decoded = atob(pemB64);
+  return string2ArrayBuffer(decoded);
+}
+
+/**
+ * @param {import('../internals').Header} header
+ * @param {import('../internals').Payload} payload
+ * @returns {string}
+ */
+function getEncodedMessage(header, payload) {
+  return `${base64encodeJSON(header)}.${base64encodeJSON(payload)}`;
+}
+
+/**
+ * @param {ArrayBuffer} buffer
+ * @returns {string}
+ */
+function base64encode(buffer) {
+  var binary = "";
+  var bytes = new Uint8Array(buffer);
+  var len = bytes.byteLength;
+  for (var i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+
+  return fromBase64(btoa(binary));
+}
+
+/**
+ * @param {string} base64
+ * @returns {string}
+ */
+function fromBase64(base64) {
+  return base64.replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+}
+
+/**
+ * @param {Record<string,unknown>} obj
+ * @returns {string}
+ */
+function base64encodeJSON(obj) {
+  return fromBase64(btoa(JSON.stringify(obj)));
+}
+
+// EXTERNAL MODULE: external "node:crypto"
+var external_node_crypto_ = __nccwpck_require__(7598);
+;// CONCATENATED MODULE: ../../../node_modules/universal-github-app-jwt/lib/crypto-node.js
+// this can be removed once we only support Node 20+
+
+
+
+
+
+// no-op, unfortunately there is no way to transform from PKCS8 or OpenSSH to PKCS1 with WebCrypto
+function convertPrivateKey(privateKey) {
+  if (!isPkcs1(privateKey)) return privateKey;
+
+  return (0,external_node_crypto_.createPrivateKey)(privateKey).export({
+    type: "pkcs8",
+    format: "pem",
+  });
+}
+
+;// CONCATENATED MODULE: ../../../node_modules/universal-github-app-jwt/lib/get-token.js
+// we don't @ts-check here because it chokes crypto which is a global API in modern JS runtime environments
+
+
+
+
+
+/**
+ * @param {import('../internals').GetTokenOptions} options
+ * @returns {Promise<string>}
+ */
+async function getToken({ privateKey, payload }) {
+  const convertedPrivateKey = convertPrivateKey(privateKey);
+
+  // WebCrypto only supports PKCS#8, unfortunately
+  /* c8 ignore start */
+  if (isPkcs1(convertedPrivateKey)) {
+    throw new Error(
+      "[universal-github-app-jwt] Private Key is in PKCS#1 format, but only PKCS#8 is supported. See https://github.com/gr2m/universal-github-app-jwt#private-key-formats"
+    );
+  }
+  /* c8 ignore stop */
+
+  // WebCrypto does not support OpenSSH, unfortunately
+  if (isOpenSsh(convertedPrivateKey)) {
+    throw new Error(
+      "[universal-github-app-jwt] Private Key is in OpenSSH format, but only PKCS#8 is supported. See https://github.com/gr2m/universal-github-app-jwt#private-key-formats"
+    );
+  }
+
+  const algorithm = {
+    name: "RSASSA-PKCS1-v1_5",
+    hash: { name: "SHA-256" },
+  };
+
+  /** @type {import('../internals').Header} */
+  const header = { alg: "RS256", typ: "JWT" };
+
+  const privateKeyDER = getDERfromPEM(convertedPrivateKey);
+  const importedKey = await external_node_crypto_.subtle.importKey(
+    "pkcs8",
+    privateKeyDER,
+    algorithm,
+    false,
+    ["sign"]
+  );
+
+  const encodedMessage = getEncodedMessage(header, payload);
+  const encodedMessageArrBuf = string2ArrayBuffer(encodedMessage);
+
+  const signatureArrBuf = await external_node_crypto_.subtle.sign(
+    algorithm.name,
+    importedKey,
+    encodedMessageArrBuf
+  );
+
+  const encodedSignature = base64encode(signatureArrBuf);
+
+  return `${encodedMessage}.${encodedSignature}`;
+}
+
+;// CONCATENATED MODULE: ../../../node_modules/universal-github-app-jwt/index.js
+// @ts-check
+
+// @ts-ignore - #get-token is defined in "imports" in package.json
+
+
+/**
+ * @param {import(".").Options} options
+ * @returns {Promise<import(".").Result>}
+ */
+async function githubAppJwt({
+  id,
+  privateKey,
+  now = Math.floor(Date.now() / 1000),
+}) {
+  // Private keys are often times configured as environment variables, in which case line breaks are escaped using `\\n`.
+  // Replace these here for convenience.
+  const privateKeyWithNewlines = privateKey.replace(/\\n/g, '\n');
+
+  // When creating a JSON Web Token, it sets the "issued at time" (iat) to 30s
+  // in the past as we have seen people running situations where the GitHub API
+  // claimed the iat would be in future. It turned out the clocks on the
+  // different machine were not in sync.
+  const nowWithSafetyMargin = now - 30;
+  const expiration = nowWithSafetyMargin + 60 * 10; // JWT expiration time (10 minute maximum)
+
+  const payload = {
+    iat: nowWithSafetyMargin, // Issued at time
+    exp: expiration,
+    iss: id,
+  };
+
+  const token = await getToken({
+    privateKey: privateKeyWithNewlines,
+    payload,
+  });
+
+  return {
+    appId: id,
+    expiration,
+    token,
+  };
+}
+
+;// CONCATENATED MODULE: ../../../node_modules/toad-cache/dist/toad-cache.mjs
+/**
+ * toad-cache
+ *
+ * @copyright 2024 Igor Savin <kibertoad@gmail.com>
+ * @license MIT
+ * @version 3.7.0
+ */
+class FifoMap {
+  constructor(max = 1000, ttlInMsecs = 0) {
+    if (isNaN(max) || max < 0) {
+      throw new Error('Invalid max value')
+    }
+
+    if (isNaN(ttlInMsecs) || ttlInMsecs < 0) {
+      throw new Error('Invalid ttl value')
+    }
+
+    this.first = null;
+    this.items = new Map();
+    this.last = null;
+    this.max = max;
+    this.ttl = ttlInMsecs;
+  }
+
+  get size() {
+    return this.items.size
+  }
+
+  clear() {
+    this.items = new Map();
+    this.first = null;
+    this.last = null;
+  }
+
+  delete(key) {
+    if (this.items.has(key)) {
+      const deletedItem = this.items.get(key);
+
+      this.items.delete(key);
+
+      if (deletedItem.prev !== null) {
+        deletedItem.prev.next = deletedItem.next;
+      }
+
+      if (deletedItem.next !== null) {
+        deletedItem.next.prev = deletedItem.prev;
+      }
+
+      if (this.first === deletedItem) {
+        this.first = deletedItem.next;
+      }
+
+      if (this.last === deletedItem) {
+        this.last = deletedItem.prev;
+      }
+    }
+  }
+
+  deleteMany(keys) {
+    for (var i = 0; i < keys.length; i++) {
+      this.delete(keys[i]);
+    }
+  }
+
+  evict() {
+    if (this.size > 0) {
+      const item = this.first;
+
+      this.items.delete(item.key);
+
+      if (this.size === 0) {
+        this.first = null;
+        this.last = null;
+      } else {
+        this.first = item.next;
+        this.first.prev = null;
+      }
+    }
+  }
+
+  expiresAt(key) {
+    if (this.items.has(key)) {
+      return this.items.get(key).expiry
+    }
+  }
+
+  get(key) {
+    if (this.items.has(key)) {
+      const item = this.items.get(key);
+
+      if (this.ttl > 0 && item.expiry <= Date.now()) {
+        this.delete(key);
+        return
+      }
+
+      return item.value
+    }
+  }
+
+  getMany(keys) {
+    const result = [];
+
+    for (var i = 0; i < keys.length; i++) {
+      result.push(this.get(keys[i]));
+    }
+
+    return result
+  }
+
+  keys() {
+    return this.items.keys()
+  }
+
+  set(key, value) {
+    // Replace existing item
+    if (this.items.has(key)) {
+      const item = this.items.get(key);
+      item.value = value;
+
+      item.expiry = this.ttl > 0 ? Date.now() + this.ttl : this.ttl;
+
+      return
+    }
+
+    // Add new item
+    if (this.max > 0 && this.size === this.max) {
+      this.evict();
+    }
+
+    const item = {
+      expiry: this.ttl > 0 ? Date.now() + this.ttl : this.ttl,
+      key: key,
+      prev: this.last,
+      next: null,
+      value,
+    };
+    this.items.set(key, item);
+
+    if (this.size === 1) {
+      this.first = item;
+    } else {
+      this.last.next = item;
+    }
+
+    this.last = item;
+  }
+}class LruMap {
+  constructor(max = 1000, ttlInMsecs = 0) {
+    if (isNaN(max) || max < 0) {
+      throw new Error('Invalid max value')
+    }
+
+    if (isNaN(ttlInMsecs) || ttlInMsecs < 0) {
+      throw new Error('Invalid ttl value')
+    }
+
+    this.first = null;
+    this.items = new Map();
+    this.last = null;
+    this.max = max;
+    this.ttl = ttlInMsecs;
+  }
+
+  get size() {
+    return this.items.size
+  }
+
+  bumpLru(item) {
+    if (this.last === item) {
+      return // Item is already the last one, no need to bump
+    }
+
+    const last = this.last;
+    const next = item.next;
+    const prev = item.prev;
+
+    if (this.first === item) {
+      this.first = next;
+    }
+
+    item.next = null;
+    item.prev = last;
+    last.next = item;
+
+    if (prev !== null) {
+      prev.next = next;
+    }
+
+    if (next !== null) {
+      next.prev = prev;
+    }
+
+    this.last = item;
+  }
+
+  clear() {
+    this.items = new Map();
+    this.first = null;
+    this.last = null;
+  }
+
+  delete(key) {
+    if (this.items.has(key)) {
+      const item = this.items.get(key);
+
+      this.items.delete(key);
+
+      if (item.prev !== null) {
+        item.prev.next = item.next;
+      }
+
+      if (item.next !== null) {
+        item.next.prev = item.prev;
+      }
+
+      if (this.first === item) {
+        this.first = item.next;
+      }
+
+      if (this.last === item) {
+        this.last = item.prev;
+      }
+    }
+  }
+
+  deleteMany(keys) {
+    for (var i = 0; i < keys.length; i++) {
+      this.delete(keys[i]);
+    }
+  }
+
+  evict() {
+    if (this.size > 0) {
+      const item = this.first;
+
+      this.items.delete(item.key);
+
+      if (this.size === 0) {
+        this.first = null;
+        this.last = null;
+      } else {
+        this.first = item.next;
+        this.first.prev = null;
+      }
+    }
+  }
+
+  expiresAt(key) {
+    if (this.items.has(key)) {
+      return this.items.get(key).expiry
+    }
+  }
+
+  get(key) {
+    if (this.items.has(key)) {
+      const item = this.items.get(key);
+
+      // Item has already expired
+      if (this.ttl > 0 && item.expiry <= Date.now()) {
+        this.delete(key);
+        return
+      }
+
+      // Item is still fresh
+      this.bumpLru(item);
+      return item.value
+    }
+  }
+
+  getMany(keys) {
+    const result = [];
+
+    for (var i = 0; i < keys.length; i++) {
+      result.push(this.get(keys[i]));
+    }
+
+    return result
+  }
+
+  keys() {
+    return this.items.keys()
+  }
+
+  set(key, value) {
+    // Replace existing item
+    if (this.items.has(key)) {
+      const item = this.items.get(key);
+      item.value = value;
+
+      item.expiry = this.ttl > 0 ? Date.now() + this.ttl : this.ttl;
+
+      if (this.last !== item) {
+        this.bumpLru(item);
+      }
+
+      return
+    }
+
+    // Add new item
+    if (this.max > 0 && this.size === this.max) {
+      this.evict();
+    }
+
+    const item = {
+      expiry: this.ttl > 0 ? Date.now() + this.ttl : this.ttl,
+      key: key,
+      prev: this.last,
+      next: null,
+      value,
+    };
+    this.items.set(key, item);
+
+    if (this.size === 1) {
+      this.first = item;
+    } else {
+      this.last.next = item;
+    }
+
+    this.last = item;
+  }
+}class LruObject {
+  constructor(max = 1000, ttlInMsecs = 0) {
+    if (isNaN(max) || max < 0) {
+      throw new Error('Invalid max value')
+    }
+
+    if (isNaN(ttlInMsecs) || ttlInMsecs < 0) {
+      throw new Error('Invalid ttl value')
+    }
+
+    this.first = null;
+    this.items = Object.create(null);
+    this.last = null;
+    this.size = 0;
+    this.max = max;
+    this.ttl = ttlInMsecs;
+  }
+
+  bumpLru(item) {
+    if (this.last === item) {
+      return // Item is already the last one, no need to bump
+    }
+
+    const last = this.last;
+    const next = item.next;
+    const prev = item.prev;
+
+    if (this.first === item) {
+      this.first = next;
+    }
+
+    item.next = null;
+    item.prev = last;
+    last.next = item;
+
+    if (prev !== null) {
+      prev.next = next;
+    }
+
+    if (next !== null) {
+      next.prev = prev;
+    }
+
+    this.last = item;
+  }
+
+  clear() {
+    this.items = Object.create(null);
+    this.first = null;
+    this.last = null;
+    this.size = 0;
+  }
+
+  delete(key) {
+    if (Object.prototype.hasOwnProperty.call(this.items, key)) {
+      const item = this.items[key];
+
+      delete this.items[key];
+      this.size--;
+
+      if (item.prev !== null) {
+        item.prev.next = item.next;
+      }
+
+      if (item.next !== null) {
+        item.next.prev = item.prev;
+      }
+
+      if (this.first === item) {
+        this.first = item.next;
+      }
+
+      if (this.last === item) {
+        this.last = item.prev;
+      }
+    }
+  }
+
+  deleteMany(keys) {
+    for (var i = 0; i < keys.length; i++) {
+      this.delete(keys[i]);
+    }
+  }
+
+  evict() {
+    if (this.size > 0) {
+      const item = this.first;
+
+      delete this.items[item.key];
+
+      if (--this.size === 0) {
+        this.first = null;
+        this.last = null;
+      } else {
+        this.first = item.next;
+        this.first.prev = null;
+      }
+    }
+  }
+
+  expiresAt(key) {
+    if (Object.prototype.hasOwnProperty.call(this.items, key)) {
+      return this.items[key].expiry
+    }
+  }
+
+  get(key) {
+    if (Object.prototype.hasOwnProperty.call(this.items, key)) {
+      const item = this.items[key];
+
+      // Item has already expired
+      if (this.ttl > 0 && item.expiry <= Date.now()) {
+        this.delete(key);
+        return
+      }
+
+      // Item is still fresh
+      this.bumpLru(item);
+      return item.value
+    }
+  }
+
+  getMany(keys) {
+    const result = [];
+
+    for (var i = 0; i < keys.length; i++) {
+      result.push(this.get(keys[i]));
+    }
+
+    return result
+  }
+
+  keys() {
+    return Object.keys(this.items)
+  }
+
+  set(key, value) {
+    // Replace existing item
+    if (Object.prototype.hasOwnProperty.call(this.items, key)) {
+      const item = this.items[key];
+      item.value = value;
+
+      item.expiry = this.ttl > 0 ? Date.now() + this.ttl : this.ttl;
+
+      if (this.last !== item) {
+        this.bumpLru(item);
+      }
+
+      return
+    }
+
+    // Add new item
+    if (this.max > 0 && this.size === this.max) {
+      this.evict();
+    }
+
+    const item = {
+      expiry: this.ttl > 0 ? Date.now() + this.ttl : this.ttl,
+      key: key,
+      prev: this.last,
+      next: null,
+      value,
+    };
+    this.items[key] = item;
+
+    if (++this.size === 1) {
+      this.first = item;
+    } else {
+      this.last.next = item;
+    }
+
+    this.last = item;
+  }
+}class HitStatisticsRecord {
+  constructor() {
+    this.records = {};
+  }
+
+  initForCache(cacheId, currentTimeStamp) {
+    this.records[cacheId] = {
+      [currentTimeStamp]: {
+        cacheSize: 0,
+        hits: 0,
+        falsyHits: 0,
+        emptyHits: 0,
+        misses: 0,
+        expirations: 0,
+        evictions: 0,
+        invalidateOne: 0,
+        invalidateAll: 0,
+        sets: 0,
+      },
+    };
+  }
+
+  resetForCache(cacheId) {
+    for (let key of Object.keys(this.records[cacheId])) {
+      this.records[cacheId][key] = {
+        cacheSize: 0,
+        hits: 0,
+        falsyHits: 0,
+        emptyHits: 0,
+        misses: 0,
+        expirations: 0,
+        evictions: 0,
+        invalidateOne: 0,
+        invalidateAll: 0,
+        sets: 0,
+      };
+    }
+  }
+
+  getStatistics() {
+    return this.records
+  }
+}/**
+ *
+ * @param {Date} date
+ * @returns {string}
+ */
+function getTimestamp(date) {
+  return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date
+    .getDate()
+    .toString()
+    .padStart(2, '0')}`
+}class HitStatistics {
+  constructor(cacheId, statisticTtlInHours, globalStatisticsRecord) {
+    this.cacheId = cacheId;
+    this.statisticTtlInHours = statisticTtlInHours;
+
+    this.collectionStart = new Date();
+    this.currentTimeStamp = getTimestamp(this.collectionStart);
+
+    this.records = globalStatisticsRecord || new HitStatisticsRecord();
+    this.records.initForCache(this.cacheId, this.currentTimeStamp);
+  }
+
+  get currentRecord() {
+    // safety net
+    /* c8 ignore next 14 */
+    if (!this.records.records[this.cacheId][this.currentTimeStamp]) {
+      this.records.records[this.cacheId][this.currentTimeStamp] = {
+        cacheSize: 0,
+        hits: 0,
+        falsyHits: 0,
+        emptyHits: 0,
+        misses: 0,
+        expirations: 0,
+        evictions: 0,
+        sets: 0,
+        invalidateOne: 0,
+        invalidateAll: 0,
+      };
+    }
+
+    return this.records.records[this.cacheId][this.currentTimeStamp]
+  }
+
+  hoursPassed() {
+    return (Date.now() - this.collectionStart) / 1000 / 60 / 60
+  }
+
+  addHit() {
+    this.archiveIfNeeded();
+    this.currentRecord.hits++;
+  }
+  addFalsyHit() {
+    this.archiveIfNeeded();
+    this.currentRecord.falsyHits++;
+  }
+
+  addEmptyHit() {
+    this.archiveIfNeeded();
+    this.currentRecord.emptyHits++;
+  }
+
+  addMiss() {
+    this.archiveIfNeeded();
+    this.currentRecord.misses++;
+  }
+
+  addEviction() {
+    this.archiveIfNeeded();
+    this.currentRecord.evictions++;
+  }
+
+  setCacheSize(currentSize) {
+    this.archiveIfNeeded();
+    this.currentRecord.cacheSize = currentSize;
+  }
+
+  addExpiration() {
+    this.archiveIfNeeded();
+    this.currentRecord.expirations++;
+  }
+
+  addSet() {
+    this.archiveIfNeeded();
+    this.currentRecord.sets++;
+  }
+
+  addInvalidateOne() {
+    this.archiveIfNeeded();
+    this.currentRecord.invalidateOne++;
+  }
+
+  addInvalidateAll() {
+    this.archiveIfNeeded();
+    this.currentRecord.invalidateAll++;
+  }
+
+  getStatistics() {
+    return this.records.getStatistics()
+  }
+
+  archiveIfNeeded() {
+    if (this.hoursPassed() >= this.statisticTtlInHours) {
+      this.collectionStart = new Date();
+      this.currentTimeStamp = getTimestamp(this.collectionStart);
+      this.records.initForCache(this.cacheId, this.currentTimeStamp);
+    }
+  }
+}class LruObjectHitStatistics extends LruObject {
+  constructor(max, ttlInMsecs, cacheId, globalStatisticsRecord, statisticTtlInHours) {
+    super(max || 1000, ttlInMsecs || 0);
+
+    if (!cacheId) {
+      throw new Error('Cache id is mandatory')
+    }
+
+    this.hitStatistics = new HitStatistics(
+      cacheId,
+      statisticTtlInHours !== undefined ? statisticTtlInHours : 24,
+      globalStatisticsRecord,
+    );
+  }
+
+  getStatistics() {
+    return this.hitStatistics.getStatistics()
+  }
+
+  set(key, value) {
+    super.set(key, value);
+    this.hitStatistics.addSet();
+    this.hitStatistics.setCacheSize(this.size);
+  }
+
+  evict() {
+    super.evict();
+    this.hitStatistics.addEviction();
+    this.hitStatistics.setCacheSize(this.size);
+  }
+
+  delete(key, isExpiration = false) {
+    super.delete(key);
+
+    if (!isExpiration) {
+      this.hitStatistics.addInvalidateOne();
+    }
+    this.hitStatistics.setCacheSize(this.size);
+  }
+
+  clear() {
+    super.clear();
+
+    this.hitStatistics.addInvalidateAll();
+    this.hitStatistics.setCacheSize(this.size);
+  }
+
+  get(key) {
+    if (Object.prototype.hasOwnProperty.call(this.items, key)) {
+      const item = this.items[key];
+
+      // Item has already expired
+      if (this.ttl > 0 && item.expiry <= Date.now()) {
+        this.delete(key, true);
+        this.hitStatistics.addExpiration();
+        return
+      }
+
+      // Item is still fresh
+      this.bumpLru(item);
+      if (!item.value) {
+        this.hitStatistics.addFalsyHit();
+      }
+      if (item.value === undefined || item.value === null || item.value === '') {
+        this.hitStatistics.addEmptyHit();
+      }
+      this.hitStatistics.addHit();
+      return item.value
+    }
+    this.hitStatistics.addMiss();
+  }
+}class FifoObject {
+  constructor(max = 1000, ttlInMsecs = 0) {
+    if (isNaN(max) || max < 0) {
+      throw new Error('Invalid max value')
+    }
+
+    if (isNaN(ttlInMsecs) || ttlInMsecs < 0) {
+      throw new Error('Invalid ttl value')
+    }
+
+    this.first = null;
+    this.items = Object.create(null);
+    this.last = null;
+    this.size = 0;
+    this.max = max;
+    this.ttl = ttlInMsecs;
+  }
+
+  clear() {
+    this.items = Object.create(null);
+    this.first = null;
+    this.last = null;
+    this.size = 0;
+  }
+
+  delete(key) {
+    if (Object.prototype.hasOwnProperty.call(this.items, key)) {
+      const deletedItem = this.items[key];
+
+      delete this.items[key];
+      this.size--;
+
+      if (deletedItem.prev !== null) {
+        deletedItem.prev.next = deletedItem.next;
+      }
+
+      if (deletedItem.next !== null) {
+        deletedItem.next.prev = deletedItem.prev;
+      }
+
+      if (this.first === deletedItem) {
+        this.first = deletedItem.next;
+      }
+
+      if (this.last === deletedItem) {
+        this.last = deletedItem.prev;
+      }
+    }
+  }
+
+  deleteMany(keys) {
+    for (var i = 0; i < keys.length; i++) {
+      this.delete(keys[i]);
+    }
+  }
+
+  evict() {
+    if (this.size > 0) {
+      const item = this.first;
+
+      delete this.items[item.key];
+
+      if (--this.size === 0) {
+        this.first = null;
+        this.last = null;
+      } else {
+        this.first = item.next;
+        this.first.prev = null;
+      }
+    }
+  }
+
+  expiresAt(key) {
+    if (Object.prototype.hasOwnProperty.call(this.items, key)) {
+      return this.items[key].expiry
+    }
+  }
+
+  get(key) {
+    if (Object.prototype.hasOwnProperty.call(this.items, key)) {
+      const item = this.items[key];
+
+      if (this.ttl > 0 && item.expiry <= Date.now()) {
+        this.delete(key);
+        return
+      }
+
+      return item.value
+    }
+  }
+
+  getMany(keys) {
+    const result = [];
+
+    for (var i = 0; i < keys.length; i++) {
+      result.push(this.get(keys[i]));
+    }
+
+    return result
+  }
+
+  keys() {
+    return Object.keys(this.items)
+  }
+
+  set(key, value) {
+    // Replace existing item
+    if (Object.prototype.hasOwnProperty.call(this.items, key)) {
+      const item = this.items[key];
+      item.value = value;
+
+      item.expiry = this.ttl > 0 ? Date.now() + this.ttl : this.ttl;
+
+      return
+    }
+
+    // Add new item
+    if (this.max > 0 && this.size === this.max) {
+      this.evict();
+    }
+
+    const item = {
+      expiry: this.ttl > 0 ? Date.now() + this.ttl : this.ttl,
+      key: key,
+      prev: this.last,
+      next: null,
+      value,
+    };
+    this.items[key] = item;
+
+    if (++this.size === 1) {
+      this.first = item;
+    } else {
+      this.last.next = item;
+    }
+
+    this.last = item;
+  }
+}
+;// CONCATENATED MODULE: ../../../node_modules/@octokit/auth-app/dist-node/index.js
+// pkg/dist-src/index.js
+
+
+
+
+// pkg/dist-src/get-app-authentication.js
+
+async function getAppAuthentication({
+  appId,
+  privateKey,
+  timeDifference
+}) {
+  try {
+    const authOptions = {
+      id: appId,
+      privateKey
+    };
+    if (timeDifference) {
+      Object.assign(authOptions, {
+        now: Math.floor(Date.now() / 1e3) + timeDifference
+      });
+    }
+    const appAuthentication = await githubAppJwt(authOptions);
+    return {
+      type: "app",
+      token: appAuthentication.token,
+      appId: appAuthentication.appId,
+      expiresAt: new Date(appAuthentication.expiration * 1e3).toISOString()
+    };
+  } catch (error) {
+    if (privateKey === "-----BEGIN RSA PRIVATE KEY-----") {
+      throw new Error(
+        "The 'privateKey` option contains only the first line '-----BEGIN RSA PRIVATE KEY-----'. If you are setting it using a `.env` file, make sure it is set on a single line with newlines replaced by '\n'"
+      );
+    } else {
+      throw error;
+    }
+  }
+}
+
+// pkg/dist-src/cache.js
+
+function getCache() {
+  return new LruObject(
+    // cache max. 15000 tokens, that will use less than 10mb memory
+    15e3,
+    // Cache for 1 minute less than GitHub expiry
+    1e3 * 60 * 59
+  );
+}
+async function dist_node_get(cache, options) {
+  const cacheKey = optionsToCacheKey(options);
+  const result = await cache.get(cacheKey);
+  if (!result) {
+    return;
+  }
+  const [
+    token,
+    createdAt,
+    expiresAt,
+    repositorySelection,
+    permissionsString,
+    singleFileName
+  ] = result.split("|");
+  const permissions = options.permissions || permissionsString.split(/,/).reduce((permissions2, string) => {
+    if (/!$/.test(string)) {
+      permissions2[string.slice(0, -1)] = "write";
+    } else {
+      permissions2[string] = "read";
+    }
+    return permissions2;
+  }, {});
+  return {
+    token,
+    createdAt,
+    expiresAt,
+    permissions,
+    repositoryIds: options.repositoryIds,
+    repositoryNames: options.repositoryNames,
+    singleFileName,
+    repositorySelection
+  };
+}
+async function dist_node_set(cache, options, data) {
+  const key = optionsToCacheKey(options);
+  const permissionsString = options.permissions ? "" : Object.keys(data.permissions).map(
+    (name) => `${name}${data.permissions[name] === "write" ? "!" : ""}`
+  ).join(",");
+  const value = [
+    data.token,
+    data.createdAt,
+    data.expiresAt,
+    data.repositorySelection,
+    permissionsString,
+    data.singleFileName
+  ].join("|");
+  await cache.set(key, value);
+}
+function optionsToCacheKey({
+  installationId,
+  permissions = {},
+  repositoryIds = [],
+  repositoryNames = []
+}) {
+  const permissionsString = Object.keys(permissions).sort().map((name) => permissions[name] === "read" ? name : `${name}!`).join(",");
+  const repositoryIdsString = repositoryIds.sort().join(",");
+  const repositoryNamesString = repositoryNames.join(",");
+  return [
+    installationId,
+    repositoryIdsString,
+    repositoryNamesString,
+    permissionsString
+  ].filter(Boolean).join("|");
+}
+
+// pkg/dist-src/to-token-authentication.js
+function toTokenAuthentication({
+  installationId,
+  token,
+  createdAt,
+  expiresAt,
+  repositorySelection,
+  permissions,
+  repositoryIds,
+  repositoryNames,
+  singleFileName
+}) {
+  return Object.assign(
+    {
+      type: "token",
+      tokenType: "installation",
+      token,
+      installationId,
+      permissions,
+      createdAt,
+      expiresAt,
+      repositorySelection
+    },
+    repositoryIds ? { repositoryIds } : null,
+    repositoryNames ? { repositoryNames } : null,
+    singleFileName ? { singleFileName } : null
+  );
+}
+
+// pkg/dist-src/get-installation-authentication.js
+async function getInstallationAuthentication(state, options, customRequest) {
+  const installationId = Number(options.installationId || state.installationId);
+  if (!installationId) {
+    throw new Error(
+      "[@octokit/auth-app] installationId option is required for installation authentication."
+    );
+  }
+  if (options.factory) {
+    const { type, factory, oauthApp, ...factoryAuthOptions } = {
+      ...state,
+      ...options
+    };
+    return factory(factoryAuthOptions);
+  }
+  const request = customRequest || state.request;
+  return getInstallationAuthenticationConcurrently(
+    state,
+    { ...options, installationId },
+    request
+  );
+}
+var pendingPromises = /* @__PURE__ */ new Map();
+function getInstallationAuthenticationConcurrently(state, options, request) {
+  const cacheKey = optionsToCacheKey(options);
+  if (pendingPromises.has(cacheKey)) {
+    return pendingPromises.get(cacheKey);
+  }
+  const promise = getInstallationAuthenticationImpl(
+    state,
+    options,
+    request
+  ).finally(() => pendingPromises.delete(cacheKey));
+  pendingPromises.set(cacheKey, promise);
+  return promise;
+}
+async function getInstallationAuthenticationImpl(state, options, request) {
+  if (!options.refresh) {
+    const result = await dist_node_get(state.cache, options);
+    if (result) {
+      const {
+        token: token2,
+        createdAt: createdAt2,
+        expiresAt: expiresAt2,
+        permissions: permissions2,
+        repositoryIds: repositoryIds2,
+        repositoryNames: repositoryNames2,
+        singleFileName: singleFileName2,
+        repositorySelection: repositorySelection2
+      } = result;
+      return toTokenAuthentication({
+        installationId: options.installationId,
+        token: token2,
+        createdAt: createdAt2,
+        expiresAt: expiresAt2,
+        permissions: permissions2,
+        repositorySelection: repositorySelection2,
+        repositoryIds: repositoryIds2,
+        repositoryNames: repositoryNames2,
+        singleFileName: singleFileName2
+      });
+    }
+  }
+  const appAuthentication = await getAppAuthentication(state);
+  const payload = {
+    installation_id: options.installationId,
+    mediaType: {
+      previews: ["machine-man"]
+    },
+    headers: {
+      authorization: `bearer ${appAuthentication.token}`
+    }
+  };
+  if (options.repositoryIds) {
+    Object.assign(payload, { repository_ids: options.repositoryIds });
+  }
+  if (options.repositoryNames) {
+    Object.assign(payload, {
+      repositories: options.repositoryNames
+    });
+  }
+  if (options.permissions) {
+    Object.assign(payload, { permissions: options.permissions });
+  }
+  const {
+    data: {
+      token,
+      expires_at: expiresAt,
+      repositories,
+      permissions: permissionsOptional,
+      repository_selection: repositorySelectionOptional,
+      single_file: singleFileName
+    }
+  } = await request(
+    "POST /app/installations/{installation_id}/access_tokens",
+    payload
+  );
+  const permissions = permissionsOptional || {};
+  const repositorySelection = repositorySelectionOptional || "all";
+  const repositoryIds = repositories ? repositories.map((r) => r.id) : void 0;
+  const repositoryNames = repositories ? repositories.map((repo) => repo.name) : void 0;
+  const createdAt = (/* @__PURE__ */ new Date()).toISOString();
+  const cacheOptions = {
+    token,
+    createdAt,
+    expiresAt,
+    repositorySelection,
+    permissions,
+    repositoryIds,
+    repositoryNames
+  };
+  if (singleFileName) {
+    Object.assign(payload, { singleFileName });
+  }
+  await dist_node_set(state.cache, options, cacheOptions);
+  const cacheData = {
+    installationId: options.installationId,
+    token,
+    createdAt,
+    expiresAt,
+    repositorySelection,
+    permissions,
+    repositoryIds,
+    repositoryNames
+  };
+  if (singleFileName) {
+    Object.assign(cacheData, { singleFileName });
+  }
+  return toTokenAuthentication(cacheData);
+}
+
+// pkg/dist-src/auth.js
+async function dist_node_auth(state, authOptions) {
+  switch (authOptions.type) {
+    case "app":
+      return getAppAuthentication(state);
+    case "oauth-app":
+      return state.oauthApp({ type: "oauth-app" });
+    case "installation":
+      authOptions;
+      return getInstallationAuthentication(state, {
+        ...authOptions,
+        type: "installation"
+      });
+    case "oauth-user":
+      return state.oauthApp(authOptions);
+    default:
+      throw new Error(`Invalid auth type: ${authOptions.type}`);
+  }
+}
+
+// pkg/dist-src/hook.js
+
+
+
+// pkg/dist-src/requires-app-auth.js
+var PATHS = [
+  "/app",
+  "/app/hook/config",
+  "/app/hook/deliveries",
+  "/app/hook/deliveries/{delivery_id}",
+  "/app/hook/deliveries/{delivery_id}/attempts",
+  "/app/installations",
+  "/app/installations/{installation_id}",
+  "/app/installations/{installation_id}/access_tokens",
+  "/app/installations/{installation_id}/suspended",
+  "/app/installation-requests",
+  "/marketplace_listing/accounts/{account_id}",
+  "/marketplace_listing/plan",
+  "/marketplace_listing/plans",
+  "/marketplace_listing/plans/{plan_id}/accounts",
+  "/marketplace_listing/stubbed/accounts/{account_id}",
+  "/marketplace_listing/stubbed/plan",
+  "/marketplace_listing/stubbed/plans",
+  "/marketplace_listing/stubbed/plans/{plan_id}/accounts",
+  "/orgs/{org}/installation",
+  "/repos/{owner}/{repo}/installation",
+  "/users/{username}/installation"
+];
+function dist_node_routeMatcher(paths) {
+  const regexes = paths.map(
+    (p) => p.split("/").map((c) => c.startsWith("{") ? "(?:.+?)" : c).join("/")
+  );
+  const regex = `^(?:${regexes.map((r) => `(?:${r})`).join("|")})$`;
+  return new RegExp(regex, "i");
+}
+var REGEX = dist_node_routeMatcher(PATHS);
+function requiresAppAuth(url) {
+  return !!url && REGEX.test(url.split("?")[0]);
+}
+
+// pkg/dist-src/hook.js
+var FIVE_SECONDS_IN_MS = 5 * 1e3;
+function isNotTimeSkewError(error) {
+  return !(error.message.match(
+    /'Expiration time' claim \('exp'\) must be a numeric value representing the future time at which the assertion expires/
+  ) || error.message.match(
+    /'Issued at' claim \('iat'\) must be an Integer representing the time that the assertion was issued/
+  ));
+}
+async function dist_node_hook(state, request, route, parameters) {
+  const endpoint = request.endpoint.merge(route, parameters);
+  const url = endpoint.url;
+  if (/\/login\/oauth\/access_token$/.test(url)) {
+    return request(endpoint);
+  }
+  if (requiresAppAuth(url.replace(request.endpoint.DEFAULTS.baseUrl, ""))) {
+    const { token: token2 } = await getAppAuthentication(state);
+    endpoint.headers.authorization = `bearer ${token2}`;
+    let response;
+    try {
+      response = await request(endpoint);
+    } catch (error) {
+      if (isNotTimeSkewError(error)) {
+        throw error;
+      }
+      if (typeof error.response.headers.date === "undefined") {
+        throw error;
+      }
+      const diff = Math.floor(
+        (Date.parse(error.response.headers.date) - Date.parse((/* @__PURE__ */ new Date()).toString())) / 1e3
+      );
+      state.log.warn(error.message);
+      state.log.warn(
+        `[@octokit/auth-app] GitHub API time and system time are different by ${diff} seconds. Retrying request with the difference accounted for.`
+      );
+      const { token: token3 } = await getAppAuthentication({
+        ...state,
+        timeDifference: diff
+      });
+      endpoint.headers.authorization = `bearer ${token3}`;
+      return request(endpoint);
+    }
+    return response;
+  }
+  if (requiresBasicAuth(url)) {
+    const authentication = await state.oauthApp({ type: "oauth-app" });
+    endpoint.headers.authorization = authentication.headers.authorization;
+    return request(endpoint);
+  }
+  const { token, createdAt } = await getInstallationAuthentication(
+    state,
+    // @ts-expect-error TBD
+    {},
+    request.defaults({ baseUrl: endpoint.baseUrl })
+  );
+  endpoint.headers.authorization = `token ${token}`;
+  return sendRequestWithRetries(
+    state,
+    request,
+    endpoint,
+    createdAt
+  );
+}
+async function sendRequestWithRetries(state, request, options, createdAt, retries = 0) {
+  const timeSinceTokenCreationInMs = +/* @__PURE__ */ new Date() - +new Date(createdAt);
+  try {
+    return await request(options);
+  } catch (error) {
+    if (error.status !== 401) {
+      throw error;
+    }
+    if (timeSinceTokenCreationInMs >= FIVE_SECONDS_IN_MS) {
+      if (retries > 0) {
+        error.message = `After ${retries} retries within ${timeSinceTokenCreationInMs / 1e3}s of creating the installation access token, the response remains 401. At this point, the cause may be an authentication problem or a system outage. Please check https://www.githubstatus.com for status information`;
+      }
+      throw error;
+    }
+    ++retries;
+    const awaitTime = retries * 1e3;
+    state.log.warn(
+      `[@octokit/auth-app] Retrying after 401 response to account for token replication delay (retry: ${retries}, wait: ${awaitTime / 1e3}s)`
+    );
+    await new Promise((resolve) => setTimeout(resolve, awaitTime));
+    return sendRequestWithRetries(state, request, options, createdAt, retries);
+  }
+}
+
+// pkg/dist-src/version.js
+var dist_node_VERSION = "8.0.2";
+
+// pkg/dist-src/index.js
+
+function createAppAuth(options) {
+  if (!options.appId) {
+    throw new Error("[@octokit/auth-app] appId option is required");
+  }
+  if (!options.privateKey) {
+    throw new Error("[@octokit/auth-app] privateKey option is required");
+  }
+  if ("installationId" in options && !options.installationId) {
+    throw new Error(
+      "[@octokit/auth-app] installationId is set to a falsy value"
+    );
+  }
+  const log = options.log || {};
+  if (typeof log.warn !== "function") {
+    log.warn = console.warn.bind(console);
+  }
+  const request = options.request || dist_bundle_request.defaults({
+    headers: {
+      "user-agent": `octokit-auth-app.js/${dist_node_VERSION} ${getUserAgent()}`
+    }
+  });
+  const state = Object.assign(
+    {
+      request,
+      cache: getCache()
+    },
+    options,
+    options.installationId ? { installationId: Number(options.installationId) } : {},
+    {
+      log,
+      oauthApp: createOAuthAppAuth({
+        clientType: "github-app",
+        clientId: options.clientId || "",
+        clientSecret: options.clientSecret || "",
+        request
+      })
+    }
+  );
+  return Object.assign(dist_node_auth.bind(null, state), {
+    hook: dist_node_hook.bind(null, state)
+  });
+}
+
+
+;// CONCATENATED MODULE: ../../../node_modules/@octokit/auth-unauthenticated/dist-node/index.js
+// pkg/dist-src/auth.js
+async function auth_unauthenticated_dist_node_auth(reason) {
+  return {
+    type: "unauthenticated",
+    reason
+  };
+}
+
+// pkg/dist-src/is-rate-limit-error.js
+function isRateLimitError(error) {
+  if (error.status !== 403) {
+    return false;
+  }
+  if (!error.response) {
+    return false;
+  }
+  return error.response.headers["x-ratelimit-remaining"] === "0";
+}
+
+// pkg/dist-src/is-abuse-limit-error.js
+var REGEX_ABUSE_LIMIT_MESSAGE = /\babuse\b/i;
+function isAbuseLimitError(error) {
+  if (error.status !== 403) {
+    return false;
+  }
+  return REGEX_ABUSE_LIMIT_MESSAGE.test(error.message);
+}
+
+// pkg/dist-src/hook.js
+async function auth_unauthenticated_dist_node_hook(reason, request, route, parameters) {
+  const endpoint = request.endpoint.merge(
+    route,
+    parameters
+  );
+  return request(endpoint).catch((error) => {
+    if (error.status === 404) {
+      error.message = `Not found. May be due to lack of authentication. Reason: ${reason}`;
+      throw error;
+    }
+    if (isRateLimitError(error)) {
+      error.message = `API rate limit exceeded. This maybe caused by the lack of authentication. Reason: ${reason}`;
+      throw error;
+    }
+    if (isAbuseLimitError(error)) {
+      error.message = `You have triggered an abuse detection mechanism. This maybe caused by the lack of authentication. Reason: ${reason}`;
+      throw error;
+    }
+    if (error.status === 401) {
+      error.message = `Unauthorized. "${endpoint.method} ${endpoint.url}" failed most likely due to lack of authentication. Reason: ${reason}`;
+      throw error;
+    }
+    if (error.status >= 400 && error.status < 500) {
+      error.message = error.message.replace(
+        /\.?$/,
+        `. May be caused by lack of authentication (${reason}).`
+      );
+    }
+    throw error;
+  });
+}
+
+// pkg/dist-src/index.js
+var createUnauthenticatedAuth = function createUnauthenticatedAuth2(options) {
+  if (!options || !options.reason) {
+    throw new Error(
+      "[@octokit/auth-unauthenticated] No reason passed to createUnauthenticatedAuth"
+    );
+  }
+  return Object.assign(auth_unauthenticated_dist_node_auth.bind(null, options.reason), {
+    hook: auth_unauthenticated_dist_node_hook.bind(null, options.reason)
+  });
+};
+
+
+;// CONCATENATED MODULE: ../../../node_modules/@octokit/oauth-app/dist-node/index.js
+// pkg/dist-src/index.js
+
+
+// pkg/dist-src/version.js
+var oauth_app_dist_node_VERSION = "8.0.1";
+
+// pkg/dist-src/add-event-handler.js
+function addEventHandler(state, eventName, eventHandler) {
+  if (Array.isArray(eventName)) {
+    for (const singleEventName of eventName) {
+      addEventHandler(state, singleEventName, eventHandler);
+    }
+    return;
+  }
+  if (!state.eventHandlers[eventName]) {
+    state.eventHandlers[eventName] = [];
+  }
+  state.eventHandlers[eventName].push(eventHandler);
+}
+
+// pkg/dist-src/oauth-app-octokit.js
+
+
+var OAuthAppOctokit = dist_src_Octokit.defaults({
+  userAgent: `octokit-oauth-app.js/${oauth_app_dist_node_VERSION} ${getUserAgent()}`
+});
+
+// pkg/dist-src/methods/get-user-octokit.js
+
+
+// pkg/dist-src/emit-event.js
+async function emitEvent(state, context) {
+  const { name, action } = context;
+  if (state.eventHandlers[`${name}.${action}`]) {
+    for (const eventHandler of state.eventHandlers[`${name}.${action}`]) {
+      await eventHandler(context);
+    }
+  }
+  if (state.eventHandlers[name]) {
+    for (const eventHandler of state.eventHandlers[name]) {
+      await eventHandler(context);
+    }
+  }
+}
+
+// pkg/dist-src/methods/get-user-octokit.js
+async function getUserOctokitWithState(state, options) {
+  return state.octokit.auth({
+    type: "oauth-user",
+    ...options,
+    async factory(options2) {
+      const octokit = new state.Octokit({
+        authStrategy: createOAuthUserAuth,
+        auth: options2
+      });
+      const authentication = await octokit.auth({
+        type: "get"
+      });
+      await emitEvent(state, {
+        name: "token",
+        action: "created",
+        token: authentication.token,
+        scopes: authentication.scopes,
+        authentication,
+        octokit
+      });
+      return octokit;
+    }
+  });
+}
+
+// pkg/dist-src/methods/get-web-flow-authorization-url.js
+
+function getWebFlowAuthorizationUrlWithState(state, options) {
+  const optionsWithDefaults = {
+    clientId: state.clientId,
+    request: state.octokit.request,
+    ...options,
+    allowSignup: state.allowSignup ?? options.allowSignup,
+    redirectUrl: options.redirectUrl ?? state.redirectUrl,
+    scopes: options.scopes ?? state.defaultScopes
+  };
+  return getWebFlowAuthorizationUrl({
+    clientType: state.clientType,
+    ...optionsWithDefaults
+  });
+}
+
+// pkg/dist-src/methods/create-token.js
+
+async function createTokenWithState(state, options) {
+  const authentication = await state.octokit.auth({
+    type: "oauth-user",
+    ...options
+  });
+  await emitEvent(state, {
+    name: "token",
+    action: "created",
+    token: authentication.token,
+    scopes: authentication.scopes,
+    authentication,
+    octokit: new state.Octokit({
+      authStrategy: createOAuthUserAuth,
+      auth: {
+        clientType: state.clientType,
+        clientId: state.clientId,
+        clientSecret: state.clientSecret,
+        token: authentication.token,
+        scopes: authentication.scopes,
+        refreshToken: authentication.refreshToken,
+        expiresAt: authentication.expiresAt,
+        refreshTokenExpiresAt: authentication.refreshTokenExpiresAt
+      }
+    })
+  });
+  return { authentication };
+}
+
+// pkg/dist-src/methods/check-token.js
+
+async function checkTokenWithState(state, options) {
+  const result = await checkToken({
+    // @ts-expect-error not worth the extra code to appease TS
+    clientType: state.clientType,
+    clientId: state.clientId,
+    clientSecret: state.clientSecret,
+    request: state.octokit.request,
+    ...options
+  });
+  Object.assign(result.authentication, { type: "token", tokenType: "oauth" });
+  return result;
+}
+
+// pkg/dist-src/methods/reset-token.js
+
+
+async function resetTokenWithState(state, options) {
+  const optionsWithDefaults = {
+    clientId: state.clientId,
+    clientSecret: state.clientSecret,
+    request: state.octokit.request,
+    ...options
+  };
+  if (state.clientType === "oauth-app") {
+    const response2 = await resetToken({
+      clientType: "oauth-app",
+      ...optionsWithDefaults
+    });
+    const authentication2 = Object.assign(response2.authentication, {
+      type: "token",
+      tokenType: "oauth"
+    });
+    await emitEvent(state, {
+      name: "token",
+      action: "reset",
+      token: response2.authentication.token,
+      scopes: response2.authentication.scopes || void 0,
+      authentication: authentication2,
+      octokit: new state.Octokit({
+        authStrategy: createOAuthUserAuth,
+        auth: {
+          clientType: state.clientType,
+          clientId: state.clientId,
+          clientSecret: state.clientSecret,
+          token: response2.authentication.token,
+          scopes: response2.authentication.scopes
+        }
+      })
+    });
+    return { ...response2, authentication: authentication2 };
+  }
+  const response = await resetToken({
+    clientType: "github-app",
+    ...optionsWithDefaults
+  });
+  const authentication = Object.assign(response.authentication, {
+    type: "token",
+    tokenType: "oauth"
+  });
+  await emitEvent(state, {
+    name: "token",
+    action: "reset",
+    token: response.authentication.token,
+    authentication,
+    octokit: new state.Octokit({
+      authStrategy: createOAuthUserAuth,
+      auth: {
+        clientType: state.clientType,
+        clientId: state.clientId,
+        clientSecret: state.clientSecret,
+        token: response.authentication.token
+      }
+    })
+  });
+  return { ...response, authentication };
+}
+
+// pkg/dist-src/methods/refresh-token.js
+
+
+async function refreshTokenWithState(state, options) {
+  if (state.clientType === "oauth-app") {
+    throw new Error(
+      "[@octokit/oauth-app] app.refreshToken() is not supported for OAuth Apps"
+    );
+  }
+  const response = await refreshToken({
+    clientType: "github-app",
+    clientId: state.clientId,
+    clientSecret: state.clientSecret,
+    request: state.octokit.request,
+    refreshToken: options.refreshToken
+  });
+  const authentication = Object.assign(response.authentication, {
+    type: "token",
+    tokenType: "oauth"
+  });
+  await emitEvent(state, {
+    name: "token",
+    action: "refreshed",
+    token: response.authentication.token,
+    authentication,
+    octokit: new state.Octokit({
+      authStrategy: createOAuthUserAuth,
+      auth: {
+        clientType: state.clientType,
+        clientId: state.clientId,
+        clientSecret: state.clientSecret,
+        token: response.authentication.token
+      }
+    })
+  });
+  return { ...response, authentication };
+}
+
+// pkg/dist-src/methods/scope-token.js
+
+
+async function scopeTokenWithState(state, options) {
+  if (state.clientType === "oauth-app") {
+    throw new Error(
+      "[@octokit/oauth-app] app.scopeToken() is not supported for OAuth Apps"
+    );
+  }
+  const response = await scopeToken({
+    clientType: "github-app",
+    clientId: state.clientId,
+    clientSecret: state.clientSecret,
+    request: state.octokit.request,
+    ...options
+  });
+  const authentication = Object.assign(response.authentication, {
+    type: "token",
+    tokenType: "oauth"
+  });
+  await emitEvent(state, {
+    name: "token",
+    action: "scoped",
+    token: response.authentication.token,
+    authentication,
+    octokit: new state.Octokit({
+      authStrategy: createOAuthUserAuth,
+      auth: {
+        clientType: state.clientType,
+        clientId: state.clientId,
+        clientSecret: state.clientSecret,
+        token: response.authentication.token
+      }
+    })
+  });
+  return { ...response, authentication };
+}
+
+// pkg/dist-src/methods/delete-token.js
+
+
+async function deleteTokenWithState(state, options) {
+  const optionsWithDefaults = {
+    clientId: state.clientId,
+    clientSecret: state.clientSecret,
+    request: state.octokit.request,
+    ...options
+  };
+  const response = state.clientType === "oauth-app" ? await deleteToken({
+    clientType: "oauth-app",
+    ...optionsWithDefaults
+  }) : (
+    /* v8 ignore next 4 */
+    await deleteToken({
+      clientType: "github-app",
+      ...optionsWithDefaults
+    })
+  );
+  await emitEvent(state, {
+    name: "token",
+    action: "deleted",
+    token: options.token,
+    octokit: new state.Octokit({
+      authStrategy: createUnauthenticatedAuth,
+      auth: {
+        reason: `Handling "token.deleted" event. The access for the token has been revoked.`
+      }
+    })
+  });
+  return response;
+}
+
+// pkg/dist-src/methods/delete-authorization.js
+
+
+async function deleteAuthorizationWithState(state, options) {
+  const optionsWithDefaults = {
+    clientId: state.clientId,
+    clientSecret: state.clientSecret,
+    request: state.octokit.request,
+    ...options
+  };
+  const response = state.clientType === "oauth-app" ? await deleteAuthorization({
+    clientType: "oauth-app",
+    ...optionsWithDefaults
+  }) : (
+    /* v8 ignore next 4 */
+    await deleteAuthorization({
+      clientType: "github-app",
+      ...optionsWithDefaults
+    })
+  );
+  await emitEvent(state, {
+    name: "token",
+    action: "deleted",
+    token: options.token,
+    octokit: new state.Octokit({
+      authStrategy: createUnauthenticatedAuth,
+      auth: {
+        reason: `Handling "token.deleted" event. The access for the token has been revoked.`
+      }
+    })
+  });
+  await emitEvent(state, {
+    name: "authorization",
+    action: "deleted",
+    token: options.token,
+    octokit: new state.Octokit({
+      authStrategy: createUnauthenticatedAuth,
+      auth: {
+        reason: `Handling "authorization.deleted" event. The access for the app has been revoked.`
+      }
+    })
+  });
+  return response;
+}
+
+// pkg/dist-src/middleware/unknown-route-response.js
+function dist_node_unknownRouteResponse(request) {
+  return {
+    status: 404,
+    headers: { "content-type": "application/json" },
+    text: JSON.stringify({
+      error: `Unknown route: ${request.method} ${request.url}`
+    })
+  };
+}
+
+// pkg/dist-src/middleware/handle-request.js
+async function handleRequest(app, { pathPrefix = "/api/github/oauth" }, request) {
+  let { pathname } = new URL(request.url, "http://localhost");
+  if (!pathname.startsWith(`${pathPrefix}/`)) {
+    return void 0;
+  }
+  if (request.method === "OPTIONS") {
+    return {
+      status: 200,
+      headers: {
+        "access-control-allow-origin": "*",
+        "access-control-allow-methods": "*",
+        "access-control-allow-headers": "Content-Type, User-Agent, Authorization"
+      }
+    };
+  }
+  pathname = pathname.slice(pathPrefix.length + 1);
+  const route = [request.method, pathname].join(" ");
+  const routes = {
+    getLogin: `GET login`,
+    getCallback: `GET callback`,
+    createToken: `POST token`,
+    getToken: `GET token`,
+    patchToken: `PATCH token`,
+    patchRefreshToken: `PATCH refresh-token`,
+    scopeToken: `POST token/scoped`,
+    deleteToken: `DELETE token`,
+    deleteGrant: `DELETE grant`
+  };
+  if (!Object.values(routes).includes(route)) {
+    return dist_node_unknownRouteResponse(request);
+  }
+  let json;
+  try {
+    const text = await request.text();
+    json = text ? JSON.parse(text) : {};
+  } catch (error) {
+    return {
+      status: 400,
+      headers: {
+        "content-type": "application/json",
+        "access-control-allow-origin": "*"
+      },
+      text: JSON.stringify({
+        error: "[@octokit/oauth-app] request error"
+      })
+    };
+  }
+  const { searchParams } = new URL(request.url, "http://localhost");
+  const query = Object.fromEntries(searchParams);
+  const headers = request.headers;
+  try {
+    if (route === routes.getLogin) {
+      const authOptions = {};
+      if (query.state) {
+        Object.assign(authOptions, { state: query.state });
+      }
+      if (query.scopes) {
+        Object.assign(authOptions, { scopes: query.scopes.split(",") });
+      }
+      if (query.allowSignup) {
+        Object.assign(authOptions, {
+          allowSignup: query.allowSignup === "true"
+        });
+      }
+      if (query.redirectUrl) {
+        Object.assign(authOptions, { redirectUrl: query.redirectUrl });
+      }
+      const { url } = app.getWebFlowAuthorizationUrl(authOptions);
+      return { status: 302, headers: { location: url } };
+    }
+    if (route === routes.getCallback) {
+      if (query.error) {
+        throw new Error(
+          `[@octokit/oauth-app] ${query.error} ${query.error_description}`
+        );
+      }
+      if (!query.code) {
+        throw new Error('[@octokit/oauth-app] "code" parameter is required');
+      }
+      const {
+        authentication: { token: token2 }
+      } = await app.createToken({
+        code: query.code
+      });
+      return {
+        status: 200,
+        headers: {
+          "content-type": "text/html"
+        },
+        text: `<h1>Token created successfully</h1>
+
+<p>Your token is: <strong>${token2}</strong>. Copy it now as it cannot be shown again.</p>`
+      };
+    }
+    if (route === routes.createToken) {
+      const { code, redirectUrl } = json;
+      if (!code) {
+        throw new Error('[@octokit/oauth-app] "code" parameter is required');
+      }
+      const result = await app.createToken({
+        code,
+        redirectUrl
+      });
+      delete result.authentication.clientSecret;
+      return {
+        status: 201,
+        headers: {
+          "content-type": "application/json",
+          "access-control-allow-origin": "*"
+        },
+        text: JSON.stringify(result)
+      };
+    }
+    if (route === routes.getToken) {
+      const token2 = headers.authorization?.substr("token ".length);
+      if (!token2) {
+        throw new Error(
+          '[@octokit/oauth-app] "Authorization" header is required'
+        );
+      }
+      const result = await app.checkToken({
+        token: token2
+      });
+      delete result.authentication.clientSecret;
+      return {
+        status: 200,
+        headers: {
+          "content-type": "application/json",
+          "access-control-allow-origin": "*"
+        },
+        text: JSON.stringify(result)
+      };
+    }
+    if (route === routes.patchToken) {
+      const token2 = headers.authorization?.substr("token ".length);
+      if (!token2) {
+        throw new Error(
+          '[@octokit/oauth-app] "Authorization" header is required'
+        );
+      }
+      const result = await app.resetToken({ token: token2 });
+      delete result.authentication.clientSecret;
+      return {
+        status: 200,
+        headers: {
+          "content-type": "application/json",
+          "access-control-allow-origin": "*"
+        },
+        text: JSON.stringify(result)
+      };
+    }
+    if (route === routes.patchRefreshToken) {
+      const token2 = headers.authorization?.substr("token ".length);
+      if (!token2) {
+        throw new Error(
+          '[@octokit/oauth-app] "Authorization" header is required'
+        );
+      }
+      const { refreshToken: refreshToken2 } = json;
+      if (!refreshToken2) {
+        throw new Error(
+          "[@octokit/oauth-app] refreshToken must be sent in request body"
+        );
+      }
+      const result = await app.refreshToken({ refreshToken: refreshToken2 });
+      delete result.authentication.clientSecret;
+      return {
+        status: 200,
+        headers: {
+          "content-type": "application/json",
+          "access-control-allow-origin": "*"
+        },
+        text: JSON.stringify(result)
+      };
+    }
+    if (route === routes.scopeToken) {
+      const token2 = headers.authorization?.substr("token ".length);
+      if (!token2) {
+        throw new Error(
+          '[@octokit/oauth-app] "Authorization" header is required'
+        );
+      }
+      const result = await app.scopeToken({
+        token: token2,
+        ...json
+      });
+      delete result.authentication.clientSecret;
+      return {
+        status: 200,
+        headers: {
+          "content-type": "application/json",
+          "access-control-allow-origin": "*"
+        },
+        text: JSON.stringify(result)
+      };
+    }
+    if (route === routes.deleteToken) {
+      const token2 = headers.authorization?.substr("token ".length);
+      if (!token2) {
+        throw new Error(
+          '[@octokit/oauth-app] "Authorization" header is required'
+        );
+      }
+      await app.deleteToken({
+        token: token2
+      });
+      return {
+        status: 204,
+        headers: { "access-control-allow-origin": "*" }
+      };
+    }
+    const token = headers.authorization?.substr("token ".length);
+    if (!token) {
+      throw new Error(
+        '[@octokit/oauth-app] "Authorization" header is required'
+      );
+    }
+    await app.deleteAuthorization({
+      token
+    });
+    return {
+      status: 204,
+      headers: { "access-control-allow-origin": "*" }
+    };
+  } catch (error) {
+    return {
+      status: 400,
+      headers: {
+        "content-type": "application/json",
+        "access-control-allow-origin": "*"
+      },
+      text: JSON.stringify({ error: error.message })
+    };
+  }
+}
+
+// pkg/dist-src/middleware/node/parse-request.js
+function parseRequest(request) {
+  const { method, url, headers } = request;
+  async function text() {
+    const text2 = await new Promise((resolve, reject) => {
+      let bodyChunks = [];
+      request.on("error", reject).on("data", (chunk) => bodyChunks.push(chunk)).on("end", () => resolve(Buffer.concat(bodyChunks).toString()));
+    });
+    return text2;
+  }
+  return { method, url, headers, text };
+}
+
+// pkg/dist-src/middleware/node/send-response.js
+function sendResponse(octokitResponse, response) {
+  response.writeHead(octokitResponse.status, octokitResponse.headers);
+  response.end(octokitResponse.text);
+}
+
+// pkg/dist-src/middleware/node/index.js
+function createNodeMiddleware(app, options = {}) {
+  return async function(request, response, next) {
+    const octokitRequest = await parseRequest(request);
+    const octokitResponse = await handleRequest(app, options, octokitRequest);
+    if (octokitResponse) {
+      sendResponse(octokitResponse, response);
+      return true;
+    } else {
+      next?.();
+      return false;
+    }
+  };
+}
+
+// pkg/dist-src/middleware/web-worker/parse-request.js
+function parseRequest2(request) {
+  const headers = Object.fromEntries(request.headers.entries());
+  return {
+    method: request.method,
+    url: request.url,
+    headers,
+    text: () => request.text()
+  };
+}
+
+// pkg/dist-src/middleware/web-worker/send-response.js
+function sendResponse2(octokitResponse) {
+  const responseOptions = {
+    status: octokitResponse.status
+  };
+  if (octokitResponse.headers) {
+    Object.assign(responseOptions, { headers: octokitResponse.headers });
+  }
+  return new Response(octokitResponse.text, responseOptions);
+}
+
+// pkg/dist-src/middleware/web-worker/index.js
+function createWebWorkerHandler(app, options = {}) {
+  return async function(request) {
+    const octokitRequest = await parseRequest2(request);
+    const octokitResponse = await handleRequest(app, options, octokitRequest);
+    return octokitResponse ? sendResponse2(octokitResponse) : void 0;
+  };
+}
+
+// pkg/dist-src/middleware/aws-lambda/api-gateway-v2-parse-request.js
+function parseRequest3(request) {
+  const { method } = request.requestContext.http;
+  let url = request.rawPath;
+  const { stage } = request.requestContext;
+  if (url.startsWith("/" + stage)) url = url.substring(stage.length + 1);
+  if (request.rawQueryString) url += "?" + request.rawQueryString;
+  const headers = request.headers;
+  const text = async () => request.body || "";
+  return { method, url, headers, text };
+}
+
+// pkg/dist-src/middleware/aws-lambda/api-gateway-v2-send-response.js
+function sendResponse3(octokitResponse) {
+  return {
+    statusCode: octokitResponse.status,
+    headers: octokitResponse.headers,
+    body: octokitResponse.text
+  };
+}
+
+// pkg/dist-src/middleware/aws-lambda/api-gateway-v2.js
+function createAWSLambdaAPIGatewayV2Handler(app, options = {}) {
+  return async function(event) {
+    const request = parseRequest3(event);
+    const response = await handleRequest(app, options, request);
+    return response ? sendResponse3(response) : void 0;
+  };
+}
+
+// pkg/dist-src/index.js
+var OAuthApp = class {
+  static VERSION = oauth_app_dist_node_VERSION;
+  static defaults(defaults) {
+    const OAuthAppWithDefaults = class extends this {
+      constructor(...args) {
+        super({
+          ...defaults,
+          ...args[0]
+        });
+      }
+    };
+    return OAuthAppWithDefaults;
+  }
+  constructor(options) {
+    const Octokit2 = options.Octokit || OAuthAppOctokit;
+    this.type = options.clientType || "oauth-app";
+    const octokit = new Octokit2({
+      authStrategy: createOAuthAppAuth,
+      auth: {
+        clientType: this.type,
+        clientId: options.clientId,
+        clientSecret: options.clientSecret
+      }
+    });
+    const state = {
+      clientType: this.type,
+      clientId: options.clientId,
+      clientSecret: options.clientSecret,
+      // @ts-expect-error defaultScopes not permitted for GitHub Apps
+      defaultScopes: options.defaultScopes || [],
+      allowSignup: options.allowSignup,
+      baseUrl: options.baseUrl,
+      redirectUrl: options.redirectUrl,
+      log: options.log,
+      Octokit: Octokit2,
+      octokit,
+      eventHandlers: {}
+    };
+    this.on = addEventHandler.bind(null, state);
+    this.octokit = octokit;
+    this.getUserOctokit = getUserOctokitWithState.bind(null, state);
+    this.getWebFlowAuthorizationUrl = getWebFlowAuthorizationUrlWithState.bind(
+      null,
+      state
+    );
+    this.createToken = createTokenWithState.bind(
+      null,
+      state
+    );
+    this.checkToken = checkTokenWithState.bind(
+      null,
+      state
+    );
+    this.resetToken = resetTokenWithState.bind(
+      null,
+      state
+    );
+    this.refreshToken = refreshTokenWithState.bind(
+      null,
+      state
+    );
+    this.scopeToken = scopeTokenWithState.bind(
+      null,
+      state
+    );
+    this.deleteToken = deleteTokenWithState.bind(null, state);
+    this.deleteAuthorization = deleteAuthorizationWithState.bind(null, state);
+  }
+  // assigned during constructor
+  type;
+  on;
+  octokit;
+  getUserOctokit;
+  getWebFlowAuthorizationUrl;
+  createToken;
+  checkToken;
+  resetToken;
+  refreshToken;
+  scopeToken;
+  deleteToken;
+  deleteAuthorization;
+};
+
+
+;// CONCATENATED MODULE: external "node:buffer"
+const external_node_buffer_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:buffer");
+;// CONCATENATED MODULE: ../../../node_modules/@octokit/webhooks-methods/dist-node/index.js
+// pkg/dist-src/node/sign.js
+
+
+// pkg/dist-src/version.js
+var webhooks_methods_dist_node_VERSION = "6.0.0";
+
+// pkg/dist-src/node/sign.js
+async function sign(secret, payload) {
+  if (!secret || !payload) {
+    throw new TypeError(
+      "[@octokit/webhooks-methods] secret & payload required for sign()"
+    );
+  }
+  if (typeof payload !== "string") {
+    throw new TypeError("[@octokit/webhooks-methods] payload must be a string");
+  }
+  const algorithm = "sha256";
+  return `${algorithm}=${(0,external_node_crypto_.createHmac)(algorithm, secret).update(payload).digest("hex")}`;
+}
+sign.VERSION = webhooks_methods_dist_node_VERSION;
+
+// pkg/dist-src/node/verify.js
+
+
+async function verify(secret, eventPayload, signature) {
+  if (!secret || !eventPayload || !signature) {
+    throw new TypeError(
+      "[@octokit/webhooks-methods] secret, eventPayload & signature required"
+    );
+  }
+  if (typeof eventPayload !== "string") {
+    throw new TypeError(
+      "[@octokit/webhooks-methods] eventPayload must be a string"
+    );
+  }
+  const signatureBuffer = external_node_buffer_namespaceObject.Buffer.from(signature);
+  const verificationBuffer = external_node_buffer_namespaceObject.Buffer.from(await sign(secret, eventPayload));
+  if (signatureBuffer.length !== verificationBuffer.length) {
+    return false;
+  }
+  return (0,external_node_crypto_.timingSafeEqual)(signatureBuffer, verificationBuffer);
+}
+verify.VERSION = webhooks_methods_dist_node_VERSION;
+
+// pkg/dist-src/index.js
+async function verifyWithFallback(secret, payload, signature, additionalSecrets) {
+  const firstPass = await verify(secret, payload, signature);
+  if (firstPass) {
+    return true;
+  }
+  if (additionalSecrets !== void 0) {
+    for (const s of additionalSecrets) {
+      const v = await verify(s, payload, signature);
+      if (v) {
+        return v;
+      }
+    }
+  }
+  return false;
+}
+
+
+;// CONCATENATED MODULE: ../../../node_modules/@octokit/webhooks/dist-bundle/index.js
+// pkg/dist-src/create-logger.js
+var dist_bundle_createLogger = (logger = {}) => {
+  if (typeof logger.debug !== "function") {
+    logger.debug = () => {
+    };
+  }
+  if (typeof logger.info !== "function") {
+    logger.info = () => {
+    };
+  }
+  if (typeof logger.warn !== "function") {
+    logger.warn = console.warn.bind(console);
+  }
+  if (typeof logger.error !== "function") {
+    logger.error = console.error.bind(console);
+  }
+  return logger;
+};
+
+// pkg/dist-src/generated/webhook-names.js
+var emitterEventNames = [
+  "branch_protection_configuration",
+  "branch_protection_configuration.disabled",
+  "branch_protection_configuration.enabled",
+  "branch_protection_rule",
+  "branch_protection_rule.created",
+  "branch_protection_rule.deleted",
+  "branch_protection_rule.edited",
+  "check_run",
+  "check_run.completed",
+  "check_run.created",
+  "check_run.requested_action",
+  "check_run.rerequested",
+  "check_suite",
+  "check_suite.completed",
+  "check_suite.requested",
+  "check_suite.rerequested",
+  "code_scanning_alert",
+  "code_scanning_alert.appeared_in_branch",
+  "code_scanning_alert.closed_by_user",
+  "code_scanning_alert.created",
+  "code_scanning_alert.fixed",
+  "code_scanning_alert.reopened",
+  "code_scanning_alert.reopened_by_user",
+  "commit_comment",
+  "commit_comment.created",
+  "create",
+  "custom_property",
+  "custom_property.created",
+  "custom_property.deleted",
+  "custom_property.promote_to_enterprise",
+  "custom_property.updated",
+  "custom_property_values",
+  "custom_property_values.updated",
+  "delete",
+  "dependabot_alert",
+  "dependabot_alert.auto_dismissed",
+  "dependabot_alert.auto_reopened",
+  "dependabot_alert.created",
+  "dependabot_alert.dismissed",
+  "dependabot_alert.fixed",
+  "dependabot_alert.reintroduced",
+  "dependabot_alert.reopened",
+  "deploy_key",
+  "deploy_key.created",
+  "deploy_key.deleted",
+  "deployment",
+  "deployment.created",
+  "deployment_protection_rule",
+  "deployment_protection_rule.requested",
+  "deployment_review",
+  "deployment_review.approved",
+  "deployment_review.rejected",
+  "deployment_review.requested",
+  "deployment_status",
+  "deployment_status.created",
+  "discussion",
+  "discussion.answered",
+  "discussion.category_changed",
+  "discussion.closed",
+  "discussion.created",
+  "discussion.deleted",
+  "discussion.edited",
+  "discussion.labeled",
+  "discussion.locked",
+  "discussion.pinned",
+  "discussion.reopened",
+  "discussion.transferred",
+  "discussion.unanswered",
+  "discussion.unlabeled",
+  "discussion.unlocked",
+  "discussion.unpinned",
+  "discussion_comment",
+  "discussion_comment.created",
+  "discussion_comment.deleted",
+  "discussion_comment.edited",
+  "fork",
+  "github_app_authorization",
+  "github_app_authorization.revoked",
+  "gollum",
+  "installation",
+  "installation.created",
+  "installation.deleted",
+  "installation.new_permissions_accepted",
+  "installation.suspend",
+  "installation.unsuspend",
+  "installation_repositories",
+  "installation_repositories.added",
+  "installation_repositories.removed",
+  "installation_target",
+  "installation_target.renamed",
+  "issue_comment",
+  "issue_comment.created",
+  "issue_comment.deleted",
+  "issue_comment.edited",
+  "issues",
+  "issues.assigned",
+  "issues.closed",
+  "issues.deleted",
+  "issues.demilestoned",
+  "issues.edited",
+  "issues.labeled",
+  "issues.locked",
+  "issues.milestoned",
+  "issues.opened",
+  "issues.pinned",
+  "issues.reopened",
+  "issues.transferred",
+  "issues.typed",
+  "issues.unassigned",
+  "issues.unlabeled",
+  "issues.unlocked",
+  "issues.unpinned",
+  "issues.untyped",
+  "label",
+  "label.created",
+  "label.deleted",
+  "label.edited",
+  "marketplace_purchase",
+  "marketplace_purchase.cancelled",
+  "marketplace_purchase.changed",
+  "marketplace_purchase.pending_change",
+  "marketplace_purchase.pending_change_cancelled",
+  "marketplace_purchase.purchased",
+  "member",
+  "member.added",
+  "member.edited",
+  "member.removed",
+  "membership",
+  "membership.added",
+  "membership.removed",
+  "merge_group",
+  "merge_group.checks_requested",
+  "merge_group.destroyed",
+  "meta",
+  "meta.deleted",
+  "milestone",
+  "milestone.closed",
+  "milestone.created",
+  "milestone.deleted",
+  "milestone.edited",
+  "milestone.opened",
+  "org_block",
+  "org_block.blocked",
+  "org_block.unblocked",
+  "organization",
+  "organization.deleted",
+  "organization.member_added",
+  "organization.member_invited",
+  "organization.member_removed",
+  "organization.renamed",
+  "package",
+  "package.published",
+  "package.updated",
+  "page_build",
+  "personal_access_token_request",
+  "personal_access_token_request.approved",
+  "personal_access_token_request.cancelled",
+  "personal_access_token_request.created",
+  "personal_access_token_request.denied",
+  "ping",
+  "project",
+  "project.closed",
+  "project.created",
+  "project.deleted",
+  "project.edited",
+  "project.reopened",
+  "project_card",
+  "project_card.converted",
+  "project_card.created",
+  "project_card.deleted",
+  "project_card.edited",
+  "project_card.moved",
+  "project_column",
+  "project_column.created",
+  "project_column.deleted",
+  "project_column.edited",
+  "project_column.moved",
+  "projects_v2",
+  "projects_v2.closed",
+  "projects_v2.created",
+  "projects_v2.deleted",
+  "projects_v2.edited",
+  "projects_v2.reopened",
+  "projects_v2_item",
+  "projects_v2_item.archived",
+  "projects_v2_item.converted",
+  "projects_v2_item.created",
+  "projects_v2_item.deleted",
+  "projects_v2_item.edited",
+  "projects_v2_item.reordered",
+  "projects_v2_item.restored",
+  "projects_v2_status_update",
+  "projects_v2_status_update.created",
+  "projects_v2_status_update.deleted",
+  "projects_v2_status_update.edited",
+  "public",
+  "pull_request",
+  "pull_request.assigned",
+  "pull_request.auto_merge_disabled",
+  "pull_request.auto_merge_enabled",
+  "pull_request.closed",
+  "pull_request.converted_to_draft",
+  "pull_request.demilestoned",
+  "pull_request.dequeued",
+  "pull_request.edited",
+  "pull_request.enqueued",
+  "pull_request.labeled",
+  "pull_request.locked",
+  "pull_request.milestoned",
+  "pull_request.opened",
+  "pull_request.ready_for_review",
+  "pull_request.reopened",
+  "pull_request.review_request_removed",
+  "pull_request.review_requested",
+  "pull_request.synchronize",
+  "pull_request.unassigned",
+  "pull_request.unlabeled",
+  "pull_request.unlocked",
+  "pull_request_review",
+  "pull_request_review.dismissed",
+  "pull_request_review.edited",
+  "pull_request_review.submitted",
+  "pull_request_review_comment",
+  "pull_request_review_comment.created",
+  "pull_request_review_comment.deleted",
+  "pull_request_review_comment.edited",
+  "pull_request_review_thread",
+  "pull_request_review_thread.resolved",
+  "pull_request_review_thread.unresolved",
+  "push",
+  "registry_package",
+  "registry_package.published",
+  "registry_package.updated",
+  "release",
+  "release.created",
+  "release.deleted",
+  "release.edited",
+  "release.prereleased",
+  "release.published",
+  "release.released",
+  "release.unpublished",
+  "repository",
+  "repository.archived",
+  "repository.created",
+  "repository.deleted",
+  "repository.edited",
+  "repository.privatized",
+  "repository.publicized",
+  "repository.renamed",
+  "repository.transferred",
+  "repository.unarchived",
+  "repository_advisory",
+  "repository_advisory.published",
+  "repository_advisory.reported",
+  "repository_dispatch",
+  "repository_dispatch.sample.collected",
+  "repository_import",
+  "repository_ruleset",
+  "repository_ruleset.created",
+  "repository_ruleset.deleted",
+  "repository_ruleset.edited",
+  "repository_vulnerability_alert",
+  "repository_vulnerability_alert.create",
+  "repository_vulnerability_alert.dismiss",
+  "repository_vulnerability_alert.reopen",
+  "repository_vulnerability_alert.resolve",
+  "secret_scanning_alert",
+  "secret_scanning_alert.created",
+  "secret_scanning_alert.publicly_leaked",
+  "secret_scanning_alert.reopened",
+  "secret_scanning_alert.resolved",
+  "secret_scanning_alert.validated",
+  "secret_scanning_alert_location",
+  "secret_scanning_alert_location.created",
+  "secret_scanning_scan",
+  "secret_scanning_scan.completed",
+  "security_advisory",
+  "security_advisory.published",
+  "security_advisory.updated",
+  "security_advisory.withdrawn",
+  "security_and_analysis",
+  "sponsorship",
+  "sponsorship.cancelled",
+  "sponsorship.created",
+  "sponsorship.edited",
+  "sponsorship.pending_cancellation",
+  "sponsorship.pending_tier_change",
+  "sponsorship.tier_changed",
+  "star",
+  "star.created",
+  "star.deleted",
+  "status",
+  "sub_issues",
+  "sub_issues.parent_issue_added",
+  "sub_issues.parent_issue_removed",
+  "sub_issues.sub_issue_added",
+  "sub_issues.sub_issue_removed",
+  "team",
+  "team.added_to_repository",
+  "team.created",
+  "team.deleted",
+  "team.edited",
+  "team.removed_from_repository",
+  "team_add",
+  "watch",
+  "watch.started",
+  "workflow_dispatch",
+  "workflow_job",
+  "workflow_job.completed",
+  "workflow_job.in_progress",
+  "workflow_job.queued",
+  "workflow_job.waiting",
+  "workflow_run",
+  "workflow_run.completed",
+  "workflow_run.in_progress",
+  "workflow_run.requested"
+];
+
+// pkg/dist-src/event-handler/validate-event-name.js
+function validateEventName(eventName, options = {}) {
+  if (typeof eventName !== "string") {
+    throw new TypeError("eventName must be of type string");
+  }
+  if (eventName === "*") {
+    throw new TypeError(
+      `Using the "*" event with the regular Webhooks.on() function is not supported. Please use the Webhooks.onAny() method instead`
+    );
+  }
+  if (eventName === "error") {
+    throw new TypeError(
+      `Using the "error" event with the regular Webhooks.on() function is not supported. Please use the Webhooks.onError() method instead`
+    );
+  }
+  if (options.onUnknownEventName === "ignore") {
+    return;
+  }
+  if (!emitterEventNames.includes(eventName)) {
+    if (options.onUnknownEventName !== "warn") {
+      throw new TypeError(
+        `"${eventName}" is not a known webhook name (https://developer.github.com/v3/activity/events/types/)`
+      );
+    } else {
+      (options.log || console).warn(
+        `"${eventName}" is not a known webhook name (https://developer.github.com/v3/activity/events/types/)`
+      );
+    }
+  }
+}
+
+// pkg/dist-src/event-handler/on.js
+function handleEventHandlers(state, webhookName, handler) {
+  if (!state.hooks[webhookName]) {
+    state.hooks[webhookName] = [];
+  }
+  state.hooks[webhookName].push(handler);
+}
+function receiverOn(state, webhookNameOrNames, handler) {
+  if (Array.isArray(webhookNameOrNames)) {
+    webhookNameOrNames.forEach(
+      (webhookName) => receiverOn(state, webhookName, handler)
+    );
+    return;
+  }
+  validateEventName(webhookNameOrNames, {
+    onUnknownEventName: "warn",
+    log: state.log
+  });
+  handleEventHandlers(state, webhookNameOrNames, handler);
+}
+function receiverOnAny(state, handler) {
+  handleEventHandlers(state, "*", handler);
+}
+function receiverOnError(state, handler) {
+  handleEventHandlers(state, "error", handler);
+}
+
+// pkg/dist-src/event-handler/wrap-error-handler.js
+function wrapErrorHandler(handler, error) {
+  let returnValue;
+  try {
+    returnValue = handler(error);
+  } catch (error2) {
+    console.log('FATAL: Error occurred in "error" event handler');
+    console.log(error2);
+  }
+  if (returnValue && returnValue.catch) {
+    returnValue.catch((error2) => {
+      console.log('FATAL: Error occurred in "error" event handler');
+      console.log(error2);
+    });
+  }
+}
+
+// pkg/dist-src/event-handler/receive.js
+function getHooks(state, eventPayloadAction, eventName) {
+  const hooks = [state.hooks[eventName], state.hooks["*"]];
+  if (eventPayloadAction) {
+    hooks.unshift(state.hooks[`${eventName}.${eventPayloadAction}`]);
+  }
+  return [].concat(...hooks.filter(Boolean));
+}
+function receiverHandle(state, event) {
+  const errorHandlers = state.hooks.error || [];
+  if (event instanceof Error) {
+    const error = Object.assign(new AggregateError([event], event.message), {
+      event
+    });
+    errorHandlers.forEach((handler) => wrapErrorHandler(handler, error));
+    return Promise.reject(error);
+  }
+  if (!event || !event.name) {
+    const error = new Error("Event name not passed");
+    throw new AggregateError([error], error.message);
+  }
+  if (!event.payload) {
+    const error = new Error("Event name not passed");
+    throw new AggregateError([error], error.message);
+  }
+  const hooks = getHooks(
+    state,
+    "action" in event.payload ? event.payload.action : null,
+    event.name
+  );
+  if (hooks.length === 0) {
+    return Promise.resolve();
+  }
+  const errors = [];
+  const promises = hooks.map((handler) => {
+    let promise = Promise.resolve(event);
+    if (state.transform) {
+      promise = promise.then(state.transform);
+    }
+    return promise.then((event2) => {
+      return handler(event2);
+    }).catch((error) => errors.push(Object.assign(error, { event })));
+  });
+  return Promise.all(promises).then(() => {
+    if (errors.length === 0) {
+      return;
+    }
+    const error = new AggregateError(
+      errors,
+      errors.map((error2) => error2.message).join("\n")
+    );
+    Object.assign(error, {
+      event
+    });
+    errorHandlers.forEach((handler) => wrapErrorHandler(handler, error));
+    throw error;
+  });
+}
+
+// pkg/dist-src/event-handler/remove-listener.js
+function removeListener(state, webhookNameOrNames, handler) {
+  if (Array.isArray(webhookNameOrNames)) {
+    webhookNameOrNames.forEach(
+      (webhookName) => removeListener(state, webhookName, handler)
+    );
+    return;
+  }
+  if (!state.hooks[webhookNameOrNames]) {
+    return;
+  }
+  for (let i = state.hooks[webhookNameOrNames].length - 1; i >= 0; i--) {
+    if (state.hooks[webhookNameOrNames][i] === handler) {
+      state.hooks[webhookNameOrNames].splice(i, 1);
+      return;
+    }
+  }
+}
+
+// pkg/dist-src/event-handler/index.js
+function createEventHandler(options) {
+  const state = {
+    hooks: {},
+    log: dist_bundle_createLogger(options && options.log)
+  };
+  if (options && options.transform) {
+    state.transform = options.transform;
+  }
+  return {
+    on: receiverOn.bind(null, state),
+    onAny: receiverOnAny.bind(null, state),
+    onError: receiverOnError.bind(null, state),
+    removeListener: removeListener.bind(null, state),
+    receive: receiverHandle.bind(null, state)
+  };
+}
+
+// pkg/dist-src/index.js
+
+
+// pkg/dist-src/verify-and-receive.js
+
+async function verifyAndReceive(state, event) {
+  const matchesSignature = await verifyWithFallback(
+    state.secret,
+    event.payload,
+    event.signature,
+    state.additionalSecrets
+  ).catch(() => false);
+  if (!matchesSignature) {
+    const error = new Error(
+      "[@octokit/webhooks] signature does not match event payload and secret"
+    );
+    error.event = event;
+    error.status = 400;
+    return state.eventHandler.receive(error);
+  }
+  let payload;
+  try {
+    payload = JSON.parse(event.payload);
+  } catch (error) {
+    error.message = "Invalid JSON";
+    error.status = 400;
+    throw new AggregateError([error], error.message);
+  }
+  return state.eventHandler.receive({
+    id: event.id,
+    name: event.name,
+    payload
+  });
+}
+
+// pkg/dist-src/normalize-trailing-slashes.js
+function normalizeTrailingSlashes(path) {
+  let i = path.length;
+  if (i === 0) {
+    return "/";
+  }
+  while (i > 0) {
+    if (path.charCodeAt(--i) !== 47) {
+      break;
+    }
+  }
+  if (i === -1) {
+    return "/";
+  }
+  return path.slice(0, i + 1);
+}
+
+// pkg/dist-src/middleware/create-middleware.js
+var isApplicationJsonRE = /^\s*(application\/json)\s*(?:;|$)/u;
+var WEBHOOK_HEADERS = (/* unused pure expression or super */ null && ([
+  "x-github-event",
+  "x-hub-signature-256",
+  "x-github-delivery"
+]));
+function createMiddleware(options) {
+  const { handleResponse: handleResponse3, getRequestHeader: getRequestHeader3, getPayload: getPayload3 } = options;
+  return function middleware(webhooks, options2) {
+    const middlewarePath = normalizeTrailingSlashes(options2.path);
+    return async function octokitWebhooksMiddleware(request, response, next) {
+      let pathname;
+      try {
+        pathname = new URL(
+          normalizeTrailingSlashes(request.url),
+          "http://localhost"
+        ).pathname;
+      } catch (error) {
+        return handleResponse3(
+          JSON.stringify({
+            error: `Request URL could not be parsed: ${request.url}`
+          }),
+          422,
+          {
+            "content-type": "application/json"
+          },
+          response
+        );
+      }
+      if (pathname !== middlewarePath) {
+        next?.();
+        return handleResponse3(null);
+      } else if (request.method !== "POST") {
+        return handleResponse3(
+          JSON.stringify({
+            error: `Unknown route: ${request.method} ${pathname}`
+          }),
+          404,
+          {
+            "content-type": "application/json"
+          },
+          response
+        );
+      }
+      const contentType = getRequestHeader3(request, "content-type");
+      if (typeof contentType !== "string" || !isApplicationJsonRE.test(contentType)) {
+        return handleResponse3(
+          JSON.stringify({
+            error: `Unsupported "Content-Type" header value. Must be "application/json"`
+          }),
+          415,
+          {
+            "content-type": "application/json",
+            accept: "application/json"
+          },
+          response
+        );
+      }
+      const missingHeaders = WEBHOOK_HEADERS.filter((header) => {
+        return getRequestHeader3(request, header) == void 0;
+      }).join(", ");
+      if (missingHeaders) {
+        return handleResponse3(
+          JSON.stringify({
+            error: `Required headers missing: ${missingHeaders}`
+          }),
+          400,
+          {
+            "content-type": "application/json",
+            accept: "application/json"
+          },
+          response
+        );
+      }
+      const eventName = getRequestHeader3(
+        request,
+        "x-github-event"
+      );
+      const signature = getRequestHeader3(request, "x-hub-signature-256");
+      const id = getRequestHeader3(request, "x-github-delivery");
+      options2.log.debug(`${eventName} event received (id: ${id})`);
+      let didTimeout = false;
+      let timeout;
+      const timeoutPromise = new Promise((resolve) => {
+        timeout = setTimeout(() => {
+          didTimeout = true;
+          resolve(
+            handleResponse3(
+              "still processing\n",
+              202,
+              {
+                "Content-Type": "text/plain",
+                accept: "application/json"
+              },
+              response
+            )
+          );
+        }, options2.timeout);
+      });
+      const processWebhook = async () => {
+        try {
+          const payload = await getPayload3(request);
+          await webhooks.verifyAndReceive({
+            id,
+            name: eventName,
+            payload,
+            signature
+          });
+          clearTimeout(timeout);
+          if (didTimeout) return handleResponse3(null);
+          return handleResponse3(
+            "ok\n",
+            200,
+            {
+              "content-type": "text/plain",
+              accept: "application/json"
+            },
+            response
+          );
+        } catch (error) {
+          clearTimeout(timeout);
+          if (didTimeout) return handleResponse3(null);
+          const err = Array.from(error.errors)[0];
+          const errorMessage = err.message ? `${err.name}: ${err.message}` : "Error: An Unspecified error occurred";
+          const statusCode = typeof err.status !== "undefined" ? err.status : 500;
+          options2.log.error(error);
+          return handleResponse3(
+            JSON.stringify({
+              error: errorMessage
+            }),
+            statusCode,
+            {
+              "content-type": "application/json",
+              accept: "application/json"
+            },
+            response
+          );
+        }
+      };
+      return await Promise.race([timeoutPromise, processWebhook()]);
+    };
+  };
+}
+
+// pkg/dist-src/middleware/node/handle-response.js
+function handleResponse(body, status = 200, headers = {}, response) {
+  if (body === null) {
+    return false;
+  }
+  headers["content-length"] = body.length.toString();
+  response.writeHead(status, headers).end(body);
+  return true;
+}
+
+// pkg/dist-src/middleware/node/get-request-header.js
+function getRequestHeader(request, key) {
+  return request.headers[key];
+}
+
+// pkg/dist-src/concat-uint8array.js
+function concatUint8Array(data) {
+  if (data.length === 0) {
+    return new Uint8Array(0);
+  }
+  let totalLength = 0;
+  for (let i = 0; i < data.length; i++) {
+    totalLength += data[i].length;
+  }
+  if (totalLength === 0) {
+    return new Uint8Array(0);
+  }
+  const result = new Uint8Array(totalLength);
+  let offset = 0;
+  for (let i = 0; i < data.length; i++) {
+    result.set(data[i], offset);
+    offset += data[i].length;
+  }
+  return result;
+}
+
+// pkg/dist-src/middleware/node/get-payload.js
+var textDecoder = new TextDecoder("utf-8", { fatal: false });
+var decode = textDecoder.decode.bind(textDecoder);
+async function getPayload(request) {
+  if (typeof request.body === "object" && "rawBody" in request && request.rawBody instanceof Uint8Array) {
+    return decode(request.rawBody);
+  } else if (typeof request.body === "string") {
+    return request.body;
+  }
+  const payload = await getPayloadFromRequestStream(request);
+  return decode(payload);
+}
+function getPayloadFromRequestStream(request) {
+  return new Promise((resolve, reject) => {
+    let data = [];
+    request.on(
+      "error",
+      (error) => reject(new AggregateError([error], error.message))
+    );
+    request.on("data", data.push.bind(data));
+    request.on("end", () => {
+      const result = concatUint8Array(data);
+      queueMicrotask(() => resolve(result));
+    });
+  });
+}
+
+// pkg/dist-src/middleware/node/index.js
+function dist_bundle_createNodeMiddleware(webhooks, {
+  path = "/api/github/webhooks",
+  log = dist_bundle_createLogger(),
+  timeout = 9e3
+} = {}) {
+  return createMiddleware({
+    handleResponse,
+    getRequestHeader,
+    getPayload
+  })(webhooks, {
+    path,
+    log,
+    timeout
+  });
+}
+
+// pkg/dist-src/middleware/web/get-payload.js
+function getPayload2(request) {
+  return request.text();
+}
+
+// pkg/dist-src/middleware/web/get-request-header.js
+function getRequestHeader2(request, key) {
+  return request.headers.get(key);
+}
+
+// pkg/dist-src/middleware/web/handle-response.js
+function handleResponse2(body, status = 200, headers = {}) {
+  if (body !== null) {
+    headers["content-length"] = body.length.toString();
+  }
+  return new Response(body, {
+    status,
+    headers
+  });
+}
+
+// pkg/dist-src/middleware/web/index.js
+function createWebMiddleware(webhooks, {
+  path = "/api/github/webhooks",
+  log = dist_bundle_createLogger(),
+  timeout = 9e3
+} = {}) {
+  return createMiddleware({
+    handleResponse: handleResponse2,
+    getRequestHeader: getRequestHeader2,
+    getPayload: getPayload2
+  })(webhooks, {
+    path,
+    log,
+    timeout
+  });
+}
+
+// pkg/dist-src/index.js
+var Webhooks = class {
+  sign;
+  verify;
+  on;
+  onAny;
+  onError;
+  removeListener;
+  receive;
+  verifyAndReceive;
+  constructor(options) {
+    if (!options || !options.secret) {
+      throw new Error("[@octokit/webhooks] options.secret required");
+    }
+    const state = {
+      eventHandler: createEventHandler(options),
+      secret: options.secret,
+      additionalSecrets: options.additionalSecrets,
+      hooks: {},
+      log: dist_bundle_createLogger(options.log)
+    };
+    this.sign = sign.bind(null, options.secret);
+    this.verify = verify.bind(null, options.secret);
+    this.on = state.eventHandler.on;
+    this.onAny = state.eventHandler.onAny;
+    this.onError = state.eventHandler.onError;
+    this.removeListener = state.eventHandler.removeListener;
+    this.receive = state.eventHandler.receive;
+    this.verifyAndReceive = verifyAndReceive.bind(null, state);
+  }
+};
+
+
+;// CONCATENATED MODULE: ../../../node_modules/@octokit/app/dist-node/index.js
+// pkg/dist-src/index.js
+
+
+
+
+// pkg/dist-src/version.js
+var app_dist_node_VERSION = "16.0.1";
+
+// pkg/dist-src/webhooks.js
+
+
+
+function webhooks(appOctokit, options) {
+  return new Webhooks({
+    secret: options.secret,
+    transform: async (event) => {
+      if (!("installation" in event.payload) || typeof event.payload.installation !== "object") {
+        const octokit2 = new appOctokit.constructor({
+          authStrategy: createUnauthenticatedAuth,
+          auth: {
+            reason: `"installation" key missing in webhook event payload`
+          }
+        });
+        return {
+          ...event,
+          octokit: octokit2
+        };
+      }
+      const installationId = event.payload.installation.id;
+      const octokit = await appOctokit.auth({
+        type: "installation",
+        installationId,
+        factory(auth) {
+          return new auth.octokit.constructor({
+            ...auth.octokitOptions,
+            authStrategy: createAppAuth,
+            ...{
+              auth: {
+                ...auth,
+                installationId
+              }
+            }
+          });
+        }
+      });
+      octokit.hook.before("request", (options2) => {
+        options2.headers["x-github-delivery"] = event.id;
+      });
+      return {
+        ...event,
+        octokit
+      };
+    }
+  });
+}
+
+// pkg/dist-src/each-installation.js
+
+
+// pkg/dist-src/get-installation-octokit.js
+
+async function getInstallationOctokit(app, installationId) {
+  return app.octokit.auth({
+    type: "installation",
+    installationId,
+    factory(auth) {
+      const options = {
+        ...auth.octokitOptions,
+        authStrategy: createAppAuth,
+        ...{ auth: { ...auth, installationId } }
+      };
+      return new auth.octokit.constructor(options);
+    }
+  });
+}
+
+// pkg/dist-src/each-installation.js
+function eachInstallationFactory(app) {
+  return Object.assign(eachInstallation.bind(null, app), {
+    iterator: eachInstallationIterator.bind(null, app)
+  });
+}
+async function eachInstallation(app, callback) {
+  const i = eachInstallationIterator(app)[Symbol.asyncIterator]();
+  let result = await i.next();
+  while (!result.done) {
+    await callback(result.value);
+    result = await i.next();
+  }
+}
+function eachInstallationIterator(app) {
+  return {
+    async *[Symbol.asyncIterator]() {
+      const iterator = composePaginateRest.iterator(
+        app.octokit,
+        "GET /app/installations"
+      );
+      for await (const { data: installations } of iterator) {
+        for (const installation of installations) {
+          const installationOctokit = await getInstallationOctokit(
+            app,
+            installation.id
+          );
+          yield { octokit: installationOctokit, installation };
+        }
+      }
+    }
+  };
+}
+
+// pkg/dist-src/each-repository.js
+
+function eachRepositoryFactory(app) {
+  return Object.assign(eachRepository.bind(null, app), {
+    iterator: eachRepositoryIterator.bind(null, app)
+  });
+}
+async function eachRepository(app, queryOrCallback, callback) {
+  const i = eachRepositoryIterator(
+    app,
+    callback ? queryOrCallback : void 0
+  )[Symbol.asyncIterator]();
+  let result = await i.next();
+  while (!result.done) {
+    if (callback) {
+      await callback(result.value);
+    } else {
+      await queryOrCallback(result.value);
+    }
+    result = await i.next();
+  }
+}
+function singleInstallationIterator(app, installationId) {
+  return {
+    async *[Symbol.asyncIterator]() {
+      yield {
+        octokit: await app.getInstallationOctokit(installationId)
+      };
+    }
+  };
+}
+function eachRepositoryIterator(app, query) {
+  return {
+    async *[Symbol.asyncIterator]() {
+      const iterator = query ? singleInstallationIterator(app, query.installationId) : app.eachInstallation.iterator();
+      for await (const { octokit } of iterator) {
+        const repositoriesIterator = composePaginateRest.iterator(
+          octokit,
+          "GET /installation/repositories"
+        );
+        for await (const { data: repositories } of repositoriesIterator) {
+          for (const repository of repositories) {
+            yield { octokit, repository };
+          }
+        }
+      }
+    }
+  };
+}
+
+// pkg/dist-src/get-installation-url.js
+function getInstallationUrlFactory(app) {
+  let installationUrlBasePromise;
+  return async function getInstallationUrl(options = {}) {
+    if (!installationUrlBasePromise) {
+      installationUrlBasePromise = getInstallationUrlBase(app);
+    }
+    const installationUrlBase = await installationUrlBasePromise;
+    const installationUrl = new URL(installationUrlBase);
+    if (options.target_id !== void 0) {
+      installationUrl.pathname += "/permissions";
+      installationUrl.searchParams.append(
+        "target_id",
+        options.target_id.toFixed()
+      );
+    }
+    if (options.state !== void 0) {
+      installationUrl.searchParams.append("state", options.state);
+    }
+    return installationUrl.href;
+  };
+}
+async function getInstallationUrlBase(app) {
+  const { data: appInfo } = await app.octokit.request("GET /app");
+  if (!appInfo) {
+    throw new Error("[@octokit/app] unable to fetch metadata for app");
+  }
+  return `${appInfo.html_url}/installations/new`;
+}
+
+// pkg/dist-src/middleware/node/index.js
+
+
+function dist_node_noop() {
+}
+function dist_node_createNodeMiddleware(app, options = {}) {
+  const log = Object.assign(
+    {
+      debug: dist_node_noop,
+      info: dist_node_noop,
+      warn: console.warn.bind(console),
+      error: console.error.bind(console)
+    },
+    options.log
+  );
+  const optionsWithDefaults = {
+    pathPrefix: "/api/github",
+    ...options,
+    log
+  };
+  const webhooksMiddleware = webhooksNodeMiddleware(app.webhooks, {
+    path: optionsWithDefaults.pathPrefix + "/webhooks",
+    log
+  });
+  const oauthMiddleware = oauthNodeMiddleware(app.oauth, {
+    pathPrefix: optionsWithDefaults.pathPrefix + "/oauth"
+  });
+  return middleware.bind(
+    null,
+    optionsWithDefaults.pathPrefix,
+    webhooksMiddleware,
+    oauthMiddleware
+  );
+}
+async function middleware(pathPrefix, webhooksMiddleware, oauthMiddleware, request, response, next) {
+  const { pathname } = new URL(request.url, "http://localhost");
+  if (pathname.startsWith(`${pathPrefix}/`)) {
+    if (pathname === `${pathPrefix}/webhooks`) {
+      webhooksMiddleware(request, response);
+    } else if (pathname.startsWith(`${pathPrefix}/oauth/`)) {
+      oauthMiddleware(request, response);
+    } else {
+      sendNodeResponse(unknownRouteResponse(request), response);
+    }
+    return true;
+  } else {
+    next?.();
+    return false;
+  }
+}
+
+// pkg/dist-src/index.js
+var App = class {
+  static VERSION = app_dist_node_VERSION;
+  static defaults(defaults) {
+    const AppWithDefaults = class extends this {
+      constructor(...args) {
+        super({
+          ...defaults,
+          ...args[0]
+        });
+      }
+    };
+    return AppWithDefaults;
+  }
+  octokit;
+  // @ts-ignore calling app.webhooks will throw a helpful error when options.webhooks is not set
+  webhooks;
+  // @ts-ignore calling app.oauth will throw a helpful error when options.oauth is not set
+  oauth;
+  getInstallationOctokit;
+  eachInstallation;
+  eachRepository;
+  getInstallationUrl;
+  log;
+  constructor(options) {
+    const Octokit = options.Octokit || dist_src_Octokit;
+    const authOptions = Object.assign(
+      {
+        appId: options.appId,
+        privateKey: options.privateKey
+      },
+      options.oauth ? {
+        clientId: options.oauth.clientId,
+        clientSecret: options.oauth.clientSecret
+      } : {}
+    );
+    const octokitOptions = {
+      authStrategy: createAppAuth,
+      auth: authOptions
+    };
+    if ("log" in options && typeof options.log !== "undefined") {
+      octokitOptions.log = options.log;
+    }
+    this.octokit = new Octokit(octokitOptions);
+    this.log = Object.assign(
+      {
+        debug: () => {
+        },
+        info: () => {
+        },
+        warn: console.warn.bind(console),
+        error: console.error.bind(console)
+      },
+      options.log
+    );
+    if (options.webhooks) {
+      this.webhooks = webhooks(this.octokit, options.webhooks);
+    } else {
+      Object.defineProperty(this, "webhooks", {
+        get() {
+          throw new Error("[@octokit/app] webhooks option not set");
+        }
+      });
+    }
+    if (options.oauth) {
+      this.oauth = new OAuthApp({
+        ...options.oauth,
+        clientType: "github-app",
+        Octokit
+      });
+    } else {
+      Object.defineProperty(this, "oauth", {
+        get() {
+          throw new Error(
+            "[@octokit/app] oauth.clientId / oauth.clientSecret options are not set"
+          );
+        }
+      });
+    }
+    this.getInstallationOctokit = getInstallationOctokit.bind(
+      null,
+      this
+    );
+    this.eachInstallation = eachInstallationFactory(
+      this
+    );
+    this.eachRepository = eachRepositoryFactory(
+      this
+    );
+    this.getInstallationUrl = getInstallationUrlFactory(this);
+  }
+};
+
+
+;// CONCATENATED MODULE: ../../../node_modules/octokit/dist-bundle/index.js
+// pkg/dist-src/octokit.js
+
+
+
+
+
+
+
+// pkg/dist-src/version.js
+var octokit_dist_bundle_VERSION = "0.0.0-development";
+
+// pkg/dist-src/octokit.js
+
+var Octokit = dist_src_Octokit.plugin(
+  restEndpointMethods,
+  paginateRest,
+  paginateGraphQL,
+  retry,
+  throttling
+).defaults({
+  userAgent: `octokit.js/${octokit_dist_bundle_VERSION}`,
+  throttle: {
+    onRateLimit,
+    onSecondaryRateLimit
+  }
+});
+function onRateLimit(retryAfter, options, octokit) {
+  octokit.log.warn(
+    `Request quota exhausted for request ${options.method} ${options.url}`
+  );
+  if (options.request.retryCount === 0) {
+    octokit.log.info(`Retrying after ${retryAfter} seconds!`);
+    return true;
+  }
+}
+function onSecondaryRateLimit(retryAfter, options, octokit) {
+  octokit.log.warn(
+    `SecondaryRateLimit detected for request ${options.method} ${options.url}`
+  );
+  if (options.request.retryCount === 0) {
+    octokit.log.info(`Retrying after ${retryAfter} seconds!`);
+    return true;
+  }
+}
+
+// pkg/dist-src/app.js
+
+
+
+var dist_bundle_App = App.defaults({ Octokit });
+var dist_bundle_OAuthApp = OAuthApp.defaults({ Octokit });
+
+
+;// CONCATENATED MODULE: ../issue-number-branch-core/dist/infrastructure/github-client.js
+// Infrastructure layer - GitHub API operations
+
+
+
+
+// Create custom Octokit with retry and throttling plugins
+const MyOctokit = Octokit.plugin(retry, throttling);
+/**
+ * GitHubClient provides access to GitHub API
+ */
+class GitHubClient {
+    octokit;
+    constructor(token) {
+        const config = Config.getInstance();
+        const auth = token ?? config.getGitHubToken();
+        this.octokit = new MyOctokit({
+            auth,
+            userAgent: "issue-number-branch",
+            baseUrl: config.getGitHubApiUrl(),
+            retry: {
+                doNotRetry: ["429"], // Let throttling plugin handle rate limits
+            },
+            throttle: {
+                onRateLimit: (retryAfter, _options, _octokit, retryCount) => {
+                    // Retry up to 2 times for rate limit errors
+                    if (retryCount < 2) {
+                        console.warn(`Rate limit hit, retrying after ${retryAfter} seconds...`);
+                        return true;
+                    }
+                    console.error("Rate limit exceeded after retries");
+                    return false;
+                },
+                onSecondaryRateLimit: (_retryAfter, _options, _octokit) => {
+                    // Don't retry on abuse detection
+                    console.error(`Abuse detection triggered, please wait ${_retryAfter} seconds`);
+                    return false;
+                },
+            },
+        });
+    }
+    /**
+     * Get an issue from GitHub
+     * @param owner - Repository owner
+     * @param repo - Repository name
+     * @param issueNumber - Issue number
+     * @returns Issue if found, null otherwise
+     */
+    async getIssue(owner, repo, issueNumber) {
+        try {
+            const { data } = await this.octokit.rest.issues.get({
+                owner,
+                repo,
+                issue_number: issueNumber,
+                headers: {
+                    Accept: "application/vnd.github+json",
+                },
+            });
+            // Convert GitHub issue to our Issue type
+            const issue = {
+                number: data.number,
+                state: (data.state?.toLowerCase() ?? "open"),
+                title: data.title,
+            };
+            // Add optional body if it exists
+            if (data.body) {
+                issue.body = data.body;
+            }
+            return issue;
+        }
+        catch (error) {
+            // Type-safe error handling with proper type guard
+            const isRequestError = (err) => {
+                if (typeof err !== "object" || err === null) {
+                    return false;
+                }
+                // Use type assertion with proper check
+                const error = err;
+                return typeof error.status === "number";
+            };
+            if (isRequestError(error)) {
+                if (error.status === 404) {
+                    // Issue doesn't exist - this is normal, not an error
+                    return null;
+                }
+                if (error.status === 403) {
+                    // Permission denied or rate limit
+                    console.error(`GitHub API access denied for issue #${issueNumber}: ${error.message}`);
+                    return null;
+                }
+                if (error.status === 401) {
+                    // Authentication failed
+                    console.error(`GitHub API authentication failed: ${error.message}`);
+                    return null;
+                }
+                // Log other API errors
+                console.error(`GitHub API error for issue #${issueNumber}: ${error.status} ${error.message}`);
+                return null;
+            }
+            // Non-API errors (network, etc.)
+            console.error(`Unexpected error fetching issue #${issueNumber}:`, error);
+            return null;
+        }
+    }
+}
+//# sourceMappingURL=github-client.js.map
+;// CONCATENATED MODULE: ../issue-number-branch-core/dist/use-cases/check-branch.js
+// Use case layer - Main business logic
+
+
+
+
+
+
+/**
+ * Main use case for checking if a branch name contains a valid issue number
+ * @param options - Options for the check
+ * @returns Result of the check
+ */
+async function checkBranch(options = {}) {
+    const config = Config.getInstance();
+    const defaults = config.getDefaults();
+    // Merge options with defaults
+    const excludePattern = options.excludePattern ?? defaults.excludePattern;
+    const issueState = options.issueState ?? defaults.issueState;
+    const githubToken = options.githubToken ?? config.getGitHubToken();
+    // Initialize clients
+    const gitClient = new GitClient();
+    const githubClient = new GitHubClient(githubToken);
+    try {
+        // 1. Get branch name (from option or current branch)
+        const branch = options.branch ?? (await gitClient.getCurrentBranch());
+        // 2. Check if branch should be excluded
+        if (validateBranchExclusion(branch, excludePattern)) {
             return {
-                ok: true,
+                success: true,
                 reason: "excluded",
                 branch,
-                message: `branch '${branch}' is excluded by '${excludeGlob}'`,
+                message: `Branch '${branch}' is excluded from validation`,
             };
         }
-        // 2) Extract candidates
-        const candidates = extractIssueNumbers(branch);
-        if (candidates.length === 0) {
+        // 3. Extract issue numbers from branch name
+        const issueNumbers = extractIssueNumbers(branch);
+        if (issueNumbers.length === 0) {
             return {
-                ok: false,
-                reason: "no-number",
+                success: false,
+                reason: "no-issue-number",
                 branch,
-                message: `no numeric issue in '${branch}'`,
+                message: `No issue number found in branch '${branch}'`,
             };
         }
-        // 3) Parse owner/repo
-        const remote = (await git(["config", "--get", "remote.origin.url"])).trim();
-        const { owner, repo } = parseOwnerRepo(remote);
-        // 4) Check existence (return on first match)
-        for (const n of candidates) {
-            const ok = await issueExists(owner, repo, n, allowed, token);
-            if (ok) {
+        // 4. Get repository information (from options or git remote)
+        let owner;
+        let repo;
+        if (options.owner && options.repo) {
+            owner = options.owner;
+            repo = options.repo;
+        }
+        else {
+            const remoteUrl = await gitClient.getRemoteUrl();
+            const parsed = parseGitRemoteUrl(remoteUrl);
+            owner = parsed.owner;
+            repo = parsed.repo;
+        }
+        // 5. Check if any of the issue numbers exist with allowed states
+        for (const num of issueNumbers) {
+            const issue = await githubClient.getIssue(owner, repo, num);
+            if (issue && validateIssueState(issue.state, issueState)) {
                 return {
-                    ok: true,
-                    reason: "excluded",
+                    success: true,
+                    reason: "issue-found",
                     branch,
-                    matched: n,
-                    message: `issue #${n} exists (${owner}/${repo})`,
+                    issueNumber: num,
+                    message: `Issue #${num} found in ${owner}/${repo} (state: ${issue.state})`,
+                    metadata: {
+                        owner,
+                        repo,
+                        checkedIssues: issueNumbers,
+                    },
                 };
             }
         }
+        // No valid issue found
         return {
-            ok: false,
-            reason: "not-found",
+            success: false,
+            reason: "issue-not-found",
             branch,
-            message: `no existing issue among [${candidates.join(", ")}]`,
+            message: `No valid issue found among: ${issueNumbers.join(", ")} in ${owner}/${repo}`,
+            metadata: {
+                owner,
+                repo,
+                checkedIssues: issueNumbers,
+            },
         };
     }
     catch (error) {
-        // TODO: Better error handling (distinguish between git errors, network errors, etc.)
+        // Handle any errors
         return {
-            ok: false,
+            success: false,
             reason: "error",
             branch: "unknown",
-            message: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            message: error instanceof Error ? error.message : String(error),
         };
     }
 }
-function parseOwnerRepo(url) {
-    const https = /https?:\/\/[^/]+\/([^/]+)\/([^/.]+)(?:\.git)?/i.exec(url);
-    if (https?.[1] && https?.[2])
-        return { owner: https[1], repo: https[2] };
-    const ssh = /git@[^:]+:([^/]+)\/([^/.]+)(?:\.git)?/i.exec(url);
-    if (ssh?.[1] && ssh?.[2])
-        return { owner: ssh[1], repo: ssh[2] };
-    // TODO: Support more git remote URL formats
-    throw new Error(`Unsupported remote URL: ${url}`);
-}
-async function issueExists(owner, repo, num, allowed, token) {
-    try {
-        const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/issues/${num}`, {
-            headers: {
-                Accept: "application/vnd.github+json",
-                "User-Agent": "issue-number-branch",
-                ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
-        });
-        if (res.status === 404)
-            return false;
-        // TODO: Handle rate limiting (status 403 with specific headers)
-        // TODO: Retry logic for network errors
-        if (!res.ok) {
-            console.error(`GitHub API error: ${res.status}`);
-            // For now, treat API errors as "issue not found"
-            return false;
-        }
-        const data = (await res.json());
-        const state = (data.state ?? "").toLowerCase();
-        return allowed.has(state);
-    }
-    catch (error) {
-        // TODO: Better error handling
-        console.error(`Failed to check issue #${num}:`, error);
-        return false;
-    }
-}
-async function git(args) {
-    // TODO: Handle cases where git is not installed or not in a git repository
-    const { stdout } = await execFile("git", args);
-    return stdout;
-}
+//# sourceMappingURL=check-branch.js.map
+;// CONCATENATED MODULE: ../issue-number-branch-core/dist/index.js
+// Core package - Main exports
+// Re-export only what's needed by API package
+/** @public */
+
+//# sourceMappingURL=index.js.map
+;// CONCATENATED MODULE: ../issue-number-branch-api/dist/index.js
+// API package - Thin wrapper for Core functionality
+// Re-export only what's needed by CLI and Action
+/** @public */
+
 //# sourceMappingURL=index.js.map
 
 /***/ })
@@ -32178,31 +50038,68 @@ var exports = __webpack_exports__;
 Object.defineProperty(exports, "B", ({ value: true }));
 const tslib_1 = __nccwpck_require__(4594);
 const core = tslib_1.__importStar(__nccwpck_require__(7930));
-const issue_number_branch_api_1 = __nccwpck_require__(5120);
+const issue_number_branch_api_1 = __nccwpck_require__(7627);
 async function run() {
     try {
-        // TODO: Add input validation
-        // TODO: Better error messages for GitHub Actions context
-        const excludeGlob = core.getInput("exclude_glob") || "main|master|develop";
-        const allowedStates = (core.getInput("allowed_states") || "open,closed")
-            .split(",")
-            .map((s) => s.trim());
-        const res = await (0, issue_number_branch_api_1.checkCurrentBranch)({ excludeGlob, allowedStates });
-        if (res.ok) {
-            core.info(`OK: ${res.message}`);
-            core.setOutput("status", "ok");
-            if (res.matched) {
-                core.setOutput("issue_number", res.matched.toString());
+        // Get inputs
+        const branch = core.getInput("branch") || undefined;
+        const owner = core.getInput("owner") || undefined;
+        const repo = core.getInput("repo") || undefined;
+        const excludePattern = core.getInput("exclude_pattern") || "{main,master,develop}";
+        const issueStateInput = core.getInput("issue_state") || "all";
+        // Validate issue state
+        const issueState = issueStateInput;
+        if (issueState !== "all" &&
+            issueState !== "open" &&
+            issueState !== "closed") {
+            core.setFailed(`Invalid issue state "${issueState}". Valid options are "all", "open", or "closed".`);
+            return;
+        }
+        // Check branch with provided options
+        const result = await (0, issue_number_branch_api_1.checkBranch)({
+            ...(branch && { branch }),
+            ...(owner && { owner }),
+            ...(repo && { repo }),
+            excludePattern,
+            issueState,
+        });
+        // Set outputs
+        core.setOutput("success", result.success.toString());
+        core.setOutput("reason", result.reason);
+        core.setOutput("branch", result.branch);
+        if (result.issueNumber) {
+            core.setOutput("issue_number", result.issueNumber.toString());
+        }
+        if (result.metadata) {
+            core.setOutput("owner", result.metadata.owner || "");
+            core.setOutput("repo", result.metadata.repo || "");
+            core.setOutput("metadata", JSON.stringify(result.metadata));
+        }
+        // Log result
+        if (result.success) {
+            core.info(`✅ ${result.message}`);
+            if (result.metadata) {
+                core.info(`Repository: ${result.metadata.owner}/${result.metadata.repo}`);
+                if (result.issueNumber) {
+                    core.info(`Issue: #${result.issueNumber}`);
+                }
             }
         }
         else {
-            // TODO: Consider different failure modes (warning vs error)
-            core.setFailed(`${res.reason === "error" ? "ERR" : "NG"}: ${res.message}`);
+            core.setFailed(`❌ ${result.message}`);
+            if (result.metadata) {
+                core.error(`Repository: ${result.metadata.owner}/${result.metadata.repo}`);
+                if (result.metadata.checkedIssues?.length) {
+                    core.error(`Checked issues: ${result.metadata.checkedIssues.join(", ")}`);
+                }
+            }
         }
     }
     catch (error) {
-        // TODO: Better error reporting with stack traces in debug mode
         core.setFailed(`Unexpected error: ${error instanceof Error ? error.message : String(error)}`);
+        if (error instanceof Error && error.stack) {
+            core.debug(`Stack trace: ${error.stack}`);
+        }
     }
 }
 run();

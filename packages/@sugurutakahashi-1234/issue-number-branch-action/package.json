@@ -15,12 +15,9 @@
     "🧪": "========== Test ==========",
     "test": "bun test",
     "test:quiet": "bun test > /dev/null 2>&1 && echo '✅ Tests passed' || echo '❌ Tests failed'",
-    "test:coverage": "bun test --coverage",
     "🎨": "========== Lint & Format ==========",
     "lint": "biome check --write .",
-    "lint:check": "biome check .",
     "format": "biome format --write .",
-    "format:check": "biome format .",
     "📚": "========== Documentation ==========",
     "docs:deps-graph": "tsg --tsconfig ../../../tsconfig.typescript-graph.json --LR --abstraction packages/@sugurutakahashi-1234/issue-number-branch --abstraction packages/@sugurutakahashi-1234/issue-number-branch-api --abstraction packages/@sugurutakahashi-1234/issue-number-branch-core --md ../../../docs/reports/dependencies/action.md",
     "🚀": "========== CI & Clean ==========",
@@ -32,7 +29,9 @@
     "@sugurutakahashi-1234/issue-number-branch-api": "workspace:*"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.1.4",
     "@vercel/ncc": "^0.38.3",
+    "@ysk8hori/typescript-graph": "^0.26.4",
     "typescript": "^5.9.2"
   }
 }

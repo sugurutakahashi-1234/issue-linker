@@ -23,6 +23,6 @@ fi
 
 # Auto-update dependency graph
 if git diff --cached --name-only | grep -qE "^src/.*\.ts$"; then
-  bun run update:docs
+  bun run docs:update
   git add docs/reports/
 fi

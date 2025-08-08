@@ -3,16 +3,43 @@ description: 'Check if current branch name contains an existing GitHub issue num
 author: 'Suguru Takahashi'
 
 inputs:
-  exclude_glob:
-    description: 'Glob pattern to exclude branches (default: main|master|develop)'
+  branch:
+    description: |
+      Branch name to check
+      Default: current branch
     required: false
-    default: 'main|master|develop'
-  allowed_states:
-    description: 'Allowed issue states, comma-separated (default: open,closed)'
+  owner:
+    description: |
+      Repository owner
+      Default: automatically detected from git remote
     required: false
-    default: 'open,closed'
-  token:
-    description: 'GitHub token for API access (default: uses GITHUB_TOKEN)'
+  repo:
+    description: |
+      Repository name
+      Default: automatically detected from git remote
+    required: false
+  exclude_pattern:
+    description: |
+      Glob pattern to exclude branches from validation
+      Default: '{main,master,develop}'
+      Pattern examples:
+        '{main,master,develop}'  - exclude specific branches
+        'release/*'              - exclude with wildcard
+        '{release,hotfix}/*'     - exclude multiple prefixes
+        '!(feature|bugfix)/*'    - exclude all except these
+    required: false
+    default: '{main,master,develop}'
+  issue_state:
+    description: |
+      Filter by issue state
+      Options: 'all', 'open', 'closed'
+      Default: 'all' (checks both open and closed issues)
+    required: false
+    default: 'all'
+  github_token:
+    description: |
+      GitHub token for API access
+      Default: uses GITHUB_TOKEN from environment
     required: false
     default: ${{ github.token }}
 

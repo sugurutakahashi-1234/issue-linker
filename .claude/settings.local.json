@@ -157,7 +157,8 @@
       "Bash(bash:*)",
       "Bash(git-branch-lint:*)",
       "Bash(tsg:*)",
-      "Bash(ncc build:*)"
+      "Bash(ncc build:*)",
+      "Bash(concurrently:*)"
     ],
     "deny": []
   },
