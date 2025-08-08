@@ -33652,7 +33652,7 @@ __webpack_unused_export__ = defaultContentType
 
 /***/ }),
 
-/***/ 6375:
+/***/ 2766:
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
 
 // ESM COMPAT FLAG
@@ -33733,121 +33733,6 @@ function parseGitRemoteUrl(url) {
         "  - ssh://git@github.com/owner/repo[.git]");
 }
 //# sourceMappingURL=parsers.js.map
-// EXTERNAL MODULE: ../../../node_modules/micromatch/index.js
-var micromatch = __nccwpck_require__(7343);
-;// CONCATENATED MODULE: ../issue-number-branch-core/dist/domain/validators.js
-// Domain layer - Pure validation functions
-
-/**
- * Validates if a branch should be excluded from validation
- * @param branch - The branch name to check
- * @param pattern - Glob pattern for exclusion
- * @returns true if branch should be excluded
- */
-function validateBranchExclusion(branch, pattern) {
-    if (!pattern)
-        return false;
-    return micromatch.isMatch(branch, pattern);
-}
-/**
- * Validates if an issue state is allowed
- * @param state - The issue state to check
- * @param filter - Issue state filter ("all", "open", or "closed")
- * @returns true if state is allowed
- */
-function validateIssueState(state, filter) {
-    const normalizedState = state.toLowerCase();
-    if (filter === "all") {
-        return true;
-    }
-    return normalizedState === filter;
-}
-//# sourceMappingURL=validators.js.map
-;// CONCATENATED MODULE: ../../../node_modules/@t3-oss/env-core/dist/src-Bb3GbGAa.js
-//#region src/standard.ts
-function ensureSynchronous(value, message) {
-	if (value instanceof Promise) throw new Error(message);
-}
-function parseWithDictionary(dictionary, value) {
-	const result = {};
-	const issues = [];
-	for (const key in dictionary) {
-		const propResult = dictionary[key]["~standard"].validate(value[key]);
-		ensureSynchronous(propResult, `Validation must be synchronous, but ${key} returned a Promise.`);
-		if (propResult.issues) {
-			issues.push(...propResult.issues.map((issue) => ({
-				...issue,
-				message: issue.message,
-				path: [key, ...issue.path ?? []]
-			})));
-			continue;
-		}
-		result[key] = propResult.value;
-	}
-	if (issues.length) return { issues };
-	return { value: result };
-}
-
-//#endregion
-//#region src/index.ts
-/**
-* Create a new environment variable schema.
-*/
-function createEnv(opts) {
-	const runtimeEnv = opts.runtimeEnvStrict ?? opts.runtimeEnv ?? process.env;
-	const emptyStringAsUndefined = opts.emptyStringAsUndefined ?? false;
-	if (emptyStringAsUndefined) {
-		for (const [key, value] of Object.entries(runtimeEnv)) if (value === "") delete runtimeEnv[key];
-	}
-	const skip = !!opts.skipValidation;
-	if (skip) return runtimeEnv;
-	const _client = typeof opts.client === "object" ? opts.client : {};
-	const _server = typeof opts.server === "object" ? opts.server : {};
-	const _shared = typeof opts.shared === "object" ? opts.shared : {};
-	const isServer = opts.isServer ?? (typeof window === "undefined" || "Deno" in window);
-	const finalSchemaShape = isServer ? {
-		..._server,
-		..._shared,
-		..._client
-	} : {
-		..._client,
-		..._shared
-	};
-	const parsed = opts.createFinalSchema?.(finalSchemaShape, isServer)["~standard"].validate(runtimeEnv) ?? parseWithDictionary(finalSchemaShape, runtimeEnv);
-	ensureSynchronous(parsed, "Validation must be synchronous");
-	const onValidationError = opts.onValidationError ?? ((issues) => {
-		console.error("❌ Invalid environment variables:", issues);
-		throw new Error("Invalid environment variables");
-	});
-	const onInvalidAccess = opts.onInvalidAccess ?? (() => {
-		throw new Error("❌ Attempted to access a server-side environment variable on the client");
-	});
-	if (parsed.issues) return onValidationError(parsed.issues);
-	const isServerAccess = (prop) => {
-		if (!opts.clientPrefix) return true;
-		return !prop.startsWith(opts.clientPrefix) && !(prop in _shared);
-	};
-	const isValidServerAccess = (prop) => {
-		return isServer || !isServerAccess(prop);
-	};
-	const ignoreProp = (prop) => {
-		return prop === "__esModule" || prop === "$$typeof";
-	};
-	const extendedObj = (opts.extends ?? []).reduce((acc, curr) => {
-		return Object.assign(acc, curr);
-	}, {});
-	const fullObj = Object.assign(extendedObj, parsed.value);
-	const env = new Proxy(fullObj, { get(target, prop) {
-		if (typeof prop !== "string") return void 0;
-		if (ignoreProp(prop)) return void 0;
-		if (!isValidServerAccess(prop)) return onInvalidAccess(prop);
-		return Reflect.get(target, prop);
-	} });
-	return env;
-}
-
-//#endregion
-
 ;// CONCATENATED MODULE: ../../../node_modules/valibot/dist/index.js
 // src/storages/globalConfig/globalConfig.ts
 var store;
@@ -40926,6 +40811,173 @@ function unwrap(schema) {
   return schema.wrapped;
 }
 
+
+;// CONCATENATED MODULE: ../issue-number-branch-core/dist/domain/schemas.js
+// Domain layer - Validation schemas using Valibot
+
+/**
+ * Schema for IssueStateFilter validation
+ */
+const IssueStateFilterSchema = union([
+    literal("all"),
+    literal("open"),
+    literal("closed"),
+]);
+/**
+ * Schema for repository format validation
+ * Validates "owner/repo" format
+ */
+const RepositoryFormatSchema = pipe(string(), regex(/^[^/]+\/[^/]+$/, 'Repository must be in "owner/repo" format'));
+/**
+ * Schema for CheckOptions validation
+ * Internal use only - not exported to maintain abstraction
+ */
+const CheckOptionsSchema = object({
+    branch: optional(string()),
+    repo: optional(RepositoryFormatSchema),
+    excludePattern: optional(string()),
+    issueState: optional(IssueStateFilterSchema),
+    githubToken: optional(string()),
+});
+/**
+ * Validate CheckOptions using Valibot
+ * @param options - Options to validate
+ * @returns Validation result
+ */
+function validateCheckOptions(options) {
+    return safeParse(CheckOptionsSchema, options);
+}
+/**
+ * Parse repository string into owner and repo
+ * @param repository - Repository in "owner/repo" format
+ * @returns Parsed owner and repo
+ */
+function parseRepository(repository) {
+    const parts = repository.split("/");
+    // This should already be validated by the schema, but double-check
+    if (parts.length !== 2 || !parts[0] || !parts[1]) {
+        throw new Error(`Invalid repository format "${repository}". Expected "owner/repo" format.`);
+    }
+    return {
+        owner: parts[0],
+        repo: parts[1],
+    };
+}
+//# sourceMappingURL=schemas.js.map
+// EXTERNAL MODULE: ../../../node_modules/micromatch/index.js
+var micromatch = __nccwpck_require__(7343);
+;// CONCATENATED MODULE: ../issue-number-branch-core/dist/domain/validators.js
+// Domain layer - Pure validation functions
+
+/**
+ * Validates if a branch should be excluded from validation
+ * @param branch - The branch name to check
+ * @param pattern - Glob pattern for exclusion
+ * @returns true if branch should be excluded
+ */
+function validateBranchExclusion(branch, pattern) {
+    if (!pattern)
+        return false;
+    return micromatch.isMatch(branch, pattern);
+}
+/**
+ * Validates if an issue state is allowed
+ * @param state - The issue state to check
+ * @param filter - Issue state filter ("all", "open", or "closed")
+ * @returns true if state is allowed
+ */
+function validateIssueState(state, filter) {
+    const normalizedState = state.toLowerCase();
+    if (filter === "all") {
+        return true;
+    }
+    return normalizedState === filter;
+}
+//# sourceMappingURL=validators.js.map
+;// CONCATENATED MODULE: ../../../node_modules/@t3-oss/env-core/dist/src-Bb3GbGAa.js
+//#region src/standard.ts
+function ensureSynchronous(value, message) {
+	if (value instanceof Promise) throw new Error(message);
+}
+function parseWithDictionary(dictionary, value) {
+	const result = {};
+	const issues = [];
+	for (const key in dictionary) {
+		const propResult = dictionary[key]["~standard"].validate(value[key]);
+		ensureSynchronous(propResult, `Validation must be synchronous, but ${key} returned a Promise.`);
+		if (propResult.issues) {
+			issues.push(...propResult.issues.map((issue) => ({
+				...issue,
+				message: issue.message,
+				path: [key, ...issue.path ?? []]
+			})));
+			continue;
+		}
+		result[key] = propResult.value;
+	}
+	if (issues.length) return { issues };
+	return { value: result };
+}
+
+//#endregion
+//#region src/index.ts
+/**
+* Create a new environment variable schema.
+*/
+function createEnv(opts) {
+	const runtimeEnv = opts.runtimeEnvStrict ?? opts.runtimeEnv ?? process.env;
+	const emptyStringAsUndefined = opts.emptyStringAsUndefined ?? false;
+	if (emptyStringAsUndefined) {
+		for (const [key, value] of Object.entries(runtimeEnv)) if (value === "") delete runtimeEnv[key];
+	}
+	const skip = !!opts.skipValidation;
+	if (skip) return runtimeEnv;
+	const _client = typeof opts.client === "object" ? opts.client : {};
+	const _server = typeof opts.server === "object" ? opts.server : {};
+	const _shared = typeof opts.shared === "object" ? opts.shared : {};
+	const isServer = opts.isServer ?? (typeof window === "undefined" || "Deno" in window);
+	const finalSchemaShape = isServer ? {
+		..._server,
+		..._shared,
+		..._client
+	} : {
+		..._client,
+		..._shared
+	};
+	const parsed = opts.createFinalSchema?.(finalSchemaShape, isServer)["~standard"].validate(runtimeEnv) ?? parseWithDictionary(finalSchemaShape, runtimeEnv);
+	ensureSynchronous(parsed, "Validation must be synchronous");
+	const onValidationError = opts.onValidationError ?? ((issues) => {
+		console.error("❌ Invalid environment variables:", issues);
+		throw new Error("Invalid environment variables");
+	});
+	const onInvalidAccess = opts.onInvalidAccess ?? (() => {
+		throw new Error("❌ Attempted to access a server-side environment variable on the client");
+	});
+	if (parsed.issues) return onValidationError(parsed.issues);
+	const isServerAccess = (prop) => {
+		if (!opts.clientPrefix) return true;
+		return !prop.startsWith(opts.clientPrefix) && !(prop in _shared);
+	};
+	const isValidServerAccess = (prop) => {
+		return isServer || !isServerAccess(prop);
+	};
+	const ignoreProp = (prop) => {
+		return prop === "__esModule" || prop === "$$typeof";
+	};
+	const extendedObj = (opts.extends ?? []).reduce((acc, curr) => {
+		return Object.assign(acc, curr);
+	}, {});
+	const fullObj = Object.assign(extendedObj, parsed.value);
+	const env = new Proxy(fullObj, { get(target, prop) {
+		if (typeof prop !== "string") return void 0;
+		if (ignoreProp(prop)) return void 0;
+		if (!isValidServerAccess(prop)) return onInvalidAccess(prop);
+		return Reflect.get(target, prop);
+	} });
+	return env;
+}
+
+//#endregion
 
 ;// CONCATENATED MODULE: ../issue-number-branch-core/dist/infrastructure/config.js
 // Infrastructure layer - Configuration management
@@ -49834,31 +49886,35 @@ class GitHubClient {
 
 
 
+
 /**
  * Main use case for checking if a branch name contains a valid issue number
  * @param options - Options for the check
  * @returns Result of the check
  */
 async function checkBranch(options = {}) {
-    // Validate issue state if provided
-    if (options.issueState && !isValidIssueState(options.issueState)) {
+    // Validate options using domain layer validation
+    const validationResult = validateCheckOptions(options);
+    if (!validationResult.success) {
+        const firstIssue = validationResult.issues[0];
         return {
             success: false,
             reason: "error",
             branch: options.branch ?? "unknown",
-            message: `Invalid issue state "${options.issueState}". Valid options are "all", "open", or "closed".`,
+            message: firstIssue?.message ?? "Invalid options provided",
         };
     }
+    const validatedOptions = validationResult.output;
     // Merge options with defaults
-    const excludePattern = options.excludePattern ?? DEFAULT_CHECK_OPTIONS.excludePattern;
-    const issueState = options.issueState ?? DEFAULT_CHECK_OPTIONS.issueState;
-    const githubToken = options.githubToken ?? getGitHubToken();
+    const excludePattern = validatedOptions.excludePattern ?? DEFAULT_CHECK_OPTIONS.excludePattern;
+    const issueState = validatedOptions.issueState ?? DEFAULT_CHECK_OPTIONS.issueState;
+    const githubToken = validatedOptions.githubToken ?? getGitHubToken();
     // Initialize clients
     const gitClient = new GitClient();
     const githubClient = new GitHubClient(githubToken);
     try {
         // 1. Get branch name (from option or current branch)
-        const branch = options.branch ?? (await gitClient.getCurrentBranch());
+        const branch = validatedOptions.branch ?? (await gitClient.getCurrentBranch());
         // 2. Check if branch should be excluded
         if (validateBranchExclusion(branch, excludePattern)) {
             return {
@@ -49881,19 +49937,11 @@ async function checkBranch(options = {}) {
         // 4. Get repository information (from options or git remote)
         let owner;
         let repoName;
-        if (options.repo) {
-            // Parse "owner/repo" format
-            const parts = options.repo.split("/");
-            if (parts.length !== 2 || !parts[0] || !parts[1]) {
-                return {
-                    success: false,
-                    reason: "error",
-                    branch,
-                    message: `Invalid repository format "${options.repo}". Expected "owner/repo" format.`,
-                };
-            }
-            owner = parts[0];
-            repoName = parts[1];
+        if (validatedOptions.repo) {
+            // Parse "owner/repo" format (already validated by schema)
+            const parsed = parseRepository(validatedOptions.repo);
+            owner = parsed.owner;
+            repoName = parsed.repo;
         }
         else {
             const remoteUrl = await gitClient.getRemoteUrl();
@@ -49941,12 +49989,6 @@ async function checkBranch(options = {}) {
             message: error instanceof Error ? error.message : String(error),
         };
     }
-}
-/**
- * Helper function to validate issue state
- */
-function isValidIssueState(state) {
-    return state === "all" || state === "open" || state === "closed";
 }
 //# sourceMappingURL=check-branch.js.map
 ;// CONCATENATED MODULE: ../issue-number-branch-core/dist/index.js
@@ -50041,7 +50083,7 @@ var exports = __webpack_exports__;
 Object.defineProperty(exports, "B", ({ value: true }));
 const tslib_1 = __nccwpck_require__(4594);
 const core = tslib_1.__importStar(__nccwpck_require__(7930));
-const issue_number_branch_api_1 = __nccwpck_require__(6375);
+const issue_number_branch_api_1 = __nccwpck_require__(2766);
 async function run() {
     try {
         // Get inputs

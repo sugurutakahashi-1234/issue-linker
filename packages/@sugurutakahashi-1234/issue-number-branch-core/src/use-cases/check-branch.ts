@@ -3,6 +3,7 @@
 import { DEFAULT_CHECK_OPTIONS } from "../constants.js";
 import { extractIssueNumbers } from "../domain/extractors.js";
 import { parseGitRemoteUrl } from "../domain/parsers.js";
+import { parseRepository, validateCheckOptions } from "../domain/schemas.js";
 import {
   validateBranchExclusion,
   validateIssueState,
@@ -10,7 +11,7 @@ import {
 import { getGitHubToken } from "../infrastructure/config.js";
 import { GitClient } from "../infrastructure/git-client.js";
 import { GitHubClient } from "../infrastructure/github-client.js";
-import type { CheckOptions, CheckResult, IssueStateFilter } from "../types.js";
+import type { CheckOptions, CheckResult } from "../types.js";
 
 /**
  * Main use case for checking if a branch name contains a valid issue number
@@ -20,21 +21,26 @@ import type { CheckOptions, CheckResult, IssueStateFilter } from "../types.js";
 export async function checkBranch(
   options: CheckOptions = {},
 ): Promise<CheckResult> {
-  // Validate issue state if provided
-  if (options.issueState && !isValidIssueState(options.issueState)) {
+  // Validate options using domain layer validation
+  const validationResult = validateCheckOptions(options);
+  if (!validationResult.success) {
+    const firstIssue = validationResult.issues[0];
     return {
       success: false,
       reason: "error",
       branch: options.branch ?? "unknown",
-      message: `Invalid issue state "${options.issueState}". Valid options are "all", "open", or "closed".`,
+      message: firstIssue?.message ?? "Invalid options provided",
     };
   }
 
+  const validatedOptions = validationResult.output;
+
   // Merge options with defaults
   const excludePattern =
-    options.excludePattern ?? DEFAULT_CHECK_OPTIONS.excludePattern;
-  const issueState = options.issueState ?? DEFAULT_CHECK_OPTIONS.issueState;
-  const githubToken = options.githubToken ?? getGitHubToken();
+    validatedOptions.excludePattern ?? DEFAULT_CHECK_OPTIONS.excludePattern;
+  const issueState =
+    validatedOptions.issueState ?? DEFAULT_CHECK_OPTIONS.issueState;
+  const githubToken = validatedOptions.githubToken ?? getGitHubToken();
 
   // Initialize clients
   const gitClient = new GitClient();
@@ -42,7 +48,8 @@ export async function checkBranch(
 
   try {
     // 1. Get branch name (from option or current branch)
-    const branch = options.branch ?? (await gitClient.getCurrentBranch());
+    const branch =
+      validatedOptions.branch ?? (await gitClient.getCurrentBranch());
 
     // 2. Check if branch should be excluded
     if (validateBranchExclusion(branch, excludePattern)) {
@@ -69,19 +76,11 @@ export async function checkBranch(
     let owner: string;
     let repoName: string;
 
-    if (options.repo) {
-      // Parse "owner/repo" format
-      const parts = options.repo.split("/");
-      if (parts.length !== 2 || !parts[0] || !parts[1]) {
-        return {
-          success: false,
-          reason: "error",
-          branch,
-          message: `Invalid repository format "${options.repo}". Expected "owner/repo" format.`,
-        };
-      }
-      owner = parts[0];
-      repoName = parts[1];
+    if (validatedOptions.repo) {
+      // Parse "owner/repo" format (already validated by schema)
+      const parsed = parseRepository(validatedOptions.repo);
+      owner = parsed.owner;
+      repoName = parsed.repo;
     } else {
       const remoteUrl = await gitClient.getRemoteUrl();
       const parsed = parseGitRemoteUrl(remoteUrl);
@@ -130,11 +129,4 @@ export async function checkBranch(
       message: error instanceof Error ? error.message : String(error),
     };
   }
-}
-
-/**
- * Helper function to validate issue state
- */
-function isValidIssueState(state: unknown): state is IssueStateFilter {
-  return state === "all" || state === "open" || state === "closed";
 }
