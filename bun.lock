@@ -25,6 +25,7 @@
         "issue-number-branch": "dist/cli.js",
       },
       "dependencies": {
+        "@commander-js/extra-typings": "^14.0.0",
         "@sugurutakahashi-1234/issue-number-branch-api": "workspace:*",
       },
       "devDependencies": {
