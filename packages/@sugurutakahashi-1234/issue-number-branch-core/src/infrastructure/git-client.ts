@@ -1,68 +1,61 @@
 // Infrastructure layer - Git operations
 
-import { execFile as _execFile } from "node:child_process";
-import { promisify } from "node:util";
+import { type SimpleGit, simpleGit } from "simple-git";
 
-const execFile = promisify(_execFile);
+// Create a simple-git instance
+const git: SimpleGit = simpleGit();
 
 /**
- * GitClient provides access to local Git repository information
+ * Get the current branch name
+ * @returns Current branch name
+ * @throws Error if not in a git repository or other git errors
  */
-export class GitClient {
-  /**
-   * Execute a git command
-   * @param args - Arguments to pass to git
-   * @returns Command output
-   */
-  private async execute(args: string[]): Promise<string> {
-    try {
-      const { stdout } = await execFile("git", args);
-      return stdout;
-    } catch (error: unknown) {
-      // Improve error messages for common git failures
-      const gitError = error as {
-        code?: string;
-        stderr?: string;
-        message?: string;
-      };
-
-      if (gitError.code === "ENOENT") {
-        throw new Error("Git is not installed or not in PATH");
-      }
-      if (gitError.stderr?.includes("not a git repository")) {
-        throw new Error("Not in a git repository");
-      }
-      // Re-throw with original error for debugging
-      throw new Error(
-        `Git command failed: ${gitError.message ?? String(error)}`,
-      );
-    }
-  }
-
-  /**
-   * Get the current branch name
-   * @returns Current branch name
-   */
-  async getCurrentBranch(): Promise<string> {
-    const branch = await this.execute(["rev-parse", "--abbrev-ref", "HEAD"]);
+export async function getCurrentGitBranch(): Promise<string> {
+  try {
+    const branch = await git.revparse(["--abbrev-ref", "HEAD"]);
     return branch.trim();
-  }
+  } catch (error) {
+    // Improve error messages
+    const message = error instanceof Error ? error.message : String(error);
 
-  /**
-   * Get the remote URL for origin
-   * @returns Remote URL
-   */
-  async getRemoteUrl(): Promise<string> {
-    try {
-      const url = await this.execute(["config", "--get", "remote.origin.url"]);
-      return url.trim();
-    } catch (error: unknown) {
-      // Provide helpful error message when no remote is configured
-      const gitError = error as { message?: string };
-      if (gitError.message?.includes("exit code 1")) {
-        throw new Error("No remote 'origin' configured for this repository");
-      }
-      throw error;
+    if (message.includes("not a git repository")) {
+      throw new Error("Not in a git repository");
     }
+
+    throw new Error(`Failed to get current branch: ${message}`);
+  }
+}
+
+/**
+ * Get the remote URL for origin
+ * @returns Remote URL
+ * @throws Error if no origin remote is found
+ */
+export async function getGitRemoteUrl(): Promise<string> {
+  try {
+    // Get remotes with their URLs
+    const remotes = await git.getRemotes(true);
+
+    // Find the origin remote
+    const origin = remotes.find((remote) => remote.name === "origin");
+
+    if (!origin?.refs?.fetch) {
+      throw new Error("No origin remote found");
+    }
+
+    return origin.refs.fetch;
+  } catch (error) {
+    // Improve error messages
+    const message = error instanceof Error ? error.message : String(error);
+
+    if (message.includes("not a git repository")) {
+      throw new Error("Not in a git repository");
+    }
+
+    if (message.includes("No origin remote")) {
+      throw error; // Re-throw our custom error
+    }
+
+    throw new Error(`Failed to get remote URL: ${message}`);
   }
 }

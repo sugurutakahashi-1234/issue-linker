@@ -9,8 +9,11 @@ import {
   validateIssueState,
 } from "../domain/validators.js";
 import { getGitHubToken } from "../infrastructure/config.js";
-import { GitClient } from "../infrastructure/git-client.js";
-import { GitHubClient } from "../infrastructure/github-client.js";
+import {
+  getCurrentGitBranch,
+  getGitRemoteUrl,
+} from "../infrastructure/git-client.js";
+import { getGitHubIssue } from "../infrastructure/github-client.js";
 import type { CheckOptions, CheckResult } from "../types.js";
 
 /**
@@ -42,14 +45,9 @@ export async function checkBranch(
     validatedOptions.issueState ?? DEFAULT_CHECK_OPTIONS.issueState;
   const githubToken = validatedOptions.githubToken ?? getGitHubToken();
 
-  // Initialize clients
-  const gitClient = new GitClient();
-  const githubClient = new GitHubClient(githubToken);
-
   try {
     // 1. Get branch name (from option or current branch)
-    const branch =
-      validatedOptions.branch ?? (await gitClient.getCurrentBranch());
+    const branch = validatedOptions.branch ?? (await getCurrentGitBranch());
 
     // 2. Check if branch should be excluded
     if (validateBranchExclusion(branch, excludePattern)) {
@@ -82,7 +80,7 @@ export async function checkBranch(
       owner = parsed.owner;
       repoName = parsed.repo;
     } else {
-      const remoteUrl = await gitClient.getRemoteUrl();
+      const remoteUrl = await getGitRemoteUrl();
       const parsed = parseGitRemoteUrl(remoteUrl);
       owner = parsed.owner;
       repoName = parsed.repo;
@@ -90,7 +88,7 @@ export async function checkBranch(
 
     // 5. Check if any of the issue numbers exist with allowed states
     for (const num of issueNumbers) {
-      const issue = await githubClient.getIssue(owner, repoName, num);
+      const issue = await getGitHubIssue(owner, repoName, num, githubToken);
 
       if (issue && validateIssueState(issue.state, issueState)) {
         return {

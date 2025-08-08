@@ -19,6 +19,7 @@ flowchart LR
         node//modules/valibot/dist/index.d.cts["valibot"]
         node//modules///types/micromatch/index.d.ts["@types/micromatch"]
         node//modules///t3//oss/env//core/dist/index.d.ts["@t3-oss/env-core"]
+        node//modules/simple//git/dist/typings/index.d.ts["simple-git"]
         node//modules///octokit/plugin//retry/dist//types/index.d.ts["@octokit/plugin-retry"]
         node//modules///octokit/plugin//throttling/dist//types/index.d.ts["@octokit/plugin-throttling"]
         node//modules///octokit/request//error/dist//types/index.d.ts["@octokit/request-error"]
@@ -32,6 +33,7 @@ flowchart LR
     packages///sugurutakahashi//1234/issue//number//branch//core-->node//modules/valibot/dist/index.d.cts
     packages///sugurutakahashi//1234/issue//number//branch//core-->node//modules///types/micromatch/index.d.ts
     packages///sugurutakahashi//1234/issue//number//branch//core-->node//modules///t3//oss/env//core/dist/index.d.ts
+    packages///sugurutakahashi//1234/issue//number//branch//core-->node//modules/simple//git/dist/typings/index.d.ts
     packages///sugurutakahashi//1234/issue//number//branch//core-->node//modules///octokit/plugin//retry/dist//types/index.d.ts
     packages///sugurutakahashi//1234/issue//number//branch//core-->node//modules///octokit/plugin//throttling/dist//types/index.d.ts
     packages///sugurutakahashi//1234/issue//number//branch//core-->node//modules///octokit/request//error/dist//types/index.d.ts
