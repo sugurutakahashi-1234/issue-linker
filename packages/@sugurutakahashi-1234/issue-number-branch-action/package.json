@@ -24,7 +24,7 @@
     "📚": "========== Documentation ==========",
     "docs:deps-graph": "tsg --tsconfig ../../../tsconfig.typescript-graph.json --LR --abstraction packages/@sugurutakahashi-1234/issue-number-branch --abstraction packages/@sugurutakahashi-1234/issue-number-branch-api --abstraction packages/@sugurutakahashi-1234/issue-number-branch-core --md ../../../docs/reports/dependencies/action.md",
     "🚀": "========== CI & Clean ==========",
-    "ci": "bun run lint && bun run format && bun run typecheck && bun run build && bun run test:quiet",
+    "ci": "bun run lint && bun run format && bun run build && bun run typecheck && bun run test:quiet",
     "clean": "rm -rf dist *.tsbuildinfo"
   },
   "dependencies": {
