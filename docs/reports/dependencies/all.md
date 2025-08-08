@@ -31,10 +31,12 @@ flowchart LR
         end
     end
     subgraph node//modules["node_modules"]
+        node//modules///commander//js/extra//typings/index.d.ts["@commander-js/extra-typings"]
         node//modules///actions/core/lib/core.d.ts["@actions/core"]
         node//modules///types/micromatch/index.d.ts["@types/micromatch"]
     end
     packages///sugurutakahashi//1234/issue//number//branch//api/dist/index.d.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/dist/index.d.ts
+    packages///sugurutakahashi//1234/issue//number//branch/src/cli.ts-->node//modules///commander//js/extra//typings/index.d.ts
     packages///sugurutakahashi//1234/issue//number//branch/src/cli.ts-->packages///sugurutakahashi//1234/issue//number//branch//api/dist/index.d.ts
     packages///sugurutakahashi//1234/issue//number//branch//action/src/index.ts-->node//modules///actions/core/lib/core.d.ts
     packages///sugurutakahashi//1234/issue//number//branch//action/src/index.ts-->packages///sugurutakahashi//1234/issue//number//branch//api/dist/index.d.ts
