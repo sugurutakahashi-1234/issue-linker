@@ -30,8 +30,8 @@
     "declaration": true,
     "declarationMap": true,
     "importHelpers": true,
-    "newLine": "lf"
+    "newLine": "lf",
+    "outDir": "dist"
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["packages/**/*"]
 }

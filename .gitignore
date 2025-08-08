@@ -43,6 +43,10 @@ bun.lockb
 # compiled binaries
 dist/
 
+# packages の dist は無視するが、Action パッケージの dist だけはコミット
+packages/**/dist/
+!packages/@sugurutakahashi-1234/issue-number-branch-action/dist/
+
 # editor
 .vscode/*
 !.vscode/settings.json

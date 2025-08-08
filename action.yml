@@ -1,0 +1,29 @@
+name: 'Issue Number Branch Check'
+description: 'Check if current branch name contains an existing GitHub issue number'
+author: 'Suguru Takahashi'
+
+inputs:
+  exclude_glob:
+    description: 'Glob pattern to exclude branches (default: main|master|develop)'
+    required: false
+    default: 'main|master|develop'
+  allowed_states:
+    description: 'Allowed issue states, comma-separated (default: open,closed)'
+    required: false
+    default: 'open,closed'
+  token:
+    description: 'GitHub token for API access (default: uses GITHUB_TOKEN)'
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  status:
+    description: 'Status of the check (ok or failed)'
+
+runs:
+  using: 'node20'
+  main: 'packages/@sugurutakahashi-1234/issue-number-branch-action/dist/index.js'
+
+branding:
+  icon: 'git-branch'
+  color: 'blue'

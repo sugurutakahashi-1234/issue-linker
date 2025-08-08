@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // CLI layer: Executable file, no type definitions needed
+    "declaration": false,
+    "declarationMap": false,
+    // CLI is a standalone executable (no project references needed)
+    "composite": false,
+    "rootDir": "./src",
+    "outDir": "./dist"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["**/*.test.ts", "**/*.spec.ts", "**/*.d.ts"]
+}

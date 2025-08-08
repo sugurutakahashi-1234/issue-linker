@@ -154,7 +154,10 @@
       "Bash(git submodule add:*)",
       "Bash(git submodule:*)",
       "Bash(git init:*)",
-      "Bash(bash:*)"
+      "Bash(bash:*)",
+      "Bash(git-branch-lint:*)",
+      "Bash(tsg:*)",
+      "Bash(ncc build:*)"
     ],
     "deny": []
   },
