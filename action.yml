@@ -8,15 +8,10 @@ inputs:
       Branch name to check
       Default: current branch
     required: false
-  owner:
-    description: |
-      Repository owner
-      Default: automatically detected from git remote
-    required: false
   repo:
     description: |
-      Repository name
-      Default: automatically detected from git remote
+      Repository in owner/repo format
+      Default: current repository
     required: false
   exclude_pattern:
     description: |

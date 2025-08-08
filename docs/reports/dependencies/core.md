@@ -53,8 +53,8 @@ flowchart LR
     end
     packages///sugurutakahashi//1234/issue//number//branch//core/dist/constants.d.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/dist/types.d.ts
     packages///sugurutakahashi//1234/issue//number//branch//core/dist/use//cases/check//branch.d.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/dist/types.d.ts
-    packages///sugurutakahashi//1234/issue//number//branch//core/dist/index.d.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/dist/types.d.ts
     packages///sugurutakahashi//1234/issue//number//branch//core/dist/index.d.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/dist/constants.d.ts
+    packages///sugurutakahashi//1234/issue//number//branch//core/dist/index.d.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/dist/types.d.ts
     packages///sugurutakahashi//1234/issue//number//branch//core/dist/index.d.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/dist/use//cases/check//branch.d.ts
     packages///sugurutakahashi//1234/issue//number//branch//api-->packages///sugurutakahashi//1234/issue//number//branch//core/dist/index.d.ts
     packages///sugurutakahashi//1234/issue//number//branch-->node//modules///commander//js/extra//typings/index.d.ts

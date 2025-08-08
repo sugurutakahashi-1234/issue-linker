@@ -5,7 +5,7 @@ import { throttling } from "@octokit/plugin-throttling";
 import type { RequestError } from "@octokit/request-error";
 import { Octokit } from "octokit";
 import type { Issue, IssueState } from "../types.js";
-import { Config } from "./config.js";
+import { getGitHubApiUrl, getGitHubToken } from "./config.js";
 
 // Create custom Octokit with retry and throttling plugins
 const MyOctokit = Octokit.plugin(retry, throttling);
@@ -17,33 +17,22 @@ export class GitHubClient {
   private octokit: Octokit;
 
   constructor(token?: string) {
-    const config = Config.getInstance();
-    const auth = token ?? config.getGitHubToken();
+    const auth = token ?? getGitHubToken();
 
     this.octokit = new MyOctokit({
       auth,
       userAgent: "issue-number-branch",
-      baseUrl: config.getGitHubApiUrl(),
+      baseUrl: getGitHubApiUrl(),
       retry: {
         doNotRetry: ["429"], // Let throttling plugin handle rate limits
       },
       throttle: {
-        onRateLimit: (retryAfter, _options, _octokit, retryCount) => {
+        onRateLimit: (_retryAfter, _options, _octokit, retryCount) => {
           // Retry up to 2 times for rate limit errors
-          if (retryCount < 2) {
-            console.warn(
-              `Rate limit hit, retrying after ${retryAfter} seconds...`,
-            );
-            return true;
-          }
-          console.error("Rate limit exceeded after retries");
-          return false;
+          return retryCount < 2;
         },
         onSecondaryRateLimit: (_retryAfter, _options, _octokit) => {
           // Don't retry on abuse detection
-          console.error(
-            `Abuse detection triggered, please wait ${_retryAfter} seconds`,
-          );
           return false;
         },
       },
@@ -98,34 +87,12 @@ export class GitHubClient {
       };
 
       if (isRequestError(error)) {
-        if (error.status === 404) {
-          // Issue doesn't exist - this is normal, not an error
-          return null;
-        }
-
-        if (error.status === 403) {
-          // Permission denied or rate limit
-          console.error(
-            `GitHub API access denied for issue #${issueNumber}: ${error.message}`,
-          );
-          return null;
-        }
-
-        if (error.status === 401) {
-          // Authentication failed
-          console.error(`GitHub API authentication failed: ${error.message}`);
-          return null;
-        }
-
-        // Log other API errors
-        console.error(
-          `GitHub API error for issue #${issueNumber}: ${error.status} ${error.message}`,
-        );
+        // Return null for all API errors (404, 403, 401, etc.)
+        // The error details are available in the error object if needed
         return null;
       }
 
-      // Non-API errors (network, etc.)
-      console.error(`Unexpected error fetching issue #${issueNumber}:`, error);
+      // Non-API errors (network, etc.) - also return null
       return null;
     }
   }

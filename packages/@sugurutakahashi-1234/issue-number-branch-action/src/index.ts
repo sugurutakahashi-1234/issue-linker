@@ -9,7 +9,6 @@ async function run() {
   try {
     // Get inputs
     const branch = core.getInput("branch") || undefined;
-    const owner = core.getInput("owner") || undefined;
     const repo = core.getInput("repo") || undefined;
     const excludePattern =
       core.getInput("exclude_pattern") || DEFAULT_CHECK_OPTIONS.excludePattern;
@@ -19,7 +18,6 @@ async function run() {
     // Check branch with provided options (validation is done in Core layer)
     const result = await checkBranch({
       ...(branch && { branch }),
-      ...(owner && { owner }),
       ...(repo && { repo }),
       excludePattern,
       issueState: issueStateInput as IssueStateFilter,

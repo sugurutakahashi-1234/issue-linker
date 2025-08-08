@@ -40942,42 +40942,33 @@ const env = createEnv({
     runtimeEnv: process.env,
 });
 /**
- * Configuration singleton for the application
+ * Get GitHub token from environment variables
+ * @returns GitHub token or undefined
  */
-class Config {
-    static instance = null;
-    constructor() { }
-    static getInstance() {
-        if (!Config.instance) {
-            Config.instance = new Config();
-        }
-        return Config.instance;
+function getGitHubToken() {
+    // Check GITHUB_TOKEN first, then fall back to GH_TOKEN
+    return env.GITHUB_TOKEN ?? env.GH_TOKEN;
+}
+/**
+ * Get GitHub API URL from environment variables
+ * @returns GitHub API URL
+ */
+function getGitHubApiUrl() {
+    // Priority order:
+    // 1. GITHUB_API_URL (direct API URL)
+    // 2. GITHUB_SERVER_URL (GitHub Enterprise Server URL - needs /api/v3 suffix)
+    // 3. Default to GitHub.com API
+    if (env.GITHUB_API_URL) {
+        // Remove trailing slashes
+        return env.GITHUB_API_URL.replace(/\/+$/, "");
     }
-    getGitHubToken() {
-        // Check GITHUB_TOKEN first, then fall back to GH_TOKEN
-        return env.GITHUB_TOKEN ?? env.GH_TOKEN;
+    if (env.GITHUB_SERVER_URL) {
+        // GitHub Enterprise Server API endpoint format
+        const serverUrl = env.GITHUB_SERVER_URL.replace(/\/+$/, "");
+        return `${serverUrl}/api/v3`;
     }
-    getGitHubApiUrl() {
-        // Priority order:
-        // 1. GITHUB_API_URL (direct API URL)
-        // 2. GITHUB_SERVER_URL (GitHub Enterprise Server URL - needs /api/v3 suffix)
-        // 3. Default to GitHub.com API
-        if (env.GITHUB_API_URL) {
-            // Remove trailing slashes
-            return env.GITHUB_API_URL.replace(/\/+$/, "");
-        }
-        if (env.GITHUB_SERVER_URL) {
-            // GitHub Enterprise Server API endpoint format
-            const serverUrl = env.GITHUB_SERVER_URL.replace(/\/+$/, "");
-            return `${serverUrl}/api/v3`;
-        }
-        // Default to GitHub.com
-        return "https://api.github.com";
-    }
-    // For testing purposes
-    static resetInstance() {
-        Config.instance = null;
-    }
+    // Default to GitHub.com
+    return "https://api.github.com";
 }
 //# sourceMappingURL=config.js.map
 ;// CONCATENATED MODULE: external "node:child_process"
@@ -49764,28 +49755,21 @@ const MyOctokit = Octokit.plugin(retry, throttling);
 class GitHubClient {
     octokit;
     constructor(token) {
-        const config = Config.getInstance();
-        const auth = token ?? config.getGitHubToken();
+        const auth = token ?? getGitHubToken();
         this.octokit = new MyOctokit({
             auth,
             userAgent: "issue-number-branch",
-            baseUrl: config.getGitHubApiUrl(),
+            baseUrl: getGitHubApiUrl(),
             retry: {
                 doNotRetry: ["429"], // Let throttling plugin handle rate limits
             },
             throttle: {
-                onRateLimit: (retryAfter, _options, _octokit, retryCount) => {
+                onRateLimit: (_retryAfter, _options, _octokit, retryCount) => {
                     // Retry up to 2 times for rate limit errors
-                    if (retryCount < 2) {
-                        console.warn(`Rate limit hit, retrying after ${retryAfter} seconds...`);
-                        return true;
-                    }
-                    console.error("Rate limit exceeded after retries");
-                    return false;
+                    return retryCount < 2;
                 },
                 onSecondaryRateLimit: (_retryAfter, _options, _octokit) => {
                     // Don't retry on abuse detection
-                    console.error(`Abuse detection triggered, please wait ${_retryAfter} seconds`);
                     return false;
                 },
             },
@@ -49831,26 +49815,11 @@ class GitHubClient {
                 return typeof error.status === "number";
             };
             if (isRequestError(error)) {
-                if (error.status === 404) {
-                    // Issue doesn't exist - this is normal, not an error
-                    return null;
-                }
-                if (error.status === 403) {
-                    // Permission denied or rate limit
-                    console.error(`GitHub API access denied for issue #${issueNumber}: ${error.message}`);
-                    return null;
-                }
-                if (error.status === 401) {
-                    // Authentication failed
-                    console.error(`GitHub API authentication failed: ${error.message}`);
-                    return null;
-                }
-                // Log other API errors
-                console.error(`GitHub API error for issue #${issueNumber}: ${error.status} ${error.message}`);
+                // Return null for all API errors (404, 403, 401, etc.)
+                // The error details are available in the error object if needed
                 return null;
             }
-            // Non-API errors (network, etc.)
-            console.error(`Unexpected error fetching issue #${issueNumber}:`, error);
+            // Non-API errors (network, etc.) - also return null
             return null;
         }
     }
@@ -49880,11 +49849,10 @@ async function checkBranch(options = {}) {
             message: `Invalid issue state "${options.issueState}". Valid options are "all", "open", or "closed".`,
         };
     }
-    const config = Config.getInstance();
     // Merge options with defaults
     const excludePattern = options.excludePattern ?? DEFAULT_CHECK_OPTIONS.excludePattern;
     const issueState = options.issueState ?? DEFAULT_CHECK_OPTIONS.issueState;
-    const githubToken = options.githubToken ?? config.getGitHubToken();
+    const githubToken = options.githubToken ?? getGitHubToken();
     // Initialize clients
     const gitClient = new GitClient();
     const githubClient = new GitHubClient(githubToken);
@@ -49912,30 +49880,40 @@ async function checkBranch(options = {}) {
         }
         // 4. Get repository information (from options or git remote)
         let owner;
-        let repo;
-        if (options.owner && options.repo) {
-            owner = options.owner;
-            repo = options.repo;
+        let repoName;
+        if (options.repo) {
+            // Parse "owner/repo" format
+            const parts = options.repo.split("/");
+            if (parts.length !== 2 || !parts[0] || !parts[1]) {
+                return {
+                    success: false,
+                    reason: "error",
+                    branch,
+                    message: `Invalid repository format "${options.repo}". Expected "owner/repo" format.`,
+                };
+            }
+            owner = parts[0];
+            repoName = parts[1];
         }
         else {
             const remoteUrl = await gitClient.getRemoteUrl();
             const parsed = parseGitRemoteUrl(remoteUrl);
             owner = parsed.owner;
-            repo = parsed.repo;
+            repoName = parsed.repo;
         }
         // 5. Check if any of the issue numbers exist with allowed states
         for (const num of issueNumbers) {
-            const issue = await githubClient.getIssue(owner, repo, num);
+            const issue = await githubClient.getIssue(owner, repoName, num);
             if (issue && validateIssueState(issue.state, issueState)) {
                 return {
                     success: true,
                     reason: "issue-found",
                     branch,
                     issueNumber: num,
-                    message: `Issue #${num} found in ${owner}/${repo} (state: ${issue.state})`,
+                    message: `Issue #${num} found in ${owner}/${repoName} (state: ${issue.state})`,
                     metadata: {
                         owner,
-                        repo,
+                        repo: repoName,
                         checkedIssues: issueNumbers,
                     },
                 };
@@ -49946,10 +49924,10 @@ async function checkBranch(options = {}) {
             success: false,
             reason: "issue-not-found",
             branch,
-            message: `No valid issue found among: ${issueNumbers.join(", ")} in ${owner}/${repo}`,
+            message: `No valid issue found among: ${issueNumbers.join(", ")} in ${owner}/${repoName}`,
             metadata: {
                 owner,
-                repo,
+                repo: repoName,
                 checkedIssues: issueNumbers,
             },
         };
@@ -50068,14 +50046,12 @@ async function run() {
     try {
         // Get inputs
         const branch = core.getInput("branch") || undefined;
-        const owner = core.getInput("owner") || undefined;
         const repo = core.getInput("repo") || undefined;
         const excludePattern = core.getInput("exclude_pattern") || issue_number_branch_api_1.DEFAULT_CHECK_OPTIONS.excludePattern;
         const issueStateInput = core.getInput("issue_state") || issue_number_branch_api_1.DEFAULT_CHECK_OPTIONS.issueState;
         // Check branch with provided options (validation is done in Core layer)
         const result = await (0, issue_number_branch_api_1.checkBranch)({
             ...(branch && { branch }),
-            ...(owner && { owner }),
             ...(repo && { repo }),
             excludePattern,
             issueState: issueStateInput,

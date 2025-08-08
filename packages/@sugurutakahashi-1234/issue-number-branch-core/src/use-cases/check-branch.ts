@@ -7,7 +7,7 @@ import {
   validateBranchExclusion,
   validateIssueState,
 } from "../domain/validators.js";
-import { Config } from "../infrastructure/config.js";
+import { getGitHubToken } from "../infrastructure/config.js";
 import { GitClient } from "../infrastructure/git-client.js";
 import { GitHubClient } from "../infrastructure/github-client.js";
 import type { CheckOptions, CheckResult, IssueStateFilter } from "../types.js";
@@ -30,13 +30,11 @@ export async function checkBranch(
     };
   }
 
-  const config = Config.getInstance();
-
   // Merge options with defaults
   const excludePattern =
     options.excludePattern ?? DEFAULT_CHECK_OPTIONS.excludePattern;
   const issueState = options.issueState ?? DEFAULT_CHECK_OPTIONS.issueState;
-  const githubToken = options.githubToken ?? config.getGitHubToken();
+  const githubToken = options.githubToken ?? getGitHubToken();
 
   // Initialize clients
   const gitClient = new GitClient();
@@ -69,21 +67,31 @@ export async function checkBranch(
 
     // 4. Get repository information (from options or git remote)
     let owner: string;
-    let repo: string;
+    let repoName: string;
 
-    if (options.owner && options.repo) {
-      owner = options.owner;
-      repo = options.repo;
+    if (options.repo) {
+      // Parse "owner/repo" format
+      const parts = options.repo.split("/");
+      if (parts.length !== 2 || !parts[0] || !parts[1]) {
+        return {
+          success: false,
+          reason: "error",
+          branch,
+          message: `Invalid repository format "${options.repo}". Expected "owner/repo" format.`,
+        };
+      }
+      owner = parts[0];
+      repoName = parts[1];
     } else {
       const remoteUrl = await gitClient.getRemoteUrl();
       const parsed = parseGitRemoteUrl(remoteUrl);
       owner = parsed.owner;
-      repo = parsed.repo;
+      repoName = parsed.repo;
     }
 
     // 5. Check if any of the issue numbers exist with allowed states
     for (const num of issueNumbers) {
-      const issue = await githubClient.getIssue(owner, repo, num);
+      const issue = await githubClient.getIssue(owner, repoName, num);
 
       if (issue && validateIssueState(issue.state, issueState)) {
         return {
@@ -91,10 +99,10 @@ export async function checkBranch(
           reason: "issue-found",
           branch,
           issueNumber: num,
-          message: `Issue #${num} found in ${owner}/${repo} (state: ${issue.state})`,
+          message: `Issue #${num} found in ${owner}/${repoName} (state: ${issue.state})`,
           metadata: {
             owner,
-            repo,
+            repo: repoName,
             checkedIssues: issueNumbers,
           },
         };
@@ -106,10 +114,10 @@ export async function checkBranch(
       success: false,
       reason: "issue-not-found",
       branch,
-      message: `No valid issue found among: ${issueNumbers.join(", ")} in ${owner}/${repo}`,
+      message: `No valid issue found among: ${issueNumbers.join(", ")} in ${owner}/${repoName}`,
       metadata: {
         owner,
-        repo,
+        repo: repoName,
         checkedIssues: issueNumbers,
       },
     };

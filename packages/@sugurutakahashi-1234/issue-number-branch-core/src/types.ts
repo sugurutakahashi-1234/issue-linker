@@ -27,8 +27,7 @@ export interface CheckResult {
 export interface CheckOptions {
   // Target information (auto-detected if not specified)
   branch?: string; // Branch name to check (default: current branch)
-  owner?: string; // Repository owner (default: from git remote)
-  repo?: string; // Repository name (default: from git remote)
+  repo?: string; // Repository in "owner/repo" format (default: from git remote)
 
   // Filter settings
   excludePattern?: string; // Glob pattern to exclude branches (default: "{main,master,develop}")

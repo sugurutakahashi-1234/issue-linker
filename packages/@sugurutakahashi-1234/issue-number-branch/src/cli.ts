@@ -21,9 +21,14 @@ program
   .name("issue-number-branch")
   .description("Validate branch names against issue numbers")
   .version(packageJson.version)
-  .option("--branch <branch>", "branch name to check (default: current branch)")
-  .option("--owner <owner>", "repository owner (default: from git remote)")
-  .option("--repo <repo>", "repository name (default: from git remote)")
+  .option(
+    "-b, --branch <branch>",
+    "branch name to check (default: current branch)",
+  )
+  .option(
+    "-r, --repo <owner/repo>",
+    "repository in owner/repo format (default: current repository)",
+  )
   .option(
     "--exclude-pattern <pattern>",
     `glob pattern to exclude branches (default: ${DEFAULT_CHECK_OPTIONS.excludePattern})\n` +
@@ -48,7 +53,6 @@ program
       // Check branch with provided options (validation is done in Core layer)
       const result = await checkBranch({
         ...(options.branch && { branch: options.branch }),
-        ...(options.owner && { owner: options.owner }),
         ...(options.repo && { repo: options.repo }),
         excludePattern: options.excludePattern,
         issueState: options.issueState as IssueStateFilter,
