@@ -163,7 +163,8 @@
       "Bash(biome:*)",
       "Bash(time bun run:*)",
       "Bash(do time bun run ./src/cli.ts --branch \"feat/issue-3-test\" --repo \"sugurutakahashi-1234/issue-number-branch\")",
-      "Bash(time bun test:*)"
+      "Bash(time bun test:*)",
+      "Bash(do echo \"=== Checking $scope ===\")"
     ],
     "deny": []
   },
