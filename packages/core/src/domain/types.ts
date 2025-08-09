@@ -1,4 +1,4 @@
-// Type definitions for issue-number-branch
+// Type definitions for issue-linker
 
 // Issue related types
 export type IssueStatus = "open" | "closed";

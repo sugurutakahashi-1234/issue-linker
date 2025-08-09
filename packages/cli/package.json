@@ -1,11 +1,13 @@
 {
-  "name": "@sugurutakahashi-1234/issue-number-branch-api",
+  "name": "issue-linker",
   "version": "0.0.0",
   "type": "module",
+  "bin": {
+    "issue-linker": "dist/cli.js"
+  },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "default": "./dist/cli.js"
     }
   },
   "publishConfig": {
@@ -21,14 +23,18 @@
     "🎨": "========== Code Quality ==========",
     "fix": "biome check --write --unsafe .",
     "check": "biome check .",
+    "💡": "========== Help Commands ==========",
+    "help:branch": "bun run src/cli.ts branch --help",
+    "help:commit": "bun run src/cli.ts commit --help",
     "📚": "========== Documentation ==========",
-    "docs:deps-graph": "tsg --tsconfig ../../../tsconfig.typescript-graph.json --LR --abstraction packages/@sugurutakahashi-1234/issue-number-branch --abstraction packages/@sugurutakahashi-1234/issue-number-branch-action --abstraction packages/@sugurutakahashi-1234/issue-number-branch-core --md ../../../docs/reports/dependencies/api.md",
+    "docs:deps-graph": "tsg --tsconfig ../../tsconfig.typescript-graph.json --LR --abstraction packages/action --abstraction packages/core --md ../../docs/reports/dependencies/cli.md",
     "🚀": "========== CI & Clean ==========",
     "ci": "bun run fix && bun run check && bun run build && bun run typecheck && bun run test:quiet",
     "clean": "rm -rf dist *.tsbuildinfo"
   },
   "dependencies": {
-    "@sugurutakahashi-1234/issue-number-branch-core": "workspace:*"
+    "@commander-js/extra-typings": "^14.0.0",
+    "@issue-linker/core": "workspace:*"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.1.4",

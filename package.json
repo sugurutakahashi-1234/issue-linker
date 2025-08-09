@@ -1,17 +1,17 @@
 {
-  "name": "issue-number-branch-monorepo",
+  "name": "issue-linker-monorepo",
   "version": "0.0.0",
   "private": true,
   "author": "Suguru Takahashi",
-  "description": "issue-number-branch monorepo",
+  "description": "issue-linker monorepo",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sugurutakahashi-1234/issue-number-branch.git"
+    "url": "https://github.com/sugurutakahashi-1234/issue-linker.git"
   },
   "bugs": {
-    "url": "https://github.com/sugurutakahashi-1234/issue-number-branch/issues"
+    "url": "https://github.com/sugurutakahashi-1234/issue-linker/issues"
   },
-  "homepage": "https://github.com/sugurutakahashi-1234/issue-number-branch#readme",
+  "homepage": "https://github.com/sugurutakahashi-1234/issue-linker#readme",
   "keywords": [],
   "license": "MIT",
   "type": "module",
@@ -20,11 +20,11 @@
   },
   "packageManager": "bun@1.2.19",
   "workspaces": [
-    "packages/@sugurutakahashi-1234/*"
+    "packages/*"
   ],
   "scripts": {
     "🔧": "========== Workspace Commands (all packages) ==========",
-    "build": "bun run --filter '@sugurutakahashi-1234/issue-number-branch-core' build && bun run --filter '@sugurutakahashi-1234/issue-number-branch-api' build && bun run --filter '@sugurutakahashi-1234/issue-number-branch' build && bun run --filter '@sugurutakahashi-1234/issue-number-branch-action' build",
+    "build": "bun run --filter '@issue-linker/core' build && bun run --filter 'issue-linker' build && bun run --filter '@issue-linker/action' build",
     "typecheck": "bun run --filter '*' typecheck",
     "test": "bun test",
     "ci": "bun run fix && bun run build && concurrently -n \"pkg,e2e,docs,knip\" -c \"cyan,green,yellow,magenta\" --hide \"pkg,e2e,docs,knip\" --timings --kill-others-on-fail \"bun run --filter '*' --parallel ci\" \"bun run test:e2e\" \"bun run docs:update\" \"bun run knip\"",
@@ -36,7 +36,7 @@
     "test:coverage": "bun test --coverage",
     "test:coverage:html": "bun test --coverage && bunx @lcov-viewer/cli lcov coverage/lcov.info -o coverage/html",
     "📚": "========== Documentation Generation ==========",
-    "docs:deps-graph:overview": "tsg --tsconfig tsconfig.typescript-graph.json --LR --abstraction packages/@sugurutakahashi-1234/issue-number-branch --abstraction packages/@sugurutakahashi-1234/issue-number-branch-action --abstraction packages/@sugurutakahashi-1234/issue-number-branch-api --abstraction packages/@sugurutakahashi-1234/issue-number-branch-core --md docs/reports/dependencies/overview.md",
+    "docs:deps-graph:overview": "tsg --tsconfig tsconfig.typescript-graph.json --LR --abstraction packages/cli --abstraction packages/action --abstraction packages/core --md docs/reports/dependencies/overview.md",
     "docs:deps-graph:all": "tsg --tsconfig tsconfig.typescript-graph.json --LR --md docs/reports/dependencies/all.md",
     "docs:deps-graph": "concurrently -n \"overview,all,pkg\" -c \"cyan,green,yellow\" --hide \"overview,all,pkg\" --timings --kill-others-on-fail \"bun run docs:deps-graph:overview\" \"bun run docs:deps-graph:all\" \"bun run --filter '*' docs:deps-graph\"",
     "docs:knip": "knip -c knip.config.ts --reporter markdown > docs/reports/code-quality/unused-code.md",
@@ -49,8 +49,8 @@
     "validate:codecov": "cat codecov.yml | curl --data-binary @- https://codecov.io/validate",
     "validate:renovate": "$(which npx) --yes --package renovate -- renovate-config-validator renovate.json5 --strict",
     "validate:branch": "git-branch-lint --config .elsikora/git-branch-lint.config.ts",
-    "release:dry-run": "bunx release-please release-pr --token=$(gh auth token) --repo-url=$(gh repo view --json nameWithOwner --jq '.nameWithOwner') --debug --dry-run",
-    "publish:dry-run": "npm publish --workspaces --access public --dry-run",
+    "release-please:dry-run": "bunx release-please release-pr --token=$(gh auth token) --repo-url=$(gh repo view --json nameWithOwner --jq '.nameWithOwner') --target-branch=$(git branch --show-current) --debug --dry-run",
+    "npm-publish:dry-run": "npm publish --workspaces --access public --dry-run",
     "📦": "========== Dependency Management ==========",
     "deps:size": "node-size",
     "deps:check": "bunx ncu --deep",
@@ -68,7 +68,7 @@
     "@commitlint/types": "^19.8.1",
     "@elsikora/git-branch-lint": "^1.1.2",
     "@types/bun": "^1.2.19",
-    "@types/node": "^24.2.0",
+    "@types/node": "^24.2.1",
     "@ysk8hori/typescript-graph": "^0.26.4",
     "concurrently": "^9.2.0",
     "husky": "^9.1.7",

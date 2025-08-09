@@ -1,8 +1,5 @@
 import * as core from "@actions/core";
-import {
-  checkBranch,
-  DEFAULT_CHECK_OPTIONS,
-} from "@sugurutakahashi-1234/issue-number-branch-api";
+import { checkBranch, DEFAULT_CHECK_OPTIONS } from "@issue-linker/core";
 
 async function run() {
   try {

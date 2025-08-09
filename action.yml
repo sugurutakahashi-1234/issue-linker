@@ -1,6 +1,12 @@
-name: 'Issue Number Branch Check'
-description: 'Check if current branch name contains an existing GitHub issue number'
+name: 'Issue Linker Branch Check'
+
+description: 'Check if branch name contains an existing GitHub issue number'
+
 author: 'Suguru Takahashi'
+
+branding:
+  icon: 'git-branch'
+  color: 'blue'
 
 inputs:
   branch:
@@ -44,8 +50,4 @@ outputs:
 
 runs:
   using: 'node20'
-  main: 'packages/@sugurutakahashi-1234/issue-number-branch-action/dist/index.js'
-
-branding:
-  icon: 'git-branch'
-  color: 'blue'
+  main: 'packages/action/dist/index.js'

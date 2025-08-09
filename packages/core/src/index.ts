@@ -28,3 +28,5 @@ export type {
 // Application layer exports
 /** @public */
 export { checkBranch } from "./application/check-branch-use-case.js";
+/** @public */
+export { checkCommit } from "./application/check-commit-use-case.js";

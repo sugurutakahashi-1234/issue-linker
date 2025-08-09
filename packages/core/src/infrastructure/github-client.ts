@@ -21,7 +21,7 @@ function createOctokit(token?: string): Octokit {
 
   return new MyOctokit({
     auth,
-    userAgent: "issue-number-branch",
+    userAgent: "issue-linker",
     baseUrl: getGitHubApiUrl(),
     request: {
       // Aggressive timeout for fast feedback during development

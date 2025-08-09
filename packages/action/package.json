@@ -1,5 +1,5 @@
 {
-  "name": "@sugurutakahashi-1234/issue-number-branch-action",
+  "name": "@issue-linker/action",
   "version": "0.0.0",
   "type": "module",
   "exports": {
@@ -19,14 +19,14 @@
     "fix": "biome check --write --unsafe .",
     "check": "biome check .",
     "📚": "========== Documentation ==========",
-    "docs:deps-graph": "tsg --tsconfig ../../../tsconfig.typescript-graph.json --LR --abstraction packages/@sugurutakahashi-1234/issue-number-branch --abstraction packages/@sugurutakahashi-1234/issue-number-branch-api --abstraction packages/@sugurutakahashi-1234/issue-number-branch-core --md ../../../docs/reports/dependencies/action.md",
+    "docs:deps-graph": "tsg --tsconfig ../../tsconfig.typescript-graph.json --LR --abstraction packages/cli --abstraction packages/core --md ../../docs/reports/dependencies/action.md",
     "🚀": "========== CI & Clean ==========",
     "ci": "bun run fix && bun run check && bun run build && bun run typecheck && bun run test:quiet",
     "clean": "rm -rf dist *.tsbuildinfo"
   },
   "dependencies": {
     "@actions/core": "^1.11.1",
-    "@sugurutakahashi-1234/issue-number-branch-api": "workspace:*"
+    "@issue-linker/core": "workspace:*"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.1.4",

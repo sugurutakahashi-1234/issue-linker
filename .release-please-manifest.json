@@ -1,5 +1,4 @@
 {
-  "packages/@sugurutakahashi-1234/issue-number-branch": "0.0.0",
-  "packages/@sugurutakahashi-1234/issue-number-branch-api": "0.0.0",
-  "packages/@sugurutakahashi-1234/issue-number-branch-core": "0.0.0"
+  "packages/cli": "0.0.0",
+  "packages/core": "0.0.0"
 }

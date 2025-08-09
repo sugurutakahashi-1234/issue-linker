@@ -1,4 +1,4 @@
-// Constants for issue-number-branch
+// Constants for issue-linker
 
 import type { IssueStatusFilter } from "./types.js";
 
