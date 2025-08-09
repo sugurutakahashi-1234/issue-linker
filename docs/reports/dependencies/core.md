@@ -16,6 +16,9 @@ flowchart LR
                 packages///sugurutakahashi//1234/issue//number//branch//core/dist/types.d.ts["types.d.ts"]
                 packages///sugurutakahashi//1234/issue//number//branch//core/dist/constants.d.ts["constants.d.ts"]
                 packages///sugurutakahashi//1234/issue//number//branch//core/dist/index.d.ts["index.d.ts"]
+                subgraph packages///sugurutakahashi//1234/issue//number//branch//core/dist/domain["/domain"]
+                    packages///sugurutakahashi//1234/issue//number//branch//core/dist/domain/errors.d.ts["errors.d.ts"]
+                end
                 subgraph packages///sugurutakahashi//1234/issue//number//branch//core/dist/use//cases["/use-cases"]
                     packages///sugurutakahashi//1234/issue//number//branch//core/dist/use//cases/check//branch.d.ts["check-branch.d.ts"]
                 end
@@ -25,6 +28,7 @@ flowchart LR
                 packages///sugurutakahashi//1234/issue//number//branch//core/src/constants.ts["constants.ts"]
                 packages///sugurutakahashi//1234/issue//number//branch//core/src/index.ts["index.ts"]
                 subgraph packages///sugurutakahashi//1234/issue//number//branch//core/src/domain["/domain"]
+                    packages///sugurutakahashi//1234/issue//number//branch//core/src/domain/errors.ts["errors.ts"]
                     packages///sugurutakahashi//1234/issue//number//branch//core/src/domain/extractors.ts["extractors.ts"]
                     packages///sugurutakahashi//1234/issue//number//branch//core/src/domain/parsers.ts["parsers.ts"]
                     packages///sugurutakahashi//1234/issue//number//branch//core/src/domain/schemas.ts["schemas.ts"]
@@ -56,6 +60,7 @@ flowchart LR
     packages///sugurutakahashi//1234/issue//number//branch//core/dist/constants.d.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/dist/types.d.ts
     packages///sugurutakahashi//1234/issue//number//branch//core/dist/use//cases/check//branch.d.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/dist/types.d.ts
     packages///sugurutakahashi//1234/issue//number//branch//core/dist/index.d.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/dist/constants.d.ts
+    packages///sugurutakahashi//1234/issue//number//branch//core/dist/index.d.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/dist/domain/errors.d.ts
     packages///sugurutakahashi//1234/issue//number//branch//core/dist/index.d.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/dist/types.d.ts
     packages///sugurutakahashi//1234/issue//number//branch//core/dist/index.d.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/dist/use//cases/check//branch.d.ts
     packages///sugurutakahashi//1234/issue//number//branch//api-->packages///sugurutakahashi//1234/issue//number//branch//core/dist/index.d.ts
@@ -71,13 +76,16 @@ flowchart LR
     packages///sugurutakahashi//1234/issue//number//branch//core/src/infrastructure/config.ts-->node//modules///t3//oss/env//core/dist/index.d.ts
     packages///sugurutakahashi//1234/issue//number//branch//core/src/infrastructure/config.ts-->node//modules/valibot/dist/index.d.cts
     packages///sugurutakahashi//1234/issue//number//branch//core/src/infrastructure/git//client.ts-->node//modules/simple//git/dist/typings/index.d.ts
+    packages///sugurutakahashi//1234/issue//number//branch//core/src/infrastructure/git//client.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/src/domain/errors.ts
     packages///sugurutakahashi//1234/issue//number//branch//core/src/infrastructure/github//client.ts-->node//modules///octokit/plugin//retry/dist//types/index.d.ts
     packages///sugurutakahashi//1234/issue//number//branch//core/src/infrastructure/github//client.ts-->node//modules///octokit/plugin//throttling/dist//types/index.d.ts
     packages///sugurutakahashi//1234/issue//number//branch//core/src/infrastructure/github//client.ts-->node//modules///octokit/request//error/dist//types/index.d.ts
     packages///sugurutakahashi//1234/issue//number//branch//core/src/infrastructure/github//client.ts-->node//modules/octokit/dist//types/index.d.ts
+    packages///sugurutakahashi//1234/issue//number//branch//core/src/infrastructure/github//client.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/src/domain/errors.ts
     packages///sugurutakahashi//1234/issue//number//branch//core/src/infrastructure/github//client.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/src/types.ts
     packages///sugurutakahashi//1234/issue//number//branch//core/src/infrastructure/github//client.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/src/infrastructure/config.ts
     packages///sugurutakahashi//1234/issue//number//branch//core/src/use//cases/check//branch.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/src/constants.ts
+    packages///sugurutakahashi//1234/issue//number//branch//core/src/use//cases/check//branch.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/src/domain/errors.ts
     packages///sugurutakahashi//1234/issue//number//branch//core/src/use//cases/check//branch.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/src/domain/extractors.ts
     packages///sugurutakahashi//1234/issue//number//branch//core/src/use//cases/check//branch.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/src/domain/parsers.ts
     packages///sugurutakahashi//1234/issue//number//branch//core/src/use//cases/check//branch.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/src/domain/schemas.ts
@@ -87,6 +95,7 @@ flowchart LR
     packages///sugurutakahashi//1234/issue//number//branch//core/src/use//cases/check//branch.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/src/infrastructure/github//client.ts
     packages///sugurutakahashi//1234/issue//number//branch//core/src/use//cases/check//branch.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/src/types.ts
     packages///sugurutakahashi//1234/issue//number//branch//core/src/index.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/src/constants.ts
+    packages///sugurutakahashi//1234/issue//number//branch//core/src/index.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/src/domain/errors.ts
     packages///sugurutakahashi//1234/issue//number//branch//core/src/index.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/src/types.ts
     packages///sugurutakahashi//1234/issue//number//branch//core/src/index.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/src/use//cases/check//branch.ts
 ```

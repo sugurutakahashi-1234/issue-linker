@@ -7,6 +7,10 @@ export {
   type CheckResult,
   checkBranch,
   DEFAULT_CHECK_OPTIONS,
+  GitError,
+  GitHubError,
+  IssueNotFoundError,
   type IssueState,
   type IssueStateFilter,
+  ValidationError,
 } from "@sugurutakahashi-1234/issue-number-branch-core";

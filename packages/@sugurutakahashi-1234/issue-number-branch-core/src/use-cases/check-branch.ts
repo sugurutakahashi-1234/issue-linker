@@ -1,6 +1,7 @@
 // Use case layer - Main business logic
 
 import { DEFAULT_CHECK_OPTIONS } from "../constants.js";
+import { IssueNotFoundError } from "../domain/errors.js";
 import { extractIssueNumbers } from "../domain/extractors.js";
 import { parseGitRemoteUrl } from "../domain/parsers.js";
 import { parseRepository, validateCheckOptions } from "../domain/schemas.js";
@@ -88,21 +89,30 @@ export async function checkBranch(
 
     // 5. Check if any of the issue numbers exist with allowed states
     for (const num of issueNumbers) {
-      const issue = await getGitHubIssue(owner, repoName, num, githubToken);
+      try {
+        const issue = await getGitHubIssue(owner, repoName, num, githubToken);
 
-      if (issue && validateIssueState(issue.state, issueState)) {
-        return {
-          success: true,
-          reason: "issue-found",
-          branch,
-          issueNumber: num,
-          message: `Issue #${num} found in ${owner}/${repoName} (state: ${issue.state})`,
-          metadata: {
-            owner,
-            repo: repoName,
-            checkedIssues: issueNumbers,
-          },
-        };
+        if (validateIssueState(issue.state, issueState)) {
+          return {
+            success: true,
+            reason: "issue-found",
+            branch,
+            issueNumber: num,
+            message: `Issue #${num} found in ${owner}/${repoName} (state: ${issue.state})`,
+            metadata: {
+              owner,
+              repo: repoName,
+              checkedIssues: issueNumbers,
+            },
+          };
+        }
+      } catch (error) {
+        if (error instanceof IssueNotFoundError) {
+          // Issue doesn't exist - continue to next issue number
+          continue;
+        }
+        // Other errors (auth, network, etc.) should be re-thrown
+        throw error;
       }
     }
 

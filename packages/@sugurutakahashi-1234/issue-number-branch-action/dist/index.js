@@ -35007,7 +35007,7 @@ __webpack_unused_export__ = defaultContentType
 
 /***/ }),
 
-/***/ 6813:
+/***/ 568:
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
 
 // ESM COMPAT FLAG
@@ -35016,6 +35016,10 @@ __nccwpck_require__.r(__webpack_exports__);
 // EXPORTS
 __nccwpck_require__.d(__webpack_exports__, {
   DEFAULT_CHECK_OPTIONS: () => (/* reexport */ DEFAULT_CHECK_OPTIONS),
+  GitError: () => (/* reexport */ GitError),
+  GitHubError: () => (/* reexport */ GitHubError),
+  IssueNotFoundError: () => (/* reexport */ IssueNotFoundError),
+  ValidationError: () => (/* reexport */ ValidationError),
   checkBranch: () => (/* reexport */ checkBranch)
 });
 
@@ -35031,6 +35035,52 @@ const DEFAULT_CHECK_OPTIONS = {
     issueState: "all",
 };
 //# sourceMappingURL=constants.js.map
+;// CONCATENATED MODULE: ../issue-number-branch-core/dist/domain/errors.js
+// Domain layer - Error definitions
+/**
+ * Error thrown when validation fails
+ */
+class ValidationError extends Error {
+    field;
+    constructor(message, field) {
+        super(message);
+        this.field = field;
+        this.name = "ValidationError";
+    }
+}
+/**
+ * Error thrown when a GitHub issue is not found (404)
+ * This is a normal case, not a real error
+ */
+class IssueNotFoundError extends Error {
+    issueNumber;
+    constructor(issueNumber) {
+        super(`Issue #${issueNumber} not found`);
+        this.issueNumber = issueNumber;
+        this.name = "IssueNotFoundError";
+    }
+}
+/**
+ * Error thrown when Git operations fail
+ */
+class GitError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = "GitError";
+    }
+}
+/**
+ * Error thrown when GitHub API operations fail
+ */
+class GitHubError extends Error {
+    status;
+    constructor(message, status) {
+        super(message);
+        this.status = status;
+        this.name = "GitHubError";
+    }
+}
+//# sourceMappingURL=errors.js.map
 ;// CONCATENATED MODULE: ../issue-number-branch-core/dist/domain/extractors.js
 // Domain layer - Pure extraction functions
 /**
@@ -42436,11 +42486,11 @@ var init_pathspec = __esm({
 });
 
 // src/lib/errors/git-error.ts
-var GitError;
+var esm_GitError;
 var init_git_error = __esm({
   "src/lib/errors/git-error.ts"() {
     "use strict";
-    GitError = class extends Error {
+    esm_GitError = class extends Error {
       constructor(task, message) {
         super(message);
         this.task = task;
@@ -42456,7 +42506,7 @@ var init_git_response_error = __esm({
   "src/lib/errors/git-response-error.ts"() {
     "use strict";
     init_git_error();
-    GitResponseError = class extends GitError {
+    GitResponseError = class extends esm_GitError {
       constructor(git, message) {
         super(void 0, message || String(git));
         this.git = git;
@@ -42471,7 +42521,7 @@ var init_task_configuration_error = __esm({
   "src/lib/errors/task-configuration-error.ts"() {
     "use strict";
     init_git_error();
-    TaskConfigurationError = class extends GitError {
+    TaskConfigurationError = class extends esm_GitError {
       constructor(message) {
         super(void 0, message);
       }
@@ -43609,7 +43659,7 @@ var init_tasks_pending_queue = __esm({
       attempt(task) {
         const progress = this.withProgress(task);
         if (!progress) {
-          throw new GitError(void 0, "TasksPendingQueue: attempt called for an unknown task");
+          throw new esm_GitError(void 0, "TasksPendingQueue: attempt called for an unknown task");
         }
         progress.logger("Starting task");
         return progress;
@@ -43694,7 +43744,7 @@ var init_git_executor_chain = __esm({
         }
       }
       onFatalException(task, e) {
-        const gitError = e instanceof GitError ? Object.assign(e, { task }) : new GitError(task, e && String(e));
+        const gitError = e instanceof esm_GitError ? Object.assign(e, { task }) : new esm_GitError(task, e && String(e));
         this._chain = Promise.resolve();
         this._queue.fatal(gitError);
         return gitError;
@@ -46570,7 +46620,7 @@ init_pathspec();
 
 // src/lib/errors/git-construct-error.ts
 init_git_error();
-var GitConstructError = class extends GitError {
+var GitConstructError = class extends esm_GitError {
   constructor(config, message) {
     super(void 0, message);
     this.config = config;
@@ -46582,7 +46632,7 @@ init_git_error();
 
 // src/lib/errors/git-plugin-error.ts
 init_git_error();
-var GitPluginError = class extends GitError {
+var GitPluginError = class extends esm_GitError {
   constructor(task, plugin, message) {
     super(task, message);
     this.task = task;
@@ -46827,7 +46877,7 @@ function errorDetectionPlugin(config) {
         exitCode: context.exitCode
       });
       if (Buffer.isBuffer(error)) {
-        return { error: new GitError(void 0, error.toString("utf-8")) };
+        return { error: new esm_GitError(void 0, error.toString("utf-8")) };
       }
       return {
         error
@@ -47162,6 +47212,7 @@ var esm_default = (/* unused pure expression or super */ null && (gitInstanceFac
 ;// CONCATENATED MODULE: ../issue-number-branch-core/dist/infrastructure/git-client.js
 // Infrastructure layer - Git operations
 
+
 // Create a simple-git instance
 const git = simpleGit();
 /**
@@ -47178,9 +47229,9 @@ async function getCurrentGitBranch() {
         // Improve error messages
         const message = error instanceof Error ? error.message : String(error);
         if (message.includes("not a git repository")) {
-            throw new Error("Not in a git repository");
+            throw new GitError("Not in a git repository");
         }
-        throw new Error(`Failed to get current branch: ${message}`);
+        throw new GitError(`Failed to get current branch: ${message}`);
     }
 }
 /**
@@ -47195,7 +47246,7 @@ async function getGitRemoteUrl() {
         // Find the origin remote
         const origin = remotes.find((remote) => remote.name === "origin");
         if (!origin?.refs?.fetch) {
-            throw new Error("No origin remote found");
+            throw new GitError("No origin remote found");
         }
         return origin.refs.fetch;
     }
@@ -47203,12 +47254,12 @@ async function getGitRemoteUrl() {
         // Improve error messages
         const message = error instanceof Error ? error.message : String(error);
         if (message.includes("not a git repository")) {
-            throw new Error("Not in a git repository");
+            throw new GitError("Not in a git repository");
         }
         if (message.includes("No origin remote")) {
             throw error; // Re-throw our custom error
         }
-        throw new Error(`Failed to get remote URL: ${message}`);
+        throw new GitError(`Failed to get remote URL: ${message}`);
     }
 }
 //# sourceMappingURL=git-client.js.map
@@ -55923,6 +55974,7 @@ var dist_bundle_OAuthApp = OAuthApp.defaults({ Octokit });
 
 
 
+
 // Create custom Octokit with retry and throttling plugins
 const MyOctokit = Octokit.plugin(retry, throttling);
 /**
@@ -55957,8 +56009,9 @@ function createOctokit(token) {
  * @param repo - Repository name
  * @param issueNumber - Issue number
  * @param token - Optional GitHub token
- * @returns Issue if found, null if not found (404)
- * @throws Error for authentication, permission, or network issues
+ * @returns Issue object
+ * @throws IssueNotFoundError if issue doesn't exist (404)
+ * @throws GitHubError for other API errors
  */
 async function getGitHubIssue(owner, repo, issueNumber, token) {
     const octokit = createOctokit(token);
@@ -55987,12 +56040,11 @@ async function getGitHubIssue(owner, repo, issueNumber, token) {
         // Handle different error cases appropriately
         if (error instanceof RequestError) {
             if (error.status === 404) {
-                // Issue doesn't exist - this is expected, not an error
-                return null;
+                // Issue doesn't exist - this is a normal case
+                throw new IssueNotFoundError(issueNumber);
             }
-            // For other API errors (401, 403, etc.), throw the error
-            // so the caller can handle authentication/permission issues
-            throw error;
+            // For other API errors (401, 403, etc.)
+            throw new GitHubError(error.message, error.status);
         }
         // Re-throw unexpected errors (network issues, etc.)
         throw error;
@@ -56001,6 +56053,7 @@ async function getGitHubIssue(owner, repo, issueNumber, token) {
 //# sourceMappingURL=github-client.js.map
 ;// CONCATENATED MODULE: ../issue-number-branch-core/dist/use-cases/check-branch.js
 // Use case layer - Main business logic
+
 
 
 
@@ -56070,20 +56123,30 @@ async function checkBranch(options = {}) {
         }
         // 5. Check if any of the issue numbers exist with allowed states
         for (const num of issueNumbers) {
-            const issue = await getGitHubIssue(owner, repoName, num, githubToken);
-            if (issue && validateIssueState(issue.state, issueState)) {
-                return {
-                    success: true,
-                    reason: "issue-found",
-                    branch,
-                    issueNumber: num,
-                    message: `Issue #${num} found in ${owner}/${repoName} (state: ${issue.state})`,
-                    metadata: {
-                        owner,
-                        repo: repoName,
-                        checkedIssues: issueNumbers,
-                    },
-                };
+            try {
+                const issue = await getGitHubIssue(owner, repoName, num, githubToken);
+                if (validateIssueState(issue.state, issueState)) {
+                    return {
+                        success: true,
+                        reason: "issue-found",
+                        branch,
+                        issueNumber: num,
+                        message: `Issue #${num} found in ${owner}/${repoName} (state: ${issue.state})`,
+                        metadata: {
+                            owner,
+                            repo: repoName,
+                            checkedIssues: issueNumbers,
+                        },
+                    };
+                }
+            }
+            catch (error) {
+                if (error instanceof IssueNotFoundError) {
+                    // Issue doesn't exist - continue to next issue number
+                    continue;
+                }
+                // Other errors (auth, network, etc.) should be re-thrown
+                throw error;
             }
         }
         // No valid issue found
@@ -56113,6 +56176,9 @@ async function checkBranch(options = {}) {
 ;// CONCATENATED MODULE: ../issue-number-branch-core/dist/index.js
 // Core package - Main exports
 // Re-export constants
+/** @public */
+
+// Re-export error classes
 /** @public */
 
 // Re-export only what's needed by API package
@@ -56202,7 +56268,7 @@ var exports = __webpack_exports__;
 Object.defineProperty(exports, "B", ({ value: true }));
 const tslib_1 = __nccwpck_require__(4594);
 const core = tslib_1.__importStar(__nccwpck_require__(7930));
-const issue_number_branch_api_1 = __nccwpck_require__(6813);
+const issue_number_branch_api_1 = __nccwpck_require__(568);
 async function run() {
     try {
         // Get inputs

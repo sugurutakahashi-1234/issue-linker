@@ -4,19 +4,22 @@
 export type IssueState = "open" | "closed";
 export type IssueStateFilter = "all" | "open" | "closed";
 
-// Result reasons - clearly separated into success and failure
-type SuccessReason = "excluded" | "issue-found";
-type FailureReason = "no-issue-number" | "issue-not-found" | "error";
+// Check result reasons
+export type CheckReason =
+  | "excluded" // Branch is in the exclude pattern
+  | "issue-found" // Valid issue was found
+  | "no-issue-number" // No issue number in branch name
+  | "issue-not-found" // Issue number exists but issue not found/invalid
+  | "error"; // Unexpected error occurred
 
-// Check result with improved structure
+// Check result - single consistent interface
 export interface CheckResult {
-  success: boolean; // Renamed from 'ok' for clarity
-  reason: SuccessReason | FailureReason;
+  success: boolean;
+  reason: CheckReason;
   branch: string;
-  issueNumber?: number; // Renamed from 'matched' for clarity
   message: string;
+  issueNumber?: number; // Optional field, present only when an issue is found
   metadata?: {
-    // Additional information for debugging and logging
     owner?: string;
     repo?: string;
     checkedIssues?: number[];

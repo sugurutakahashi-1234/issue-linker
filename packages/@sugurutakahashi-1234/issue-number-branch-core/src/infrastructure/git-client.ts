@@ -1,6 +1,7 @@
 // Infrastructure layer - Git operations
 
 import { type SimpleGit, simpleGit } from "simple-git";
+import { GitError } from "../domain/errors.js";
 
 // Create a simple-git instance
 const git: SimpleGit = simpleGit();
@@ -19,10 +20,10 @@ export async function getCurrentGitBranch(): Promise<string> {
     const message = error instanceof Error ? error.message : String(error);
 
     if (message.includes("not a git repository")) {
-      throw new Error("Not in a git repository");
+      throw new GitError("Not in a git repository");
     }
 
-    throw new Error(`Failed to get current branch: ${message}`);
+    throw new GitError(`Failed to get current branch: ${message}`);
   }
 }
 
@@ -40,7 +41,7 @@ export async function getGitRemoteUrl(): Promise<string> {
     const origin = remotes.find((remote) => remote.name === "origin");
 
     if (!origin?.refs?.fetch) {
-      throw new Error("No origin remote found");
+      throw new GitError("No origin remote found");
     }
 
     return origin.refs.fetch;
@@ -49,13 +50,13 @@ export async function getGitRemoteUrl(): Promise<string> {
     const message = error instanceof Error ? error.message : String(error);
 
     if (message.includes("not a git repository")) {
-      throw new Error("Not in a git repository");
+      throw new GitError("Not in a git repository");
     }
 
     if (message.includes("No origin remote")) {
       throw error; // Re-throw our custom error
     }
 
-    throw new Error(`Failed to get remote URL: ${message}`);
+    throw new GitError(`Failed to get remote URL: ${message}`);
   }
 }

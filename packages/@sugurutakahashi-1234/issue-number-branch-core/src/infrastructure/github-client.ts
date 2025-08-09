@@ -4,6 +4,7 @@ import { retry } from "@octokit/plugin-retry";
 import { throttling } from "@octokit/plugin-throttling";
 import { RequestError } from "@octokit/request-error";
 import { Octokit } from "octokit";
+import { GitHubError, IssueNotFoundError } from "../domain/errors.js";
 import type { Issue, IssueState } from "../types.js";
 import { getGitHubApiUrl, getGitHubToken } from "./config.js";
 
@@ -44,15 +45,16 @@ function createOctokit(token?: string): Octokit {
  * @param repo - Repository name
  * @param issueNumber - Issue number
  * @param token - Optional GitHub token
- * @returns Issue if found, null if not found (404)
- * @throws Error for authentication, permission, or network issues
+ * @returns Issue object
+ * @throws IssueNotFoundError if issue doesn't exist (404)
+ * @throws GitHubError for other API errors
  */
 export async function getGitHubIssue(
   owner: string,
   repo: string,
   issueNumber: number,
   token?: string,
-): Promise<Issue | null> {
+): Promise<Issue> {
   const octokit = createOctokit(token);
 
   try {
@@ -82,12 +84,11 @@ export async function getGitHubIssue(
     // Handle different error cases appropriately
     if (error instanceof RequestError) {
       if (error.status === 404) {
-        // Issue doesn't exist - this is expected, not an error
-        return null;
+        // Issue doesn't exist - this is a normal case
+        throw new IssueNotFoundError(issueNumber);
       }
-      // For other API errors (401, 403, etc.), throw the error
-      // so the caller can handle authentication/permission issues
-      throw error;
+      // For other API errors (401, 403, etc.)
+      throw new GitHubError(error.message, error.status);
     }
 
     // Re-throw unexpected errors (network issues, etc.)

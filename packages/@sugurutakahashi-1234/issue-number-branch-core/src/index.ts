@@ -3,9 +3,21 @@
 // Re-export constants
 /** @public */
 export { DEFAULT_CHECK_OPTIONS } from "./constants.js";
+
+// Re-export error classes
+/** @public */
+export {
+  GitError,
+  GitHubError,
+  IssueNotFoundError,
+  ValidationError,
+} from "./domain/errors.js";
+
+// Re-export types
 /** @public */
 export type {
   CheckOptions,
+  CheckReason,
   CheckResult,
   IssueState,
   IssueStateFilter,
