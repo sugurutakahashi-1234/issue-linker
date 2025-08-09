@@ -6,11 +6,6 @@ bun run fix
 bun run check
 git diff --exit-code
 
-# Validate schema if changed
-# if git diff --cached --name-only | grep -q "^schema/config.schema.json$"; then
-#   bun run validate:schema
-# fi
-
 # Validate codecov.yml if changed
 if git diff --cached --name-only | grep -q "^codecov.yml$"; then
   bun run validate:codecov
@@ -22,7 +17,16 @@ if git diff --cached --name-only | grep -q "^renovate.json5$"; then
 fi
 
 # Auto-update dependency graph
-if git diff --cached --name-only | grep -qE "^src/.*\.ts$"; then
+if git diff --cached --name-only | grep -qE "^(packages|src)/.*\.ts$"; then
   bun run docs:update
-  git add docs/reports/
+  
+  # Check if any docs were modified
+  if ! git diff --exit-code docs/ > /dev/null 2>&1; then
+    echo "📊 Documentation has been updated."
+    echo "Please review and stage the changes, then commit again:"
+    echo "  git diff docs/"
+    echo "  git add docs/"
+    echo "  git commit"
+    exit 1
+  fi
 fi
