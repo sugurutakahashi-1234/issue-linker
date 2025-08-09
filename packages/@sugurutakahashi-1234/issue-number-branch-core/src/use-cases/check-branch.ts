@@ -2,7 +2,7 @@
 
 import { DEFAULT_CHECK_OPTIONS } from "../constants.js";
 import { IssueNotFoundError } from "../domain/errors.js";
-import { extractIssueNumbers } from "../domain/extractors.js";
+import { extractIssueNumber } from "../domain/extractors.js";
 import { parseGitRemoteUrl } from "../domain/parsers.js";
 import { parseRepository, validateCheckOptions } from "../domain/schemas.js";
 import {
@@ -60,9 +60,9 @@ export async function checkBranch(
       };
     }
 
-    // 3. Extract issue numbers from branch name
-    const issueNumbers = extractIssueNumbers(branch);
-    if (issueNumbers.length === 0) {
+    // 3. Extract issue number from branch name
+    const issueNumber = extractIssueNumber(branch);
+    if (issueNumber === null) {
       return {
         success: false,
         reason: "no-issue-number",
@@ -87,47 +87,60 @@ export async function checkBranch(
       repoName = parsed.repo;
     }
 
-    // 5. Check if any of the issue numbers exist with allowed states
-    for (const num of issueNumbers) {
-      try {
-        const issue = await getGitHubIssue(owner, repoName, num, githubToken);
-
-        if (validateIssueState(issue.state, issueState)) {
-          return {
-            success: true,
-            reason: "issue-found",
-            branch,
-            issueNumber: num,
-            message: `Issue #${num} found in ${owner}/${repoName} (state: ${issue.state})`,
-            metadata: {
-              owner,
-              repo: repoName,
-              checkedIssues: issueNumbers,
-            },
-          };
-        }
-      } catch (error) {
-        if (error instanceof IssueNotFoundError) {
-          // Issue doesn't exist - continue to next issue number
-          continue;
-        }
-        // Other errors (auth, network, etc.) should be re-thrown
-        throw error;
-      }
-    }
-
-    // No valid issue found
-    return {
-      success: false,
-      reason: "issue-not-found",
-      branch,
-      message: `No valid issue found among: ${issueNumbers.join(", ")} in ${owner}/${repoName}`,
-      metadata: {
+    // 5. Check if the issue exists with allowed state
+    try {
+      const issue = await getGitHubIssue(
         owner,
-        repo: repoName,
-        checkedIssues: issueNumbers,
-      },
-    };
+        repoName,
+        issueNumber,
+        githubToken,
+      );
+
+      if (validateIssueState(issue.state, issueState)) {
+        return {
+          success: true,
+          reason: "issue-found",
+          branch,
+          issueNumber,
+          message: `Issue #${issueNumber} found in ${owner}/${repoName} (state: ${issue.state})`,
+          metadata: {
+            owner,
+            repo: repoName,
+            checkedIssues: [issueNumber],
+          },
+        };
+      } else {
+        // Issue exists but state doesn't match
+        return {
+          success: false,
+          reason: "issue-not-found",
+          branch,
+          message: `Issue #${issueNumber} exists but state '${issue.state}' is not allowed`,
+          metadata: {
+            owner,
+            repo: repoName,
+            checkedIssues: [issueNumber],
+          },
+        };
+      }
+    } catch (error) {
+      if (error instanceof IssueNotFoundError) {
+        // Issue doesn't exist
+        return {
+          success: false,
+          reason: "issue-not-found",
+          branch,
+          message: `Issue #${issueNumber} not found in ${owner}/${repoName}`,
+          metadata: {
+            owner,
+            repo: repoName,
+            checkedIssues: [issueNumber],
+          },
+        };
+      }
+      // Other errors (auth, network, etc.) should be re-thrown
+      throw error;
+    }
   } catch (error) {
     // Handle any errors
     return {

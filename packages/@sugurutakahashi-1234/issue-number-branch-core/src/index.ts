@@ -13,6 +13,10 @@ export {
   ValidationError,
 } from "./domain/errors.js";
 
+// Re-export extraction function for external use
+/** @public */
+export { extractIssueNumber } from "./domain/extractors.js";
+
 // Re-export types
 /** @public */
 export type {
