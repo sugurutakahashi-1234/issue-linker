@@ -43,9 +43,9 @@ bun.lockb
 # compiled binaries
 dist/
 
-# packages の dist は無視するが、Action パッケージの dist だけはコミット
+# Ignore dist directories in packages, but commit the one for the Action package
 packages/**/dist/
-!packages/@sugurutakahashi-1234/issue-number-branch-action/dist/
+!packages/action/dist/
 
 # editor
 .vscode/*

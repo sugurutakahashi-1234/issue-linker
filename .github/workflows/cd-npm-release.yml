@@ -69,7 +69,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           # Publish all public packages to npm using workspaces
-          # Private packages (issue-number-branch-action) are automatically skipped
+          # Private packages (action) are automatically skipped
           npm publish --workspaces --access public
 
       - name: Get created tag

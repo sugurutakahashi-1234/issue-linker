@@ -27,13 +27,10 @@
     { "type": "chore", "section": "🔧 Maintenance" }
   ],
   "packages": {
-    "packages/@sugurutakahashi-1234/issue-number-branch": {
+    "packages/cli": {
       "changelog-path": "CHANGELOG.md"
     },
-    "packages/@sugurutakahashi-1234/issue-number-branch-api": {
-      "changelog-path": "CHANGELOG.md"
-    },
-    "packages/@sugurutakahashi-1234/issue-number-branch-core": {
+    "packages/core": {
       "changelog-path": "CHANGELOG.md"
     }
   },

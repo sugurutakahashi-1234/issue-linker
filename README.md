@@ -1,6 +1,6 @@
-# issue-number-branch
+# issue-linker
 
-Validate Git branch names against GitHub issue numbers.
+Validate Git branch names and commit messages against GitHub issue numbers.
 
 ## Installation
 
@@ -8,10 +8,10 @@ Validate Git branch names against GitHub issue numbers.
 
 ```bash
 # npm
-npm install -g @sugurutakahashi-1234/issue-number-branch
+npm install -g issue-linker
 
 # bun
-bun add -g @sugurutakahashi-1234/issue-number-branch
+bun add -g issue-linker
 ```
 
 ### GitHub Action
@@ -19,33 +19,55 @@ bun add -g @sugurutakahashi-1234/issue-number-branch
 Add to your workflow:
 
 ```yaml
-- uses: sugurutakahashi-1234/issue-number-branch@v1
+- uses: sugurutakahashi-1234/issue-linker@v1
 ```
 
 ## Usage
 
 ### CLI
 
+The `issue-linker` CLI provides two subcommands: `branch` and `commit`.
+
+#### Branch validation
+
 Check if your current branch name contains a valid GitHub issue number:
 
 ```bash
-issue-number-branch
+issue-linker branch
 ```
 
 With options:
 
 ```bash
 # Check specific branch
-issue-number-branch --branch feat/issue-123
+issue-linker branch --branch feat/issue-123
 
 # Check specific repository
-issue-number-branch --repo owner/repo
+issue-linker branch --repo owner/repo
 
 # Exclude branches from validation
-issue-number-branch --exclude-pattern '{main,master,develop}'
+issue-linker branch --exclude-pattern '{main,master,develop}'
 
 # Filter by issue status
-issue-number-branch --issue-status open
+issue-linker branch --issue-status open
+```
+
+#### Commit validation
+
+Check if a commit message contains valid GitHub issue numbers:
+
+```bash
+# Check specific commit message
+issue-linker commit "fix: resolve issue #123"
+
+# Check latest commit from git log
+issue-linker commit --latest
+
+# Check with specific repository
+issue-linker commit "feat: add feature #456" --repo owner/repo
+
+# Filter by issue status
+issue-linker commit "fix: closes #789" --issue-status open
 ```
 
 ### GitHub Action
@@ -65,7 +87,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - uses: sugurutakahashi-1234/issue-number-branch@v1
+      - uses: sugurutakahashi-1234/issue-linker@v1
         with:
           # Optional: exclude pattern (default: '{main,master,develop}')
           exclude-pattern: '{main,master,develop,release/*}'
@@ -79,13 +101,24 @@ jobs:
 
 ## Options
 
+### Branch Command Options
+
 | Option | Description | Default |
 |--------|-------------|---------|
-| `--branch` / `branch` | Branch name to check | Current branch |
-| `--repo` / `repo` | Repository (owner/repo format) | Current repository |
-| `--exclude-pattern` / `exclude-pattern` | Glob pattern to exclude branches | `{main,master,develop}` |
-| `--issue-status` / `issue-status` | Filter by issue status (all/open/closed) | `all` |
-| `--github-token` / `github-token` | GitHub token for API access | `GITHUB_TOKEN` env |
+| `--branch` | Branch name to check | Current branch |
+| `--repo` | Repository (owner/repo format) | Current repository |
+| `--exclude-pattern` | Glob pattern to exclude branches | `{main,master,develop}` |
+| `--issue-status` | Filter by issue status (all/open/closed) | `all` |
+| `--github-token` | GitHub token for API access | `GITHUB_TOKEN` env |
+
+### Commit Command Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--latest` | Check the latest commit from git log | - |
+| `--repo` | Repository (owner/repo format) | Current repository |
+| `--issue-status` | Filter by issue status (all/open/closed) | `all` |
+| `--github-token` | GitHub token for API access | `GITHUB_TOKEN` env |
 
 ### Exclude Pattern Examples
 
@@ -98,19 +131,16 @@ jobs:
 
 ### Project Structure
 
-This is a monorepo project with the following packages:
+This is a monorepo with the following packages:
 
-```mermaid
-flowchart LR
-    CLI["@sugurutakahashi-1234/issue-number-branch<br>(CLI)"]
-    Action["@sugurutakahashi-1234/issue-number-branch-action<br>(GitHub Action)"]
-    API["@sugurutakahashi-1234/issue-number-branch-api<br>(API)"]
-    Core["@sugurutakahashi-1234/issue-number-branch-core<br>(Core)"]
-    
-    CLI --> API
-    Action --> API
-    API --> Core
-```
+- `packages/core` - Core business logic (@issue-linker/core)
+- `packages/cli` - CLI tool (issue-linker)
+- `packages/action` - GitHub Action
+
+### Requirements
+
+- Node.js v20+
+- Bun (latest)
 
 ### Setup
 
@@ -128,21 +158,35 @@ bun test
 bun run ci
 ```
 
-### Available Scripts
+### Testing
 
-| Command | Description |
-|---------|-------------|
-| `bun run build` | Build all packages |
-| `bun run test` | Run tests |
-| `bun run ci` | Run complete CI pipeline |
-| `bun run fix` | Auto-fix code style issues |
-| `bun run typecheck` | Type check all packages |
+```bash
+# Run all tests
+bun test
 
-### Requirements
+# Run tests with coverage
+bun run test:coverage
 
-- Node.js v20+
-- Bun (latest)
+# Run specific package tests
+bun run --filter '@issue-linker/core' test
+```
+
+### Scripts
+
+- `bun run build` - Build all packages
+- `bun run test` - Run all tests
+- `bun run ci` - Run full CI pipeline
+- `bun run fix` - Auto-fix code style issues
+- `bun run check` - Check code style
 
 ## License
 
 MIT
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## Author
+
+Suguru Takahashi
