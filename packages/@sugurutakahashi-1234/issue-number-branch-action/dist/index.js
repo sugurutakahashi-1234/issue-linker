@@ -55954,13 +55954,18 @@ function createOctokit(token) {
         auth,
         userAgent: "issue-number-branch",
         baseUrl: getGitHubApiUrl(),
+        request: {
+            timeout: 3000, // 3 second timeout for better UX
+        },
         retry: {
-            doNotRetry: ["429"], // Let throttling plugin handle rate limits
+            doNotRetry: ["404", "429"], // Don't retry on not found or rate limit
+            retries: 1, // Only retry once for other errors
+            retryAfter: 1, // 1 second between retries
         },
         throttle: {
             onRateLimit: (_retryAfter, _options, _octokit, retryCount) => {
-                // Retry up to 2 times for rate limit errors
-                return retryCount < 2;
+                // Only retry once for rate limit errors
+                return retryCount < 1;
             },
             onSecondaryRateLimit: (_retryAfter, _options, _octokit) => {
                 // Don't retry on abuse detection

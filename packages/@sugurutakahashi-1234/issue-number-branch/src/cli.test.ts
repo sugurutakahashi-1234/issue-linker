@@ -114,52 +114,63 @@ describe("CLI", () => {
       expect(proc.exitCode).toBe(2); // Error exit code
     });
 
-    // Skip API-dependent tests to avoid timeout issues
-    it.skip("should succeed when issue exists in this repository", async () => {
-      // Using issue #3 which exists in this repository
-      const proc = spawn(
-        [
-          "bun",
-          "run",
-          "./cli.ts",
-          "--branch",
-          "feat/issue-3-test",
-          "--repo",
-          "sugurutakahashi-1234/issue-number-branch",
-        ],
-        {
-          cwd: import.meta.dir,
-        },
-      );
+    // API tests using real GitHub API
+    // Note: These tests may fail due to rate limits.
+    // If they consistently fail, change 'it' to 'it.skip' to skip them.
+    // Timeout settings are being tuned for optimal UX (target: <3s for 404s)
+    it(
+      "should succeed when issue exists in this repository",
+      async () => {
+        // Using issue #3 which exists in this repository
+        const proc = spawn(
+          [
+            "bun",
+            "run",
+            "./cli.ts",
+            "--branch",
+            "feat/issue-3-test",
+            "--repo",
+            "sugurutakahashi-1234/issue-number-branch",
+          ],
+          {
+            cwd: import.meta.dir,
+          },
+        );
 
-      const text = await new Response(proc.stdout).text();
-      await proc.exited;
+        const text = await new Response(proc.stdout).text();
+        await proc.exited;
 
-      expect(text).toContain("Issue #3 found");
-      expect(proc.exitCode).toBe(0);
-    });
+        expect(text).toContain("Issue #3 found");
+        expect(proc.exitCode).toBe(0);
+      },
+      { timeout: 5000 }, // 5s timeout for successful API calls
+    );
 
-    it.skip("should fail when issue does not exist in this repository", async () => {
-      // Using a non-existent issue number
-      const proc = spawn(
-        [
-          "bun",
-          "run",
-          "./cli.ts",
-          "--branch",
-          "feat/issue-99999-test",
-          "--repo",
-          "sugurutakahashi-1234/issue-number-branch",
-        ],
-        {
-          cwd: import.meta.dir,
-          stderr: "pipe",
-        },
-      );
+    it(
+      "should fail when issue does not exist in this repository",
+      async () => {
+        // Using a non-existent issue number
+        const proc = spawn(
+          [
+            "bun",
+            "run",
+            "./cli.ts",
+            "--branch",
+            "feat/issue-99999-test",
+            "--repo",
+            "sugurutakahashi-1234/issue-number-branch",
+          ],
+          {
+            cwd: import.meta.dir,
+            stderr: "pipe",
+          },
+        );
 
-      await proc.exited;
+        await proc.exited;
 
-      expect(proc.exitCode).toBe(1);
-    });
+        expect(proc.exitCode).toBe(1);
+      },
+      { timeout: 5000 }, // 5s timeout (API timeout is 3s + some buffer)
+    );
   });
 });
