@@ -35084,17 +35084,37 @@ class GitHubError extends Error {
 ;// CONCATENATED MODULE: ../issue-number-branch-core/dist/domain/extractors.js
 // Domain layer - Pure extraction functions
 /**
- * Extracts issue numbers from a branch name
+ * Extracts the first issue number from a branch name
+ *
+ * Priority order for extraction:
+ * 1. Number at the beginning: 123-feature
+ * 2. Number after slash: feat/123-description
+ * 3. Number with hash: feat/#123-description
+ * 4. Number after hyphen or underscore: feature-123-description
+ *
  * @param branch - The branch name to extract from
- * @returns Array of unique issue numbers found
+ * @returns The first issue number found, or null if none found
  */
-function extractIssueNumbers(branch) {
-    const numbers = new Set();
-    const regex = /\d{1,7}/g;
-    for (const match of branch.matchAll(regex)) {
-        numbers.add(Number(match[0]));
+function extractIssueNumber(branch) {
+    // Priority patterns to try in order
+    const patterns = [
+        /^(\d{1,7})(?:-|_|$)/, // Start with number: 123-feature, 123_feature, or just 123
+        /\/(\d{1,7})(?:-|_|$)/, // After slash: feat/123-desc, feat/123_desc
+        /#(\d{1,7})(?:\b|$)/, // With hash: #123, feat/#123-desc
+        /(?:^|-)(\d{1,7})(?:-|_|$)/, // After hyphen: feature-123-, issue-123_
+        /(?:^|_)(\d{1,7})(?:-|_|$)/, // After underscore: feature_123_, issue_123-
+    ];
+    for (const pattern of patterns) {
+        const match = branch.match(pattern);
+        if (match?.[1]) {
+            const num = Number(match[1]);
+            // Validate that it's a reasonable issue number (1-9999999)
+            if (num > 0 && num <= 9999999) {
+                return num;
+            }
+        }
     }
-    return Array.from(numbers);
+    return null;
 }
 //# sourceMappingURL=extractors.js.map
 ;// CONCATENATED MODULE: ../issue-number-branch-core/dist/domain/parsers.js
@@ -56096,9 +56116,9 @@ async function checkBranch(options = {}) {
                 message: `Branch '${branch}' is excluded from validation`,
             };
         }
-        // 3. Extract issue numbers from branch name
-        const issueNumbers = extractIssueNumbers(branch);
-        if (issueNumbers.length === 0) {
+        // 3. Extract issue number from branch name
+        const issueNumber = extractIssueNumber(branch);
+        if (issueNumber === null) {
             return {
                 success: false,
                 reason: "no-issue-number",
@@ -56121,46 +56141,56 @@ async function checkBranch(options = {}) {
             owner = parsed.owner;
             repoName = parsed.repo;
         }
-        // 5. Check if any of the issue numbers exist with allowed states
-        for (const num of issueNumbers) {
-            try {
-                const issue = await getGitHubIssue(owner, repoName, num, githubToken);
-                if (validateIssueState(issue.state, issueState)) {
-                    return {
-                        success: true,
-                        reason: "issue-found",
-                        branch,
-                        issueNumber: num,
-                        message: `Issue #${num} found in ${owner}/${repoName} (state: ${issue.state})`,
-                        metadata: {
-                            owner,
-                            repo: repoName,
-                            checkedIssues: issueNumbers,
-                        },
-                    };
-                }
+        // 5. Check if the issue exists with allowed state
+        try {
+            const issue = await getGitHubIssue(owner, repoName, issueNumber, githubToken);
+            if (validateIssueState(issue.state, issueState)) {
+                return {
+                    success: true,
+                    reason: "issue-found",
+                    branch,
+                    issueNumber,
+                    message: `Issue #${issueNumber} found in ${owner}/${repoName} (state: ${issue.state})`,
+                    metadata: {
+                        owner,
+                        repo: repoName,
+                        checkedIssues: [issueNumber],
+                    },
+                };
             }
-            catch (error) {
-                if (error instanceof IssueNotFoundError) {
-                    // Issue doesn't exist - continue to next issue number
-                    continue;
-                }
-                // Other errors (auth, network, etc.) should be re-thrown
-                throw error;
+            else {
+                // Issue exists but state doesn't match
+                return {
+                    success: false,
+                    reason: "issue-not-found",
+                    branch,
+                    message: `Issue #${issueNumber} exists but state '${issue.state}' is not allowed`,
+                    metadata: {
+                        owner,
+                        repo: repoName,
+                        checkedIssues: [issueNumber],
+                    },
+                };
             }
         }
-        // No valid issue found
-        return {
-            success: false,
-            reason: "issue-not-found",
-            branch,
-            message: `No valid issue found among: ${issueNumbers.join(", ")} in ${owner}/${repoName}`,
-            metadata: {
-                owner,
-                repo: repoName,
-                checkedIssues: issueNumbers,
-            },
-        };
+        catch (error) {
+            if (error instanceof IssueNotFoundError) {
+                // Issue doesn't exist
+                return {
+                    success: false,
+                    reason: "issue-not-found",
+                    branch,
+                    message: `Issue #${issueNumber} not found in ${owner}/${repoName}`,
+                    metadata: {
+                        owner,
+                        repo: repoName,
+                        checkedIssues: [issueNumber],
+                    },
+                };
+            }
+            // Other errors (auth, network, etc.) should be re-thrown
+            throw error;
+        }
     }
     catch (error) {
         // Handle any errors
@@ -56179,6 +56209,9 @@ async function checkBranch(options = {}) {
 /** @public */
 
 // Re-export error classes
+/** @public */
+
+// Re-export extraction function for external use
 /** @public */
 
 // Re-export only what's needed by API package

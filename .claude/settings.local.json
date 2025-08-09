@@ -159,7 +159,8 @@
       "Bash(tsg:*)",
       "Bash(ncc build:*)",
       "Bash(concurrently:*)",
-      "Bash(git remote get-url:*)"
+      "Bash(git remote get-url:*)",
+      "Bash(biome:*)"
     ],
     "deny": []
   },
