@@ -27,14 +27,14 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Type check
-        run: bun run typecheck
-
-      - name: Lint
-        run: bun run lint:check
+      - name: Check code quality
+        run: bun run check
 
       - name: Build
         run: bun run build
+
+      - name: Type check
+        run: bun run typecheck
 
       - name: Check dependencies
         run: bun run knip
@@ -42,7 +42,7 @@ jobs:
       - name: Test
         run: bun run test
 
-      - name: Test
+      - name: Test Coverage
         run: bun run test:coverage
         continue-on-error: true  # TODO: Remove once test output format bug is fixed
 
@@ -51,7 +51,7 @@ jobs:
         env:
           HUSKY: 0
         with:
-          tsconfig: './tsconfig.json' # Path to your TypeScript config file
+          tsconfig: './tsconfig.base.json' # Path to your TypeScript config file
           orientation: 'LR' # Change to 'TB' for top-bottom orientation
           max-size: 50 # default is 30, adjust as needed
           # NOTE: show-metrics is set to false because enabling it produced too much output for this repository.

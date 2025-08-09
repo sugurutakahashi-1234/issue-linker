@@ -1,0 +1,51 @@
+name: 'Issue Number Branch Check'
+description: 'Check if current branch name contains an existing GitHub issue number'
+author: 'Suguru Takahashi'
+
+inputs:
+  branch:
+    description: |
+      Branch name to check
+      Default: current branch
+    required: false
+  repo:
+    description: |
+      Repository in owner/repo format
+      Default: current repository
+    required: false
+  exclude-pattern:
+    description: |
+      Glob pattern to exclude branches from validation
+      Default: '{main,master,develop}'
+      Pattern examples:
+        '{main,master,develop}'  - exclude specific branches
+        'release/*'              - exclude with wildcard
+        '{release,hotfix}/*'     - exclude multiple prefixes
+        '!(feature|bugfix)/*'    - exclude all except these
+    required: false
+    default: '{main,master,develop}'
+  issue-status:
+    description: |
+      Filter by issue status
+      Options: 'all', 'open', 'closed'
+      Default: 'all' (checks both open and closed issues)
+    required: false
+    default: 'all'
+  github-token:
+    description: |
+      GitHub token for API access
+      Default: uses GITHUB_TOKEN from environment
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  status:
+    description: 'Status of the check (ok or failed)'
+
+runs:
+  using: 'node20'
+  main: 'packages/@sugurutakahashi-1234/issue-number-branch-action/dist/index.js'
+
+branding:
+  icon: 'git-branch'
+  color: 'blue'

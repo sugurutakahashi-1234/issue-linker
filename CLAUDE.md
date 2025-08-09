@@ -74,7 +74,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **実装の見直し**: テストが複雑になる場合は、まず実装をシンプルにできないか検討する
 
 ### TypeScript実装前の型安全確認
-- **必ず最初に**: tsconfig.json の型安全制御設定を確認
+- **必ず最初に**: tsconfig.base.json の型安全制御設定を確認
 - **型安全性は最高レベル**: `strict: true`により`noImplicitAny`を含むすべての厳格な型チェックが有効
 - **よくある間違い**: エクスポートする関数・クラスの戻り値型や引数型の明示的な型注釈を忘れがち
 
@@ -90,10 +90,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **CIコマンド**: `bun run ci` でフォーマット→型チェック→リント→ビルド→テスト→未使用コード検出を順次実行
 - **エラー処理**: 途中でエラーが発生した場合は詳細を日本語で説明し、修正提案を行う
 - **未使用コード検出**: CIで未使用の関数やクラスが検出されるため、実際に使用されるコードのみを実装すること
-
-### アーキテクチャドキュメント
-- **抽象化した依存図**: @docs/reports/dependencies/layers.md に各レイヤー間の依存関係を抽象化した図があります
-- **詳細な依存図**: @docs/reports/dependencies/deps-graph.md にすべてのモジュール間の詳細な依存関係図があります
 
 ### 提案への批判的思考
 - **疑問を持つ姿勢**: ユーザーからの提案や指示をすぐに鵜呑みにせず、批判的に検討する

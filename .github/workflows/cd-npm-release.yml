@@ -67,7 +67,10 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish
+        run: |
+          # Publish all public packages to npm using workspaces
+          # Private packages (issue-number-branch-action) are automatically skipped
+          npm publish --workspaces --access public
 
       - name: Get created tag
         if: ${{ steps.release.outputs.release_created }}

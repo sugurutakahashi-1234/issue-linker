@@ -154,7 +154,17 @@
       "Bash(git submodule add:*)",
       "Bash(git submodule:*)",
       "Bash(git init:*)",
-      "Bash(bash:*)"
+      "Bash(bash:*)",
+      "Bash(git-branch-lint:*)",
+      "Bash(tsg:*)",
+      "Bash(ncc build:*)",
+      "Bash(concurrently:*)",
+      "Bash(git remote get-url:*)",
+      "Bash(biome:*)",
+      "Bash(time bun run:*)",
+      "Bash(do time bun run ./src/cli.ts --branch \"feat/issue-3-test\" --repo \"sugurutakahashi-1234/issue-number-branch\")",
+      "Bash(time bun test:*)",
+      "Bash(do echo \"=== Checking $scope ===\")"
     ],
     "deny": []
   },
