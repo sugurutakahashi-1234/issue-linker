@@ -2,7 +2,6 @@ import * as core from "@actions/core";
 import {
   checkBranch,
   DEFAULT_CHECK_OPTIONS,
-  type IssueStateFilter,
 } from "@sugurutakahashi-1234/issue-number-branch-api";
 
 async function run() {
@@ -11,16 +10,16 @@ async function run() {
     const branch = core.getInput("branch") || undefined;
     const repo = core.getInput("repo") || undefined;
     const excludePattern =
-      core.getInput("exclude_pattern") || DEFAULT_CHECK_OPTIONS.excludePattern;
-    const issueStateInput =
-      core.getInput("issue_state") || DEFAULT_CHECK_OPTIONS.issueState;
+      core.getInput("exclude-pattern") || DEFAULT_CHECK_OPTIONS.excludePattern;
+    const issueStatusInput =
+      core.getInput("issue-status") || DEFAULT_CHECK_OPTIONS.issueStatus;
 
     // Check branch with provided options (validation is done in Core layer)
     const result = await checkBranch({
       ...(branch && { branch }),
       ...(repo && { repo }),
       excludePattern,
-      issueState: issueStateInput as IssueStateFilter,
+      issueStatus: issueStatusInput,
     });
 
     // Set outputs

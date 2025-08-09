@@ -35007,7 +35007,7 @@ __webpack_unused_export__ = defaultContentType
 
 /***/ }),
 
-/***/ 568:
+/***/ 5953:
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
 
 // ESM COMPAT FLAG
@@ -35023,7 +35023,7 @@ __nccwpck_require__.d(__webpack_exports__, {
   checkBranch: () => (/* reexport */ checkBranch)
 });
 
-;// CONCATENATED MODULE: ../issue-number-branch-core/dist/constants.js
+;// CONCATENATED MODULE: ../issue-number-branch-core/dist/domain/constants.js
 // Constants for issue-number-branch
 /**
  * Default values for check options
@@ -35031,8 +35031,8 @@ __nccwpck_require__.d(__webpack_exports__, {
 const DEFAULT_CHECK_OPTIONS = {
     /** Default glob pattern to exclude branches */
     excludePattern: "{main,master,develop}",
-    /** Default issue state filter */
-    issueState: "all",
+    /** Default issue status filter */
+    issueStatus: "all",
 };
 //# sourceMappingURL=constants.js.map
 ;// CONCATENATED MODULE: ../issue-number-branch-core/dist/domain/errors.js
@@ -35081,83 +35081,6 @@ class GitHubError extends Error {
     }
 }
 //# sourceMappingURL=errors.js.map
-;// CONCATENATED MODULE: ../issue-number-branch-core/dist/domain/extractors.js
-// Domain layer - Pure extraction functions
-/**
- * Extracts the first issue number from a branch name
- *
- * Priority order for extraction:
- * 1. Number at the beginning: 123-feature
- * 2. Number after slash: feat/123-description
- * 3. Number with hash: feat/#123-description
- * 4. Number after hyphen or underscore: feature-123-description
- *
- * @param branch - The branch name to extract from
- * @returns The first issue number found, or null if none found
- */
-function extractIssueNumber(branch) {
-    // Priority patterns to try in order
-    const patterns = [
-        /^(\d{1,7})(?:-|_|$)/, // Start with number: 123-feature, 123_feature, or just 123
-        /\/(\d{1,7})(?:-|_|$)/, // After slash: feat/123-desc, feat/123_desc
-        /#(\d{1,7})(?:\b|$)/, // With hash: #123, feat/#123-desc
-        /(?:^|-)(\d{1,7})(?:-|_|$)/, // After hyphen: feature-123-, issue-123_
-        /(?:^|_)(\d{1,7})(?:-|_|$)/, // After underscore: feature_123_, issue_123-
-    ];
-    for (const pattern of patterns) {
-        const match = branch.match(pattern);
-        if (match?.[1]) {
-            const num = Number(match[1]);
-            // Validate that it's a reasonable issue number (1-9999999)
-            if (num > 0 && num <= 9999999) {
-                return num;
-            }
-        }
-    }
-    return null;
-}
-//# sourceMappingURL=extractors.js.map
-;// CONCATENATED MODULE: ../issue-number-branch-core/dist/domain/parsers.js
-// Domain layer - Pure parsing functions
-/**
- * Parses owner and repository from a Git remote URL
- * @param url - The Git remote URL to parse
- * @returns Object containing owner and repo
- * @throws Error if URL format is not supported
- */
-function parseGitRemoteUrl(url) {
-    // Handle HTTPS URLs (GitHub, GitHub Enterprise)
-    // Examples:
-    // - https://github.com/owner/repo.git
-    // - https://github.com/owner/repo
-    // - https://github.enterprise.com/owner/repo.git
-    const httpsMatch = /https?:\/\/[^/]+\/([^/]+)\/([^/.]+)(?:\.git)?$/i.exec(url);
-    if (httpsMatch?.[1] && httpsMatch?.[2]) {
-        return { owner: httpsMatch[1], repo: httpsMatch[2] };
-    }
-    // Handle SSH URLs
-    // Examples:
-    // - git@github.com:owner/repo.git
-    // - git@github.com:owner/repo
-    // - git@github.enterprise.com:owner/repo.git
-    const sshMatch = /git@[^:]+:([^/]+)\/([^/.]+)(?:\.git)?$/i.exec(url);
-    if (sshMatch?.[1] && sshMatch?.[2]) {
-        return { owner: sshMatch[1], repo: sshMatch[2] };
-    }
-    // Handle SSH protocol URLs
-    // Example: ssh://git@github.com/owner/repo.git
-    const sshProtocolMatch = /ssh:\/\/git@[^/]+\/([^/]+)\/([^/.]+)(?:\.git)?$/i.exec(url);
-    if (sshProtocolMatch?.[1] && sshProtocolMatch?.[2]) {
-        return { owner: sshProtocolMatch[1], repo: sshProtocolMatch[2] };
-    }
-    // If no pattern matches, throw an informative error
-    throw new Error(`Unable to parse owner and repository from remote URL: ${url}\n` +
-        "Supported formats:\n" +
-        "  - https://github.com/owner/repo[.git]\n" +
-        "  - git@github.com:owner/repo[.git]\n" +
-        "  - ssh://git@github.com/owner/repo[.git]");
-}
-//# sourceMappingURL=parsers.js.map
 ;// CONCATENATED MODULE: ../../../node_modules/valibot/dist/index.js
 // src/storages/globalConfig/globalConfig.ts
 var store;
@@ -42237,13 +42160,13 @@ function unwrap(schema) {
 }
 
 
-;// CONCATENATED MODULE: ../issue-number-branch-core/dist/domain/schemas.js
+;// CONCATENATED MODULE: ../issue-number-branch-core/dist/domain/validation-schemas.js
 // Domain layer - Validation schemas using Valibot
 
 /**
- * Schema for IssueStateFilter validation
+ * Schema for IssueStatusFilter validation
  */
-const IssueStateFilterSchema = union([
+const IssueStatusFilterSchema = union([
     literal("all"),
     literal("open"),
     literal("closed"),
@@ -42255,44 +42178,19 @@ const IssueStateFilterSchema = union([
 const RepositoryFormatSchema = pipe(string(), regex(/^[^/]+\/[^/]+$/, 'Repository must be in "owner/repo" format'));
 /**
  * Schema for CheckOptions validation
- * Internal use only - not exported to maintain abstraction
  */
 const CheckOptionsSchema = object({
     branch: optional(string()),
     repo: optional(RepositoryFormatSchema),
     excludePattern: optional(string()),
-    issueState: optional(IssueStateFilterSchema),
+    issueStatus: optional(IssueStatusFilterSchema),
     githubToken: optional(string()),
 });
-/**
- * Validate CheckOptions using Valibot
- * @param options - Options to validate
- * @returns Validation result
- */
-function validateCheckOptions(options) {
-    return safeParse(CheckOptionsSchema, options);
-}
-/**
- * Parse repository string into owner and repo
- * @param repository - Repository in "owner/repo" format
- * @returns Parsed owner and repo
- */
-function parseRepository(repository) {
-    const parts = repository.split("/");
-    // This should already be validated by the schema, but double-check
-    if (parts.length !== 2 || !parts[0] || !parts[1]) {
-        throw new Error(`Invalid repository format "${repository}". Expected "owner/repo" format.`);
-    }
-    return {
-        owner: parts[0],
-        repo: parts[1],
-    };
-}
-//# sourceMappingURL=schemas.js.map
+//# sourceMappingURL=validation-schemas.js.map
 // EXTERNAL MODULE: ../../../node_modules/micromatch/index.js
 var micromatch = __nccwpck_require__(7343);
-;// CONCATENATED MODULE: ../issue-number-branch-core/dist/domain/validators.js
-// Domain layer - Pure validation functions
+;// CONCATENATED MODULE: ../issue-number-branch-core/dist/infrastructure/branch-matcher.js
+// Infrastructure layer - Validation functions
 
 /**
  * Validates if a branch should be excluded from validation
@@ -42300,7 +42198,7 @@ var micromatch = __nccwpck_require__(7343);
  * @param pattern - Glob pattern for exclusion
  * @returns true if branch should be excluded
  */
-function validateBranchExclusion(branch, pattern) {
+function isBranchExcluded(branch, pattern) {
     if (!pattern)
         return false;
     return micromatch.isMatch(branch, pattern);
@@ -42311,14 +42209,14 @@ function validateBranchExclusion(branch, pattern) {
  * @param filter - Issue state filter ("all", "open", or "closed")
  * @returns true if state is allowed
  */
-function validateIssueState(state, filter) {
+function isIssueStateAllowed(state, filter) {
     const normalizedState = state.toLowerCase();
     if (filter === "all") {
         return true;
     }
     return normalizedState === filter;
 }
-//# sourceMappingURL=validators.js.map
+//# sourceMappingURL=branch-matcher.js.map
 ;// CONCATENATED MODULE: ../../../node_modules/@t3-oss/env-core/dist/src-Bb3GbGAa.js
 //#region src/standard.ts
 function ensureSynchronous(value, message) {
@@ -42404,11 +42302,14 @@ function createEnv(opts) {
 
 //#endregion
 
-;// CONCATENATED MODULE: ../issue-number-branch-core/dist/infrastructure/config.js
-// Infrastructure layer - Configuration management
+;// CONCATENATED MODULE: ../issue-number-branch-core/dist/domain/env.js
+// Domain layer - Environment configuration schema
 
 
-// Define environment variables using @t3-oss/env-core with Valibot
+/**
+ * Environment variables schema definition
+ * Defines what environment variables are accepted and their validation rules
+ */
 const env = createEnv({
     server: {
         GITHUB_TOKEN: optional(string()),
@@ -42418,6 +42319,10 @@ const env = createEnv({
     },
     runtimeEnv: process.env,
 });
+//# sourceMappingURL=env.js.map
+;// CONCATENATED MODULE: ../issue-number-branch-core/dist/infrastructure/env-accessor.js
+// Infrastructure layer - Environment variable accessor
+
 /**
  * Get GitHub token from environment variables
  * @returns GitHub token or undefined
@@ -42447,7 +42352,7 @@ function getGitHubApiUrl() {
     // Default to GitHub.com
     return "https://api.github.com";
 }
-//# sourceMappingURL=config.js.map
+//# sourceMappingURL=env-accessor.js.map
 ;// CONCATENATED MODULE: external "node:buffer"
 const external_node_buffer_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:buffer");
 // EXTERNAL MODULE: ../../../node_modules/@kwsites/file-exists/dist/index.js
@@ -47283,6 +47188,47 @@ async function getGitRemoteUrl() {
     }
 }
 //# sourceMappingURL=git-client.js.map
+;// CONCATENATED MODULE: ../issue-number-branch-core/dist/infrastructure/git-url-parser.js
+// Infrastructure layer - Git URL parsing
+/**
+ * Parses owner and repository from a Git remote URL
+ * @param url - The Git remote URL to parse
+ * @returns Object containing owner and repo
+ * @throws Error if URL format is not supported
+ */
+function parseRepositoryFromGitUrl(url) {
+    // Handle HTTPS URLs (GitHub, GitHub Enterprise)
+    // Examples:
+    // - https://github.com/owner/repo.git
+    // - https://github.com/owner/repo
+    // - https://github.enterprise.com/owner/repo.git
+    const httpsMatch = /https?:\/\/[^/]+\/([^/]+)\/([^/.]+)(?:\.git)?$/i.exec(url);
+    if (httpsMatch?.[1] && httpsMatch?.[2]) {
+        return { owner: httpsMatch[1], repo: httpsMatch[2] };
+    }
+    // Handle SSH URLs
+    // Examples:
+    // - git@github.com:owner/repo.git
+    // - git@github.com:owner/repo
+    // - git@github.enterprise.com:owner/repo.git
+    const sshMatch = /git@[^:]+:([^/]+)\/([^/.]+)(?:\.git)?$/i.exec(url);
+    if (sshMatch?.[1] && sshMatch?.[2]) {
+        return { owner: sshMatch[1], repo: sshMatch[2] };
+    }
+    // Handle SSH protocol URLs
+    // Example: ssh://git@github.com/owner/repo.git
+    const sshProtocolMatch = /ssh:\/\/git@[^/]+\/([^/]+)\/([^/.]+)(?:\.git)?$/i.exec(url);
+    if (sshProtocolMatch?.[1] && sshProtocolMatch?.[2]) {
+        return { owner: sshProtocolMatch[1], repo: sshProtocolMatch[2] };
+    }
+    // If no pattern matches, throw an informative error
+    throw new Error(`Unable to parse owner and repository from remote URL: ${url}\n` +
+        "Supported formats:\n" +
+        "  - https://github.com/owner/repo[.git]\n" +
+        "  - git@github.com:owner/repo[.git]\n" +
+        "  - ssh://git@github.com/owner/repo[.git]");
+}
+//# sourceMappingURL=git-url-parser.js.map
 // EXTERNAL MODULE: ../../../node_modules/bottleneck/light.js
 var light = __nccwpck_require__(7605);
 ;// CONCATENATED MODULE: ../../../node_modules/@octokit/request-error/dist-src/index.js
@@ -56071,8 +56017,65 @@ async function getGitHubIssue(owner, repo, issueNumber, token) {
     }
 }
 //# sourceMappingURL=github-client.js.map
-;// CONCATENATED MODULE: ../issue-number-branch-core/dist/use-cases/check-branch.js
-// Use case layer - Main business logic
+;// CONCATENATED MODULE: ../issue-number-branch-core/dist/infrastructure/issue-extractor.js
+// Infrastructure layer - Issue number extraction
+/**
+ * Extracts the first issue number from a branch name
+ *
+ * Priority order for extraction:
+ * 1. Number at the beginning: 123-feature
+ * 2. Number after slash: feat/123-description
+ * 3. Number with hash: feat/#123-description
+ * 4. Number after hyphen or underscore: feature-123-description
+ *
+ * @param branch - The branch name to extract from
+ * @returns The first issue number found, or null if none found
+ */
+function extractIssueNumberFromBranch(branch) {
+    // Priority patterns to try in order
+    const patterns = [
+        /^(\d{1,7})(?:-|_|$)/, // Start with number: 123-feature, 123_feature, or just 123
+        /\/(\d{1,7})(?:-|_|$)/, // After slash: feat/123-desc, feat/123_desc
+        /#(\d{1,7})(?:\b|$)/, // With hash: #123, feat/#123-desc
+        /(?:^|-)(\d{1,7})(?:-|_|$)/, // After hyphen: feature-123-, issue-123_
+        /(?:^|_)(\d{1,7})(?:-|_|$)/, // After underscore: feature_123_, issue_123-
+    ];
+    for (const pattern of patterns) {
+        const match = branch.match(pattern);
+        if (match?.[1]) {
+            const num = Number(match[1]);
+            // Validate that it's a reasonable issue number (1-9999999)
+            if (num > 0 && num <= 9999999) {
+                return num;
+            }
+        }
+    }
+    return null;
+}
+//# sourceMappingURL=issue-extractor.js.map
+;// CONCATENATED MODULE: ../issue-number-branch-core/dist/infrastructure/repository-parser.js
+// Infrastructure layer - Repository string parsing
+/**
+ * Parse repository string into owner and repo
+ * @param repository - Repository in "owner/repo" format
+ * @returns Parsed owner and repo
+ */
+function parseRepositoryString(repository) {
+    const parts = repository.split("/");
+    // This should already be validated by the schema, but double-check
+    if (parts.length !== 2 || !parts[0] || !parts[1]) {
+        throw new Error(`Invalid repository format "${repository}". Expected "owner/repo" format.`);
+    }
+    return {
+        owner: parts[0],
+        repo: parts[1],
+    };
+}
+//# sourceMappingURL=repository-parser.js.map
+;// CONCATENATED MODULE: ../issue-number-branch-core/dist/application/check-branch-use-case.js
+// Application layer - Use case for checking branch
+
+
 
 
 
@@ -56088,27 +56091,23 @@ async function getGitHubIssue(owner, repo, issueNumber, token) {
  * @returns Result of the check
  */
 async function checkBranch(options = {}) {
-    // Validate options using domain layer validation
-    const validationResult = validateCheckOptions(options);
+    // Step 1: Validate options
+    const validationResult = safeParse(CheckOptionsSchema, options);
     if (!validationResult.success) {
-        const firstIssue = validationResult.issues[0];
         return {
             success: false,
             reason: "error",
             branch: options.branch ?? "unknown",
-            message: firstIssue?.message ?? "Invalid options provided",
+            message: validationResult.issues[0]?.message ?? "Invalid options provided",
         };
     }
-    const validatedOptions = validationResult.output;
-    // Merge options with defaults
-    const excludePattern = validatedOptions.excludePattern ?? DEFAULT_CHECK_OPTIONS.excludePattern;
-    const issueState = validatedOptions.issueState ?? DEFAULT_CHECK_OPTIONS.issueState;
-    const githubToken = validatedOptions.githubToken ?? getGitHubToken();
+    const opts = validationResult.output;
     try {
-        // 1. Get branch name (from option or current branch)
-        const branch = validatedOptions.branch ?? (await getCurrentGitBranch());
-        // 2. Check if branch should be excluded
-        if (validateBranchExclusion(branch, excludePattern)) {
+        // Step 2: Get branch name
+        const branch = opts.branch ?? (await getCurrentGitBranch());
+        // Step 3: Check exclusion patterns
+        const excludePattern = opts.excludePattern ?? DEFAULT_CHECK_OPTIONS.excludePattern;
+        if (isBranchExcluded(branch, excludePattern)) {
             return {
                 success: true,
                 reason: "excluded",
@@ -56116,9 +56115,9 @@ async function checkBranch(options = {}) {
                 message: `Branch '${branch}' is excluded from validation`,
             };
         }
-        // 3. Extract issue number from branch name
-        const issueNumber = extractIssueNumber(branch);
-        if (issueNumber === null) {
+        // Step 4: Extract issue number
+        const issueNumber = extractIssueNumberFromBranch(branch);
+        if (!issueNumber) {
             return {
                 success: false,
                 reason: "no-issue-number",
@@ -56126,95 +56125,82 @@ async function checkBranch(options = {}) {
                 message: `No issue number found in branch '${branch}'`,
             };
         }
-        // 4. Get repository information (from options or git remote)
-        let owner;
-        let repoName;
-        if (validatedOptions.repo) {
-            // Parse "owner/repo" format (already validated by schema)
-            const parsed = parseRepository(validatedOptions.repo);
-            owner = parsed.owner;
-            repoName = parsed.repo;
+        // Step 5: Get repository information
+        const repository = opts.repo
+            ? parseRepositoryString(opts.repo)
+            : parseRepositoryFromGitUrl(await getGitRemoteUrl());
+        // Step 6: Check GitHub issue
+        const githubToken = opts.githubToken ?? getGitHubToken();
+        const issue = await getGitHubIssue(repository.owner, repository.repo, issueNumber, githubToken);
+        // Step 7: Verify issue status
+        const allowedStatus = opts.issueStatus ?? DEFAULT_CHECK_OPTIONS.issueStatus;
+        if (!isIssueStateAllowed(issue.state, allowedStatus)) {
+            return {
+                success: false,
+                reason: "issue-not-found",
+                branch,
+                message: `Issue #${issueNumber} exists but state '${issue.state}' is not allowed`,
+                metadata: {
+                    owner: repository.owner,
+                    repo: repository.repo,
+                    checkedIssues: [issueNumber],
+                },
+            };
         }
-        else {
-            const remoteUrl = await getGitRemoteUrl();
-            const parsed = parseGitRemoteUrl(remoteUrl);
-            owner = parsed.owner;
-            repoName = parsed.repo;
-        }
-        // 5. Check if the issue exists with allowed state
-        try {
-            const issue = await getGitHubIssue(owner, repoName, issueNumber, githubToken);
-            if (validateIssueState(issue.state, issueState)) {
-                return {
-                    success: true,
-                    reason: "issue-found",
-                    branch,
-                    issueNumber,
-                    message: `Issue #${issueNumber} found in ${owner}/${repoName} (state: ${issue.state})`,
-                    metadata: {
-                        owner,
-                        repo: repoName,
-                        checkedIssues: [issueNumber],
-                    },
-                };
-            }
-            else {
-                // Issue exists but state doesn't match
-                return {
-                    success: false,
-                    reason: "issue-not-found",
-                    branch,
-                    message: `Issue #${issueNumber} exists but state '${issue.state}' is not allowed`,
-                    metadata: {
-                        owner,
-                        repo: repoName,
-                        checkedIssues: [issueNumber],
-                    },
-                };
-            }
-        }
-        catch (error) {
-            if (error instanceof IssueNotFoundError) {
-                // Issue doesn't exist
-                return {
-                    success: false,
-                    reason: "issue-not-found",
-                    branch,
-                    message: `Issue #${issueNumber} not found in ${owner}/${repoName}`,
-                    metadata: {
-                        owner,
-                        repo: repoName,
-                        checkedIssues: [issueNumber],
-                    },
-                };
-            }
-            // Other errors (auth, network, etc.) should be re-thrown
-            throw error;
-        }
+        // Step 8: Return success result
+        return {
+            success: true,
+            reason: "issue-found",
+            branch,
+            issueNumber,
+            message: `Issue #${issueNumber} found in ${repository.owner}/${repository.repo} (state: ${issue.state})`,
+            metadata: {
+                owner: repository.owner,
+                repo: repository.repo,
+                checkedIssues: [issueNumber],
+            },
+        };
     }
     catch (error) {
-        // Handle any errors
+        // Error handling
+        if (error instanceof IssueNotFoundError) {
+            const issueNumber = error.issueNumber;
+            // Re-fetch repository information (for error case)
+            const repository = opts.repo
+                ? parseRepositoryString(opts.repo)
+                : parseRepositoryFromGitUrl(await getGitRemoteUrl());
+            return {
+                success: false,
+                reason: "issue-not-found",
+                branch: opts.branch ?? "unknown",
+                message: `Issue #${issueNumber} not found in ${repository.owner}/${repository.repo}`,
+                metadata: {
+                    owner: repository.owner,
+                    repo: repository.repo,
+                    checkedIssues: [issueNumber],
+                },
+            };
+        }
+        // Other errors
         return {
             success: false,
             reason: "error",
-            branch: "unknown",
+            branch: opts.branch ?? "unknown",
             message: error instanceof Error ? error.message : String(error),
         };
     }
 }
-//# sourceMappingURL=check-branch.js.map
+//# sourceMappingURL=check-branch-use-case.js.map
 ;// CONCATENATED MODULE: ../issue-number-branch-core/dist/index.js
 // Core package - Main exports
-// Re-export constants
+// Domain layer exports
 /** @public */
 
-// Re-export error classes
 /** @public */
 
-// Re-export extraction function for external use
-/** @public */
-
-// Re-export only what's needed by API package
+// Infrastructure layer exports (if needed by external packages)
+// None for now
+// Application layer exports
 /** @public */
 
 //# sourceMappingURL=index.js.map
@@ -56301,20 +56287,20 @@ var exports = __webpack_exports__;
 Object.defineProperty(exports, "B", ({ value: true }));
 const tslib_1 = __nccwpck_require__(4594);
 const core = tslib_1.__importStar(__nccwpck_require__(7930));
-const issue_number_branch_api_1 = __nccwpck_require__(568);
+const issue_number_branch_api_1 = __nccwpck_require__(5953);
 async function run() {
     try {
         // Get inputs
         const branch = core.getInput("branch") || undefined;
         const repo = core.getInput("repo") || undefined;
-        const excludePattern = core.getInput("exclude_pattern") || issue_number_branch_api_1.DEFAULT_CHECK_OPTIONS.excludePattern;
-        const issueStateInput = core.getInput("issue_state") || issue_number_branch_api_1.DEFAULT_CHECK_OPTIONS.issueState;
+        const excludePattern = core.getInput("exclude-pattern") || issue_number_branch_api_1.DEFAULT_CHECK_OPTIONS.excludePattern;
+        const issueStatusInput = core.getInput("issue-status") || issue_number_branch_api_1.DEFAULT_CHECK_OPTIONS.issueStatus;
         // Check branch with provided options (validation is done in Core layer)
         const result = await (0, issue_number_branch_api_1.checkBranch)({
             ...(branch && { branch }),
             ...(repo && { repo }),
             excludePattern,
-            issueState: issueStateInput,
+            issueStatus: issueStatusInput,
         });
         // Set outputs
         core.setOutput("success", result.success.toString());

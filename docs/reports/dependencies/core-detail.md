@@ -1,12 +1,16 @@
 # TypeScript Graph
 
 ```bash
-tsg --tsconfig tsconfig.typescript-graph.json --LR --md docs/reports/dependencies/all.md
+tsg --tsconfig ../../../tsconfig.typescript-graph.json --LR --abstraction packages/@sugurutakahashi-1234/issue-number-branch --abstraction packages/@sugurutakahashi-1234/issue-number-branch-action --abstraction packages/@sugurutakahashi-1234/issue-number-branch-api --md ../../../docs/reports/dependencies/core-detail.md
 ```
 
 ```mermaid
 flowchart LR
+    classDef dir fill:#0000,stroke:#999
     subgraph packages///sugurutakahashi//1234["packages/@sugurutakahashi-1234"]
+        packages///sugurutakahashi//1234/issue//number//branch//api["/issue-number-branch-api"]:::dir
+        packages///sugurutakahashi//1234/issue//number//branch["/issue-number-branch"]:::dir
+        packages///sugurutakahashi//1234/issue//number//branch//action["/issue-number-branch-action"]:::dir
         subgraph packages///sugurutakahashi//1234/issue//number//branch//core["/issue-number-branch-core"]
             subgraph packages///sugurutakahashi//1234/issue//number//branch//core/dist["/dist"]
                 packages///sugurutakahashi//1234/issue//number//branch//core/dist/index.d.ts["index.d.ts"]
@@ -42,20 +46,6 @@ flowchart LR
                 end
             end
         end
-        subgraph packages///sugurutakahashi//1234/issue//number//branch//api["/issue-number-branch-api"]
-            subgraph packages///sugurutakahashi//1234/issue//number//branch//api/dist["/dist"]
-                packages///sugurutakahashi//1234/issue//number//branch//api/dist/index.d.ts["index.d.ts"]
-            end
-            subgraph packages///sugurutakahashi//1234/issue//number//branch//api/src["/src"]
-                packages///sugurutakahashi//1234/issue//number//branch//api/src/index.ts["index.ts"]
-            end
-        end
-        subgraph packages///sugurutakahashi//1234/issue//number//branch/src["/issue-number-branch/src"]
-            packages///sugurutakahashi//1234/issue//number//branch/src/cli.ts["cli.ts"]
-        end
-        subgraph packages///sugurutakahashi//1234/issue//number//branch//action/src["/issue-number-branch-action/src"]
-            packages///sugurutakahashi//1234/issue//number//branch//action/src/index.ts["index.ts"]
-        end
     end
     subgraph node//modules["node_modules"]
         node//modules///commander//js/extra//typings/index.d.ts["@commander-js/extra-typings"]
@@ -75,12 +65,11 @@ flowchart LR
     packages///sugurutakahashi//1234/issue//number//branch//core/dist/index.d.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/dist/domain/errors.d.ts
     packages///sugurutakahashi//1234/issue//number//branch//core/dist/index.d.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/dist/domain/types.d.ts
     packages///sugurutakahashi//1234/issue//number//branch//core/dist/index.d.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/dist/application/check//branch//use//case.d.ts
-    packages///sugurutakahashi//1234/issue//number//branch//api/dist/index.d.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/dist/index.d.ts
-    packages///sugurutakahashi//1234/issue//number//branch/src/cli.ts-->node//modules///commander//js/extra//typings/index.d.ts
-    packages///sugurutakahashi//1234/issue//number//branch/src/cli.ts-->packages///sugurutakahashi//1234/issue//number//branch//api/dist/index.d.ts
-    packages///sugurutakahashi//1234/issue//number//branch//action/src/index.ts-->node//modules///actions/core/lib/core.d.ts
-    packages///sugurutakahashi//1234/issue//number//branch//action/src/index.ts-->packages///sugurutakahashi//1234/issue//number//branch//api/dist/index.d.ts
-    packages///sugurutakahashi//1234/issue//number//branch//api/src/index.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/dist/index.d.ts
+    packages///sugurutakahashi//1234/issue//number//branch//api-->packages///sugurutakahashi//1234/issue//number//branch//core/dist/index.d.ts
+    packages///sugurutakahashi//1234/issue//number//branch-->node//modules///commander//js/extra//typings/index.d.ts
+    packages///sugurutakahashi//1234/issue//number//branch-->packages///sugurutakahashi//1234/issue//number//branch//api
+    packages///sugurutakahashi//1234/issue//number//branch//action-->node//modules///actions/core/lib/core.d.ts
+    packages///sugurutakahashi//1234/issue//number//branch//action-->packages///sugurutakahashi//1234/issue//number//branch//api
     packages///sugurutakahashi//1234/issue//number//branch//core/src/domain/constants.ts-->packages///sugurutakahashi//1234/issue//number//branch//core/src/domain/types.ts
     packages///sugurutakahashi//1234/issue//number//branch//core/src/domain/validation//schemas.ts-->node//modules/valibot/dist/index.d.cts
     packages///sugurutakahashi//1234/issue//number//branch//core/src/infrastructure/branch//matcher.ts-->node//modules///types/micromatch/index.d.ts

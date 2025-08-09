@@ -1,18 +1,6 @@
-// Infrastructure layer - Configuration management
+// Infrastructure layer - Environment variable accessor
 
-import { createEnv } from "@t3-oss/env-core";
-import * as v from "valibot";
-
-// Define environment variables using @t3-oss/env-core with Valibot
-const env = createEnv({
-  server: {
-    GITHUB_TOKEN: v.optional(v.string()),
-    GH_TOKEN: v.optional(v.string()),
-    GITHUB_API_URL: v.optional(v.pipe(v.string(), v.url())),
-    GITHUB_SERVER_URL: v.optional(v.pipe(v.string(), v.url())),
-  },
-  runtimeEnv: process.env,
-});
+import { env } from "../domain/env.js";
 
 /**
  * Get GitHub token from environment variables

@@ -10,7 +10,7 @@ export {
   GitError,
   GitHubError,
   IssueNotFoundError,
-  type IssueState,
-  type IssueStateFilter,
+  type IssueStatus,
+  type IssueStatusFilter,
   ValidationError,
 } from "@sugurutakahashi-1234/issue-number-branch-core";

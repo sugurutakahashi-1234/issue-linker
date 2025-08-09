@@ -1,6 +1,6 @@
-// Domain layer - Pure parsing functions
+// Infrastructure layer - Git URL parsing
 
-import type { GitRemoteInfo } from "../types.js";
+import type { GitHubRepository } from "../domain/types.js";
 
 /**
  * Parses owner and repository from a Git remote URL
@@ -8,7 +8,7 @@ import type { GitRemoteInfo } from "../types.js";
  * @returns Object containing owner and repo
  * @throws Error if URL format is not supported
  */
-export function parseGitRemoteUrl(url: string): GitRemoteInfo {
+export function parseRepositoryFromGitUrl(url: string): GitHubRepository {
   // Handle HTTPS URLs (GitHub, GitHub Enterprise)
   // Examples:
   // - https://github.com/owner/repo.git

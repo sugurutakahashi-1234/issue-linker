@@ -1,10 +1,9 @@
 // Core package - Main exports
 
-// Re-export constants
+// Domain layer exports
 /** @public */
-export { DEFAULT_CHECK_OPTIONS } from "./constants.js";
+export { DEFAULT_CHECK_OPTIONS } from "./domain/constants.js";
 
-// Re-export error classes
 /** @public */
 export {
   GitError,
@@ -12,21 +11,20 @@ export {
   IssueNotFoundError,
   ValidationError,
 } from "./domain/errors.js";
-
-// Re-export extraction function for external use
-/** @public */
-export { extractIssueNumber } from "./domain/extractors.js";
-
-// Re-export types
 /** @public */
 export type {
   CheckOptions,
   CheckReason,
   CheckResult,
-  IssueState,
-  IssueStateFilter,
-} from "./types.js";
+  GitHubRepository,
+  Issue,
+  IssueStatus,
+  IssueStatusFilter,
+} from "./domain/types.js";
 
-// Re-export only what's needed by API package
+// Infrastructure layer exports (if needed by external packages)
+// None for now
+
+// Application layer exports
 /** @public */
-export { checkBranch } from "./use-cases/check-branch.js";
+export { checkBranch } from "./application/check-branch-use-case.js";

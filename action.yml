@@ -13,7 +13,7 @@ inputs:
       Repository in owner/repo format
       Default: current repository
     required: false
-  exclude_pattern:
+  exclude-pattern:
     description: |
       Glob pattern to exclude branches from validation
       Default: '{main,master,develop}'
@@ -24,14 +24,14 @@ inputs:
         '!(feature|bugfix)/*'    - exclude all except these
     required: false
     default: '{main,master,develop}'
-  issue_state:
+  issue-status:
     description: |
-      Filter by issue state
+      Filter by issue status
       Options: 'all', 'open', 'closed'
       Default: 'all' (checks both open and closed issues)
     required: false
     default: 'all'
-  github_token:
+  github-token:
     description: |
       GitHub token for API access
       Default: uses GITHUB_TOKEN from environment

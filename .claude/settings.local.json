@@ -160,7 +160,10 @@
       "Bash(ncc build:*)",
       "Bash(concurrently:*)",
       "Bash(git remote get-url:*)",
-      "Bash(biome:*)"
+      "Bash(biome:*)",
+      "Bash(time bun run:*)",
+      "Bash(do time bun run ./src/cli.ts --branch \"feat/issue-3-test\" --repo \"sugurutakahashi-1234/issue-number-branch\")",
+      "Bash(time bun test:*)"
     ],
     "deny": []
   },

@@ -5,8 +5,8 @@ import { throttling } from "@octokit/plugin-throttling";
 import { RequestError } from "@octokit/request-error";
 import { Octokit } from "octokit";
 import { GitHubError, IssueNotFoundError } from "../domain/errors.js";
-import type { Issue, IssueState } from "../types.js";
-import { getGitHubApiUrl, getGitHubToken } from "./config.js";
+import type { Issue, IssueStatus } from "../domain/types.js";
+import { getGitHubApiUrl, getGitHubToken } from "./env-accessor.js";
 
 // Create custom Octokit with retry and throttling plugins
 const MyOctokit = Octokit.plugin(retry, throttling);
@@ -70,7 +70,7 @@ export async function getGitHubIssue(
     // Convert GitHub issue to our Issue type
     const issue: Issue = {
       number: data.number,
-      state: (data.state?.toLowerCase() ?? "open") as IssueState,
+      state: (data.state?.toLowerCase() ?? "open") as IssueStatus,
       title: data.title,
     };
 

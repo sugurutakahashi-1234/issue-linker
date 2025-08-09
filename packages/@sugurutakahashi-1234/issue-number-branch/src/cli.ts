@@ -10,7 +10,6 @@ import { program } from "@commander-js/extra-typings";
 import {
   checkBranch,
   DEFAULT_CHECK_OPTIONS,
-  type IssueStateFilter,
 } from "@sugurutakahashi-1234/issue-number-branch-api";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -40,13 +39,17 @@ program
     DEFAULT_CHECK_OPTIONS.excludePattern,
   )
   .option(
-    "--issue-state <state>",
-    `filter by issue state: all, open, or closed (default: ${DEFAULT_CHECK_OPTIONS.issueState})\n` +
+    "--issue-status <status>",
+    `filter by issue status: all, open, or closed (default: ${DEFAULT_CHECK_OPTIONS.issueStatus})\n` +
       "Examples:\n" +
       "  'all'    - check both open and closed issues\n" +
       "  'open'   - check only open issues\n" +
       "  'closed' - check only closed issues",
-    DEFAULT_CHECK_OPTIONS.issueState,
+    DEFAULT_CHECK_OPTIONS.issueStatus,
+  )
+  .option(
+    "--github-token <token>",
+    "GitHub token for API access (default: from GITHUB_TOKEN environment variable)",
   )
   .action(async (options) => {
     try {
@@ -54,8 +57,9 @@ program
       const result = await checkBranch({
         ...(options.branch && { branch: options.branch }),
         ...(options.repo && { repo: options.repo }),
+        ...(options.githubToken && { githubToken: options.githubToken }),
         excludePattern: options.excludePattern,
-        issueState: options.issueState as IssueStateFilter,
+        issueStatus: options.issueStatus,
       });
 
       // Display result with improved formatting

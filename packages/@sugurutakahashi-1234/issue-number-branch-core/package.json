@@ -22,7 +22,9 @@
     "fix": "biome check --write --unsafe .",
     "check": "biome check .",
     "📚": "========== Documentation ==========",
-    "docs:deps-graph": "tsg --tsconfig ../../../tsconfig.typescript-graph.json --LR --abstraction packages/@sugurutakahashi-1234/issue-number-branch --abstraction packages/@sugurutakahashi-1234/issue-number-branch-action --abstraction packages/@sugurutakahashi-1234/issue-number-branch-api --md ../../../docs/reports/dependencies/core.md",
+    "docs:deps-graph:detail": "tsg --tsconfig ../../../tsconfig.typescript-graph.json --LR --abstraction packages/@sugurutakahashi-1234/issue-number-branch --abstraction packages/@sugurutakahashi-1234/issue-number-branch-action --abstraction packages/@sugurutakahashi-1234/issue-number-branch-api --md ../../../docs/reports/dependencies/core-detail.md",
+    "docs:deps-graph:architecture": "tsg --tsconfig ../../../tsconfig.typescript-graph.json --LR --abstraction packages/@sugurutakahashi-1234/issue-number-branch --abstraction packages/@sugurutakahashi-1234/issue-number-branch-action --abstraction packages/@sugurutakahashi-1234/issue-number-branch-api --abstraction src/domain --abstraction src/application --abstraction src/infrastructure --md ../../../docs/reports/dependencies/core-architecture.md",
+    "docs:deps-graph": "bun run docs:deps-graph:detail && bun run docs:deps-graph:architecture",
     "🚀": "========== CI & Clean ==========",
     "ci": "bun run fix && bun run check && bun run build && bun run typecheck && bun run test:quiet",
     "clean": "rm -rf dist *.tsbuildinfo"

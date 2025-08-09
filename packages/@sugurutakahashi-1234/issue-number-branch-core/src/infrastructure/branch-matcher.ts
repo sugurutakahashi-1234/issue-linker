@@ -1,7 +1,7 @@
-// Domain layer - Pure validation functions
+// Infrastructure layer - Validation functions
 
 import micromatch from "micromatch";
-import type { IssueState, IssueStateFilter } from "../types.js";
+import type { IssueStatus, IssueStatusFilter } from "../domain/types.js";
 
 /**
  * Validates if a branch should be excluded from validation
@@ -9,10 +9,7 @@ import type { IssueState, IssueStateFilter } from "../types.js";
  * @param pattern - Glob pattern for exclusion
  * @returns true if branch should be excluded
  */
-export function validateBranchExclusion(
-  branch: string,
-  pattern: string,
-): boolean {
+export function isBranchExcluded(branch: string, pattern: string): boolean {
   if (!pattern) return false;
   return micromatch.isMatch(branch, pattern);
 }
@@ -23,11 +20,11 @@ export function validateBranchExclusion(
  * @param filter - Issue state filter ("all", "open", or "closed")
  * @returns true if state is allowed
  */
-export function validateIssueState(
+export function isIssueStateAllowed(
   state: string,
-  filter: IssueStateFilter,
+  filter: IssueStatusFilter,
 ): boolean {
-  const normalizedState = state.toLowerCase() as IssueState;
+  const normalizedState = state.toLowerCase() as IssueStatus;
 
   if (filter === "all") {
     return true;

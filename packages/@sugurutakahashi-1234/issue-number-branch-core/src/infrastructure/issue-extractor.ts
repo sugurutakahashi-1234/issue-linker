@@ -1,4 +1,4 @@
-// Domain layer - Pure extraction functions
+// Infrastructure layer - Issue number extraction
 
 /**
  * Extracts the first issue number from a branch name
@@ -12,7 +12,7 @@
  * @param branch - The branch name to extract from
  * @returns The first issue number found, or null if none found
  */
-export function extractIssueNumber(branch: string): number | null {
+export function extractIssueNumberFromBranch(branch: string): number | null {
   // Priority patterns to try in order
   const patterns = [
     /^(\d{1,7})(?:-|_|$)/, // Start with number: 123-feature, 123_feature, or just 123

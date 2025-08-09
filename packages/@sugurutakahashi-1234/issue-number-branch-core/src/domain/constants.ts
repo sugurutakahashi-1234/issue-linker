@@ -1,6 +1,6 @@
 // Constants for issue-number-branch
 
-import type { IssueStateFilter } from "./types.js";
+import type { IssueStatusFilter } from "./types.js";
 
 /**
  * Default values for check options
@@ -8,6 +8,6 @@ import type { IssueStateFilter } from "./types.js";
 export const DEFAULT_CHECK_OPTIONS = {
   /** Default glob pattern to exclude branches */
   excludePattern: "{main,master,develop}",
-  /** Default issue state filter */
-  issueState: "all" as IssueStateFilter,
+  /** Default issue status filter */
+  issueStatus: "all" as IssueStatusFilter,
 } as const;

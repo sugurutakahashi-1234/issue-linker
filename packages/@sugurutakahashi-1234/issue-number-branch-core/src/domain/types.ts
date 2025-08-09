@@ -1,8 +1,8 @@
 // Type definitions for issue-number-branch
 
 // Issue related types
-export type IssueState = "open" | "closed";
-export type IssueStateFilter = "all" | "open" | "closed";
+export type IssueStatus = "open" | "closed";
+export type IssueStatusFilter = "all" | "open" | "closed";
 
 // Check result reasons
 export type CheckReason =
@@ -12,13 +12,13 @@ export type CheckReason =
   | "issue-not-found" // Issue number exists but issue not found/invalid
   | "error"; // Unexpected error occurred
 
-// Check result - single consistent interface
+// Check result interface
 export interface CheckResult {
   success: boolean;
   reason: CheckReason;
   branch: string;
   message: string;
-  issueNumber?: number; // Optional field, present only when an issue is found
+  issueNumber?: number; // Present only when an issue is found
   metadata?: {
     owner?: string;
     repo?: string;
@@ -34,7 +34,7 @@ export interface CheckOptions {
 
   // Filter settings
   excludePattern?: string; // Glob pattern to exclude branches (default: "{main,master,develop}")
-  issueState?: IssueStateFilter; // Issue state filter (default: "all")
+  issueStatus?: string; // Issue status filter: "all", "open", or "closed" (default: "all")
 
   // Authentication
   githubToken?: string; // GitHub token for API access (default: from environment)
@@ -43,13 +43,13 @@ export interface CheckOptions {
 // GitHub Issue representation
 export interface Issue {
   number: number;
-  state: IssueState;
+  state: IssueStatus;
   title?: string;
   body?: string;
 }
 
-// Git remote information
-export interface GitRemoteInfo {
+// GitHub repository information
+export interface GitHubRepository {
   owner: string;
   repo: string;
 }
