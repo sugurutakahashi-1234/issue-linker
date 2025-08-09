@@ -55955,17 +55955,20 @@ function createOctokit(token) {
         userAgent: "issue-number-branch",
         baseUrl: getGitHubApiUrl(),
         request: {
-            timeout: 3000, // 3 second timeout for better UX
+            // Aggressive timeout for fast feedback during development
+            // Adjust this value if you need more reliability vs speed
+            timeout: 1000, // 1 second timeout (tunable)
         },
         retry: {
-            doNotRetry: ["404", "429"], // Don't retry on not found or rate limit
-            retries: 1, // Only retry once for other errors
-            retryAfter: 1, // 1 second between retries
+            // Disable all retries for 404 and rate limits
+            doNotRetry: ["404", "429"],
+            // No retries for maximum speed
+            retries: 0, // 0 = no retries (tunable: increase for reliability)
         },
         throttle: {
-            onRateLimit: (_retryAfter, _options, _octokit, retryCount) => {
-                // Only retry once for rate limit errors
-                return retryCount < 1;
+            onRateLimit: (_retryAfter, _options, _octokit, _retryCount) => {
+                // No retries on rate limit for speed
+                return false; // false = don't retry (tunable: return true for retry)
             },
             onSecondaryRateLimit: (_retryAfter, _options, _octokit) => {
                 // Don't retry on abuse detection

@@ -117,7 +117,7 @@ describe("CLI", () => {
     // API tests using real GitHub API
     // Note: These tests may fail due to rate limits.
     // If they consistently fail, change 'it' to 'it.skip' to skip them.
-    // Timeout settings are being tuned for optimal UX (target: <3s for 404s)
+    // Performance tuning: API timeout=1s, no retries for max speed
     it(
       "should succeed when issue exists in this repository",
       async () => {
@@ -143,7 +143,7 @@ describe("CLI", () => {
         expect(text).toContain("Issue #3 found");
         expect(proc.exitCode).toBe(0);
       },
-      { timeout: 5000 }, // 5s timeout for successful API calls
+      { timeout: 2000 }, // 2s timeout (API timeout 1s + buffer)
     );
 
     it(
@@ -170,7 +170,7 @@ describe("CLI", () => {
 
         expect(proc.exitCode).toBe(1);
       },
-      { timeout: 5000 }, // 5s timeout (API timeout is 3s + some buffer)
+      { timeout: 2000 }, // 2s timeout (API timeout 1s + buffer)
     );
   });
 });
