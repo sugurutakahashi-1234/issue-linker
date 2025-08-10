@@ -53862,6 +53862,13 @@ const ActionModeSchema = picklist([
     "validate-commits",
     "custom",
 ]);
+// GitHub error type schema
+const GitHubErrorTypeSchema = picklist([
+    "not-found",
+    "unauthorized",
+    "api-error",
+    "network-error",
+]);
 // ===== Complex Schemas =====
 // Pull request commit author schema
 const PullRequestCommitAuthorSchema = object({
@@ -53891,12 +53898,7 @@ const GitHubIssueResultSchema = object({
     found: dist_boolean(),
     issue: optional(IssueSchema),
     error: optional(object({
-        type: picklist([
-            "not-found",
-            "unauthorized",
-            "api-error",
-            "network-error",
-        ]),
+        type: GitHubErrorTypeSchema,
         message: string(),
     })),
 });

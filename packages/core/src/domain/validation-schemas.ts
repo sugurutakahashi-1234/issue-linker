@@ -20,6 +20,14 @@ const ActionModeSchema = v.picklist([
   "custom",
 ]);
 
+// GitHub error type schema
+const GitHubErrorTypeSchema = v.picklist([
+  "not-found",
+  "unauthorized",
+  "api-error",
+  "network-error",
+]);
+
 // ===== Complex Schemas =====
 
 // Pull request commit author schema
@@ -55,12 +63,7 @@ const GitHubIssueResultSchema = v.object({
   issue: v.optional(IssueSchema),
   error: v.optional(
     v.object({
-      type: v.picklist([
-        "not-found",
-        "unauthorized",
-        "api-error",
-        "network-error",
-      ]),
+      type: GitHubErrorTypeSchema,
       message: v.string(),
     }),
   ),
