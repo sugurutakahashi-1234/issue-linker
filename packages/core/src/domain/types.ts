@@ -17,7 +17,7 @@ export interface PullRequestCommit {
 export interface GetPullRequestCommitsOptions {
   owner: string;
   repo: string;
-  pullNumber: number;
+  prNumber: number;
   githubToken?: string;
 }
 

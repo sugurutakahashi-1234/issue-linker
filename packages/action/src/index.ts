@@ -139,7 +139,7 @@ async function run() {
           const commits = await getPullRequestCommits({
             owner: context.repo.owner,
             repo: context.repo.repo,
-            pullNumber: prNumber,
+            prNumber,
             ...(githubToken && { githubToken }),
           });
 

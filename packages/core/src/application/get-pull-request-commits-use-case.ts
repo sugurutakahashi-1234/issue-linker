@@ -10,9 +10,12 @@ import { fetchPullRequestCommits } from "../infrastructure/github-client.js";
 
 // Validation schema for options (internal use only)
 const GetPullRequestCommitsOptionsSchema = v.object({
-  owner: v.string(),
-  repo: v.string(),
-  pullNumber: v.number(),
+  owner: v.pipe(v.string(), v.minLength(1, "Owner is required")),
+  repo: v.pipe(v.string(), v.minLength(1, "Repository is required")),
+  prNumber: v.pipe(
+    v.number(),
+    v.minValue(1, "Pull request number must be positive"),
+  ),
   githubToken: v.optional(v.string()),
 });
 
@@ -34,7 +37,7 @@ export async function getPullRequestCommits(
   return await fetchPullRequestCommits(
     options.owner,
     options.repo,
-    options.pullNumber,
+    options.prNumber,
     githubToken,
   );
 }

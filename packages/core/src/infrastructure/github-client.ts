@@ -108,7 +108,7 @@ export async function getGitHubIssue(
  * Fetch commits from a pull request
  * @param owner - Repository owner
  * @param repo - Repository name
- * @param pullNumber - Pull request number
+ * @param prNumber - Pull request number
  * @param token - Optional GitHub token
  * @returns Array of pull request commits
  * @throws GitHubError for API errors
@@ -116,7 +116,7 @@ export async function getGitHubIssue(
 export async function fetchPullRequestCommits(
   owner: string,
   repo: string,
-  pullNumber: number,
+  prNumber: number,
   token?: string,
 ): Promise<PullRequestCommit[]> {
   const octokit = createOctokit(token);
@@ -125,7 +125,7 @@ export async function fetchPullRequestCommits(
     const { data } = await octokit.rest.pulls.listCommits({
       owner,
       repo,
-      pull_number: pullNumber,
+      pull_number: prNumber,
       headers: {
         Accept: "application/vnd.github+json",
       },
@@ -144,7 +144,7 @@ export async function fetchPullRequestCommits(
     // Handle API errors
     if (error instanceof RequestError) {
       throw new GitHubError(
-        `Failed to fetch commits for PR #${pullNumber}: ${error.message}`,
+        `Failed to fetch commits for PR #${prNumber}: ${error.message}`,
         error.status,
       );
     }
