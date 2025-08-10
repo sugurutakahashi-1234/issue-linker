@@ -35170,7 +35170,7 @@ __webpack_unused_export__ = defaultContentType
 
 /***/ }),
 
-/***/ 6757:
+/***/ 1819:
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
 
 // ESM COMPAT FLAG
@@ -35183,7 +35183,8 @@ __nccwpck_require__.d(__webpack_exports__, {
   GitHubError: () => (/* reexport */ GitHubError),
   IssueNotFoundError: () => (/* reexport */ IssueNotFoundError),
   ValidationError: () => (/* reexport */ ValidationError),
-  checkMessage: () => (/* reexport */ checkMessage)
+  checkMessage: () => (/* reexport */ checkMessage),
+  getPullRequestCommits: () => (/* reexport */ getPullRequestCommits)
 });
 
 ;// CONCATENATED MODULE: ../core/dist/domain/constants.js
@@ -44363,6 +44364,27 @@ function unwrap(schema) {
 }
 
 
+;// CONCATENATED MODULE: ../core/dist/domain/schemas.js
+// Domain layer - Business rules constants
+/**
+ * Default exclude patterns for each extraction mode
+ */
+const DEFAULT_EXCLUDE_PATTERNS = {
+    default: null,
+    branch: "{main,master,develop,release/*,hotfix/*}",
+    commit: null, // Will check message prefix instead
+};
+/**
+ * Commit message prefixes to exclude from validation
+ */
+const EXCLUDED_COMMIT_PREFIXES = [
+    "Rebase",
+    "Merge",
+    "Revert",
+    "fixup!",
+    "squash!",
+];
+//# sourceMappingURL=schemas.js.map
 ;// CONCATENATED MODULE: ../../node_modules/@t3-oss/env-core/dist/src-Bb3GbGAa.js
 //#region src/standard.ts
 function ensureSynchronous(value, message) {
@@ -63394,6 +63416,45 @@ async function getGitHubIssue(owner, repo, issueNumber, token) {
         throw error;
     }
 }
+/**
+ * Fetch commits from a pull request
+ * @param owner - Repository owner
+ * @param repo - Repository name
+ * @param pullNumber - Pull request number
+ * @param token - Optional GitHub token
+ * @returns Array of pull request commits
+ * @throws GitHubError for API errors
+ */
+async function fetchPullRequestCommits(owner, repo, pullNumber, token) {
+    const octokit = createOctokit(token);
+    try {
+        const { data } = await octokit.rest.pulls.listCommits({
+            owner,
+            repo,
+            pull_number: pullNumber,
+            headers: {
+                Accept: "application/vnd.github+json",
+            },
+        });
+        // Transform Octokit response to domain type
+        return data.map((commit) => ({
+            sha: commit.sha,
+            message: commit.commit.message,
+            author: {
+                name: commit.commit.author?.name ?? "Unknown",
+                email: commit.commit.author?.email ?? "unknown@example.com",
+            },
+        }));
+    }
+    catch (error) {
+        // Handle API errors
+        if (error instanceof RequestError) {
+            throw new GitHubError(`Failed to fetch commits for PR #${pullNumber}: ${error.message}`, error.status);
+        }
+        // Re-throw unexpected errors
+        throw error;
+    }
+}
 //# sourceMappingURL=github-client.js.map
 ;// CONCATENATED MODULE: ../core/dist/infrastructure/repository-parser.js
 // Infrastructure layer - Repository string parsing
@@ -63424,29 +63485,23 @@ function parseRepositoryString(repository) {
 
 
 
-// Validation schema for options
+
+// Validation schema for options (internal use only)
 const CheckMessageOptionsSchema = object({
     text: string(),
     mode: optional(picklist(["default", "branch", "commit"]), "default"),
+    actionMode: optional(picklist([
+        "validate-branch",
+        "validate-pr-title",
+        "validate-pr-body",
+        "validate-commits",
+        "custom",
+    ])),
     exclude: optional(string()),
     issueStatus: optional(picklist(["all", "open", "closed"]), "all"),
     repo: optional(string()),
     githubToken: optional(string()),
 });
-// Default exclude patterns for each mode
-const DEFAULT_EXCLUDE_PATTERNS = {
-    default: null,
-    branch: "{main,master,develop,release/*,hotfix/*}",
-    commit: null, // Will check message prefix instead
-};
-// Commit message prefixes to exclude
-const EXCLUDED_COMMIT_PREFIXES = [
-    "Rebase",
-    "Merge",
-    "Revert",
-    "fixup!",
-    "squash!",
-];
 /**
  * Extract issue numbers from text based on mode
  */
@@ -63533,6 +63588,7 @@ async function checkMessage(options) {
             excluded: false,
             metadata: {
                 mode: "default",
+                actionMode: options.actionMode,
                 repo: "",
                 text: options.text ?? "",
             },
@@ -63553,6 +63609,7 @@ async function checkMessage(options) {
                 excluded: true,
                 metadata: {
                     mode,
+                    actionMode: opts.actionMode,
                     repo: "",
                     text,
                 },
@@ -63570,6 +63627,7 @@ async function checkMessage(options) {
                 excluded: false,
                 metadata: {
                     mode,
+                    actionMode: opts.actionMode,
                     repo: "",
                     text,
                 },
@@ -63625,6 +63683,7 @@ async function checkMessage(options) {
             excluded: false,
             metadata: {
                 mode,
+                actionMode: opts.actionMode,
                 repo: repoString,
                 text,
             },
@@ -63648,6 +63707,32 @@ async function checkMessage(options) {
     }
 }
 //# sourceMappingURL=check-message-use-case.js.map
+;// CONCATENATED MODULE: ../core/dist/application/get-pull-request-commits-use-case.js
+// Application layer - Get pull request commits use case
+
+
+
+// Validation schema for options (internal use only)
+const GetPullRequestCommitsOptionsSchema = object({
+    owner: string(),
+    repo: string(),
+    pullNumber: number(),
+    githubToken: optional(string()),
+});
+/**
+ * Get commits from a pull request
+ * @param opts Options for getting pull request commits
+ * @returns Array of pull request commits
+ */
+async function getPullRequestCommits(opts) {
+    // Validate options
+    const options = parse(GetPullRequestCommitsOptionsSchema, opts);
+    // Get GitHub token
+    const githubToken = options.githubToken ?? getGitHubToken();
+    // Fetch commits from GitHub API (already transformed to PullRequestCommit[])
+    return await fetchPullRequestCommits(options.owner, options.repo, options.pullNumber, githubToken);
+}
+//# sourceMappingURL=get-pull-request-commits-use-case.js.map
 ;// CONCATENATED MODULE: ../core/dist/index.js
 // Core package - Main exports
 // Domain layer exports
@@ -63658,6 +63743,8 @@ async function checkMessage(options) {
 // Infrastructure layer exports (if needed by external packages)
 // None for now
 // Application layer exports
+/** @public */
+
 /** @public */
 
 //# sourceMappingURL=index.js.map
@@ -63739,7 +63826,7 @@ Object.defineProperty(exports, "B", ({ value: true }));
 const tslib_1 = __nccwpck_require__(4176);
 const core = tslib_1.__importStar(__nccwpck_require__(7184));
 const github = tslib_1.__importStar(__nccwpck_require__(5683));
-const core_1 = __nccwpck_require__(6757);
+const core_1 = __nccwpck_require__(1819);
 async function run() {
     try {
         const context = github.context;
@@ -63748,13 +63835,12 @@ async function run() {
         const issueStatus = (core.getInput("issue-status") ||
             "all");
         const repo = core.getInput("repo") || `${context.repo.owner}/${context.repo.repo}`;
-        const githubToken = 
-        // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
-        core.getInput("github-token") || process.env["GITHUB_TOKEN"];
+        const githubToken = core.getInput("github-token") || undefined;
         // Simple mode inputs
         const validateBranch = core.getInput("validate-branch") === "true";
         const validatePrTitle = core.getInput("validate-pr-title") === "true";
         const validatePrBody = core.getInput("validate-pr-body") === "true";
+        const validateCommits = core.getInput("validate-commits") === "true";
         // Advanced mode inputs
         const text = core.getInput("text");
         const mode = (core.getInput("mode") || "default");
@@ -63768,11 +63854,11 @@ async function run() {
                 const messageOptions = {
                     text: branchName,
                     mode: "branch",
+                    actionMode: "validate-branch",
                     issueStatus,
                     repo,
+                    ...(githubToken && { githubToken }),
                 };
-                if (githubToken)
-                    messageOptions.githubToken = githubToken;
                 core.debug(`Calling checkMessage with options: ${JSON.stringify(messageOptions)}`);
                 const result = await (0, core_1.checkMessage)(messageOptions);
                 core.debug(`checkMessage result: ${JSON.stringify(result)}`);
@@ -63781,6 +63867,7 @@ async function run() {
                     success: result.success,
                     message: result.message,
                     issues: result.validIssues,
+                    metadata: result.metadata,
                 });
             }
             else {
@@ -63795,17 +63882,18 @@ async function run() {
                 const messageOptions = {
                     text: prTitle,
                     mode: "default",
+                    actionMode: "validate-pr-title",
                     issueStatus,
                     repo,
+                    ...(githubToken && { githubToken }),
                 };
-                if (githubToken)
-                    messageOptions.githubToken = githubToken;
                 const result = await (0, core_1.checkMessage)(messageOptions);
                 validations.push({
                     name: "pr-title",
                     success: result.success,
                     message: result.message,
                     issues: result.validIssues,
+                    metadata: result.metadata,
                 });
             }
             else {
@@ -63820,21 +63908,75 @@ async function run() {
                 const messageOptions = {
                     text: prBody,
                     mode: "default",
+                    actionMode: "validate-pr-body",
                     issueStatus,
                     repo,
+                    ...(githubToken && { githubToken }),
                 };
-                if (githubToken)
-                    messageOptions.githubToken = githubToken;
                 const result = await (0, core_1.checkMessage)(messageOptions);
                 validations.push({
                     name: "pr-body",
                     success: result.success,
                     message: result.message,
                     issues: result.validIssues,
+                    metadata: result.metadata,
                 });
             }
             else {
                 core.warning("PR body not found in context");
+            }
+        }
+        if (validateCommits) {
+            // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
+            const prNumber = context.payload.pull_request?.["number"];
+            if (!prNumber) {
+                core.warning("Cannot validate commits: PR context not found");
+            }
+            else {
+                try {
+                    // Get commits using core function
+                    const commits = await (0, core_1.getPullRequestCommits)({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        pullNumber: prNumber,
+                        ...(githubToken && { githubToken }),
+                    });
+                    core.info(`Found ${commits.length} commits in PR`);
+                    // Check each commit message
+                    for (const commit of commits) {
+                        const shortSha = commit.sha.substring(0, 7);
+                        core.debug(`Checking commit ${shortSha}: ${commit.message.split("\n")[0]}`);
+                        const result = await (0, core_1.checkMessage)({
+                            text: commit.message,
+                            mode: "commit",
+                            actionMode: "validate-commits",
+                            issueStatus,
+                            repo,
+                            ...(githubToken && { githubToken }),
+                        });
+                        validations.push({
+                            name: `commit-${shortSha}`,
+                            success: result.success,
+                            message: `[${shortSha}] ${result.message}`,
+                            issues: result.validIssues,
+                            metadata: result.metadata,
+                        });
+                    }
+                }
+                catch (error) {
+                    core.error(`Failed to fetch commits: ${error instanceof Error ? error.message : String(error)}`);
+                    validations.push({
+                        name: "commits",
+                        success: false,
+                        message: `Failed to fetch commits: ${error instanceof Error ? error.message : String(error)}`,
+                        metadata: {
+                            actionMode: "validate-commits",
+                            mode: "commit",
+                            repo,
+                            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+                        },
+                    });
+                }
             }
         }
         // Advanced mode validation
@@ -63843,19 +63985,20 @@ async function run() {
             const messageOptions = {
                 text,
                 mode,
+                actionMode: "custom",
                 issueStatus,
                 repo,
+                ...(githubToken && { githubToken }),
             };
             if (exclude)
                 messageOptions.exclude = exclude;
-            if (githubToken)
-                messageOptions.githubToken = githubToken;
             const result = await (0, core_1.checkMessage)(messageOptions);
             validations.push({
                 name: "custom",
                 success: result.success,
                 message: result.message,
                 issues: result.validIssues,
+                metadata: result.metadata,
             });
         }
         // Set outputs
@@ -63864,9 +64007,19 @@ async function run() {
         const allFoundIssues = [
             ...new Set(validations.flatMap((v) => v.issues || [])),
         ];
+        // Create executed modes details
+        const executedModes = validations.map((v) => ({
+            name: v.name,
+            actionMode: v.metadata?.actionMode || "unknown",
+            extractionMode: v.metadata?.mode || "unknown",
+            success: v.success,
+            issuesFound: v.issues?.length || 0,
+        }));
         core.setOutput("success", allSuccess.toString());
         core.setOutput("failed-validations", JSON.stringify(failedValidations));
         core.setOutput("found-issues", JSON.stringify(allFoundIssues));
+        core.setOutput("executed-modes", JSON.stringify(executedModes));
+        core.setOutput("total-validations", validations.length.toString());
         // Log results
         for (const validation of validations) {
             if (validation.success) {

@@ -3,6 +3,10 @@
 import { minimatch } from "minimatch";
 import * as v from "valibot";
 import { IssueNotFoundError } from "../domain/errors.js";
+import {
+  DEFAULT_EXCLUDE_PATTERNS,
+  EXCLUDED_COMMIT_PREFIXES,
+} from "../domain/schemas.js";
 import type {
   CheckMessageOptions,
   CheckResult,
@@ -15,31 +19,24 @@ import { parseRepositoryFromGitUrl } from "../infrastructure/git-url-parser.js";
 import { getGitHubIssue } from "../infrastructure/github-client.js";
 import { parseRepositoryString } from "../infrastructure/repository-parser.js";
 
-// Validation schema for options
+// Validation schema for options (internal use only)
 const CheckMessageOptionsSchema = v.object({
   text: v.string(),
   mode: v.optional(v.picklist(["default", "branch", "commit"]), "default"),
+  actionMode: v.optional(
+    v.picklist([
+      "validate-branch",
+      "validate-pr-title",
+      "validate-pr-body",
+      "validate-commits",
+      "custom",
+    ]),
+  ),
   exclude: v.optional(v.string()),
   issueStatus: v.optional(v.picklist(["all", "open", "closed"]), "all"),
   repo: v.optional(v.string()),
   githubToken: v.optional(v.string()),
 });
-
-// Default exclude patterns for each mode
-const DEFAULT_EXCLUDE_PATTERNS: Record<ExtractionMode, string | null> = {
-  default: null,
-  branch: "{main,master,develop,release/*,hotfix/*}",
-  commit: null, // Will check message prefix instead
-};
-
-// Commit message prefixes to exclude
-const EXCLUDED_COMMIT_PREFIXES = [
-  "Rebase",
-  "Merge",
-  "Revert",
-  "fixup!",
-  "squash!",
-];
 
 /**
  * Extract issue numbers from text based on mode
@@ -142,6 +139,7 @@ export async function checkMessage(
       excluded: false,
       metadata: {
         mode: "default",
+        actionMode: options.actionMode,
         repo: "",
         text: options.text ?? "",
       },
@@ -164,6 +162,7 @@ export async function checkMessage(
         excluded: true,
         metadata: {
           mode,
+          actionMode: opts.actionMode,
           repo: "",
           text,
         },
@@ -183,6 +182,7 @@ export async function checkMessage(
         excluded: false,
         metadata: {
           mode,
+          actionMode: opts.actionMode,
           repo: "",
           text,
         },
@@ -246,6 +246,7 @@ export async function checkMessage(
       excluded: false,
       metadata: {
         mode,
+        actionMode: opts.actionMode,
         repo: repoString,
         text,
       },

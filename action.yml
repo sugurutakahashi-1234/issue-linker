@@ -22,6 +22,10 @@ inputs:
     description: 'Validate PR body'
     required: false
     default: 'false'
+  validate-commits:
+    description: 'Validate all commit messages in the PR'
+    required: false
+    default: 'false'
   
   # Advanced mode (custom text)
   text:

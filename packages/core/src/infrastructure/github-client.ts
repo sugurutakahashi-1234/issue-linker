@@ -5,7 +5,7 @@ import { throttling } from "@octokit/plugin-throttling";
 import { RequestError } from "@octokit/request-error";
 import { Octokit } from "octokit";
 import { GitHubError, IssueNotFoundError } from "../domain/errors.js";
-import type { Issue, IssueStatus } from "../domain/types.js";
+import type { Issue, IssueStatus, PullRequestCommit } from "../domain/types.js";
 import { getGitHubApiUrl, getGitHubToken } from "./env-accessor.js";
 
 // Create custom Octokit with retry and throttling plugins
@@ -100,6 +100,56 @@ export async function getGitHubIssue(
     }
 
     // Re-throw unexpected errors (network issues, etc.)
+    throw error;
+  }
+}
+
+/**
+ * Fetch commits from a pull request
+ * @param owner - Repository owner
+ * @param repo - Repository name
+ * @param pullNumber - Pull request number
+ * @param token - Optional GitHub token
+ * @returns Array of pull request commits
+ * @throws GitHubError for API errors
+ */
+export async function fetchPullRequestCommits(
+  owner: string,
+  repo: string,
+  pullNumber: number,
+  token?: string,
+): Promise<PullRequestCommit[]> {
+  const octokit = createOctokit(token);
+
+  try {
+    const { data } = await octokit.rest.pulls.listCommits({
+      owner,
+      repo,
+      pull_number: pullNumber,
+      headers: {
+        Accept: "application/vnd.github+json",
+      },
+    });
+
+    // Transform Octokit response to domain type
+    return data.map((commit) => ({
+      sha: commit.sha,
+      message: commit.commit.message,
+      author: {
+        name: commit.commit.author?.name ?? "Unknown",
+        email: commit.commit.author?.email ?? "unknown@example.com",
+      },
+    }));
+  } catch (error: unknown) {
+    // Handle API errors
+    if (error instanceof RequestError) {
+      throw new GitHubError(
+        `Failed to fetch commits for PR #${pullNumber}: ${error.message}`,
+        error.status,
+      );
+    }
+
+    // Re-throw unexpected errors
     throw error;
   }
 }

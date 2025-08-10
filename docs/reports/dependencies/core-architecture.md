@@ -20,6 +20,7 @@ flowchart LR
                 end
                 subgraph packages/core/dist/application["/application"]
                     packages/core/dist/application/check//message//use//case.d.ts["check-message-use-case.d.ts"]
+                    packages/core/dist/application/get//pull//request//commits//use//case.d.ts["get-pull-request-commits-use-case.d.ts"]
                 end
             end
             subgraph packages/core/src["/src"]
@@ -46,10 +47,12 @@ flowchart LR
     end
     packages/core/dist/domain/constants.d.ts-->packages/core/dist/domain/types.d.ts
     packages/core/dist/application/check//message//use//case.d.ts-->packages/core/dist/domain/types.d.ts
+    packages/core/dist/application/get//pull//request//commits//use//case.d.ts-->packages/core/dist/domain/types.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/domain/constants.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/domain/errors.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/domain/types.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/application/check//message//use//case.d.ts
+    packages/core/dist/index.d.ts-->packages/core/dist/application/get//pull//request//commits//use//case.d.ts
     packages/action-->node//modules///actions/core/lib/core.d.ts
     packages/action-->node//modules///actions/github/lib/github.d.ts
     packages/action-->packages/core/dist/index.d.ts

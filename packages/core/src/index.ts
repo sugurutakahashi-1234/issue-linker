@@ -13,15 +13,18 @@ export {
 } from "./domain/errors.js";
 /** @public */
 export type {
+  ActionMode,
   CheckMessageOptions,
   CheckOptions,
   CheckReason,
   CheckResult,
   ExtractionMode,
+  GetPullRequestCommitsOptions,
   GitHubRepository,
   Issue,
   IssueStatus,
   IssueStatusFilter,
+  PullRequestCommit,
 } from "./domain/types.js";
 
 // Infrastructure layer exports (if needed by external packages)
@@ -30,3 +33,6 @@ export type {
 // Application layer exports
 /** @public */
 export { checkMessage } from "./application/check-message-use-case.js";
+
+/** @public */
+export { getPullRequestCommits } from "./application/get-pull-request-commits-use-case.js";

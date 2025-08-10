@@ -1,8 +1,10 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import {
+  type ActionMode,
   checkMessage,
   type ExtractionMode,
+  getPullRequestCommits,
   type IssueStatusFilter,
 } from "@issue-linker/core";
 
@@ -11,6 +13,12 @@ interface ValidationResult {
   success: boolean;
   message: string;
   issues?: number[];
+  metadata?: {
+    mode: ExtractionMode;
+    actionMode?: ActionMode | undefined;
+    repo: string;
+    text: string;
+  };
 }
 
 async function run() {
@@ -23,14 +31,13 @@ async function run() {
       "all") as IssueStatusFilter;
     const repo =
       core.getInput("repo") || `${context.repo.owner}/${context.repo.repo}`;
-    const githubToken =
-      // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
-      core.getInput("github-token") || process.env["GITHUB_TOKEN"];
+    const githubToken = core.getInput("github-token") || undefined;
 
     // Simple mode inputs
     const validateBranch = core.getInput("validate-branch") === "true";
     const validatePrTitle = core.getInput("validate-pr-title") === "true";
     const validatePrBody = core.getInput("validate-pr-body") === "true";
+    const validateCommits = core.getInput("validate-commits") === "true";
 
     // Advanced mode inputs
     const text = core.getInput("text");
@@ -46,10 +53,11 @@ async function run() {
         const messageOptions: Parameters<typeof checkMessage>[0] = {
           text: branchName,
           mode: "branch",
+          actionMode: "validate-branch",
           issueStatus,
           repo,
+          ...(githubToken && { githubToken }),
         };
-        if (githubToken) messageOptions.githubToken = githubToken;
         core.debug(
           `Calling checkMessage with options: ${JSON.stringify(messageOptions)}`,
         );
@@ -60,6 +68,7 @@ async function run() {
           success: result.success,
           message: result.message,
           issues: result.validIssues,
+          metadata: result.metadata,
         });
       } else {
         core.warning("Branch name not found in context");
@@ -74,16 +83,18 @@ async function run() {
         const messageOptions: Parameters<typeof checkMessage>[0] = {
           text: prTitle,
           mode: "default",
+          actionMode: "validate-pr-title",
           issueStatus,
           repo,
+          ...(githubToken && { githubToken }),
         };
-        if (githubToken) messageOptions.githubToken = githubToken;
         const result = await checkMessage(messageOptions);
         validations.push({
           name: "pr-title",
           success: result.success,
           message: result.message,
           issues: result.validIssues,
+          metadata: result.metadata,
         });
       } else {
         core.warning("PR title not found in context");
@@ -98,19 +109,83 @@ async function run() {
         const messageOptions: Parameters<typeof checkMessage>[0] = {
           text: prBody,
           mode: "default",
+          actionMode: "validate-pr-body",
           issueStatus,
           repo,
+          ...(githubToken && { githubToken }),
         };
-        if (githubToken) messageOptions.githubToken = githubToken;
         const result = await checkMessage(messageOptions);
         validations.push({
           name: "pr-body",
           success: result.success,
           message: result.message,
           issues: result.validIssues,
+          metadata: result.metadata,
         });
       } else {
         core.warning("PR body not found in context");
+      }
+    }
+
+    if (validateCommits) {
+      // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
+      const prNumber = context.payload.pull_request?.["number"];
+
+      if (!prNumber) {
+        core.warning("Cannot validate commits: PR context not found");
+      } else {
+        try {
+          // Get commits using core function
+          const commits = await getPullRequestCommits({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            pullNumber: prNumber,
+            ...(githubToken && { githubToken }),
+          });
+
+          core.info(`Found ${commits.length} commits in PR`);
+
+          // Check each commit message
+          for (const commit of commits) {
+            const shortSha = commit.sha.substring(0, 7);
+
+            core.debug(
+              `Checking commit ${shortSha}: ${commit.message.split("\n")[0]}`,
+            );
+
+            const result = await checkMessage({
+              text: commit.message,
+              mode: "commit",
+              actionMode: "validate-commits",
+              issueStatus,
+              repo,
+              ...(githubToken && { githubToken }),
+            });
+
+            validations.push({
+              name: `commit-${shortSha}`,
+              success: result.success,
+              message: `[${shortSha}] ${result.message}`,
+              issues: result.validIssues,
+              metadata: result.metadata,
+            });
+          }
+        } catch (error) {
+          core.error(
+            `Failed to fetch commits: ${error instanceof Error ? error.message : String(error)}`,
+          );
+          validations.push({
+            name: "commits",
+            success: false,
+            message: `Failed to fetch commits: ${error instanceof Error ? error.message : String(error)}`,
+            metadata: {
+              actionMode: "validate-commits",
+              mode: "commit",
+              repo,
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          });
+        }
       }
     }
 
@@ -120,17 +195,19 @@ async function run() {
       const messageOptions: Parameters<typeof checkMessage>[0] = {
         text,
         mode,
+        actionMode: "custom",
         issueStatus,
         repo,
+        ...(githubToken && { githubToken }),
       };
       if (exclude) messageOptions.exclude = exclude;
-      if (githubToken) messageOptions.githubToken = githubToken;
       const result = await checkMessage(messageOptions);
       validations.push({
         name: "custom",
         success: result.success,
         message: result.message,
         issues: result.validIssues,
+        metadata: result.metadata,
       });
     }
 
@@ -141,9 +218,20 @@ async function run() {
       ...new Set(validations.flatMap((v) => v.issues || [])),
     ];
 
+    // Create executed modes details
+    const executedModes = validations.map((v) => ({
+      name: v.name,
+      actionMode: v.metadata?.actionMode || "unknown",
+      extractionMode: v.metadata?.mode || "unknown",
+      success: v.success,
+      issuesFound: v.issues?.length || 0,
+    }));
+
     core.setOutput("success", allSuccess.toString());
     core.setOutput("failed-validations", JSON.stringify(failedValidations));
     core.setOutput("found-issues", JSON.stringify(allFoundIssues));
+    core.setOutput("executed-modes", JSON.stringify(executedModes));
+    core.setOutput("total-validations", validations.length.toString());
 
     // Log results
     for (const validation of validations) {
