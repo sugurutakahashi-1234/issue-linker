@@ -1,6 +1,6 @@
 // Domain layer - Business rules constants
 
-import type { ExtractionMode } from "./types.js";
+import type { ExtractionMode } from "./validation-schemas.js";
 
 /**
  * Default exclude patterns for each extraction mode

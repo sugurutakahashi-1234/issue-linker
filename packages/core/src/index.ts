@@ -25,7 +25,6 @@ export type {
 export type {
   ActionMode,
   CheckMessageOptions,
-  CheckResult, // Alias for IssueValidationResult
   ExtractionMode,
   GetPullRequestCommitsOptions,
   GitHubRepository,
@@ -33,7 +32,15 @@ export type {
   IssueStatus,
   IssueStatusFilter,
   PullRequestCommit,
-} from "./domain/types.js";
+} from "./domain/validation-schemas.js";
+
+/** @public */
+export {
+  CheckMessageOptionsSchema,
+  ExtractionModeSchema,
+  GetPullRequestCommitsOptionsSchema,
+  IssueStatusFilterSchema,
+} from "./domain/validation-schemas.js";
 
 // Infrastructure layer exports (if needed by external packages)
 // None for now

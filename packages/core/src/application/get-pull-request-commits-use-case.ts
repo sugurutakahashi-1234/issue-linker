@@ -1,23 +1,13 @@
 // Application layer - Get pull request commits use case
 
 import * as v from "valibot";
-import type {
-  GetPullRequestCommitsOptions,
-  PullRequestCommit,
-} from "../domain/types.js";
+import {
+  type GetPullRequestCommitsOptions,
+  GetPullRequestCommitsOptionsSchema,
+  type PullRequestCommit,
+} from "../domain/validation-schemas.js";
 import { getGitHubToken } from "../infrastructure/env-accessor.js";
 import { fetchPullRequestCommits } from "../infrastructure/github-client.js";
-
-// Validation schema for options (internal use only)
-const GetPullRequestCommitsOptionsSchema = v.object({
-  owner: v.pipe(v.string(), v.minLength(1, "Owner is required")),
-  repo: v.pipe(v.string(), v.minLength(1, "Repository is required")),
-  prNumber: v.pipe(
-    v.number(),
-    v.minValue(1, "Pull request number must be positive"),
-  ),
-  githubToken: v.optional(v.string()),
-});
 
 /**
  * Get commits from a pull request

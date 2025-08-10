@@ -1,6 +1,6 @@
 // Constants for issue-linker
 
-import type { IssueStatusFilter } from "./types.js";
+import type { IssueStatusFilter } from "./validation-schemas.js";
 
 /**
  * Default values for check options

@@ -1,6 +1,6 @@
 // Infrastructure layer - Issue number extraction
 
-import type { ExtractionMode } from "../domain/types.js";
+import type { ExtractionMode } from "../domain/validation-schemas.js";
 
 /**
  * Extract issue numbers from text based on mode

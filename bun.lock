@@ -32,6 +32,7 @@
         "@vercel/ncc": "^0.38.3",
         "@ysk8hori/typescript-graph": "^0.26.4",
         "typescript": "^5.9.2",
+        "valibot": "^1.1.0",
       },
     },
     "packages/cli": {
@@ -48,6 +49,7 @@
         "@biomejs/biome": "^2.1.4",
         "@ysk8hori/typescript-graph": "^0.26.4",
         "typescript": "^5.9.2",
+        "valibot": "^1.1.0",
       },
     },
     "packages/core": {

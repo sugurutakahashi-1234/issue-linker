@@ -7,10 +7,12 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { program } from "@commander-js/extra-typings";
 import {
+  type CheckMessageOptions,
+  CheckMessageOptionsSchema,
   checkMessage,
-  type ExtractionMode,
   type IssueValidationResult,
 } from "@issue-linker/core";
+import * as v from "valibot";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const packageJsonPath = join(__dirname, "..", "package.json");
@@ -38,33 +40,27 @@ program
   .option("--json", "output full result as JSON")
   .action(async (options) => {
     try {
-      // Validate mode
-      const validModes = ["default", "branch", "commit"];
-      if (!validModes.includes(options.mode)) {
-        console.error(`❌ Invalid mode: ${options.mode}`);
-        console.error(`   Valid modes are: ${validModes.join(", ")}`);
-        process.exit(1);
+      // Validate CLI options using schema from core
+      let validatedOptions: CheckMessageOptions;
+      try {
+        validatedOptions = v.parse(CheckMessageOptionsSchema, {
+          text: options.text,
+          mode: options.mode,
+          issueStatus: options.issueStatus,
+          ...(options.exclude && { exclude: options.exclude }),
+          ...(options.repo && { repo: options.repo }),
+          ...(options.githubToken && { githubToken: options.githubToken }),
+        });
+      } catch (error) {
+        if (error instanceof v.ValiError) {
+          console.error(`❌ Invalid options: ${error.message}`);
+          process.exit(1);
+        }
+        throw error;
       }
 
-      // Validate issue status
-      const validStatuses = ["all", "open", "closed"];
-      if (!validStatuses.includes(options.issueStatus)) {
-        console.error(`❌ Invalid issue status: ${options.issueStatus}`);
-        console.error(`   Valid statuses are: ${validStatuses.join(", ")}`);
-        process.exit(1);
-      }
-
-      // Check text with provided options
-      const messageOptions: Parameters<typeof checkMessage>[0] = {
-        text: options.text,
-        mode: options.mode as ExtractionMode,
-        issueStatus: options.issueStatus as "all" | "open" | "closed",
-      };
-      if (options.exclude) messageOptions.exclude = options.exclude;
-      if (options.repo) messageOptions.repo = options.repo;
-      if (options.githubToken) messageOptions.githubToken = options.githubToken;
-
-      const result: IssueValidationResult = await checkMessage(messageOptions);
+      const result: IssueValidationResult =
+        await checkMessage(validatedOptions);
 
       // Output JSON if requested
       if (options.json) {

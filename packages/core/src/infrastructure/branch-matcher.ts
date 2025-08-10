@@ -10,7 +10,7 @@ import type {
   ExtractionMode,
   IssueStatus,
   IssueStatusFilter,
-} from "../domain/types.js";
+} from "../domain/validation-schemas.js";
 
 /**
  * Validates if a branch should be excluded from validation

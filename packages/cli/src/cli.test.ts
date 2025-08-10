@@ -102,7 +102,7 @@ describe("CLI", () => {
       const errorText = await new Response(proc.stderr).text();
       await proc.exited;
 
-      expect(errorText).toContain("Invalid issue status");
+      expect(errorText).toContain("Invalid options");
       expect(proc.exitCode).toBe(1);
     });
 

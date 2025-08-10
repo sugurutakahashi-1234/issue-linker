@@ -9,7 +9,10 @@ import {
   createNoIssuesResult,
   createValidResult,
 } from "../domain/result-factory.js";
-import type { CheckMessageOptions } from "../domain/types.js";
+import {
+  type CheckMessageOptions,
+  CheckMessageOptionsSchema,
+} from "../domain/validation-schemas.js";
 import {
   isIssueStateAllowed,
   shouldExclude,
@@ -20,25 +23,6 @@ import { parseRepositoryFromGitUrl } from "../infrastructure/git-url-parser.js";
 import { getGitHubIssue } from "../infrastructure/github-client.js";
 import { extractIssueNumbers } from "../infrastructure/issue-extractor.js";
 import { parseRepositoryString } from "../infrastructure/repository-parser.js";
-
-// Validation schema for options (internal use only)
-const CheckMessageOptionsSchema = v.object({
-  text: v.string(),
-  mode: v.optional(v.picklist(["default", "branch", "commit"]), "default"),
-  actionMode: v.optional(
-    v.picklist([
-      "validate-branch",
-      "validate-pr-title",
-      "validate-pr-body",
-      "validate-commits",
-      "custom",
-    ]),
-  ),
-  exclude: v.optional(v.string()),
-  issueStatus: v.optional(v.picklist(["all", "open", "closed"]), "all"),
-  repo: v.optional(v.string()),
-  githubToken: v.optional(v.string()),
-});
 
 /**
  * Main use case for checking if text contains valid issue numbers
@@ -54,9 +38,9 @@ export async function checkMessage(
     const input: InputConfig = {
       text: options.text ?? "",
       mode: "default",
-      ...(options.actionMode && { actionMode: options.actionMode }),
       issueStatus: "all",
       repo: "",
+      ...(options.actionMode && { actionMode: options.actionMode }),
     };
     const error = new Error(
       validationResult.issues[0]?.message ?? "Invalid options provided",
@@ -73,16 +57,16 @@ export async function checkMessage(
     const repository = opts.repo
       ? parseRepositoryString(opts.repo)
       : parseRepositoryFromGitUrl(await getGitRemoteUrl());
-    const repoString = `${repository.owner}/${repository.repo}`;
+    const repo = `${repository.owner}/${repository.repo}`;
 
     // Build input config
     const input: InputConfig = {
       text: opts.text,
       mode,
-      ...(opts.actionMode && { actionMode: opts.actionMode }),
       ...(opts.exclude && { exclude: opts.exclude }),
       issueStatus,
-      repo: repoString,
+      repo: repo,
+      ...(opts.actionMode && { actionMode: opts.actionMode }),
     };
 
     // Step 2: Check exclusion
@@ -144,10 +128,10 @@ export async function checkMessage(
     const input: InputConfig = {
       text: opts.text,
       mode,
-      ...(opts.actionMode && { actionMode: opts.actionMode }),
       ...(opts.exclude && { exclude: opts.exclude }),
       issueStatus,
       repo: opts.repo ?? "",
+      ...(opts.actionMode && { actionMode: opts.actionMode }),
     };
     return createErrorResult(error, input);
   }

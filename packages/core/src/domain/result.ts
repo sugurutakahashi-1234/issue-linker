@@ -1,16 +1,25 @@
 // Unified result type for issue validation
 
-import type { ActionMode, ExtractionMode, IssueStatusFilter } from "./types.js";
+import type {
+  ActionMode,
+  ExtractionMode,
+  IssueStatusFilter,
+} from "./validation-schemas.js";
 
 // Input configuration that was used for validation
 export interface InputConfig {
   text: string;
   mode: ExtractionMode;
-  actionMode?: ActionMode;
   exclude?: string;
   issueStatus: IssueStatusFilter;
   repo: string;
   // Note: githubToken is intentionally not stored for security reasons
+  /**
+   * Action mode - Used only by GitHub Actions to track where the validation was triggered from.
+   * This field is for telemetry/logging purposes only and does not affect the validation logic.
+   * @internal
+   */
+  actionMode?: ActionMode;
 }
 
 // Issue information when issues are found

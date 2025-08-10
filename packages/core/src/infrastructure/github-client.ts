@@ -10,7 +10,7 @@ import type {
   Issue,
   IssueStatus,
   PullRequestCommit,
-} from "../domain/types.js";
+} from "../domain/validation-schemas.js";
 import { getGitHubApiUrl, getGitHubToken } from "./env-accessor.js";
 
 // Create custom Octokit with retry and throttling plugins

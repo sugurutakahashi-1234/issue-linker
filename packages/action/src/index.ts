@@ -1,12 +1,44 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import {
+  type CheckMessageOptions,
+  CheckMessageOptionsSchema,
   checkMessage,
-  type ExtractionMode,
   getPullRequestCommits,
-  type IssueStatusFilter,
   type IssueValidationResult,
 } from "@issue-linker/core";
+import * as v from "valibot";
+
+/**
+ * Helper function to create CheckMessageOptions with validation
+ */
+function createCheckMessageOptions(
+  text: string,
+  mode: string,
+  issueStatus: string,
+  repo: string,
+  actionMode: string,
+  githubToken?: string,
+): CheckMessageOptions {
+  const options = {
+    text,
+    mode,
+    issueStatus,
+    repo,
+    actionMode,
+    ...(githubToken && { githubToken }),
+  };
+
+  // Validate using schema from core
+  try {
+    return v.parse(CheckMessageOptionsSchema, options);
+  } catch (error) {
+    if (error instanceof v.ValiError) {
+      throw new Error(`Invalid options: ${error.message}`);
+    }
+    throw error;
+  }
+}
 
 async function run() {
   try {
@@ -14,8 +46,7 @@ async function run() {
     const results: IssueValidationResult[] = [];
 
     // Get common options
-    const issueStatus = (core.getInput("issue-status") ||
-      "all") as IssueStatusFilter;
+    const issueStatus = core.getInput("issue-status") || "all";
     const repo =
       core.getInput("repo") || `${context.repo.owner}/${context.repo.repo}`;
     const githubToken = core.getInput("github-token") || undefined;
@@ -28,7 +59,7 @@ async function run() {
 
     // Advanced mode inputs
     const text = core.getInput("text");
-    const mode = (core.getInput("mode") || "default") as ExtractionMode;
+    const mode = core.getInput("mode") || "default";
     const exclude = core.getInput("exclude") || undefined;
 
     // Simple mode validations
@@ -37,14 +68,14 @@ async function run() {
       const branchName = context.payload.pull_request?.["head"]?.ref;
       if (branchName) {
         core.info(`Validating branch: ${branchName}`);
-        const messageOptions: Parameters<typeof checkMessage>[0] = {
-          text: branchName,
-          mode: "branch",
-          actionMode: "validate-branch",
+        const messageOptions = createCheckMessageOptions(
+          branchName,
+          "branch",
           issueStatus,
           repo,
-          ...(githubToken && { githubToken }),
-        };
+          "validate-branch",
+          githubToken,
+        );
         core.debug(
           `Calling checkMessage with options: ${JSON.stringify(messageOptions)}`,
         );
@@ -61,14 +92,14 @@ async function run() {
       const prTitle = context.payload.pull_request?.["title"];
       if (prTitle) {
         core.info(`Validating PR title: ${prTitle}`);
-        const messageOptions: Parameters<typeof checkMessage>[0] = {
-          text: prTitle,
-          mode: "default",
-          actionMode: "validate-pr-title",
+        const messageOptions = createCheckMessageOptions(
+          prTitle,
+          "default",
           issueStatus,
           repo,
-          ...(githubToken && { githubToken }),
-        };
+          "validate-pr-title",
+          githubToken,
+        );
         const result = await checkMessage(messageOptions);
         results.push(result);
       } else {
@@ -81,14 +112,14 @@ async function run() {
       const prBody = context.payload.pull_request?.["body"];
       if (prBody) {
         core.info(`Validating PR body`);
-        const messageOptions: Parameters<typeof checkMessage>[0] = {
-          text: prBody,
-          mode: "default",
-          actionMode: "validate-pr-body",
+        const messageOptions = createCheckMessageOptions(
+          prBody,
+          "default",
           issueStatus,
           repo,
-          ...(githubToken && { githubToken }),
-        };
+          "validate-pr-body",
+          githubToken,
+        );
         const result = await checkMessage(messageOptions);
         results.push(result);
       } else {
@@ -105,13 +136,14 @@ async function run() {
       } else {
         try {
           // Get commits using core function
-          const commits = await getPullRequestCommits({
+          const commitsOptions = {
             owner: context.repo.owner,
             repo: context.repo.repo,
             prNumber,
             ...(githubToken && { githubToken }),
-          });
+          };
 
+          const commits = await getPullRequestCommits(commitsOptions);
           core.info(`Found ${commits.length} commits in PR`);
 
           // Check each commit message
@@ -122,39 +154,23 @@ async function run() {
               `Checking commit ${shortSha}: ${commit.message.split("\n")[0]}`,
             );
 
-            const result = await checkMessage({
-              text: commit.message,
-              mode: "commit",
-              actionMode: "validate-commits",
+            const messageOptions = createCheckMessageOptions(
+              commit.message,
+              "commit",
               issueStatus,
               repo,
-              ...(githubToken && { githubToken }),
-            });
+              "validate-commits",
+              githubToken,
+            );
 
+            const result = await checkMessage(messageOptions);
             results.push(result);
           }
         } catch (error) {
-          core.error(
+          // Let the error propagate - it will be caught by the outer try-catch
+          throw new Error(
             `Failed to fetch commits: ${error instanceof Error ? error.message : String(error)}`,
           );
-          // Create error result for commit fetch failure
-          const errorResult: IssueValidationResult = {
-            success: false,
-            message: `Failed to fetch commits: ${error instanceof Error ? error.message : String(error)}`,
-            reason: "error",
-            input: {
-              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-              mode: "commit",
-              actionMode: "validate-commits",
-              issueStatus,
-              repo,
-            },
-            error: {
-              type: "CommitFetchError",
-              message: error instanceof Error ? error.message : String(error),
-            },
-          };
-          results.push(errorResult);
         }
       }
     }
@@ -162,16 +178,28 @@ async function run() {
     // Advanced mode validation
     if (text) {
       core.info(`Validating custom text: ${text}`);
-      const messageOptions: Parameters<typeof checkMessage>[0] = {
+      const messageOptions = {
         text,
         mode,
         actionMode: "custom",
         issueStatus,
         repo,
         ...(githubToken && { githubToken }),
+        ...(exclude && { exclude }),
       };
-      if (exclude) messageOptions.exclude = exclude;
-      const result = await checkMessage(messageOptions);
+
+      // Validate the options
+      let validatedOptions: CheckMessageOptions;
+      try {
+        validatedOptions = v.parse(CheckMessageOptionsSchema, messageOptions);
+      } catch (error) {
+        if (error instanceof v.ValiError) {
+          throw new Error(`Invalid advanced mode options: ${error.message}`);
+        }
+        throw error;
+      }
+
+      const result = await checkMessage(validatedOptions);
       results.push(result);
     }
 
@@ -200,23 +228,33 @@ async function run() {
       } else {
         core.error(`❌ [${actionMode}] ${result.message}`);
       }
+      if (result.issues) {
+        if (result.issues.found.length > 0) {
+          core.info(`   Found issues: #${result.issues.found.join(", #")}`);
+        }
+        if (result.issues.valid.length > 0) {
+          core.info(`   Valid: #${result.issues.valid.join(", #")}`);
+        }
+        const invalidCount =
+          result.issues.notFound.length + result.issues.wrongState.length;
+        if (invalidCount > 0) {
+          const invalid = [
+            ...result.issues.notFound,
+            ...result.issues.wrongState,
+          ];
+          core.info(`   Invalid: #${invalid.join(", #")}`);
+        }
+      }
     }
 
     // Fail if any validation failed
     if (!allSuccess) {
-      core.setFailed(`${summary.failed} validation(s) failed`);
-    } else if (results.length === 0) {
-      core.warning("No validations were performed. Check your inputs.");
-    } else {
-      core.info(`✅ All ${results.length} validation(s) passed`);
+      core.setFailed(
+        `Some validations failed. See the logs above for details.`,
+      );
     }
   } catch (error) {
-    core.setFailed(
-      `Unexpected error: ${error instanceof Error ? error.message : String(error)}`,
-    );
-    if (error instanceof Error && error.stack) {
-      core.debug(`Stack trace: ${error.stack}`);
-    }
+    core.setFailed(error instanceof Error ? error.message : String(error));
   }
 }
 
