@@ -63420,18 +63420,18 @@ async function getGitHubIssue(owner, repo, issueNumber, token) {
  * Fetch commits from a pull request
  * @param owner - Repository owner
  * @param repo - Repository name
- * @param pullNumber - Pull request number
+ * @param prNumber - Pull request number
  * @param token - Optional GitHub token
  * @returns Array of pull request commits
  * @throws GitHubError for API errors
  */
-async function fetchPullRequestCommits(owner, repo, pullNumber, token) {
+async function fetchPullRequestCommits(owner, repo, prNumber, token) {
     const octokit = createOctokit(token);
     try {
         const { data } = await octokit.rest.pulls.listCommits({
             owner,
             repo,
-            pull_number: pullNumber,
+            pull_number: prNumber,
             headers: {
                 Accept: "application/vnd.github+json",
             },
@@ -63449,7 +63449,7 @@ async function fetchPullRequestCommits(owner, repo, pullNumber, token) {
     catch (error) {
         // Handle API errors
         if (error instanceof RequestError) {
-            throw new GitHubError(`Failed to fetch commits for PR #${pullNumber}: ${error.message}`, error.status);
+            throw new GitHubError(`Failed to fetch commits for PR #${prNumber}: ${error.message}`, error.status);
         }
         // Re-throw unexpected errors
         throw error;
@@ -63714,9 +63714,9 @@ async function checkMessage(options) {
 
 // Validation schema for options (internal use only)
 const GetPullRequestCommitsOptionsSchema = object({
-    owner: string(),
-    repo: string(),
-    pullNumber: number(),
+    owner: pipe(string(), minLength(1, "Owner is required")),
+    repo: pipe(string(), minLength(1, "Repository is required")),
+    prNumber: pipe(number(), minValue(1, "Pull request number must be positive")),
     githubToken: optional(string()),
 });
 /**
@@ -63730,7 +63730,7 @@ async function getPullRequestCommits(opts) {
     // Get GitHub token
     const githubToken = options.githubToken ?? getGitHubToken();
     // Fetch commits from GitHub API (already transformed to PullRequestCommit[])
-    return await fetchPullRequestCommits(options.owner, options.repo, options.pullNumber, githubToken);
+    return await fetchPullRequestCommits(options.owner, options.repo, options.prNumber, githubToken);
 }
 //# sourceMappingURL=get-pull-request-commits-use-case.js.map
 ;// CONCATENATED MODULE: ../core/dist/index.js
@@ -63938,7 +63938,7 @@ async function run() {
                     const commits = await (0, core_1.getPullRequestCommits)({
                         owner: context.repo.owner,
                         repo: context.repo.repo,
-                        pullNumber: prNumber,
+                        prNumber,
                         ...(githubToken && { githubToken }),
                     });
                     core.info(`Found ${commits.length} commits in PR`);
