@@ -63,6 +63,10 @@ export interface CheckResult {
   validIssues: number[];
   /** Invalid issue numbers (not found or wrong status) */
   invalidIssues: number[];
+  /** Issue numbers that don't exist in repository */
+  notFoundIssues: number[];
+  /** Issue numbers with wrong state (e.g., closed when open required) */
+  wrongStateIssues: number[];
   /** Whether text was excluded by pattern */
   excluded: boolean;
   /** Additional metadata */
@@ -80,6 +84,16 @@ export interface Issue {
   state: IssueStatus;
   title?: string;
   body?: string;
+}
+
+// Result type for GitHub issue fetch operation
+export interface GitHubIssueResult {
+  found: boolean;
+  issue?: Issue;
+  error?: {
+    type: "not-found" | "unauthorized" | "api-error" | "network-error";
+    message: string;
+  };
 }
 
 // GitHub repository information

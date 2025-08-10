@@ -4,8 +4,13 @@ import { retry } from "@octokit/plugin-retry";
 import { throttling } from "@octokit/plugin-throttling";
 import { RequestError } from "@octokit/request-error";
 import { Octokit } from "octokit";
-import { GitHubError, IssueNotFoundError } from "../domain/errors.js";
-import type { Issue, IssueStatus, PullRequestCommit } from "../domain/types.js";
+import { GitHubError } from "../domain/errors.js";
+import type {
+  GitHubIssueResult,
+  Issue,
+  IssueStatus,
+  PullRequestCommit,
+} from "../domain/types.js";
 import { getGitHubApiUrl, getGitHubToken } from "./env-accessor.js";
 
 // Create custom Octokit with retry and throttling plugins
@@ -53,16 +58,14 @@ function createOctokit(token?: string): Octokit {
  * @param repo - Repository name
  * @param issueNumber - Issue number
  * @param token - Optional GitHub token
- * @returns Issue object
- * @throws IssueNotFoundError if issue doesn't exist (404)
- * @throws GitHubError for other API errors
+ * @returns Result object containing issue or error information
  */
 export async function getGitHubIssue(
   owner: string,
   repo: string,
   issueNumber: number,
   token?: string,
-): Promise<Issue> {
+): Promise<GitHubIssueResult> {
   const octokit = createOctokit(token);
 
   try {
@@ -87,20 +90,50 @@ export async function getGitHubIssue(
       issue.body = data.body;
     }
 
-    return issue;
+    return {
+      found: true,
+      issue,
+    };
   } catch (error: unknown) {
     // Handle different error cases appropriately
     if (error instanceof RequestError) {
       if (error.status === 404) {
         // Issue doesn't exist - this is a normal case
-        throw new IssueNotFoundError(issueNumber);
+        return {
+          found: false,
+          error: {
+            type: "not-found",
+            message: `Issue #${issueNumber} not found`,
+          },
+        };
       }
-      // For other API errors (401, 403, etc.)
-      throw new GitHubError(error.message, error.status);
+      if (error.status === 401) {
+        return {
+          found: false,
+          error: {
+            type: "unauthorized",
+            message: "Unauthorized access to GitHub API",
+          },
+        };
+      }
+      // For other API errors
+      return {
+        found: false,
+        error: {
+          type: "api-error",
+          message: error.message,
+        },
+      };
     }
 
-    // Re-throw unexpected errors (network issues, etc.)
-    throw error;
+    // Network or unexpected errors
+    return {
+      found: false,
+      error: {
+        type: "network-error",
+        message: error instanceof Error ? error.message : String(error),
+      },
+    };
   }
 }
 

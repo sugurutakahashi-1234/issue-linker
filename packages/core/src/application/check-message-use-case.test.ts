@@ -1,7 +1,6 @@
 // Tests for check-message-use-case
 
 import { beforeEach, describe, expect, mock, test } from "bun:test";
-import { IssueNotFoundError } from "../domain/errors.js";
 import { checkMessage } from "./check-message-use-case.js";
 
 // Mock dependencies
@@ -25,12 +24,21 @@ mock.module("../infrastructure/github-client.js", () => ({
   ) => {
     const issue = mockIssues.get(issueNumber);
     if (!issue) {
-      throw new IssueNotFoundError(issueNumber);
+      return {
+        found: false,
+        error: {
+          type: "not-found" as const,
+          message: `Issue #${issueNumber} not found`,
+        },
+      };
     }
     return {
-      number: issueNumber,
-      state: issue.state,
-      title: `Issue ${issueNumber}`,
+      found: true,
+      issue: {
+        number: issueNumber,
+        state: issue.state,
+        title: `Issue ${issueNumber}`,
+      },
     };
   },
 }));
@@ -319,7 +327,8 @@ describe("checkMessage", () => {
 
       expect(result.success).toBe(false);
       expect(result.invalidIssues).toEqual([999]);
-      expect(result.message).toContain("Invalid or not found");
+      expect(result.notFoundIssues).toEqual([999]);
+      expect(result.message).toContain("not found");
     });
 
     test("should handle mixed valid and invalid issues", async () => {
@@ -332,7 +341,38 @@ describe("checkMessage", () => {
       expect(result.success).toBe(false);
       expect(result.validIssues).toEqual([123]);
       expect(result.invalidIssues).toEqual([999]);
-      expect(result.message).toContain("Mixed results");
+      expect(result.notFoundIssues).toEqual([999]);
+      expect(result.message).toContain("not found");
+    });
+
+    test("should handle issue with wrong state", async () => {
+      mockIssues.set(456, { state: "closed" });
+
+      const result = await checkMessage({
+        text: "#456",
+        issueStatus: "open",
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.invalidIssues).toEqual([456]);
+      expect(result.wrongStateIssues).toEqual([456]);
+      expect(result.message).toContain("wrong state");
+    });
+
+    test("should handle mixed not found and wrong state", async () => {
+      mockIssues.set(123, { state: "closed" });
+
+      const result = await checkMessage({
+        text: "#123 #999",
+        issueStatus: "open",
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.invalidIssues).toEqual([999, 123]);
+      expect(result.notFoundIssues).toEqual([999]);
+      expect(result.wrongStateIssues).toEqual([123]);
+      expect(result.message).toContain("not found");
+      expect(result.message).toContain("Wrong state");
     });
 
     test("should handle invalid options", async () => {

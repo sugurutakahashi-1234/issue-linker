@@ -1,58 +1,116 @@
 import { describe, expect, it } from "bun:test";
-import { extractIssueNumberFromBranch } from "./issue-extractor.js";
+import { extractIssueNumbers } from "./issue-extractor.js";
 
-describe("extractIssueNumberFromBranch", () => {
-  it("should extract issue number from branch names with standard patterns", () => {
-    // Priority 1: Number at the beginning
-    expect(extractIssueNumberFromBranch("123-feature")).toBe(123);
-    expect(extractIssueNumberFromBranch("456_feature")).toBe(456);
-    expect(extractIssueNumberFromBranch("789")).toBe(789);
+describe("extractIssueNumbers", () => {
+  describe("default mode", () => {
+    it("should extract issue numbers with # prefix", () => {
+      expect(extractIssueNumbers("Fix #123", "default")).toEqual([123]);
+      expect(extractIssueNumbers("Closes #456 and #789", "default")).toEqual([
+        456, 789,
+      ]);
+      expect(extractIssueNumbers("#1 #2 #3", "default")).toEqual([1, 2, 3]);
+    });
 
-    // Priority 2: Number after slash
-    expect(extractIssueNumberFromBranch("feature/123-add-login")).toBe(123);
-    expect(extractIssueNumberFromBranch("fix/456-bug")).toBe(456);
-    expect(extractIssueNumberFromBranch("feat/789_update")).toBe(789);
+    it("should not extract numbers without # prefix", () => {
+      expect(extractIssueNumbers("Issue 123", "default")).toEqual([]);
+      expect(extractIssueNumbers("PR-456", "default")).toEqual([]);
+      expect(extractIssueNumbers("version 2.0", "default")).toEqual([]);
+    });
 
-    // Priority 3: Number with hash
-    expect(extractIssueNumberFromBranch("#123")).toBe(123);
-    expect(extractIssueNumberFromBranch("feat/#456-description")).toBe(456);
-
-    // Priority 4: Number after hyphen
-    expect(extractIssueNumberFromBranch("fix-456")).toBe(456);
-    expect(extractIssueNumberFromBranch("issue-789")).toBe(789);
+    it("should handle edge cases", () => {
+      expect(extractIssueNumbers("", "default")).toEqual([]);
+      expect(extractIssueNumbers("#0", "default")).toEqual([]); // 0 is invalid
+      expect(extractIssueNumbers("#99999999", "default")).toEqual([]); // Too large
+      expect(extractIssueNumbers("#123#456", "default")).toEqual([123, 456]);
+    });
   });
 
-  it("should extract only the first issue number from branches with multiple numbers", () => {
-    // Should extract 123, not 2
-    expect(extractIssueNumberFromBranch("feat/123-test-2")).toBe(123);
-    expect(extractIssueNumberFromBranch("123-feature-456")).toBe(123);
-    expect(extractIssueNumberFromBranch("fix/456-update-v2")).toBe(456);
-    expect(extractIssueNumberFromBranch("feature/789-test-10-times")).toBe(789);
+  describe("commit mode", () => {
+    it("should extract issue numbers with # prefix (same as default)", () => {
+      expect(extractIssueNumbers("Fix #123", "commit")).toEqual([123]);
+      expect(extractIssueNumbers("Closes #456 and #789", "commit")).toEqual([
+        456, 789,
+      ]);
+    });
 
-    // Edge case: when first pattern doesn't match but second does
-    expect(extractIssueNumberFromBranch("feature-v2/123-update")).toBe(123);
+    it("should handle multiple issues in commit message", () => {
+      expect(
+        extractIssueNumbers("feat: add feature (#123, #456)", "commit"),
+      ).toEqual([123, 456]);
+      expect(
+        extractIssueNumbers("fix: resolve #1, #2, and #3", "commit"),
+      ).toEqual([1, 2, 3]);
+    });
   });
 
-  it("should return null for branches without valid issue numbers", () => {
-    expect(extractIssueNumberFromBranch("main")).toBe(null);
-    expect(extractIssueNumberFromBranch("develop")).toBe(null);
-    expect(extractIssueNumberFromBranch("feature/login")).toBe(null);
-    expect(extractIssueNumberFromBranch("release-v2.0.0")).toBe(null);
-    expect(extractIssueNumberFromBranch("hotfix/update-deps")).toBe(null);
+  describe("branch mode", () => {
+    it("should extract issue number from branch names with standard patterns", () => {
+      // Priority 1: Number at the beginning
+      expect(extractIssueNumbers("123-feature", "branch")).toEqual([123]);
+      expect(extractIssueNumbers("456_feature", "branch")).toEqual([456]);
+
+      // Priority 2: Number after slash
+      expect(extractIssueNumbers("feature/123-add-login", "branch")).toEqual([
+        123,
+      ]);
+      expect(extractIssueNumbers("fix/456_bug", "branch")).toEqual([456]);
+
+      // Priority 3: Number with hash
+      expect(extractIssueNumbers("#123", "branch")).toEqual([123]);
+      expect(extractIssueNumbers("feat/#456-description", "branch")).toEqual([
+        456,
+      ]);
+
+      // Priority 4: Number after hyphen/underscore
+      expect(extractIssueNumbers("feature-123-desc", "branch")).toEqual([123]);
+      expect(extractIssueNumbers("issue_789_fix", "branch")).toEqual([789]);
+    });
+
+    it("should extract only the first matching issue number", () => {
+      // Should extract 123, not 456
+      expect(extractIssueNumbers("123-feature-456", "branch")).toEqual([123]);
+      expect(extractIssueNumbers("feat/123-test-2", "branch")).toEqual([123]);
+      expect(extractIssueNumbers("fix/456-update-v2", "branch")).toEqual([456]);
+    });
+
+    it("should return empty array for branches without valid issue numbers", () => {
+      expect(extractIssueNumbers("main", "branch")).toEqual([]);
+      expect(extractIssueNumbers("develop", "branch")).toEqual([]);
+      expect(extractIssueNumbers("feature/login", "branch")).toEqual([]);
+      expect(extractIssueNumbers("release-v2.0.0", "branch")).toEqual([]);
+      expect(extractIssueNumbers("hotfix/update-deps", "branch")).toEqual([]);
+    });
+
+    it("should handle edge cases", () => {
+      expect(extractIssueNumbers("", "branch")).toEqual([]);
+      expect(extractIssueNumbers("0-feature", "branch")).toEqual([]); // 0 is invalid
+      expect(extractIssueNumbers("99999999-test", "branch")).toEqual([]); // Too large
+      expect(extractIssueNumbers("version2", "branch")).toEqual([]); // No separator
+      expect(extractIssueNumbers("test-2.0", "branch")).toEqual([]); // Decimal number
+    });
+
+    it("should prioritize earlier patterns", () => {
+      // Start pattern wins over others
+      expect(extractIssueNumbers("123-feature-456", "branch")).toEqual([123]);
+      // Slash pattern wins when no start pattern
+      expect(extractIssueNumbers("feat/123-issue-456", "branch")).toEqual([
+        123,
+      ]);
+      // Hash pattern wins when no start/slash pattern
+      expect(extractIssueNumbers("feature/#123-and-456", "branch")).toEqual([
+        123,
+      ]);
+    });
   });
 
-  it("should handle edge cases", () => {
-    expect(extractIssueNumberFromBranch("")).toBe(null);
-    expect(extractIssueNumberFromBranch("0")).toBe(null); // 0 is not a valid issue number
-    expect(extractIssueNumberFromBranch("99999999")).toBe(null); // Too large
-    expect(extractIssueNumberFromBranch("test-2.0")).toBe(null); // 2.0 is not captured due to the dot
-    expect(extractIssueNumberFromBranch("version2")).toBe(null); // No separator after number
-  });
-
-  it("should prioritize earlier patterns", () => {
-    // When multiple patterns could match, earlier pattern should win
-    expect(extractIssueNumberFromBranch("123-feature-456")).toBe(123); // Start pattern wins
-    expect(extractIssueNumberFromBranch("feat/123-issue-456")).toBe(123); // Slash pattern wins
-    expect(extractIssueNumberFromBranch("#123-and-456")).toBe(123); // Hash pattern wins
+  describe("unique issue numbers", () => {
+    it("should return unique issue numbers", () => {
+      expect(extractIssueNumbers("Fix #123 and #123 again", "default")).toEqual(
+        [123],
+      );
+      expect(extractIssueNumbers("#1 #2 #1 #3 #2", "default")).toEqual([
+        1, 2, 3,
+      ]);
+    });
   });
 });
