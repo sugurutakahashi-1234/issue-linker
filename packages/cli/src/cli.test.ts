@@ -54,6 +54,21 @@ describe("CLI", () => {
       expect(proc.exitCode).toBe(0);
     });
 
+    it("should work with short form -c option", async () => {
+      const proc = spawn(
+        ["bun", "run", "./cli.ts", "-t", "main", "-c", "branch"],
+        {
+          cwd: import.meta.dir,
+        },
+      );
+
+      const text = await new Response(proc.stdout).text();
+      await proc.exited;
+
+      expect(text).toContain("excluded from validation");
+      expect(proc.exitCode).toBe(0);
+    });
+
     it("should handle custom exclude patterns", async () => {
       const proc = spawn(
         [
@@ -147,6 +162,36 @@ describe("CLI", () => {
             "-t",
             "feat/issue-3-test",
             "--check-mode",
+            "branch",
+            "--repo",
+            "sugurutakahashi-1234/issue-linker",
+          ],
+          {
+            cwd: import.meta.dir,
+          },
+        );
+
+        const text = await new Response(proc.stdout).text();
+        await proc.exited;
+
+        expect(text).toContain("✅ Valid issues: #3");
+        expect(proc.exitCode).toBe(0);
+      },
+      { timeout: 2000 }, // 2s timeout (API timeout 1s + buffer)
+    );
+
+    it(
+      "should work with short form -c for API calls",
+      async () => {
+        // Test short form with real GitHub API
+        const proc = spawn(
+          [
+            "bun",
+            "run",
+            "./cli.ts",
+            "-t",
+            "feat/issue-3-test",
+            "-c",
             "branch",
             "--repo",
             "sugurutakahashi-1234/issue-linker",

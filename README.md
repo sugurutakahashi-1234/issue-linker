@@ -24,7 +24,7 @@ Validate text contains valid GitHub issue numbers. Perfect for maintaining trace
 npm install -g @sugurutakahashi-1234/issue-linker
 
 # Or use directly with npx
-npx @sugurutakahashi-1234/issue-linker -t "feat/123-new-feature" --check-mode branch
+npx @sugurutakahashi-1234/issue-linker -t "feat/123-new-feature" -c branch
 ```
 
 ### GitHub Action
@@ -44,9 +44,13 @@ Add to your workflow:
 issue-linker -t "your text here"
 
 # Check branch names
+issue-linker -t "$(git branch --show-current)" -c branch
+# Or use the long form
 issue-linker -t "$(git branch --show-current)" --check-mode branch
 
 # Check commit messages
+issue-linker -t "$(git log -1 --pretty=%s)" -c commit
+# Or use the long form
 issue-linker -t "$(git log -1 --pretty=%s)" --check-mode commit
 
 # Check PR title
@@ -59,7 +63,7 @@ issue-linker -t "feat: add feature #123" --repo owner/repo
 issue-linker -t "fix #456" --issue-status open
 
 # Custom exclude pattern
-issue-linker -t "release/v1.0.0" --check-mode branch --exclude "release/*"
+issue-linker -t "release/v1.0.0" -c branch --exclude "release/*"
 
 # Show detailed output (verbose mode)
 issue-linker -t "Fix #123" --verbose
@@ -120,7 +124,7 @@ Add to your Git hooks for automatic validation:
 # It runs only when a branch is checked out (when $3 is "1"), not a file.
 if [ "$3" = "1" ]; then
   branch=$(git branch --show-current)
-  bunx @sugurutakahashi-1234/issue-linker -t "$branch" --check-mode branch || {
+  bunx @sugurutakahashi-1234/issue-linker -t "$branch" -c branch || {
     echo "⚠️  Warning: Branch name doesn't contain a valid issue number"
   }
 fi
@@ -135,7 +139,7 @@ fi
 # It reads the commit message from the file passed as the first argument ($1).
 # If validation fails, the commit is aborted.
 message=$(cat $1)
-bunx @sugurutakahashi-1234/issue-linker -t "$message" --check-mode commit || {
+bunx @sugurutakahashi-1234/issue-linker -t "$message" -c commit || {
   echo "❌ Commit message must reference a valid issue number"
   exit 1
 }
@@ -209,14 +213,14 @@ release/v1.0.0      ❌ (excluded)
 
 ```bash
 # Validate current branch
-issue-linker -t "$(git branch --show-current)" --check-mode branch
+issue-linker -t "$(git branch --show-current)" -c branch
 
 # Validate last commit
-issue-linker -t "$(git --no-pager log -1 --pretty=%s)" --check-mode commit
+issue-linker -t "$(git --no-pager log -1 --pretty=%s)" -c commit
 
 # Validate all commit messages in a PR
 git --no-pager log main..HEAD --pretty=%s | while read msg; do
-  issue-linker -t "$msg" --check-mode commit
+  issue-linker -t "$msg" -c commit
 done
 ```
 

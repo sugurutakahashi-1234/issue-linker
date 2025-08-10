@@ -26,7 +26,7 @@ program
   .version(packageJson.version)
   .requiredOption("-t, --text <text>", "text to validate")
   .option(
-    "--check-mode <mode>",
+    "-c, --check-mode <mode>",
     "check mode: default | branch | commit",
     DEFAULT_OPTIONS.mode,
   )
