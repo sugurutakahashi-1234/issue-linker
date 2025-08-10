@@ -11,13 +11,21 @@ export {
   IssueNotFoundError,
   ValidationError,
 } from "./domain/errors.js";
+
+/** @public */
+export type {
+  ErrorInfo,
+  InputConfig,
+  IssueInfo,
+  IssueValidationResult,
+  ValidationReason,
+} from "./domain/result.js";
+
 /** @public */
 export type {
   ActionMode,
   CheckMessageOptions,
-  CheckOptions,
-  CheckReason,
-  CheckResult,
+  CheckResult, // Alias for IssueValidationResult
   ExtractionMode,
   GetPullRequestCommitsOptions,
   GitHubRepository,

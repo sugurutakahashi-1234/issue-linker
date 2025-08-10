@@ -14,6 +14,7 @@ flowchart LR
             subgraph packages/core/dist["/dist"]
                 packages/core/dist/index.d.ts["index.d.ts"]
                 subgraph packages/core/dist/domain["/domain"]
+                    packages/core/dist/domain/result.d.ts["result.d.ts"]
                     packages/core/dist/domain/types.d.ts["types.d.ts"]
                     packages/core/dist/domain/constants.d.ts["constants.d.ts"]
                     packages/core/dist/domain/errors.d.ts["errors.d.ts"]
@@ -45,11 +46,15 @@ flowchart LR
         node//modules///octokit/request//error/dist//types/index.d.ts["@octokit/request-error"]
         node//modules/octokit/dist//types/index.d.ts["octokit"]
     end
+    packages/core/dist/domain/result.d.ts-->packages/core/dist/domain/types.d.ts
+    packages/core/dist/domain/types.d.ts-->packages/core/dist/domain/result.d.ts
     packages/core/dist/domain/constants.d.ts-->packages/core/dist/domain/types.d.ts
+    packages/core/dist/application/check//message//use//case.d.ts-->packages/core/dist/domain/result.d.ts
     packages/core/dist/application/check//message//use//case.d.ts-->packages/core/dist/domain/types.d.ts
     packages/core/dist/application/get//pull//request//commits//use//case.d.ts-->packages/core/dist/domain/types.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/domain/constants.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/domain/errors.d.ts
+    packages/core/dist/index.d.ts-->packages/core/dist/domain/result.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/domain/types.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/application/check//message//use//case.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/application/get//pull//request//commits//use//case.d.ts

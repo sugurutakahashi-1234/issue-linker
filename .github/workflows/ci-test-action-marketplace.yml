@@ -45,16 +45,16 @@ jobs:
       
       - name: Verify actionMode
         run: |
-          MODES='${{ steps.test.outputs.executed-modes }}'
-          echo "Executed modes: $MODES"
+          RESULTS='${{ steps.test.outputs.results }}'
+          echo "Results: $RESULTS"
           
           # Check if validate-branch mode was executed with correct actionMode
-          if echo "$MODES" | jq -e '.[] | select(.actionMode == "validate-branch")' > /dev/null 2>&1; then
+          if echo "$RESULTS" | jq -e '.[] | select(.input.actionMode == "validate-branch")' > /dev/null 2>&1; then
             echo "✅ validate-branch mode has correct actionMode"
             exit 0
           else
             echo "❌ validate-branch mode does not have correct actionMode"
-            echo "Modes found: $(echo "$MODES" | jq -r '[.[].actionMode] | unique | join(", ")' 2>/dev/null || echo 'none')"
+            echo "ActionModes found: $(echo "$RESULTS" | jq -r '[.[].input.actionMode // "none"] | unique | join(", ")' 2>/dev/null || echo 'none')"
             exit 1
           fi
 
@@ -78,16 +78,16 @@ jobs:
       
       - name: Verify actionMode
         run: |
-          MODES='${{ steps.test.outputs.executed-modes }}'
-          echo "Executed modes: $MODES"
+          RESULTS='${{ steps.test.outputs.results }}'
+          echo "Results: $RESULTS"
           
           # Check if validate-pr-title mode was executed with correct actionMode
-          if echo "$MODES" | jq -e '.[] | select(.actionMode == "validate-pr-title")' > /dev/null 2>&1; then
+          if echo "$RESULTS" | jq -e '.[] | select(.input.actionMode == "validate-pr-title")' > /dev/null 2>&1; then
             echo "✅ validate-pr-title mode has correct actionMode"
             exit 0
           else
             echo "❌ validate-pr-title mode does not have correct actionMode"
-            echo "Modes found: $(echo "$MODES" | jq -r '[.[].actionMode] | unique | join(", ")' 2>/dev/null || echo 'none')"
+            echo "ActionModes found: $(echo "$RESULTS" | jq -r '[.[].input.actionMode // "none"] | unique | join(", ")' 2>/dev/null || echo 'none')"
             exit 1
           fi
 
@@ -111,16 +111,16 @@ jobs:
       
       - name: Verify actionMode
         run: |
-          MODES='${{ steps.test.outputs.executed-modes }}'
-          echo "Executed modes: $MODES"
+          RESULTS='${{ steps.test.outputs.results }}'
+          echo "Results: $RESULTS"
           
           # Check if validate-pr-body mode was executed with correct actionMode
-          if echo "$MODES" | jq -e '.[] | select(.actionMode == "validate-pr-body")' > /dev/null 2>&1; then
+          if echo "$RESULTS" | jq -e '.[] | select(.input.actionMode == "validate-pr-body")' > /dev/null 2>&1; then
             echo "✅ validate-pr-body mode has correct actionMode"
             exit 0
           else
             echo "❌ validate-pr-body mode does not have correct actionMode"
-            echo "Modes found: $(echo "$MODES" | jq -r '[.[].actionMode] | unique | join(", ")' 2>/dev/null || echo 'none')"
+            echo "ActionModes found: $(echo "$RESULTS" | jq -r '[.[].input.actionMode // "none"] | unique | join(", ")' 2>/dev/null || echo 'none')"
             exit 1
           fi
 
@@ -144,16 +144,16 @@ jobs:
       
       - name: Verify actionMode
         run: |
-          MODES='${{ steps.test.outputs.executed-modes }}'
-          echo "Executed modes: $MODES"
+          RESULTS='${{ steps.test.outputs.results }}'
+          echo "Results: $RESULTS"
           
           # Check if validate-commits mode was executed with correct actionMode
-          if echo "$MODES" | jq -e '.[] | select(.actionMode == "validate-commits")' > /dev/null 2>&1; then
+          if echo "$RESULTS" | jq -e '.[] | select(.input.actionMode == "validate-commits")' > /dev/null 2>&1; then
             echo "✅ validate-commits mode has correct actionMode"
             exit 0
           else
             echo "❌ validate-commits mode does not have correct actionMode"
-            echo "Modes found: $(echo "$MODES" | jq -r '[.[].actionMode] | unique | join(", ")' 2>/dev/null || echo 'none')"
+            echo "ActionModes found: $(echo "$RESULTS" | jq -r '[.[].input.actionMode // "none"] | unique | join(", ")' 2>/dev/null || echo 'none')"
             exit 1
           fi
 
@@ -178,16 +178,16 @@ jobs:
       
       - name: Verify actionMode
         run: |
-          MODES='${{ steps.test.outputs.executed-modes }}'
-          echo "Executed modes: $MODES"
+          RESULTS='${{ steps.test.outputs.results }}'
+          echo "Results: $RESULTS"
           
           # Check if custom mode was executed with correct actionMode
-          if echo "$MODES" | jq -e '.[] | select(.actionMode == "custom")' > /dev/null 2>&1; then
+          if echo "$RESULTS" | jq -e '.[] | select(.input.actionMode == "custom")' > /dev/null 2>&1; then
             echo "✅ custom mode has correct actionMode"
             exit 0
           else
             echo "❌ custom mode does not have correct actionMode"
-            echo "Modes found: $(echo "$MODES" | jq -r '[.[].actionMode] | unique | join(", ")' 2>/dev/null || echo 'none')"
+            echo "ActionModes found: $(echo "$RESULTS" | jq -r '[.[].input.actionMode // "none"] | unique | join(", ")' 2>/dev/null || echo 'none')"
             exit 1
           fi
 

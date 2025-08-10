@@ -39272,7 +39272,7 @@ __webpack_unused_export__ = defaultContentType
 
 /***/ }),
 
-/***/ 165:
+/***/ 7563:
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
 
 // ESM COMPAT FLAG
@@ -46426,6 +46426,81 @@ function unwrap(schema) {
 }
 
 
+;// CONCATENATED MODULE: ../core/dist/domain/result-factory.js
+// Factory functions for creating IssueValidationResult objects
+/**
+ * Create a result for when text is excluded from validation
+ */
+function createExcludedResult(input) {
+    return {
+        success: true,
+        message: "Text was excluded from validation",
+        reason: "excluded",
+        input,
+    };
+}
+/**
+ * Create a result for when no issue numbers are found
+ */
+function createNoIssuesResult(input) {
+    return {
+        success: false,
+        message: "No issue number found in text",
+        reason: "no-issues",
+        input,
+    };
+}
+/**
+ * Create a result for when valid issues are found
+ */
+function createValidResult(issues, input) {
+    return {
+        success: true,
+        message: `Valid issue(s) found: #${issues.valid.join(", #")} in ${input.repo}`,
+        reason: "valid",
+        input,
+        issues,
+    };
+}
+/**
+ * Create a result for when invalid issues are found
+ */
+function createInvalidResult(issues, input) {
+    // Build detailed message
+    const parts = [];
+    if (issues.notFound.length > 0) {
+        parts.push(`Issues not found: #${issues.notFound.join(", #")}`);
+    }
+    if (issues.wrongState.length > 0) {
+        parts.push(`Wrong state: #${issues.wrongState.join(", #")}`);
+    }
+    const message = `${parts.join("; ")} in ${input.repo}`;
+    return {
+        success: false,
+        message,
+        reason: "invalid-issues",
+        input,
+        issues,
+    };
+}
+/**
+ * Create a result for when an error occurs
+ */
+function createErrorResult(error, input) {
+    const errorInfo = {
+        type: error instanceof Error ? error.constructor.name : "UnknownError",
+        message: error instanceof Error ? error.message : String(error),
+        ...(error instanceof Error && error.stack && { stack: error.stack }),
+    };
+    return {
+        success: false,
+        message: errorInfo.message,
+        reason: "error",
+        input,
+        error: errorInfo,
+    };
+}
+//# sourceMappingURL=result-factory.js.map
 // EXTERNAL MODULE: ../../node_modules/micromatch/index.js
 var node_modules_micromatch = __nccwpck_require__(7805);
 ;// CONCATENATED MODULE: ../../node_modules/@isaacs/balanced-match/dist/esm/index.js
@@ -67784,6 +67859,7 @@ function parseRepositoryString(repository) {
 
 
 
+
 // Validation schema for options (internal use only)
 const CheckMessageOptionsSchema = object({
     text: string(),
@@ -67809,154 +67885,88 @@ async function checkMessage(options) {
     // Step 1: Validate options
     const validationResult = safeParse(CheckMessageOptionsSchema, options);
     if (!validationResult.success) {
-        return {
-            success: false,
-            message: validationResult.issues[0]?.message ?? "Invalid options provided",
-            issueNumbers: [],
-            validIssues: [],
-            invalidIssues: [],
-            notFoundIssues: [],
-            wrongStateIssues: [],
-            excluded: false,
-            metadata: {
-                mode: "default",
-                actionMode: options.actionMode,
-                repo: "",
-                text: options.text ?? "",
-            },
+        const input = {
+            text: options.text ?? "",
+            mode: "default",
+            ...(options.actionMode && { actionMode: options.actionMode }),
+            issueStatus: "all",
+            repo: "",
         };
+        const error = new Error(validationResult.issues[0]?.message ?? "Invalid options provided");
+        return createErrorResult(error, input);
     }
     const opts = validationResult.output;
     const mode = opts.mode ?? "default";
-    const text = opts.text;
+    const issueStatus = opts.issueStatus ?? "all";
     try {
-        // Step 2: Check exclusion
-        if (shouldExclude(text, mode, opts.exclude)) {
-            return {
-                success: true,
-                message: `Text is excluded from validation`,
-                issueNumbers: [],
-                validIssues: [],
-                invalidIssues: [],
-                notFoundIssues: [],
-                wrongStateIssues: [],
-                excluded: true,
-                metadata: {
-                    mode,
-                    actionMode: opts.actionMode,
-                    repo: "",
-                    text,
-                },
-            };
-        }
-        // Step 3: Extract issue numbers
-        const issueNumbers = extractIssueNumbers(text, mode);
-        if (issueNumbers.length === 0) {
-            return {
-                success: false,
-                message: `No issue number found in text`,
-                issueNumbers: [],
-                validIssues: [],
-                invalidIssues: [],
-                notFoundIssues: [],
-                wrongStateIssues: [],
-                excluded: false,
-                metadata: {
-                    mode,
-                    actionMode: opts.actionMode,
-                    repo: "",
-                    text,
-                },
-            };
-        }
-        // Step 4: Get repository information
+        // Get repository information early for input config
         const repository = opts.repo
             ? parseRepositoryString(opts.repo)
             : parseRepositoryFromGitUrl(await getGitRemoteUrl());
         const repoString = `${repository.owner}/${repository.repo}`;
-        // Step 5: Validate each issue number
+        // Build input config
+        const input = {
+            text: opts.text,
+            mode,
+            ...(opts.actionMode && { actionMode: opts.actionMode }),
+            ...(opts.exclude && { exclude: opts.exclude }),
+            issueStatus,
+            repo: repoString,
+        };
+        // Step 2: Check exclusion
+        if (shouldExclude(opts.text, mode, opts.exclude)) {
+            return createExcludedResult(input);
+        }
+        // Step 3: Extract issue numbers
+        const issueNumbers = extractIssueNumbers(opts.text, mode);
+        if (issueNumbers.length === 0) {
+            return createNoIssuesResult(input);
+        }
+        // Step 4: Validate each issue number
         const githubToken = opts.githubToken ?? getGitHubToken();
-        const issueStatus = opts.issueStatus ?? "all";
         const validIssues = [];
         const notFoundIssues = [];
         const wrongStateIssues = [];
         for (const issueNumber of issueNumbers) {
             const result = await getGitHubIssue(repository.owner, repository.repo, issueNumber, githubToken);
             if (!result.found) {
-                // Issue doesn't exist in the repository
                 notFoundIssues.push(issueNumber);
             }
-            else {
-                // Issue was found, check its state
-                const issue = result.issue;
-                if (issue && !isIssueStateAllowed(issue.state, issueStatus)) {
-                    // Issue exists but has wrong state
-                    wrongStateIssues.push(issueNumber);
-                }
-                else if (issue) {
-                    // Issue exists and has correct state
-                    validIssues.push(issueNumber);
-                }
+            else if (result.issue &&
+                !isIssueStateAllowed(result.issue.state, issueStatus)) {
+                wrongStateIssues.push(issueNumber);
+            }
+            else if (result.issue) {
+                validIssues.push(issueNumber);
             }
         }
-        // Combine notFound and wrongState for backward compatibility
-        const invalidIssues = [...notFoundIssues, ...wrongStateIssues];
-        // Step 6: Return result
-        const success = validIssues.length > 0 && invalidIssues.length === 0;
-        let message;
-        if (success) {
-            message = `Valid issue(s) found: #${validIssues.join(", #")} in ${repoString}`;
-        }
-        else if (notFoundIssues.length > 0 && wrongStateIssues.length > 0) {
-            message = `Issues not found: #${notFoundIssues.join(", #")}; Wrong state: #${wrongStateIssues.join(", #")} in ${repoString}`;
-        }
-        else if (notFoundIssues.length > 0) {
-            message = `Issue(s) not found: #${notFoundIssues.join(", #")} in ${repoString}`;
-        }
-        else if (wrongStateIssues.length > 0) {
-            message = `Issue(s) with wrong state: #${wrongStateIssues.join(", #")} in ${repoString}`;
+        // Step 5: Create result based on findings
+        const issues = {
+            found: issueNumbers,
+            valid: validIssues,
+            notFound: notFoundIssues,
+            wrongState: wrongStateIssues,
+        };
+        if (validIssues.length > 0 &&
+            notFoundIssues.length === 0 &&
+            wrongStateIssues.length === 0) {
+            return createValidResult(issues, input);
         }
         else {
-            // This should never happen - indicates a logic error
-            // All issue numbers should be categorized as valid, notFound, or wrongState
-            throw new Error(`Unexpected state in checkMessage: issueNumbers=${issueNumbers.length}, ` +
-                `valid=${validIssues.length}, notFound=${notFoundIssues.length}, ` +
-                `wrongState=${wrongStateIssues.length}`);
+            return createInvalidResult(issues, input);
         }
-        return {
-            success,
-            message,
-            issueNumbers,
-            validIssues,
-            invalidIssues,
-            notFoundIssues,
-            wrongStateIssues,
-            excluded: false,
-            metadata: {
-                mode,
-                actionMode: opts.actionMode,
-                repo: repoString,
-                text,
-            },
-        };
     }
     catch (error) {
-        // Error handling
-        return {
-            success: false,
-            message: error instanceof Error ? error.message : String(error),
-            issueNumbers: [],
-            validIssues: [],
-            invalidIssues: [],
-            notFoundIssues: [],
-            wrongStateIssues: [],
-            excluded: false,
-            metadata: {
-                mode,
-                repo: "",
-                text,
-            },
+        // Error handling - create minimal input config if we don't have repo info yet
+        const input = {
+            text: opts.text,
+            mode,
+            ...(opts.actionMode && { actionMode: opts.actionMode }),
+            ...(opts.exclude && { exclude: opts.exclude }),
+            issueStatus,
+            repo: opts.repo ?? "",
         };
+        return createErrorResult(error, input);
     }
 }
 //# sourceMappingURL=check-message-use-case.js.map
@@ -68079,11 +68089,11 @@ Object.defineProperty(exports, "B", ({ value: true }));
 const tslib_1 = __nccwpck_require__(4176);
 const core = tslib_1.__importStar(__nccwpck_require__(7184));
 const github = tslib_1.__importStar(__nccwpck_require__(5683));
-const core_1 = __nccwpck_require__(165);
+const core_1 = __nccwpck_require__(7563);
 async function run() {
     try {
         const context = github.context;
-        const validations = [];
+        const results = [];
         // Get common options
         const issueStatus = (core.getInput("issue-status") ||
             "all");
@@ -68115,13 +68125,7 @@ async function run() {
                 core.debug(`Calling checkMessage with options: ${JSON.stringify(messageOptions)}`);
                 const result = await (0, core_1.checkMessage)(messageOptions);
                 core.debug(`checkMessage result: ${JSON.stringify(result)}`);
-                validations.push({
-                    name: "branch",
-                    success: result.success,
-                    message: result.message,
-                    issues: result.validIssues,
-                    metadata: result.metadata,
-                });
+                results.push(result);
             }
             else {
                 core.warning("Branch name not found in context");
@@ -68141,13 +68145,7 @@ async function run() {
                     ...(githubToken && { githubToken }),
                 };
                 const result = await (0, core_1.checkMessage)(messageOptions);
-                validations.push({
-                    name: "pr-title",
-                    success: result.success,
-                    message: result.message,
-                    issues: result.validIssues,
-                    metadata: result.metadata,
-                });
+                results.push(result);
             }
             else {
                 core.warning("PR title not found in context");
@@ -68167,13 +68165,7 @@ async function run() {
                     ...(githubToken && { githubToken }),
                 };
                 const result = await (0, core_1.checkMessage)(messageOptions);
-                validations.push({
-                    name: "pr-body",
-                    success: result.success,
-                    message: result.message,
-                    issues: result.validIssues,
-                    metadata: result.metadata,
-                });
+                results.push(result);
             }
             else {
                 core.warning("PR body not found in context");
@@ -68207,28 +68199,29 @@ async function run() {
                             repo,
                             ...(githubToken && { githubToken }),
                         });
-                        validations.push({
-                            name: `commit-${shortSha}`,
-                            success: result.success,
-                            message: `[${shortSha}] ${result.message}`,
-                            issues: result.validIssues,
-                            metadata: result.metadata,
-                        });
+                        results.push(result);
                     }
                 }
                 catch (error) {
                     core.error(`Failed to fetch commits: ${error instanceof Error ? error.message : String(error)}`);
-                    validations.push({
-                        name: "commits",
+                    // Create error result for commit fetch failure
+                    const errorResult = {
                         success: false,
                         message: `Failed to fetch commits: ${error instanceof Error ? error.message : String(error)}`,
-                        metadata: {
-                            actionMode: "validate-commits",
-                            mode: "commit",
-                            repo,
+                        reason: "error",
+                        input: {
                             text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+                            mode: "commit",
+                            actionMode: "validate-commits",
+                            issueStatus,
+                            repo,
                         },
-                    });
+                        error: {
+                            type: "CommitFetchError",
+                            message: error instanceof Error ? error.message : String(error),
+                        },
+                    };
+                    results.push(errorResult);
                 }
             }
         }
@@ -68246,51 +68239,41 @@ async function run() {
             if (exclude)
                 messageOptions.exclude = exclude;
             const result = await (0, core_1.checkMessage)(messageOptions);
-            validations.push({
-                name: "custom",
-                success: result.success,
-                message: result.message,
-                issues: result.validIssues,
-                metadata: result.metadata,
-            });
+            results.push(result);
         }
         // Set outputs
-        const allSuccess = validations.every((v) => v.success);
-        const failedValidations = validations.filter((v) => !v.success);
+        const allSuccess = results.every((r) => r.success);
         const allFoundIssues = [
-            ...new Set(validations.flatMap((v) => v.issues || [])),
+            ...new Set(results.flatMap((r) => r.issues?.found || [])),
         ];
-        // Create executed modes details
-        const executedModes = validations.map((v) => ({
-            name: v.name,
-            actionMode: v.metadata?.actionMode || "unknown",
-            extractionMode: v.metadata?.mode || "unknown",
-            success: v.success,
-            issuesFound: v.issues?.length || 0,
-        }));
+        // Create summary
+        const summary = {
+            totalValidations: results.length,
+            failed: results.filter((r) => !r.success).length,
+            allIssues: allFoundIssues,
+        };
         core.setOutput("success", allSuccess.toString());
-        core.setOutput("failed-validations", JSON.stringify(failedValidations));
-        core.setOutput("found-issues", JSON.stringify(allFoundIssues));
-        core.setOutput("executed-modes", JSON.stringify(executedModes));
-        core.setOutput("total-validations", validations.length.toString());
+        core.setOutput("results", JSON.stringify(results));
+        core.setOutput("summary", JSON.stringify(summary));
         // Log results
-        for (const validation of validations) {
-            if (validation.success) {
-                core.info(`✅ [${validation.name}] ${validation.message}`);
+        for (const result of results) {
+            const actionMode = result.input.actionMode || "custom";
+            if (result.success) {
+                core.info(`✅ [${actionMode}] ${result.message}`);
             }
             else {
-                core.error(`❌ [${validation.name}] ${validation.message}`);
+                core.error(`❌ [${actionMode}] ${result.message}`);
             }
         }
         // Fail if any validation failed
         if (!allSuccess) {
-            core.setFailed(`${failedValidations.length} validation(s) failed`);
+            core.setFailed(`${summary.failed} validation(s) failed`);
         }
-        else if (validations.length === 0) {
+        else if (results.length === 0) {
             core.warning("No validations were performed. Check your inputs.");
         }
         else {
-            core.info(`✅ All ${validations.length} validation(s) passed`);
+            core.info(`✅ All ${results.length} validation(s) passed`);
         }
     }
     catch (error) {

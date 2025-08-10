@@ -167,7 +167,19 @@
       "Bash(do echo \"=== Checking $scope ===\")",
       "Bash(git ls-tree:*)",
       "Bash(GITHUB_TOKEN=\"\" GH_TOKEN=\"\" bun run src/cli.ts --text \"Fix #123\" --repo \"owner/repo\")",
-      "Bash(DEBUG_TOKEN_SOURCE=1 GITHUB_TOKEN=\"\" GH_TOKEN=\"\" bun run src/cli.ts --text \"Fix #123\" --repo \"owner/repo\")"
+      "Bash(DEBUG_TOKEN_SOURCE=1 GITHUB_TOKEN=\"\" GH_TOKEN=\"\" bun run src/cli.ts --text \"Fix #123\" --repo \"owner/repo\")",
+      "Bash(-e 's/result\\.issueNumbers/result.issues?.found/g' )",
+      "Bash(-e 's/result\\.validIssues/result.issues?.valid/g' )",
+      "Bash(-e 's/result\\.invalidIssues\\]/\\(result.issues?.notFound || []).concat(result.issues?.wrongState || [])\\]/g' )",
+      "Bash(-e 's/result\\.notFoundIssues/result.issues?.notFound/g' )",
+      "Bash(-e 's/result\\.wrongStateIssues/result.issues?.wrongState/g' )",
+      "Bash(-e 's/expect(result\\.excluded)\\.toBe(true)/expect(result.reason).toBe(\"\"excluded\"\")/g' )",
+      "Bash(-e 's/expect(result\\.excluded)\\.toBe(false)/expect(result.reason).not.toBe(\"\"excluded\"\")/g' )",
+      "Bash(-e 's/result\\.metadata\\.mode/result.input.mode/g' )",
+      "Bash(-e 's/result\\.metadata\\.repo/result.input.repo/g' )",
+      "Bash(src/application/check-message-use-case.test.ts)",
+      "Bash(-e 's/expect(result\\.invalidIssues)\\.toEqual(\\[\\([^]]*\\)\\])/expect([...(result.issues?.notFound || []), ...(result.issues?.wrongState || [])]).toEqual([\\1])/g' )",
+      "Bash(/Users/sugurutakahashi/git/issue-linker/packages/core/src/application/check-message-use-case.test.ts)"
     ],
     "deny": []
   },

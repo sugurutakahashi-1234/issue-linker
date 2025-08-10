@@ -14,6 +14,7 @@ flowchart LR
             subgraph packages/core/dist["/dist"]
                 packages/core/dist/index.d.ts["index.d.ts"]
                 subgraph packages/core/dist/domain["/domain"]
+                    packages/core/dist/domain/result.d.ts["result.d.ts"]
                     packages/core/dist/domain/types.d.ts["types.d.ts"]
                     packages/core/dist/domain/constants.d.ts["constants.d.ts"]
                     packages/core/dist/domain/errors.d.ts["errors.d.ts"]
@@ -26,9 +27,11 @@ flowchart LR
             subgraph packages/core/src["/src"]
                 packages/core/src/index.ts["index.ts"]
                 subgraph packages/core/src/domain["/domain"]
+                    packages/core/src/domain/result.ts["result.ts"]
                     packages/core/src/domain/types.ts["types.ts"]
                     packages/core/src/domain/constants.ts["constants.ts"]
                     packages/core/src/domain/errors.ts["errors.ts"]
+                    packages/core/src/domain/result//factory.ts["result-factory.ts"]
                     packages/core/src/domain/schemas.ts["schemas.ts"]
                     packages/core/src/domain/env.ts["env.ts"]
                 end
@@ -62,11 +65,15 @@ flowchart LR
         node//modules///octokit/request//error/dist//types/index.d.ts["@octokit/request-error"]
         node//modules/octokit/dist//types/index.d.ts["octokit"]
     end
+    packages/core/dist/domain/result.d.ts-->packages/core/dist/domain/types.d.ts
+    packages/core/dist/domain/types.d.ts-->packages/core/dist/domain/result.d.ts
     packages/core/dist/domain/constants.d.ts-->packages/core/dist/domain/types.d.ts
+    packages/core/dist/application/check//message//use//case.d.ts-->packages/core/dist/domain/result.d.ts
     packages/core/dist/application/check//message//use//case.d.ts-->packages/core/dist/domain/types.d.ts
     packages/core/dist/application/get//pull//request//commits//use//case.d.ts-->packages/core/dist/domain/types.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/domain/constants.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/domain/errors.d.ts
+    packages/core/dist/index.d.ts-->packages/core/dist/domain/result.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/domain/types.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/application/check//message//use//case.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/application/get//pull//request//commits//use//case.d.ts
@@ -75,7 +82,10 @@ flowchart LR
     packages/action-->packages/core/dist/index.d.ts
     packages/cli-->node//modules///commander//js/extra//typings/index.d.ts
     packages/cli-->packages/core/dist/index.d.ts
+    packages/core/src/domain/result.ts-->packages/core/src/domain/types.ts
+    packages/core/src/domain/types.ts-->packages/core/src/domain/result.ts
     packages/core/src/domain/constants.ts-->packages/core/src/domain/types.ts
+    packages/core/src/domain/result//factory.ts-->packages/core/src/domain/result.ts
     packages/core/src/domain/schemas.ts-->packages/core/src/domain/types.ts
     packages/core/src/infrastructure/branch//matcher.ts-->node//modules///types/micromatch/index.d.ts
     packages/core/src/infrastructure/branch//matcher.ts-->node//modules/minimatch/dist/commonjs/index.d.ts
@@ -96,6 +106,8 @@ flowchart LR
     packages/core/src/infrastructure/github//client.ts-->packages/core/src/infrastructure/env//accessor.ts
     packages/core/src/infrastructure/issue//extractor.ts-->packages/core/src/domain/types.ts
     packages/core/src/application/check//message//use//case.ts-->node//modules/valibot/dist/index.d.cts
+    packages/core/src/application/check//message//use//case.ts-->packages/core/src/domain/result.ts
+    packages/core/src/application/check//message//use//case.ts-->packages/core/src/domain/result//factory.ts
     packages/core/src/application/check//message//use//case.ts-->packages/core/src/domain/types.ts
     packages/core/src/application/check//message//use//case.ts-->packages/core/src/infrastructure/branch//matcher.ts
     packages/core/src/application/check//message//use//case.ts-->packages/core/src/infrastructure/env//accessor.ts
@@ -110,6 +122,7 @@ flowchart LR
     packages/core/src/application/get//pull//request//commits//use//case.ts-->packages/core/src/infrastructure/github//client.ts
     packages/core/src/index.ts-->packages/core/src/domain/constants.ts
     packages/core/src/index.ts-->packages/core/src/domain/errors.ts
+    packages/core/src/index.ts-->packages/core/src/domain/result.ts
     packages/core/src/index.ts-->packages/core/src/domain/types.ts
     packages/core/src/index.ts-->packages/core/src/application/check//message//use//case.ts
     packages/core/src/index.ts-->packages/core/src/application/get//pull//request//commits//use//case.ts

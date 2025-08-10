@@ -1,30 +1,17 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import {
-  type ActionMode,
   checkMessage,
   type ExtractionMode,
   getPullRequestCommits,
   type IssueStatusFilter,
+  type IssueValidationResult,
 } from "@issue-linker/core";
-
-interface ValidationResult {
-  name: string;
-  success: boolean;
-  message: string;
-  issues?: number[];
-  metadata?: {
-    mode: ExtractionMode;
-    actionMode?: ActionMode | undefined;
-    repo: string;
-    text: string;
-  };
-}
 
 async function run() {
   try {
     const context = github.context;
-    const validations: ValidationResult[] = [];
+    const results: IssueValidationResult[] = [];
 
     // Get common options
     const issueStatus = (core.getInput("issue-status") ||
@@ -63,13 +50,7 @@ async function run() {
         );
         const result = await checkMessage(messageOptions);
         core.debug(`checkMessage result: ${JSON.stringify(result)}`);
-        validations.push({
-          name: "branch",
-          success: result.success,
-          message: result.message,
-          issues: result.validIssues,
-          metadata: result.metadata,
-        });
+        results.push(result);
       } else {
         core.warning("Branch name not found in context");
       }
@@ -89,13 +70,7 @@ async function run() {
           ...(githubToken && { githubToken }),
         };
         const result = await checkMessage(messageOptions);
-        validations.push({
-          name: "pr-title",
-          success: result.success,
-          message: result.message,
-          issues: result.validIssues,
-          metadata: result.metadata,
-        });
+        results.push(result);
       } else {
         core.warning("PR title not found in context");
       }
@@ -115,13 +90,7 @@ async function run() {
           ...(githubToken && { githubToken }),
         };
         const result = await checkMessage(messageOptions);
-        validations.push({
-          name: "pr-body",
-          success: result.success,
-          message: result.message,
-          issues: result.validIssues,
-          metadata: result.metadata,
-        });
+        results.push(result);
       } else {
         core.warning("PR body not found in context");
       }
@@ -162,29 +131,30 @@ async function run() {
               ...(githubToken && { githubToken }),
             });
 
-            validations.push({
-              name: `commit-${shortSha}`,
-              success: result.success,
-              message: `[${shortSha}] ${result.message}`,
-              issues: result.validIssues,
-              metadata: result.metadata,
-            });
+            results.push(result);
           }
         } catch (error) {
           core.error(
             `Failed to fetch commits: ${error instanceof Error ? error.message : String(error)}`,
           );
-          validations.push({
-            name: "commits",
+          // Create error result for commit fetch failure
+          const errorResult: IssueValidationResult = {
             success: false,
             message: `Failed to fetch commits: ${error instanceof Error ? error.message : String(error)}`,
-            metadata: {
-              actionMode: "validate-commits",
-              mode: "commit",
-              repo,
+            reason: "error",
+            input: {
               text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+              mode: "commit",
+              actionMode: "validate-commits",
+              issueStatus,
+              repo,
             },
-          });
+            error: {
+              type: "CommitFetchError",
+              message: error instanceof Error ? error.message : String(error),
+            },
+          };
+          results.push(errorResult);
         }
       }
     }
@@ -202,53 +172,43 @@ async function run() {
       };
       if (exclude) messageOptions.exclude = exclude;
       const result = await checkMessage(messageOptions);
-      validations.push({
-        name: "custom",
-        success: result.success,
-        message: result.message,
-        issues: result.validIssues,
-        metadata: result.metadata,
-      });
+      results.push(result);
     }
 
     // Set outputs
-    const allSuccess = validations.every((v) => v.success);
-    const failedValidations = validations.filter((v) => !v.success);
+    const allSuccess = results.every((r) => r.success);
     const allFoundIssues = [
-      ...new Set(validations.flatMap((v) => v.issues || [])),
+      ...new Set(results.flatMap((r) => r.issues?.found || [])),
     ];
 
-    // Create executed modes details
-    const executedModes = validations.map((v) => ({
-      name: v.name,
-      actionMode: v.metadata?.actionMode || "unknown",
-      extractionMode: v.metadata?.mode || "unknown",
-      success: v.success,
-      issuesFound: v.issues?.length || 0,
-    }));
+    // Create summary
+    const summary = {
+      totalValidations: results.length,
+      failed: results.filter((r) => !r.success).length,
+      allIssues: allFoundIssues,
+    };
 
     core.setOutput("success", allSuccess.toString());
-    core.setOutput("failed-validations", JSON.stringify(failedValidations));
-    core.setOutput("found-issues", JSON.stringify(allFoundIssues));
-    core.setOutput("executed-modes", JSON.stringify(executedModes));
-    core.setOutput("total-validations", validations.length.toString());
+    core.setOutput("results", JSON.stringify(results));
+    core.setOutput("summary", JSON.stringify(summary));
 
     // Log results
-    for (const validation of validations) {
-      if (validation.success) {
-        core.info(`✅ [${validation.name}] ${validation.message}`);
+    for (const result of results) {
+      const actionMode = result.input.actionMode || "custom";
+      if (result.success) {
+        core.info(`✅ [${actionMode}] ${result.message}`);
       } else {
-        core.error(`❌ [${validation.name}] ${validation.message}`);
+        core.error(`❌ [${actionMode}] ${result.message}`);
       }
     }
 
     // Fail if any validation failed
     if (!allSuccess) {
-      core.setFailed(`${failedValidations.length} validation(s) failed`);
-    } else if (validations.length === 0) {
+      core.setFailed(`${summary.failed} validation(s) failed`);
+    } else if (results.length === 0) {
       core.warning("No validations were performed. Check your inputs.");
     } else {
-      core.info(`✅ All ${validations.length} validation(s) passed`);
+      core.info(`✅ All ${results.length} validation(s) passed`);
     }
   } catch (error) {
     core.setFailed(

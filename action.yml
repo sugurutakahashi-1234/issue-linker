@@ -64,10 +64,10 @@ inputs:
 outputs:
   success:
     description: 'Whether all validations passed'
-  failed-validations:
-    description: 'List of failed validations (JSON)'
-  found-issues:
-    description: 'List of found issue numbers (JSON)'
+  results:
+    description: 'All validation results as JSON'
+  summary:
+    description: 'Summary of validations (JSON)'
 
 runs:
   using: 'node20'

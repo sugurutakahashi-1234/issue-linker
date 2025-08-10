@@ -6,7 +6,11 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { program } from "@commander-js/extra-typings";
-import { checkMessage, type ExtractionMode } from "@issue-linker/core";
+import {
+  checkMessage,
+  type ExtractionMode,
+  type IssueValidationResult,
+} from "@issue-linker/core";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const packageJsonPath = join(__dirname, "..", "package.json");
@@ -31,6 +35,7 @@ program
   )
   .option("--repo <owner/repo>", "repository (default: current repository)")
   .option("--github-token <token>", "GitHub token (default: GITHUB_TOKEN env)")
+  .option("--json", "output full result as JSON")
   .action(async (options) => {
     try {
       // Validate mode
@@ -59,35 +64,51 @@ program
       if (options.repo) messageOptions.repo = options.repo;
       if (options.githubToken) messageOptions.githubToken = options.githubToken;
 
-      const result = await checkMessage(messageOptions);
+      const result: IssueValidationResult = await checkMessage(messageOptions);
 
-      // Display result
+      // Output JSON if requested
+      if (options.json) {
+        console.log(JSON.stringify(result, null, 2));
+        process.exit(result.success ? 0 : 1);
+      }
+
+      // Display human-readable result
       if (result.success) {
         console.log(`✅ ${result.message}`);
-        if (result.excluded) {
+        if (result.reason === "excluded") {
           console.log(`   Text was excluded from validation`);
-        } else if (result.validIssues.length > 0) {
-          console.log(`   Valid issues: #${result.validIssues.join(", #")}`);
+        } else if (result.issues?.valid && result.issues.valid.length > 0) {
+          console.log(`   Valid issues: #${result.issues.valid.join(", #")}`);
         }
-        console.log(`   Mode: ${result.metadata.mode}`);
-        if (result.metadata.repo) {
-          console.log(`   Repository: ${result.metadata.repo}`);
+        console.log(`   Mode: ${result.input.mode}`);
+        if (result.input.repo) {
+          console.log(`   Repository: ${result.input.repo}`);
         }
         process.exit(0);
       } else {
         console.error(`❌ ${result.message}`);
-        if (result.issueNumbers.length > 0) {
-          console.error(`   Found issues: #${result.issueNumbers.join(", #")}`);
-          if (result.validIssues.length > 0) {
-            console.error(`   Valid: #${result.validIssues.join(", #")}`);
+        if (result.issues) {
+          if (result.issues.found.length > 0) {
+            console.error(
+              `   Found issues: #${result.issues.found.join(", #")}`,
+            );
           }
-          if (result.invalidIssues.length > 0) {
-            console.error(`   Invalid: #${result.invalidIssues.join(", #")}`);
+          if (result.issues.valid.length > 0) {
+            console.error(`   Valid: #${result.issues.valid.join(", #")}`);
+          }
+          const invalidCount =
+            result.issues.notFound.length + result.issues.wrongState.length;
+          if (invalidCount > 0) {
+            const invalid = [
+              ...result.issues.notFound,
+              ...result.issues.wrongState,
+            ];
+            console.error(`   Invalid: #${invalid.join(", #")}`);
           }
         }
-        console.error(`   Mode: ${result.metadata.mode}`);
-        if (result.metadata.repo) {
-          console.error(`   Repository: ${result.metadata.repo}`);
+        console.error(`   Mode: ${result.input.mode}`);
+        if (result.input.repo) {
+          console.error(`   Repository: ${result.input.repo}`);
         }
         process.exit(1);
       }

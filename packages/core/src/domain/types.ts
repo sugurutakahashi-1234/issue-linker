@@ -51,32 +51,8 @@ export interface CheckMessageOptions {
   githubToken?: string;
 }
 
-// Result of text validation
-export interface CheckResult {
-  /** Whether validation succeeded */
-  success: boolean;
-  /** Human-readable message */
-  message: string;
-  /** All issue numbers found in text */
-  issueNumbers: number[];
-  /** Valid issue numbers (exist and match status) */
-  validIssues: number[];
-  /** Invalid issue numbers (not found or wrong status) */
-  invalidIssues: number[];
-  /** Issue numbers that don't exist in repository */
-  notFoundIssues: number[];
-  /** Issue numbers with wrong state (e.g., closed when open required) */
-  wrongStateIssues: number[];
-  /** Whether text was excluded by pattern */
-  excluded: boolean;
-  /** Additional metadata */
-  metadata: {
-    mode: ExtractionMode;
-    actionMode?: ActionMode | undefined;
-    repo: string;
-    text: string;
-  };
-}
+// Re-export new result types for backward compatibility
+export type { IssueValidationResult as CheckResult } from "./result.js";
 
 // GitHub Issue representation
 export interface Issue {
@@ -100,21 +76,4 @@ export interface GitHubIssueResult {
 export interface GitHubRepository {
   owner: string;
   repo: string;
-}
-
-// Legacy types for backward compatibility during migration
-// TODO: Remove after migration
-export type CheckReason =
-  | "excluded"
-  | "issue-found"
-  | "no-issue-number"
-  | "issue-not-found"
-  | "error";
-
-export interface CheckOptions {
-  branch?: string;
-  repo?: string;
-  excludePattern?: string;
-  issueStatus?: string;
-  githubToken?: string;
 }

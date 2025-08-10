@@ -1,7 +1,15 @@
 // Application layer - Use case for checking text messages
 
 import * as v from "valibot";
-import type { CheckMessageOptions, CheckResult } from "../domain/types.js";
+import type { InputConfig, IssueValidationResult } from "../domain/result.js";
+import {
+  createErrorResult,
+  createExcludedResult,
+  createInvalidResult,
+  createNoIssuesResult,
+  createValidResult,
+} from "../domain/result-factory.js";
+import type { CheckMessageOptions } from "../domain/types.js";
 import {
   isIssueStateAllowed,
   shouldExclude,
@@ -39,86 +47,57 @@ const CheckMessageOptionsSchema = v.object({
  */
 export async function checkMessage(
   options: CheckMessageOptions,
-): Promise<CheckResult> {
+): Promise<IssueValidationResult> {
   // Step 1: Validate options
   const validationResult = v.safeParse(CheckMessageOptionsSchema, options);
   if (!validationResult.success) {
-    return {
-      success: false,
-      message:
-        validationResult.issues[0]?.message ?? "Invalid options provided",
-      issueNumbers: [],
-      validIssues: [],
-      invalidIssues: [],
-      notFoundIssues: [],
-      wrongStateIssues: [],
-      excluded: false,
-      metadata: {
-        mode: "default",
-        actionMode: options.actionMode,
-        repo: "",
-        text: options.text ?? "",
-      },
+    const input: InputConfig = {
+      text: options.text ?? "",
+      mode: "default",
+      ...(options.actionMode && { actionMode: options.actionMode }),
+      issueStatus: "all",
+      repo: "",
     };
+    const error = new Error(
+      validationResult.issues[0]?.message ?? "Invalid options provided",
+    );
+    return createErrorResult(error, input);
   }
 
   const opts = validationResult.output;
   const mode = opts.mode ?? "default";
-  const text = opts.text;
+  const issueStatus = opts.issueStatus ?? "all";
 
   try {
-    // Step 2: Check exclusion
-    if (shouldExclude(text, mode, opts.exclude)) {
-      return {
-        success: true,
-        message: `Text is excluded from validation`,
-        issueNumbers: [],
-        validIssues: [],
-        invalidIssues: [],
-        notFoundIssues: [],
-        wrongStateIssues: [],
-        excluded: true,
-        metadata: {
-          mode,
-          actionMode: opts.actionMode,
-          repo: "",
-          text,
-        },
-      };
-    }
-
-    // Step 3: Extract issue numbers
-    const issueNumbers = extractIssueNumbers(text, mode);
-
-    if (issueNumbers.length === 0) {
-      return {
-        success: false,
-        message: `No issue number found in text`,
-        issueNumbers: [],
-        validIssues: [],
-        invalidIssues: [],
-        notFoundIssues: [],
-        wrongStateIssues: [],
-        excluded: false,
-        metadata: {
-          mode,
-          actionMode: opts.actionMode,
-          repo: "",
-          text,
-        },
-      };
-    }
-
-    // Step 4: Get repository information
+    // Get repository information early for input config
     const repository = opts.repo
       ? parseRepositoryString(opts.repo)
       : parseRepositoryFromGitUrl(await getGitRemoteUrl());
-
     const repoString = `${repository.owner}/${repository.repo}`;
 
-    // Step 5: Validate each issue number
+    // Build input config
+    const input: InputConfig = {
+      text: opts.text,
+      mode,
+      ...(opts.actionMode && { actionMode: opts.actionMode }),
+      ...(opts.exclude && { exclude: opts.exclude }),
+      issueStatus,
+      repo: repoString,
+    };
+
+    // Step 2: Check exclusion
+    if (shouldExclude(opts.text, mode, opts.exclude)) {
+      return createExcludedResult(input);
+    }
+
+    // Step 3: Extract issue numbers
+    const issueNumbers = extractIssueNumbers(opts.text, mode);
+    if (issueNumbers.length === 0) {
+      return createNoIssuesResult(input);
+    }
+
+    // Step 4: Validate each issue number
     const githubToken = opts.githubToken ?? getGitHubToken();
-    const issueStatus = opts.issueStatus ?? "all";
     const validIssues: number[] = [];
     const notFoundIssues: number[] = [];
     const wrongStateIssues: number[] = [];
@@ -132,78 +111,44 @@ export async function checkMessage(
       );
 
       if (!result.found) {
-        // Issue doesn't exist in the repository
         notFoundIssues.push(issueNumber);
-      } else {
-        // Issue was found, check its state
-        const issue = result.issue;
-        if (issue && !isIssueStateAllowed(issue.state, issueStatus)) {
-          // Issue exists but has wrong state
-          wrongStateIssues.push(issueNumber);
-        } else if (issue) {
-          // Issue exists and has correct state
-          validIssues.push(issueNumber);
-        }
+      } else if (
+        result.issue &&
+        !isIssueStateAllowed(result.issue.state, issueStatus)
+      ) {
+        wrongStateIssues.push(issueNumber);
+      } else if (result.issue) {
+        validIssues.push(issueNumber);
       }
     }
 
-    // Combine notFound and wrongState for backward compatibility
-    const invalidIssues = [...notFoundIssues, ...wrongStateIssues];
+    // Step 5: Create result based on findings
+    const issues = {
+      found: issueNumbers,
+      valid: validIssues,
+      notFound: notFoundIssues,
+      wrongState: wrongStateIssues,
+    };
 
-    // Step 6: Return result
-    const success = validIssues.length > 0 && invalidIssues.length === 0;
-
-    let message: string;
-    if (success) {
-      message = `Valid issue(s) found: #${validIssues.join(", #")} in ${repoString}`;
-    } else if (notFoundIssues.length > 0 && wrongStateIssues.length > 0) {
-      message = `Issues not found: #${notFoundIssues.join(", #")}; Wrong state: #${wrongStateIssues.join(", #")} in ${repoString}`;
-    } else if (notFoundIssues.length > 0) {
-      message = `Issue(s) not found: #${notFoundIssues.join(", #")} in ${repoString}`;
-    } else if (wrongStateIssues.length > 0) {
-      message = `Issue(s) with wrong state: #${wrongStateIssues.join(", #")} in ${repoString}`;
+    if (
+      validIssues.length > 0 &&
+      notFoundIssues.length === 0 &&
+      wrongStateIssues.length === 0
+    ) {
+      return createValidResult(issues, input);
     } else {
-      // This should never happen - indicates a logic error
-      // All issue numbers should be categorized as valid, notFound, or wrongState
-      throw new Error(
-        `Unexpected state in checkMessage: issueNumbers=${issueNumbers.length}, ` +
-          `valid=${validIssues.length}, notFound=${notFoundIssues.length}, ` +
-          `wrongState=${wrongStateIssues.length}`,
-      );
+      return createInvalidResult(issues, input);
     }
-
-    return {
-      success,
-      message,
-      issueNumbers,
-      validIssues,
-      invalidIssues,
-      notFoundIssues,
-      wrongStateIssues,
-      excluded: false,
-      metadata: {
-        mode,
-        actionMode: opts.actionMode,
-        repo: repoString,
-        text,
-      },
-    };
   } catch (error) {
-    // Error handling
-    return {
-      success: false,
-      message: error instanceof Error ? error.message : String(error),
-      issueNumbers: [],
-      validIssues: [],
-      invalidIssues: [],
-      notFoundIssues: [],
-      wrongStateIssues: [],
-      excluded: false,
-      metadata: {
-        mode,
-        repo: "",
-        text,
-      },
+    // Error handling - create minimal input config if we don't have repo info yet
+    const input: InputConfig = {
+      text: opts.text,
+      mode,
+      ...(opts.actionMode && { actionMode: opts.actionMode }),
+      ...(opts.exclude && { exclude: opts.exclude }),
+      issueStatus,
+      repo: opts.repo ?? "",
     };
+    return createErrorResult(error, input);
   }
 }
