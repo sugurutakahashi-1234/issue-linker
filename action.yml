@@ -31,14 +31,14 @@ inputs:
   text:
     description: 'Custom text to validate'
     required: false
-  mode:
+  check-mode:
     description: |
-      Extraction mode
+      Check mode for finding issue numbers
       Options: 'default', 'branch', 'commit'
     required: false
     default: 'default'
   exclude:
-    description: 'Custom exclude pattern (overrides mode defaults)'
+    description: 'Custom exclude pattern (overrides check mode defaults)'
     required: false
   
   # Common settings

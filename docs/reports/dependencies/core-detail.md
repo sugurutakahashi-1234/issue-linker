@@ -32,7 +32,6 @@ flowchart LR
                     packages/core/src/domain/errors.ts["errors.ts"]
                     packages/core/src/domain/result.ts["result.ts"]
                     packages/core/src/domain/result//factory.ts["result-factory.ts"]
-                    packages/core/src/domain/schemas.ts["schemas.ts"]
                     packages/core/src/domain/env.ts["env.ts"]
                 end
                 subgraph packages/core/src/infrastructure["/infrastructure"]
@@ -41,7 +40,7 @@ flowchart LR
                     packages/core/src/infrastructure/git//client.ts["git-client.ts"]
                     packages/core/src/infrastructure/git//url//parser.ts["git-url-parser.ts"]
                     packages/core/src/infrastructure/github//client.ts["github-client.ts"]
-                    packages/core/src/infrastructure/issue//extractor.ts["issue-extractor.ts"]
+                    packages/core/src/infrastructure/issue//finder.ts["issue-finder.ts"]
                     packages/core/src/infrastructure/repository//parser.ts["repository-parser.ts"]
                 end
                 subgraph packages/core/src/application["/application"]
@@ -85,13 +84,13 @@ flowchart LR
     packages/cli-->packages/core/dist/index.d.ts
     packages/cli-->node//modules/valibot/dist/index.d.cts
     packages/core/src/domain/validation//schemas.ts-->node//modules/valibot/dist/index.d.cts
+    packages/core/src/domain/validation//schemas.ts-->packages/core/src/domain/constants.ts
     packages/core/src/domain/constants.ts-->packages/core/src/domain/validation//schemas.ts
     packages/core/src/domain/result.ts-->packages/core/src/domain/validation//schemas.ts
     packages/core/src/domain/result//factory.ts-->packages/core/src/domain/result.ts
-    packages/core/src/domain/schemas.ts-->packages/core/src/domain/validation//schemas.ts
     packages/core/src/infrastructure/branch//matcher.ts-->node//modules///types/micromatch/index.d.ts
     packages/core/src/infrastructure/branch//matcher.ts-->node//modules/minimatch/dist/commonjs/index.d.ts
-    packages/core/src/infrastructure/branch//matcher.ts-->packages/core/src/domain/schemas.ts
+    packages/core/src/infrastructure/branch//matcher.ts-->packages/core/src/domain/constants.ts
     packages/core/src/infrastructure/branch//matcher.ts-->packages/core/src/domain/validation//schemas.ts
     packages/core/src/domain/env.ts-->node//modules///t3//oss/env//core/dist/index.d.ts
     packages/core/src/domain/env.ts-->node//modules/valibot/dist/index.d.cts
@@ -106,7 +105,7 @@ flowchart LR
     packages/core/src/infrastructure/github//client.ts-->packages/core/src/domain/errors.ts
     packages/core/src/infrastructure/github//client.ts-->packages/core/src/domain/validation//schemas.ts
     packages/core/src/infrastructure/github//client.ts-->packages/core/src/infrastructure/env//accessor.ts
-    packages/core/src/infrastructure/issue//extractor.ts-->packages/core/src/domain/validation//schemas.ts
+    packages/core/src/infrastructure/issue//finder.ts-->packages/core/src/domain/validation//schemas.ts
     packages/core/src/application/check//message//use//case.ts-->node//modules/valibot/dist/index.d.cts
     packages/core/src/application/check//message//use//case.ts-->packages/core/src/domain/result.ts
     packages/core/src/application/check//message//use//case.ts-->packages/core/src/domain/result//factory.ts
@@ -116,7 +115,7 @@ flowchart LR
     packages/core/src/application/check//message//use//case.ts-->packages/core/src/infrastructure/git//client.ts
     packages/core/src/application/check//message//use//case.ts-->packages/core/src/infrastructure/git//url//parser.ts
     packages/core/src/application/check//message//use//case.ts-->packages/core/src/infrastructure/github//client.ts
-    packages/core/src/application/check//message//use//case.ts-->packages/core/src/infrastructure/issue//extractor.ts
+    packages/core/src/application/check//message//use//case.ts-->packages/core/src/infrastructure/issue//finder.ts
     packages/core/src/application/check//message//use//case.ts-->packages/core/src/infrastructure/repository//parser.ts
     packages/core/src/application/get//pull//request//commits//use//case.ts-->node//modules/valibot/dist/index.d.cts
     packages/core/src/application/get//pull//request//commits//use//case.ts-->packages/core/src/domain/validation//schemas.ts

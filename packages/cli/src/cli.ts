@@ -10,6 +10,7 @@ import {
   type CheckMessageOptions,
   CheckMessageOptionsSchema,
   checkMessage,
+  DEFAULT_OPTIONS,
   type IssueValidationResult,
 } from "@issue-linker/core";
 import * as v from "valibot";
@@ -25,15 +26,15 @@ program
   .version(packageJson.version)
   .requiredOption("-t, --text <text>", "text to validate")
   .option(
-    "--mode <mode>",
-    "extraction mode: default | branch | commit",
-    "default",
+    "--check-mode <mode>",
+    "check mode: default | branch | commit",
+    DEFAULT_OPTIONS.mode,
   )
   .option("--exclude <pattern>", "exclude pattern (glob)")
   .option(
     "--issue-status <status>",
     "issue status filter: all | open | closed",
-    "all",
+    DEFAULT_OPTIONS.issueStatus,
   )
   .option("--repo <owner/repo>", "repository (default: current repository)")
   .option("--github-token <token>", "GitHub token (default: GITHUB_TOKEN env)")
@@ -46,7 +47,7 @@ program
       try {
         validatedOptions = v.parse(CheckMessageOptionsSchema, {
           text: options.text,
-          mode: options.mode,
+          checkMode: options.checkMode,
           issueStatus: options.issueStatus,
           ...(options.exclude && { exclude: options.exclude }),
           ...(options.repo && { repo: options.repo }),
@@ -82,8 +83,8 @@ program
 
         // Show extra details in verbose mode
         if (options.verbose) {
-          if (result.input.mode !== "default") {
-            console.log(`   Mode: ${result.input.mode}`);
+          if (result.input.checkMode !== "default") {
+            console.log(`   Check mode: ${result.input.checkMode}`);
           }
           if (result.input.repo) {
             console.log(`   Repository: ${result.input.repo}`);
@@ -118,8 +119,8 @@ program
             console.error(`   Details: ${details.join(", ")}`);
           }
 
-          if (result.input.mode !== "default") {
-            console.error(`   Mode: ${result.input.mode}`);
+          if (result.input.checkMode !== "default") {
+            console.error(`   Check mode: ${result.input.checkMode}`);
           }
           if (result.input.repo) {
             console.error(`   Repository: ${result.input.repo}`);

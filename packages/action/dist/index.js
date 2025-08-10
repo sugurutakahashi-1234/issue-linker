@@ -46667,7 +46667,7 @@ function unwrap(schema) {
 
 /***/ }),
 
-/***/ 2994:
+/***/ 7213:
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
 
 // ESM COMPAT FLAG
@@ -46676,8 +46676,9 @@ __nccwpck_require__.r(__webpack_exports__);
 // EXPORTS
 __nccwpck_require__.d(__webpack_exports__, {
   CheckMessageOptionsSchema: () => (/* reexport */ CheckMessageOptionsSchema),
-  DEFAULT_CHECK_OPTIONS: () => (/* reexport */ DEFAULT_CHECK_OPTIONS),
-  ExtractionModeSchema: () => (/* reexport */ ExtractionModeSchema),
+  CheckModeSchema: () => (/* reexport */ CheckModeSchema),
+  DEFAULT_OPTIONS: () => (/* reexport */ DEFAULT_OPTIONS),
+  EXCLUDE_RULES: () => (/* reexport */ EXCLUDE_RULES),
   GetPullRequestCommitsOptionsSchema: () => (/* reexport */ GetPullRequestCommitsOptionsSchema),
   GitError: () => (/* reexport */ GitError),
   GitHubError: () => (/* reexport */ GitHubError),
@@ -46690,14 +46691,40 @@ __nccwpck_require__.d(__webpack_exports__, {
 
 ;// CONCATENATED MODULE: ../core/dist/domain/constants.js
 // Constants for issue-linker
+// ===== Default Values =====
 /**
- * Default values for check options
+ * Default options for all check operations
+ * Single source of truth for all default values
  */
-const DEFAULT_CHECK_OPTIONS = {
-    /** Default glob pattern to exclude branches */
-    excludePattern: "{main,master,develop}",
+const DEFAULT_OPTIONS = {
+    /** Default check mode */
+    mode: "default",
     /** Default issue status filter */
     issueStatus: "all",
+    /** Default exclude pattern (undefined means no exclusion) */
+    exclude: undefined,
+    /** Default repository (undefined means auto-detect from git) */
+    repo: undefined,
+    /** Default GitHub token (undefined means use environment variable) */
+    githubToken: undefined,
+};
+// ===== Exclude Rules =====
+/**
+ * Mode-specific exclude rules
+ * Defines how each mode handles exclusions
+ */
+const EXCLUDE_RULES = {
+    default: {
+        type: "none",
+    },
+    branch: {
+        type: "pattern",
+        value: "{main,master,develop,release/*,hotfix/*}",
+    },
+    commit: {
+        type: "prefixes",
+        values: ["Rebase", "Merge", "Revert", "fixup!", "squash!"],
+    },
 };
 //# sourceMappingURL=constants.js.map
 ;// CONCATENATED MODULE: ../core/dist/domain/errors.js
@@ -53829,12 +53856,13 @@ function unwrap(schema) {
 // Domain layer - Centralized valibot validation schemas
 // Define schemas once and derive TypeScript types from them
 
+
 // ===== Base Schemas =====
 // Issue status schemas
 const IssueStatusSchema = picklist(["open", "closed"]);
 const IssueStatusFilterSchema = picklist(["all", "open", "closed"]);
 // Mode schemas
-const ExtractionModeSchema = picklist(["default", "branch", "commit"]);
+const CheckModeSchema = picklist(["default", "branch", "commit"]);
 const ActionModeSchema = picklist([
     "validate-branch",
     "validate-pr-title",
@@ -53891,9 +53919,9 @@ const GetPullRequestCommitsOptionsSchema = object({
 // CheckMessage options schema
 const CheckMessageOptionsSchema = object({
     text: string(),
-    mode: optional(ExtractionModeSchema, "default"),
+    checkMode: optional(CheckModeSchema, DEFAULT_OPTIONS.mode),
     exclude: optional(string()),
-    issueStatus: optional(IssueStatusFilterSchema, "all"),
+    issueStatus: optional(IssueStatusFilterSchema, DEFAULT_OPTIONS.issueStatus),
     repo: optional(string()),
     githubToken: optional(string()),
     actionMode: optional(ActionModeSchema),
@@ -56016,27 +56044,6 @@ minimatch.Minimatch = Minimatch;
 minimatch.escape = escape_escape;
 minimatch.unescape = unescape_unescape;
 //# sourceMappingURL=index.js.map
-;// CONCATENATED MODULE: ../core/dist/domain/schemas.js
-// Domain layer - Business rules constants
-/**
- * Default exclude patterns for each extraction mode
- */
-const DEFAULT_EXCLUDE_PATTERNS = {
-    default: null,
-    branch: "{main,master,develop,release/*,hotfix/*}",
-    commit: null, // Will check message prefix instead
-};
-/**
- * Commit message prefixes to exclude from validation
- */
-const EXCLUDED_COMMIT_PREFIXES = [
-    "Rebase",
-    "Merge",
-    "Revert",
-    "fixup!",
-    "squash!",
-];
-//# sourceMappingURL=schemas.js.map
 ;// CONCATENATED MODULE: ../core/dist/infrastructure/branch-matcher.js
 // Infrastructure layer - Validation functions
 
@@ -56056,27 +56063,25 @@ function isBranchExcluded(branch, pattern) {
 /**
  * Check if text should be excluded based on mode and pattern
  * @param text - The text to check
- * @param mode - The extraction mode
+ * @param checkMode - The check mode
  * @param customExclude - Optional custom exclude pattern
  * @returns true if text should be excluded
  */
-function shouldExclude(text, mode, customExclude) {
+function shouldExclude(text, checkMode, customExclude) {
     // Use custom exclude pattern if provided
     if (customExclude) {
         return minimatch(text, customExclude);
     }
     // Check mode-specific default exclusions
-    if (mode === "branch") {
-        const defaultPattern = DEFAULT_EXCLUDE_PATTERNS.branch;
-        if (defaultPattern) {
-            return minimatch(text, defaultPattern);
-        }
+    const rule = EXCLUDE_RULES[checkMode];
+    switch (rule.type) {
+        case "none":
+            return false;
+        case "pattern":
+            return minimatch(text, rule.value);
+        case "prefixes":
+            return rule.values.some((prefix) => text.startsWith(prefix));
     }
-    else if (mode === "commit") {
-        // Check if commit message starts with excluded prefix
-        return EXCLUDED_COMMIT_PREFIXES.some((prefix) => text.startsWith(prefix));
-    }
-    return false;
 }
 /**
  * Validates if an issue state is allowed
@@ -75258,18 +75263,18 @@ async function fetchPullRequestCommits(owner, repo, prNumber, token) {
     }
 }
 //# sourceMappingURL=github-client.js.map
-;// CONCATENATED MODULE: ../core/dist/infrastructure/issue-extractor.js
-// Infrastructure layer - Issue number extraction
+;// CONCATENATED MODULE: ../core/dist/infrastructure/issue-finder.js
+// Infrastructure layer - Issue number finding
 /**
- * Extract issue numbers from text based on mode
- * @param text - The text to extract from
- * @param mode - The extraction mode ("default", "branch", or "commit")
+ * Find issue numbers from text based on check mode
+ * @param text - The text to search in
+ * @param checkMode - The check mode ("default", "branch", or "commit")
  * @returns Array of unique issue numbers found
  */
-function extractIssueNumbers(text, mode) {
+function findIssueNumbers(text, checkMode) {
     const numbers = new Set();
-    if (mode === "default" || mode === "commit") {
-        // Extract #123 format only
+    if (checkMode === "default" || checkMode === "commit") {
+        // Find #123 format only
         const matches = text.matchAll(/#(\d+)/g);
         for (const match of matches) {
             const num = match[1];
@@ -75281,7 +75286,7 @@ function extractIssueNumbers(text, mode) {
             }
         }
     }
-    else if (mode === "branch") {
+    else if (checkMode === "branch") {
         // Priority patterns for branch names
         const patterns = [
             /^(\d{1,7})[-_]/, // Start with number: 123-feature, 123_feature
@@ -75302,7 +75307,7 @@ function extractIssueNumbers(text, mode) {
     }
     return Array.from(numbers);
 }
-//# sourceMappingURL=issue-extractor.js.map
+//# sourceMappingURL=issue-finder.js.map
 ;// CONCATENATED MODULE: ../core/dist/infrastructure/repository-parser.js
 // Infrastructure layer - Repository string parsing
 /**
@@ -75345,7 +75350,7 @@ async function checkMessage(options) {
     if (!validationResult.success) {
         const input = {
             text: options.text ?? "",
-            mode: "default",
+            checkMode: "default",
             issueStatus: "all",
             repo: "",
             ...(options.actionMode && { actionMode: options.actionMode }),
@@ -75354,7 +75359,7 @@ async function checkMessage(options) {
         return createErrorResult(error, input);
     }
     const opts = validationResult.output;
-    const mode = opts.mode ?? "default";
+    const checkMode = opts.checkMode ?? "default";
     const issueStatus = opts.issueStatus ?? "all";
     try {
         // Get repository information early for input config
@@ -75365,18 +75370,18 @@ async function checkMessage(options) {
         // Build input config
         const input = {
             text: opts.text,
-            mode,
+            checkMode,
             ...(opts.exclude && { exclude: opts.exclude }),
             issueStatus,
             repo: repo,
             ...(opts.actionMode && { actionMode: opts.actionMode }),
         };
         // Step 2: Check exclusion
-        if (shouldExclude(opts.text, mode, opts.exclude)) {
+        if (shouldExclude(opts.text, checkMode, opts.exclude)) {
             return createExcludedResult(input);
         }
-        // Step 3: Extract issue numbers
-        const issueNumbers = extractIssueNumbers(opts.text, mode);
+        // Step 3: Find issue numbers
+        const issueNumbers = findIssueNumbers(opts.text, checkMode);
         if (issueNumbers.length === 0) {
             return createNoIssuesResult(input);
         }
@@ -75418,7 +75423,7 @@ async function checkMessage(options) {
         // Error handling - create minimal input config if we don't have repo info yet
         const input = {
             text: opts.text,
-            mode,
+            checkMode,
             ...(opts.exclude && { exclude: opts.exclude }),
             issueStatus,
             repo: opts.repo ?? "",
@@ -75543,15 +75548,15 @@ Object.defineProperty(exports, "B", ({ value: true }));
 const tslib_1 = __nccwpck_require__(4176);
 const core = tslib_1.__importStar(__nccwpck_require__(7184));
 const github = tslib_1.__importStar(__nccwpck_require__(5683));
-const core_1 = __nccwpck_require__(2994);
+const core_1 = __nccwpck_require__(7213);
 const v = tslib_1.__importStar(__nccwpck_require__(9487));
 /**
  * Helper function to create CheckMessageOptions with validation
  */
-function createCheckMessageOptions(text, mode, issueStatus, repo, actionMode, githubToken) {
+function createCheckMessageOptions(text, checkMode, issueStatus, repo, actionMode, githubToken) {
     const options = {
         text,
-        mode,
+        checkMode,
         issueStatus,
         repo,
         actionMode,
@@ -75573,7 +75578,7 @@ async function run() {
         const context = github.context;
         const results = [];
         // Get common options
-        const issueStatus = core.getInput("issue-status") || "all";
+        const issueStatus = core.getInput("issue-status") || core_1.DEFAULT_OPTIONS.issueStatus;
         const repo = core.getInput("repo") || `${context.repo.owner}/${context.repo.repo}`;
         const githubToken = core.getInput("github-token") || undefined;
         // Simple mode inputs
@@ -75583,7 +75588,7 @@ async function run() {
         const validateCommits = core.getInput("validate-commits") === "true";
         // Advanced mode inputs
         const text = core.getInput("text");
-        const mode = core.getInput("mode") || "default";
+        const checkMode = core.getInput("check-mode") || core_1.DEFAULT_OPTIONS.mode;
         const exclude = core.getInput("exclude") || undefined;
         // Simple mode validations
         if (validateBranch) {
@@ -75664,7 +75669,7 @@ async function run() {
             core.info(`Validating custom text: ${text}`);
             const messageOptions = {
                 text,
-                mode,
+                checkMode,
                 actionMode: "custom",
                 issueStatus,
                 repo,

@@ -2,14 +2,14 @@
 
 import type {
   ActionMode,
-  ExtractionMode,
+  CheckMode,
   IssueStatusFilter,
 } from "./validation-schemas.js";
 
 // Input configuration that was used for validation
 export interface InputConfig {
   text: string;
-  mode: ExtractionMode;
+  checkMode: CheckMode;
   exclude?: string;
   issueStatus: IssueStatusFilter;
   repo: string;

@@ -121,7 +121,10 @@ try {
   // Test help
   console.log("  Testing --help...");
   const helpOutput = execSync(`${packageName} --help`).toString();
-  if (!helpOutput.includes("-t, --text") || !helpOutput.includes("--mode")) {
+  if (
+    !helpOutput.includes("-t, --text") ||
+    !helpOutput.includes("--check-mode")
+  ) {
     throw new Error("Help output missing expected options");
   }
   console.log("  ✅ Help command works");
@@ -132,7 +135,7 @@ try {
   // Test with excluded branch name (should succeed)
   console.log("  Testing excluded branch validation...");
   const excludedOutput = execSync(
-    `${packageName} -t main --mode branch`,
+    `${packageName} -t main --check-mode branch`,
   ).toString();
   if (!excludedOutput.includes("excluded from validation")) {
     throw new Error("Excluded branch test failed");

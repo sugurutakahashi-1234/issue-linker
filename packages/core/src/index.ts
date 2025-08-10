@@ -2,7 +2,7 @@
 
 // Domain layer exports
 /** @public */
-export { DEFAULT_CHECK_OPTIONS } from "./domain/constants.js";
+export { DEFAULT_OPTIONS, EXCLUDE_RULES } from "./domain/constants.js";
 
 /** @public */
 export {
@@ -25,7 +25,7 @@ export type {
 export type {
   ActionMode,
   CheckMessageOptions,
-  ExtractionMode,
+  CheckMode,
   GetPullRequestCommitsOptions,
   GitHubRepository,
   Issue,
@@ -37,7 +37,7 @@ export type {
 /** @public */
 export {
   CheckMessageOptionsSchema,
-  ExtractionModeSchema,
+  CheckModeSchema,
   GetPullRequestCommitsOptionsSchema,
   IssueStatusFilterSchema,
 } from "./domain/validation-schemas.js";

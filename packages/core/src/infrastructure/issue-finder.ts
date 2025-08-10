@@ -1,21 +1,18 @@
-// Infrastructure layer - Issue number extraction
+// Infrastructure layer - Issue number finding
 
-import type { ExtractionMode } from "../domain/validation-schemas.js";
+import type { CheckMode } from "../domain/validation-schemas.js";
 
 /**
- * Extract issue numbers from text based on mode
- * @param text - The text to extract from
- * @param mode - The extraction mode ("default", "branch", or "commit")
+ * Find issue numbers from text based on check mode
+ * @param text - The text to search in
+ * @param checkMode - The check mode ("default", "branch", or "commit")
  * @returns Array of unique issue numbers found
  */
-export function extractIssueNumbers(
-  text: string,
-  mode: ExtractionMode,
-): number[] {
+export function findIssueNumbers(text: string, checkMode: CheckMode): number[] {
   const numbers = new Set<number>();
 
-  if (mode === "default" || mode === "commit") {
-    // Extract #123 format only
+  if (checkMode === "default" || checkMode === "commit") {
+    // Find #123 format only
     const matches = text.matchAll(/#(\d+)/g);
     for (const match of matches) {
       const num = match[1];
@@ -26,7 +23,7 @@ export function extractIssueNumbers(
         }
       }
     }
-  } else if (mode === "branch") {
+  } else if (checkMode === "branch") {
     // Priority patterns for branch names
     const patterns = [
       /^(\d{1,7})[-_]/, // Start with number: 123-feature, 123_feature

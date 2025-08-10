@@ -2,6 +2,7 @@
 // Define schemas once and derive TypeScript types from them
 
 import * as v from "valibot";
+import { DEFAULT_OPTIONS } from "./constants.js";
 
 // ===== Base Schemas =====
 
@@ -10,7 +11,7 @@ const IssueStatusSchema = v.picklist(["open", "closed"]);
 export const IssueStatusFilterSchema = v.picklist(["all", "open", "closed"]);
 
 // Mode schemas
-export const ExtractionModeSchema = v.picklist(["default", "branch", "commit"]);
+export const CheckModeSchema = v.picklist(["default", "branch", "commit"]);
 const ActionModeSchema = v.picklist([
   "validate-branch",
   "validate-pr-title",
@@ -81,9 +82,9 @@ export const GetPullRequestCommitsOptionsSchema = v.object({
 // CheckMessage options schema
 export const CheckMessageOptionsSchema = v.object({
   text: v.string(),
-  mode: v.optional(ExtractionModeSchema, "default"),
+  checkMode: v.optional(CheckModeSchema, DEFAULT_OPTIONS.mode),
   exclude: v.optional(v.string()),
-  issueStatus: v.optional(IssueStatusFilterSchema, "all"),
+  issueStatus: v.optional(IssueStatusFilterSchema, DEFAULT_OPTIONS.issueStatus),
   repo: v.optional(v.string()),
   githubToken: v.optional(v.string()),
   actionMode: v.optional(ActionModeSchema),
@@ -94,7 +95,7 @@ export const CheckMessageOptionsSchema = v.object({
 // Export TypeScript types inferred from schemas
 export type IssueStatus = v.InferOutput<typeof IssueStatusSchema>;
 export type IssueStatusFilter = v.InferOutput<typeof IssueStatusFilterSchema>;
-export type ExtractionMode = v.InferOutput<typeof ExtractionModeSchema>;
+export type CheckMode = v.InferOutput<typeof CheckModeSchema>;
 export type ActionMode = v.InferOutput<typeof ActionModeSchema>;
 
 export type PullRequestCommit = v.InferOutput<typeof PullRequestCommitSchema>;

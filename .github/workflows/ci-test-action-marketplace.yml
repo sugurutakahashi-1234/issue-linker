@@ -173,7 +173,7 @@ jobs:
         uses: sugurutakahashi-1234/issue-linker@main
         with:
           text: "This is custom text with #1"
-          mode: default
+          check-mode: default
         continue-on-error: true
       
       - name: Verify actionMode

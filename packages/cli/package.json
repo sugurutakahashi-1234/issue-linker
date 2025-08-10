@@ -24,8 +24,7 @@
     "fix": "biome check --write --unsafe .",
     "check": "biome check .",
     "💡": "========== Help Commands ==========",
-    "help:branch": "bun run src/cli.ts branch --help",
-    "help:commit": "bun run src/cli.ts commit --help",
+    "help": "bun run src/cli.ts --help",
     "📚": "========== Documentation ==========",
     "docs:deps-graph": "tsg --tsconfig ../../tsconfig.typescript-graph.json --LR --abstraction packages/action --abstraction packages/core --md ../../docs/reports/dependencies/cli.md",
     "🚀": "========== CI & Clean ==========",
@@ -34,7 +33,7 @@
   },
   "dependencies": {
     "@commander-js/extra-typings": "^14.0.0",
-    "@issue-linker/core": "workspace:*",
+    "@issue-linker/core": "file:/Users/sugurutakahashi/git/issue-linker/packages/core",
     "valibot": "^1.1.0"
   },
   "devDependencies": {

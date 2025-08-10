@@ -162,7 +162,7 @@ jobs:
         uses: ./
         with:
           text: "This is custom text with #1"
-          mode: default
+          check-mode: default
         continue-on-error: true
       
       - name: Verify actionMode

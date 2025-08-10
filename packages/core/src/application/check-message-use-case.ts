@@ -21,7 +21,7 @@ import { getGitHubToken } from "../infrastructure/env-accessor.js";
 import { getGitRemoteUrl } from "../infrastructure/git-client.js";
 import { parseRepositoryFromGitUrl } from "../infrastructure/git-url-parser.js";
 import { getGitHubIssue } from "../infrastructure/github-client.js";
-import { extractIssueNumbers } from "../infrastructure/issue-extractor.js";
+import { findIssueNumbers } from "../infrastructure/issue-finder.js";
 import { parseRepositoryString } from "../infrastructure/repository-parser.js";
 
 /**
@@ -37,7 +37,7 @@ export async function checkMessage(
   if (!validationResult.success) {
     const input: InputConfig = {
       text: options.text ?? "",
-      mode: "default",
+      checkMode: "default",
       issueStatus: "all",
       repo: "",
       ...(options.actionMode && { actionMode: options.actionMode }),
@@ -49,7 +49,7 @@ export async function checkMessage(
   }
 
   const opts = validationResult.output;
-  const mode = opts.mode ?? "default";
+  const checkMode = opts.checkMode ?? "default";
   const issueStatus = opts.issueStatus ?? "all";
 
   try {
@@ -62,7 +62,7 @@ export async function checkMessage(
     // Build input config
     const input: InputConfig = {
       text: opts.text,
-      mode,
+      checkMode,
       ...(opts.exclude && { exclude: opts.exclude }),
       issueStatus,
       repo: repo,
@@ -70,12 +70,12 @@ export async function checkMessage(
     };
 
     // Step 2: Check exclusion
-    if (shouldExclude(opts.text, mode, opts.exclude)) {
+    if (shouldExclude(opts.text, checkMode, opts.exclude)) {
       return createExcludedResult(input);
     }
 
-    // Step 3: Extract issue numbers
-    const issueNumbers = extractIssueNumbers(opts.text, mode);
+    // Step 3: Find issue numbers
+    const issueNumbers = findIssueNumbers(opts.text, checkMode);
     if (issueNumbers.length === 0) {
       return createNoIssuesResult(input);
     }
@@ -127,7 +127,7 @@ export async function checkMessage(
     // Error handling - create minimal input config if we don't have repo info yet
     const input: InputConfig = {
       text: opts.text,
-      mode,
+      checkMode,
       ...(opts.exclude && { exclude: opts.exclude }),
       issueStatus,
       repo: opts.repo ?? "",

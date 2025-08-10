@@ -2,12 +2,9 @@
 
 import micromatch from "micromatch";
 import { minimatch } from "minimatch";
-import {
-  DEFAULT_EXCLUDE_PATTERNS,
-  EXCLUDED_COMMIT_PREFIXES,
-} from "../domain/schemas.js";
+import { EXCLUDE_RULES } from "../domain/constants.js";
 import type {
-  ExtractionMode,
+  CheckMode,
   IssueStatus,
   IssueStatusFilter,
 } from "../domain/validation-schemas.js";
@@ -26,13 +23,13 @@ export function isBranchExcluded(branch: string, pattern: string): boolean {
 /**
  * Check if text should be excluded based on mode and pattern
  * @param text - The text to check
- * @param mode - The extraction mode
+ * @param checkMode - The check mode
  * @param customExclude - Optional custom exclude pattern
  * @returns true if text should be excluded
  */
 export function shouldExclude(
   text: string,
-  mode: ExtractionMode,
+  checkMode: CheckMode,
   customExclude?: string,
 ): boolean {
   // Use custom exclude pattern if provided
@@ -41,17 +38,16 @@ export function shouldExclude(
   }
 
   // Check mode-specific default exclusions
-  if (mode === "branch") {
-    const defaultPattern = DEFAULT_EXCLUDE_PATTERNS.branch;
-    if (defaultPattern) {
-      return minimatch(text, defaultPattern);
-    }
-  } else if (mode === "commit") {
-    // Check if commit message starts with excluded prefix
-    return EXCLUDED_COMMIT_PREFIXES.some((prefix) => text.startsWith(prefix));
-  }
+  const rule = EXCLUDE_RULES[checkMode];
 
-  return false;
+  switch (rule.type) {
+    case "none":
+      return false;
+    case "pattern":
+      return minimatch(text, rule.value);
+    case "prefixes":
+      return rule.values.some((prefix) => text.startsWith(prefix));
+  }
 }
 
 /**

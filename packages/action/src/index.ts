@@ -4,6 +4,7 @@ import {
   type CheckMessageOptions,
   CheckMessageOptionsSchema,
   checkMessage,
+  DEFAULT_OPTIONS,
   getPullRequestCommits,
   type IssueValidationResult,
 } from "@issue-linker/core";
@@ -14,7 +15,7 @@ import * as v from "valibot";
  */
 function createCheckMessageOptions(
   text: string,
-  mode: string,
+  checkMode: string,
   issueStatus: string,
   repo: string,
   actionMode: string,
@@ -22,7 +23,7 @@ function createCheckMessageOptions(
 ): CheckMessageOptions {
   const options = {
     text,
-    mode,
+    checkMode,
     issueStatus,
     repo,
     actionMode,
@@ -46,7 +47,8 @@ async function run() {
     const results: IssueValidationResult[] = [];
 
     // Get common options
-    const issueStatus = core.getInput("issue-status") || "all";
+    const issueStatus =
+      core.getInput("issue-status") || DEFAULT_OPTIONS.issueStatus;
     const repo =
       core.getInput("repo") || `${context.repo.owner}/${context.repo.repo}`;
     const githubToken = core.getInput("github-token") || undefined;
@@ -59,7 +61,7 @@ async function run() {
 
     // Advanced mode inputs
     const text = core.getInput("text");
-    const mode = core.getInput("mode") || "default";
+    const checkMode = core.getInput("check-mode") || DEFAULT_OPTIONS.mode;
     const exclude = core.getInput("exclude") || undefined;
 
     // Simple mode validations
@@ -180,7 +182,7 @@ async function run() {
       core.info(`Validating custom text: ${text}`);
       const messageOptions = {
         text,
-        mode,
+        checkMode,
         actionMode: "custom",
         issueStatus,
         repo,
