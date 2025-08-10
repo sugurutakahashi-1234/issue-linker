@@ -179,7 +179,8 @@
       "Bash(-e 's/result\\.metadata\\.repo/result.input.repo/g' )",
       "Bash(src/application/check-message-use-case.test.ts)",
       "Bash(-e 's/expect(result\\.invalidIssues)\\.toEqual(\\[\\([^]]*\\)\\])/expect([...(result.issues?.notFound || []), ...(result.issues?.wrongState || [])]).toEqual([\\1])/g' )",
-      "Bash(/Users/sugurutakahashi/git/issue-linker/packages/core/src/application/check-message-use-case.test.ts)"
+      "Bash(/Users/sugurutakahashi/git/issue-linker/packages/core/src/application/check-message-use-case.test.ts)",
+      "Bash(GITHUB_TOKEN=\"\" GH_TOKEN=\"\" bun run packages/cli/src/cli.ts --text \"[excluded] text\" --exclude \"\\[excluded\\]\")"
     ],
     "deny": []
   },

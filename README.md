@@ -60,6 +60,12 @@ issue-linker -t "fix #456" --issue-status open
 
 # Custom exclude pattern
 issue-linker -t "release/v1.0.0" --mode branch --exclude "release/*"
+
+# Show detailed output (verbose mode)
+issue-linker -t "Fix #123" --verbose
+
+# Output as JSON
+issue-linker -t "Fix #123" --json
 ```
 
 #### Extraction Modes

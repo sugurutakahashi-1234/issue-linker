@@ -38,6 +38,7 @@ program
   .option("--repo <owner/repo>", "repository (default: current repository)")
   .option("--github-token <token>", "GitHub token (default: GITHUB_TOKEN env)")
   .option("--json", "output full result as JSON")
+  .option("--verbose", "show detailed output")
   .action(async (options) => {
     try {
       // Validate CLI options using schema from core
@@ -70,41 +71,59 @@ program
 
       // Display human-readable result
       if (result.success) {
-        console.log(`✅ ${result.message}`);
+        // Success output
         if (result.reason === "excluded") {
-          console.log(`   Text was excluded from validation`);
+          console.log(`✅ Text was excluded from validation`);
         } else if (result.issues?.valid && result.issues.valid.length > 0) {
-          console.log(`   Valid issues: #${result.issues.valid.join(", #")}`);
+          console.log(`✅ Valid issues: #${result.issues.valid.join(", #")}`);
+        } else {
+          console.log(`✅ ${result.message}`);
         }
-        console.log(`   Mode: ${result.input.mode}`);
-        if (result.input.repo) {
-          console.log(`   Repository: ${result.input.repo}`);
+
+        // Show extra details in verbose mode
+        if (options.verbose) {
+          if (result.input.mode !== "default") {
+            console.log(`   Mode: ${result.input.mode}`);
+          }
+          if (result.input.repo) {
+            console.log(`   Repository: ${result.input.repo}`);
+          }
         }
         process.exit(0);
       } else {
+        // Error output
         console.error(`❌ ${result.message}`);
-        if (result.issues) {
-          if (result.issues.found.length > 0) {
-            console.error(
-              `   Found issues: #${result.issues.found.join(", #")}`,
+
+        // Show details
+        if (result.issues && options.verbose) {
+          const details = [];
+
+          if (result.issues.valid.length > 0) {
+            details.push(`Valid: #${result.issues.valid.join(", #")}`);
+          }
+          if (result.issues.notFound.length > 0) {
+            details.push(`Not found: #${result.issues.notFound.join(", #")}`);
+          }
+          if (result.issues.wrongState.length > 0) {
+            const stateInfo =
+              result.input.issueStatus === "all"
+                ? "Wrong state"
+                : `Wrong state (expected: ${result.input.issueStatus})`;
+            details.push(
+              `${stateInfo}: #${result.issues.wrongState.join(", #")}`,
             );
           }
-          if (result.issues.valid.length > 0) {
-            console.error(`   Valid: #${result.issues.valid.join(", #")}`);
+
+          if (details.length > 0) {
+            console.error(`   Details: ${details.join(", ")}`);
           }
-          const invalidCount =
-            result.issues.notFound.length + result.issues.wrongState.length;
-          if (invalidCount > 0) {
-            const invalid = [
-              ...result.issues.notFound,
-              ...result.issues.wrongState,
-            ];
-            console.error(`   Invalid: #${invalid.join(", #")}`);
+
+          if (result.input.mode !== "default") {
+            console.error(`   Mode: ${result.input.mode}`);
           }
-        }
-        console.error(`   Mode: ${result.input.mode}`);
-        if (result.input.repo) {
-          console.error(`   Repository: ${result.input.repo}`);
+          if (result.input.repo) {
+            console.error(`   Repository: ${result.input.repo}`);
+          }
         }
         process.exit(1);
       }

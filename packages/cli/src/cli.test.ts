@@ -105,6 +105,32 @@ describe("CLI", () => {
       expect(proc.exitCode).toBe(1);
     });
 
+    it("should show detailed output with --verbose option", async () => {
+      const proc = spawn(
+        [
+          "bun",
+          "run",
+          "./cli.ts",
+          "-t",
+          "Fix #999999",
+          "--repo",
+          "test-org/test-repo",
+          "--verbose",
+        ],
+        {
+          cwd: import.meta.dir,
+          stderr: "pipe",
+        },
+      );
+
+      const errorText = await new Response(proc.stderr).text();
+      await proc.exited;
+
+      expect(errorText).toContain("Details:");
+      expect(errorText).toContain("Repository: test-org/test-repo");
+      expect(proc.exitCode).toBe(1);
+    });
+
     // API tests using real GitHub API
     // Note: These tests may fail due to rate limits.
     // If they consistently fail, change 'it' to 'it.skip' to skip them.
@@ -133,7 +159,7 @@ describe("CLI", () => {
         const text = await new Response(proc.stdout).text();
         await proc.exited;
 
-        expect(text).toContain("Valid issue(s) found: #3");
+        expect(text).toContain("✅ Valid issues: #3");
         expect(proc.exitCode).toBe(0);
       },
       { timeout: 2000 }, // 2s timeout (API timeout 1s + buffer)
@@ -236,7 +262,7 @@ describe("CLI", () => {
         const text = await new Response(proc.stdout).text();
         await proc.exited;
 
-        expect(text).toContain("Valid issue(s) found");
+        expect(text).toContain("✅ Valid issues:");
         expect(proc.exitCode).toBe(0);
       },
       { timeout: 2000 },

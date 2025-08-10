@@ -75702,32 +75702,48 @@ async function run() {
         // Log results
         for (const result of results) {
             const actionMode = result.input.actionMode || "custom";
+            const prefix = results.length > 1 ? `[${actionMode}] ` : "";
             if (result.success) {
-                core.info(`✅ [${actionMode}] ${result.message}`);
+                // Success cases
+                if (result.reason === "excluded") {
+                    core.info(`✅ ${prefix}Text was excluded from validation`);
+                }
+                else if (result.issues?.valid && result.issues.valid.length > 0) {
+                    core.info(`✅ ${prefix}Valid issues: #${result.issues.valid.join(", #")}`);
+                }
+                else {
+                    core.info(`✅ ${prefix}${result.message}`);
+                }
             }
             else {
-                core.error(`❌ [${actionMode}] ${result.message}`);
-            }
-            if (result.issues) {
-                if (result.issues.found.length > 0) {
-                    core.info(`   Found issues: #${result.issues.found.join(", #")}`);
-                }
-                if (result.issues.valid.length > 0) {
-                    core.info(`   Valid: #${result.issues.valid.join(", #")}`);
-                }
-                const invalidCount = result.issues.notFound.length + result.issues.wrongState.length;
-                if (invalidCount > 0) {
-                    const invalid = [
-                        ...result.issues.notFound,
-                        ...result.issues.wrongState,
-                    ];
-                    core.info(`   Invalid: #${invalid.join(", #")}`);
+                // Failure cases
+                core.error(`❌ ${prefix}${result.message}`);
+                // Show details for failed validations
+                if (result.issues) {
+                    const details = [];
+                    if (result.issues.valid.length > 0) {
+                        details.push(`Valid: #${result.issues.valid.join(", #")}`);
+                    }
+                    if (result.issues.notFound.length > 0) {
+                        details.push(`Not found: #${result.issues.notFound.join(", #")}`);
+                    }
+                    if (result.issues.wrongState.length > 0) {
+                        const stateInfo = result.input.issueStatus === "all"
+                            ? "Wrong state"
+                            : `Wrong state (expected: ${result.input.issueStatus})`;
+                        details.push(`${stateInfo}: #${result.issues.wrongState.join(", #")}`);
+                    }
+                    if (details.length > 0) {
+                        core.info(`   Details: ${details.join(", ")}`);
+                    }
                 }
             }
         }
         // Fail if any validation failed
         if (!allSuccess) {
-            core.setFailed(`Some validations failed. See the logs above for details.`);
+            const failureCount = results.filter((r) => !r.success).length;
+            const totalCount = results.length;
+            core.setFailed(`${failureCount} of ${totalCount} validation${totalCount > 1 ? "s" : ""} failed`);
         }
     }
     catch (error) {
