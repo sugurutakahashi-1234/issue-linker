@@ -27,13 +27,13 @@
   "dependencies": {
     "@actions/core": "^1.11.1",
     "@actions/github": "^6.0.1",
-    "@issue-linker/core": "workspace:*"
+    "@issue-linker/core": "workspace:*",
+    "valibot": "^1.1.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.1.4",
     "@vercel/ncc": "^0.38.3",
     "@ysk8hori/typescript-graph": "^0.26.4",
-    "typescript": "^5.9.2",
-    "valibot": "^1.1.0"
+    "typescript": "^5.9.2"
   }
 }
