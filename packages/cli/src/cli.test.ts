@@ -10,8 +10,9 @@ describe("CLI", () => {
     const text = await new Response(proc.stdout).text();
 
     expect(text).toContain("issue-linker");
-    expect(text).toContain("branch");
-    expect(text).toContain("commit");
+    expect(text).toContain("-t, --text");
+    expect(text).toContain("--mode");
+    expect(text).toContain("--exclude");
   });
 
   it("should display version", async () => {
@@ -24,25 +25,10 @@ describe("CLI", () => {
     expect(text).toContain("0.0.0");
   });
 
-  describe("branch subcommand", () => {
-    it("should display branch help", async () => {
-      const proc = spawn(["bun", "run", "./cli.ts", "branch", "--help"], {
-        cwd: import.meta.dir,
-      });
-
-      const text = await new Response(proc.stdout).text();
-
-      expect(text).toContain("branch");
-      expect(text).toContain("--branch");
-      expect(text).toContain("--repo");
-      expect(text).toContain("--exclude-pattern");
-      expect(text).toContain("--issue-status");
-      expect(text).toContain("--github-token");
-    });
-
-    it("should fail when branch has no issue number", async () => {
+  describe("text validation", () => {
+    it("should fail when text has no issue number", async () => {
       const proc = spawn(
-        ["bun", "run", "./cli.ts", "branch", "--branch", "feat/no-issue-here"],
+        ["bun", "run", "./cli.ts", "-t", "feat/no-issue-here"],
         {
           cwd: import.meta.dir,
           stderr: "pipe",
@@ -54,18 +40,9 @@ describe("CLI", () => {
       expect(proc.exitCode).toBe(1);
     });
 
-    it("should succeed when branch matches excluded pattern", async () => {
+    it("should succeed when branch text matches excluded pattern", async () => {
       const proc = spawn(
-        [
-          "bun",
-          "run",
-          "./cli.ts",
-          "branch",
-          "--branch",
-          "main",
-          "--exclude-pattern",
-          "{main,master,develop}",
-        ],
+        ["bun", "run", "./cli.ts", "-t", "main", "--mode", "branch"],
         {
           cwd: import.meta.dir,
         },
@@ -74,7 +51,7 @@ describe("CLI", () => {
       const text = await new Response(proc.stdout).text();
       await proc.exited;
 
-      expect(text).toContain("Branch 'main' is excluded from validation");
+      expect(text).toContain("excluded from validation");
       expect(proc.exitCode).toBe(0);
     });
 
@@ -84,10 +61,11 @@ describe("CLI", () => {
           "bun",
           "run",
           "./cli.ts",
-          "branch",
-          "--branch",
+          "-t",
           "release/v1.0.0",
-          "--exclude-pattern",
+          "--mode",
+          "branch",
+          "--exclude",
           "release/*",
         ],
         {
@@ -108,8 +86,7 @@ describe("CLI", () => {
           "bun",
           "run",
           "./cli.ts",
-          "branch",
-          "--branch",
+          "-t",
           "feat/123-test",
           "--repo",
           "owner/repo",
@@ -125,8 +102,8 @@ describe("CLI", () => {
       const errorText = await new Response(proc.stderr).text();
       await proc.exited;
 
-      expect(errorText).toContain("Invalid");
-      expect(proc.exitCode).toBe(2); // Error exit code
+      expect(errorText).toContain("Invalid issue status");
+      expect(proc.exitCode).toBe(1);
     });
 
     // API tests using real GitHub API
@@ -142,9 +119,10 @@ describe("CLI", () => {
             "bun",
             "run",
             "./cli.ts",
-            "branch",
-            "--branch",
+            "-t",
             "feat/issue-3-test",
+            "--mode",
+            "branch",
             "--repo",
             "sugurutakahashi-1234/issue-linker",
           ],
@@ -156,7 +134,7 @@ describe("CLI", () => {
         const text = await new Response(proc.stdout).text();
         await proc.exited;
 
-        expect(text).toContain("Issue #3 found");
+        expect(text).toContain("Valid issue(s) found: #3");
         expect(proc.exitCode).toBe(0);
       },
       { timeout: 2000 }, // 2s timeout (API timeout 1s + buffer)
@@ -171,9 +149,10 @@ describe("CLI", () => {
             "bun",
             "run",
             "./cli.ts",
-            "branch",
-            "--branch",
+            "-t",
             "feat/issue-99999-test",
+            "--mode",
+            "branch",
             "--repo",
             "sugurutakahashi-1234/issue-linker",
           ],
@@ -191,24 +170,41 @@ describe("CLI", () => {
     );
   });
 
-  describe("commit subcommand", () => {
-    it("should display commit help", async () => {
-      const proc = spawn(["bun", "run", "./cli.ts", "commit", "--help"], {
-        cwd: import.meta.dir,
-      });
+  describe("commit mode", () => {
+    it("should exclude merge commits", async () => {
+      const proc = spawn(
+        [
+          "bun",
+          "run",
+          "./cli.ts",
+          "-t",
+          "Merge branch main",
+          "--mode",
+          "commit",
+        ],
+        {
+          cwd: import.meta.dir,
+        },
+      );
 
       const text = await new Response(proc.stdout).text();
+      await proc.exited;
 
-      expect(text).toContain("commit");
-      expect(text).toContain("--latest");
-      expect(text).toContain("--repo");
-      expect(text).toContain("--issue-status");
-      expect(text).toContain("--github-token");
+      expect(text).toContain("excluded");
+      expect(proc.exitCode).toBe(0);
     });
 
     it("should fail when commit message has no issue number", async () => {
       const proc = spawn(
-        ["bun", "run", "./cli.ts", "commit", "chore: update dependencies"],
+        [
+          "bun",
+          "run",
+          "./cli.ts",
+          "-t",
+          "chore: update dependencies",
+          "--mode",
+          "commit",
+        ],
         {
           cwd: import.meta.dir,
           stderr: "pipe",
@@ -228,7 +224,7 @@ describe("CLI", () => {
             "bun",
             "run",
             "./cli.ts",
-            "commit",
+            "-t",
             "fix: resolve issue #3",
             "--repo",
             "sugurutakahashi-1234/issue-linker",
@@ -255,7 +251,7 @@ describe("CLI", () => {
             "bun",
             "run",
             "./cli.ts",
-            "commit",
+            "-t",
             "fix: resolve issue #99999",
             "--repo",
             "sugurutakahashi-1234/issue-linker",

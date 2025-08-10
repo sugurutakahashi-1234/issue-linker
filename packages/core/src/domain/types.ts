@@ -1,43 +1,48 @@
 // Type definitions for issue-linker
 
+// Mode for text extraction
+export type ExtractionMode = "default" | "branch" | "commit";
+
 // Issue related types
 export type IssueStatus = "open" | "closed";
 export type IssueStatusFilter = "all" | "open" | "closed";
 
-// Check result reasons
-export type CheckReason =
-  | "excluded" // Branch is in the exclude pattern
-  | "issue-found" // Valid issue was found
-  | "no-issue-number" // No issue number in branch name
-  | "issue-not-found" // Issue number exists but issue not found/invalid
-  | "error"; // Unexpected error occurred
-
-// Check result interface
-export interface CheckResult {
-  success: boolean;
-  reason: CheckReason;
-  branch: string;
-  message: string;
-  issueNumber?: number; // Present only when an issue is found
-  metadata?: {
-    owner?: string;
-    repo?: string;
-    checkedIssues?: number[];
-  };
+// Options for checking text
+export interface CheckMessageOptions {
+  /** Text to validate */
+  text: string;
+  /** Extraction mode */
+  mode?: ExtractionMode;
+  /** Custom exclude pattern (overrides mode defaults) */
+  exclude?: string;
+  /** Issue status filter */
+  issueStatus?: IssueStatusFilter;
+  /** Repository in owner/repo format */
+  repo?: string;
+  /** GitHub token for API access */
+  githubToken?: string;
 }
 
-// Options for branch checking
-export interface CheckOptions {
-  // Target information (auto-detected if not specified)
-  branch?: string; // Branch name to check (default: current branch)
-  repo?: string; // Repository in "owner/repo" format (default: from git remote)
-
-  // Filter settings
-  excludePattern?: string; // Glob pattern to exclude branches (default: "{main,master,develop}")
-  issueStatus?: string; // Issue status filter: "all", "open", or "closed" (default: "all")
-
-  // Authentication
-  githubToken?: string; // GitHub token for API access (default: from environment)
+// Result of text validation
+export interface CheckResult {
+  /** Whether validation succeeded */
+  success: boolean;
+  /** Human-readable message */
+  message: string;
+  /** All issue numbers found in text */
+  issueNumbers: number[];
+  /** Valid issue numbers (exist and match status) */
+  validIssues: number[];
+  /** Invalid issue numbers (not found or wrong status) */
+  invalidIssues: number[];
+  /** Whether text was excluded by pattern */
+  excluded: boolean;
+  /** Additional metadata */
+  metadata: {
+    mode: ExtractionMode;
+    repo: string;
+    text: string;
+  };
 }
 
 // GitHub Issue representation
@@ -52,4 +57,21 @@ export interface Issue {
 export interface GitHubRepository {
   owner: string;
   repo: string;
+}
+
+// Legacy types for backward compatibility during migration
+// TODO: Remove after migration
+export type CheckReason =
+  | "excluded"
+  | "issue-found"
+  | "no-issue-number"
+  | "issue-not-found"
+  | "error";
+
+export interface CheckOptions {
+  branch?: string;
+  repo?: string;
+  excludePattern?: string;
+  issueStatus?: string;
+  githubToken?: string;
 }

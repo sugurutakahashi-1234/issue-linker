@@ -19,8 +19,7 @@ flowchart LR
                     packages/core/dist/domain/errors.d.ts["errors.d.ts"]
                 end
                 subgraph packages/core/dist/application["/application"]
-                    packages/core/dist/application/check//branch//use//case.d.ts["check-branch-use-case.d.ts"]
-                    packages/core/dist/application/check//commit//use//case.d.ts["check-commit-use-case.d.ts"]
+                    packages/core/dist/application/check//message//use//case.d.ts["check-message-use-case.d.ts"]
                 end
             end
             subgraph packages/core/src["/src"]
@@ -33,41 +32,43 @@ flowchart LR
     end
     subgraph node//modules["node_modules"]
         node//modules///actions/core/lib/core.d.ts["@actions/core"]
+        node//modules///actions/github/lib/github.d.ts["@actions/github"]
         node//modules///commander//js/extra//typings/index.d.ts["@commander-js/extra-typings"]
-        node//modules/valibot/dist/index.d.cts["valibot"]
-        node//modules///types/micromatch/index.d.ts["@types/micromatch"]
         node//modules///t3//oss/env//core/dist/index.d.ts["@t3-oss/env-core"]
+        node//modules/valibot/dist/index.d.cts["valibot"]
         node//modules/simple//git/dist/typings/index.d.ts["simple-git"]
         node//modules///octokit/plugin//retry/dist//types/index.d.ts["@octokit/plugin-retry"]
         node//modules///octokit/plugin//throttling/dist//types/index.d.ts["@octokit/plugin-throttling"]
         node//modules///octokit/request//error/dist//types/index.d.ts["@octokit/request-error"]
         node//modules/octokit/dist//types/index.d.ts["octokit"]
+        node//modules/minimatch/dist/commonjs/index.d.ts["minimatch"]
+        node//modules///types/micromatch/index.d.ts["@types/micromatch"]
     end
     packages/core/dist/domain/constants.d.ts-->packages/core/dist/domain/types.d.ts
-    packages/core/dist/application/check//branch//use//case.d.ts-->packages/core/dist/domain/types.d.ts
-    packages/core/dist/application/check//commit//use//case.d.ts-->packages/core/dist/domain/types.d.ts
+    packages/core/dist/application/check//message//use//case.d.ts-->packages/core/dist/domain/types.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/domain/constants.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/domain/errors.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/domain/types.d.ts
-    packages/core/dist/index.d.ts-->packages/core/dist/application/check//branch//use//case.d.ts
-    packages/core/dist/index.d.ts-->packages/core/dist/application/check//commit//use//case.d.ts
+    packages/core/dist/index.d.ts-->packages/core/dist/application/check//message//use//case.d.ts
     packages/action-->node//modules///actions/core/lib/core.d.ts
+    packages/action-->node//modules///actions/github/lib/github.d.ts
     packages/action-->packages/core/dist/index.d.ts
     packages/cli-->node//modules///commander//js/extra//typings/index.d.ts
     packages/cli-->packages/core/dist/index.d.ts
-    packages/core/src/domain-->node//modules/valibot/dist/index.d.cts
-    packages/core/src/infrastructure-->node//modules///types/micromatch/index.d.ts
-    packages/core/src/infrastructure-->packages/core/src/domain
     packages/core/src/domain-->node//modules///t3//oss/env//core/dist/index.d.ts
+    packages/core/src/domain-->node//modules/valibot/dist/index.d.cts
+    packages/core/src/infrastructure-->packages/core/src/domain
     packages/core/src/infrastructure-->node//modules/simple//git/dist/typings/index.d.ts
     packages/core/src/infrastructure-->node//modules///octokit/plugin//retry/dist//types/index.d.ts
     packages/core/src/infrastructure-->node//modules///octokit/plugin//throttling/dist//types/index.d.ts
     packages/core/src/infrastructure-->node//modules///octokit/request//error/dist//types/index.d.ts
     packages/core/src/infrastructure-->node//modules/octokit/dist//types/index.d.ts
+    packages/core/src/application-->node//modules/minimatch/dist/commonjs/index.d.ts
     packages/core/src/application-->node//modules/valibot/dist/index.d.cts
     packages/core/src/application-->packages/core/src/domain
     packages/core/src/application-->packages/core/src/infrastructure
     packages/core/src/index.ts-->packages/core/src/domain
     packages/core/src/index.ts-->packages/core/src/application
+    packages/core/src/infrastructure-->node//modules///types/micromatch/index.d.ts
 ```
 
