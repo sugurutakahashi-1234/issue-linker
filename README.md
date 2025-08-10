@@ -161,8 +161,10 @@ bunx @sugurutakahashi-1234/issue-linker -t "$message" --check-mode commit || {
 
 ### Default Exclude Patterns
 
+All exclude patterns use [minimatch](https://github.com/isaacs/minimatch) glob syntax:
+
 - **branch mode**: `{main,master,develop,release/*,hotfix/*}`
-- **commit mode**: Messages starting with `Rebase`, `Merge`, `Revert`, `fixup!`, `squash!`
+- **commit mode**: `{Rebase*,Merge*,Revert*,fixup!*,squash!*}`
 - **default mode**: No exclusions
 
 ## Supported Patterns

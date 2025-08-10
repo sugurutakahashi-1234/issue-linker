@@ -2,16 +2,6 @@
 
 import type { CheckMode, IssueStatusFilter } from "./validation-schemas.js";
 
-// ===== Type Definitions =====
-
-/**
- * Exclude rule types for different check modes
- */
-type ExcludeRule =
-  | { type: "none" }
-  | { type: "pattern"; value: string }
-  | { type: "prefixes"; values: readonly string[] };
-
 // ===== Default Values =====
 
 /**
@@ -35,18 +25,10 @@ export const DEFAULT_OPTIONS = {
 
 /**
  * Mode-specific exclude rules
- * Defines how each mode handles exclusions
+ * All patterns use minimatch syntax
  */
-export const EXCLUDE_RULES: Record<CheckMode, ExcludeRule> = {
-  default: {
-    type: "none",
-  },
-  branch: {
-    type: "pattern",
-    value: "{main,master,develop,release/*,hotfix/*}",
-  },
-  commit: {
-    type: "prefixes",
-    values: ["Rebase", "Merge", "Revert", "fixup!", "squash!"] as const,
-  },
+export const EXCLUDE_RULES: Record<CheckMode, string | undefined> = {
+  default: undefined,
+  branch: "{main,master,develop,release/*,hotfix/*}",
+  commit: "{Rebase*,Merge*,Revert*,fixup!*,squash!*}",
 } as const;

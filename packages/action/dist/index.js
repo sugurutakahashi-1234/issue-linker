@@ -46711,20 +46711,12 @@ const DEFAULT_OPTIONS = {
 // ===== Exclude Rules =====
 /**
  * Mode-specific exclude rules
- * Defines how each mode handles exclusions
+ * All patterns use minimatch syntax
  */
 const EXCLUDE_RULES = {
-    default: {
-        type: "none",
-    },
-    branch: {
-        type: "pattern",
-        value: "{main,master,develop,release/*,hotfix/*}",
-    },
-    commit: {
-        type: "prefixes",
-        values: ["Rebase", "Merge", "Revert", "fixup!", "squash!"],
-    },
+    default: undefined,
+    branch: "{main,master,develop,release/*,hotfix/*}",
+    commit: "{Rebase*,Merge*,Revert*,fixup!*,squash!*}",
 };
 //# sourceMappingURL=constants.js.map
 ;// CONCATENATED MODULE: ../core/dist/domain/errors.js
@@ -56068,20 +56060,13 @@ function isBranchExcluded(branch, pattern) {
  * @returns true if text should be excluded
  */
 function shouldExclude(text, checkMode, customExclude) {
-    // Use custom exclude pattern if provided
-    if (customExclude) {
-        return minimatch(text, customExclude);
+    // Use custom exclude pattern if provided, otherwise use mode-specific default
+    const pattern = customExclude ?? EXCLUDE_RULES[checkMode];
+    // No pattern means no exclusion
+    if (!pattern) {
+        return false;
     }
-    // Check mode-specific default exclusions
-    const rule = EXCLUDE_RULES[checkMode];
-    switch (rule.type) {
-        case "none":
-            return false;
-        case "pattern":
-            return minimatch(text, rule.value);
-        case "prefixes":
-            return rule.values.some((prefix) => text.startsWith(prefix));
-    }
+    return minimatch(text, pattern);
 }
 /**
  * Validates if an issue state is allowed

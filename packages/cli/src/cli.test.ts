@@ -41,7 +41,7 @@ describe("CLI", () => {
 
     it("should succeed when branch text matches excluded pattern", async () => {
       const proc = spawn(
-        ["bun", "run", "./cli.ts", "-t", "main", "--mode", "branch"],
+        ["bun", "run", "./cli.ts", "-t", "main", "--check-mode", "branch"],
         {
           cwd: import.meta.dir,
         },
@@ -62,7 +62,7 @@ describe("CLI", () => {
           "./cli.ts",
           "-t",
           "release/v1.0.0",
-          "--mode",
+          "--check-mode",
           "branch",
           "--exclude",
           "release/*",
@@ -146,7 +146,7 @@ describe("CLI", () => {
             "./cli.ts",
             "-t",
             "feat/issue-3-test",
-            "--mode",
+            "--check-mode",
             "branch",
             "--repo",
             "sugurutakahashi-1234/issue-linker",
@@ -176,7 +176,7 @@ describe("CLI", () => {
             "./cli.ts",
             "-t",
             "feat/issue-99999-test",
-            "--mode",
+            "--check-mode",
             "branch",
             "--repo",
             "sugurutakahashi-1234/issue-linker",
@@ -204,7 +204,7 @@ describe("CLI", () => {
           "./cli.ts",
           "-t",
           "Merge branch main",
-          "--mode",
+          "--check-mode",
           "commit",
         ],
         {
@@ -227,7 +227,7 @@ describe("CLI", () => {
           "./cli.ts",
           "-t",
           "chore: update dependencies",
-          "--mode",
+          "--check-mode",
           "commit",
         ],
         {

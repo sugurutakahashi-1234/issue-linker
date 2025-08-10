@@ -32,22 +32,15 @@ export function shouldExclude(
   checkMode: CheckMode,
   customExclude?: string,
 ): boolean {
-  // Use custom exclude pattern if provided
-  if (customExclude) {
-    return minimatch(text, customExclude);
+  // Use custom exclude pattern if provided, otherwise use mode-specific default
+  const pattern = customExclude ?? EXCLUDE_RULES[checkMode];
+
+  // No pattern means no exclusion
+  if (!pattern) {
+    return false;
   }
 
-  // Check mode-specific default exclusions
-  const rule = EXCLUDE_RULES[checkMode];
-
-  switch (rule.type) {
-    case "none":
-      return false;
-    case "pattern":
-      return minimatch(text, rule.value);
-    case "prefixes":
-      return rule.values.some((prefix) => text.startsWith(prefix));
-  }
+  return minimatch(text, pattern);
 }
 
 /**
