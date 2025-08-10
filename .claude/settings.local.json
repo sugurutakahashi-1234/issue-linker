@@ -165,7 +165,9 @@
       "Bash(do time bun run ./src/cli.ts --branch \"feat/issue-3-test\" --repo \"sugurutakahashi-1234/issue-number-branch\")",
       "Bash(time bun test:*)",
       "Bash(do echo \"=== Checking $scope ===\")",
-      "Bash(git ls-tree:*)"
+      "Bash(git ls-tree:*)",
+      "Bash(GITHUB_TOKEN=\"\" GH_TOKEN=\"\" bun run src/cli.ts --text \"Fix #123\" --repo \"owner/repo\")",
+      "Bash(DEBUG_TOKEN_SOURCE=1 GITHUB_TOKEN=\"\" GH_TOKEN=\"\" bun run src/cli.ts --text \"Fix #123\" --repo \"owner/repo\")"
     ],
     "deny": []
   },

@@ -35170,7 +35170,7 @@ __webpack_unused_export__ = defaultContentType
 
 /***/ }),
 
-/***/ 1819:
+/***/ 5469:
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
 
 // ESM COMPAT FLAG
@@ -44385,6 +44385,8 @@ const EXCLUDED_COMMIT_PREFIXES = [
     "squash!",
 ];
 //# sourceMappingURL=schemas.js.map
+;// CONCATENATED MODULE: external "node:child_process"
+const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:child_process");
 ;// CONCATENATED MODULE: ../../node_modules/@t3-oss/env-core/dist/src-Bb3GbGAa.js
 //#region src/standard.ts
 function ensureSynchronous(value, message) {
@@ -44491,13 +44493,78 @@ const env = createEnv({
 ;// CONCATENATED MODULE: ../core/dist/infrastructure/env-accessor.js
 // Infrastructure layer - Environment variable accessor
 
+
 /**
- * Get GitHub token from environment variables
+ * Get GitHub token from Git Credential Manager
+ * @returns GitHub token or undefined
+ */
+function getTokenFromGitCredentialManager() {
+    try {
+        const result = (0,external_node_child_process_namespaceObject.execSync)("git credential fill", {
+            input: "url=https://github.com\n",
+            encoding: "utf8",
+            stdio: ["pipe", "pipe", "ignore"], // Ignore stderr
+        });
+        // Parse the output to extract the password (token)
+        const lines = result.split("\n");
+        for (const line of lines) {
+            if (line.startsWith("password=")) {
+                return line.substring(9); // Length of "password="
+            }
+        }
+    }
+    catch {
+        // Git command not available or no credentials stored
+        return undefined;
+    }
+    return undefined;
+}
+/**
+ * Get GitHub token from GitHub CLI
+ * @returns GitHub token or undefined
+ */
+function getTokenFromGitHubCLI() {
+    try {
+        const token = (0,external_node_child_process_namespaceObject.execSync)("gh auth token", {
+            encoding: "utf8",
+            stdio: ["pipe", "pipe", "ignore"], // Ignore stderr
+        }).trim();
+        // Verify it looks like a valid token
+        if (token && (token.startsWith("gho_") || token.startsWith("ghp_"))) {
+            return token;
+        }
+    }
+    catch {
+        // GitHub CLI not available or not authenticated
+        return undefined;
+    }
+    return undefined;
+}
+/**
+ * Get GitHub token from multiple sources
+ * Priority order:
+ * 1. Environment variables (GITHUB_TOKEN, GH_TOKEN)
+ * 2. Git Credential Manager
+ * 3. GitHub CLI
  * @returns GitHub token or undefined
  */
 function getGitHubToken() {
-    // Check GITHUB_TOKEN first, then fall back to GH_TOKEN
-    return env.GITHUB_TOKEN ?? env.GH_TOKEN;
+    // 1. Check environment variables first (existing behavior)
+    const envToken = env.GITHUB_TOKEN ?? env.GH_TOKEN;
+    if (envToken) {
+        return envToken;
+    }
+    // 2. Try Git Credential Manager
+    const gitCredToken = getTokenFromGitCredentialManager();
+    if (gitCredToken) {
+        return gitCredToken;
+    }
+    // 3. Try GitHub CLI as fallback
+    const ghCliToken = getTokenFromGitHubCLI();
+    if (ghCliToken) {
+        return ghCliToken;
+    }
+    return undefined;
 }
 /**
  * Get GitHub API URL from environment variables
@@ -63826,7 +63893,7 @@ Object.defineProperty(exports, "B", ({ value: true }));
 const tslib_1 = __nccwpck_require__(4176);
 const core = tslib_1.__importStar(__nccwpck_require__(7184));
 const github = tslib_1.__importStar(__nccwpck_require__(5683));
-const core_1 = __nccwpck_require__(1819);
+const core_1 = __nccwpck_require__(5469);
 async function run() {
     try {
         const context = github.context;
