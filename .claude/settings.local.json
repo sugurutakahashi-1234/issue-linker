@@ -186,7 +186,9 @@
       "Bash(false)",
       "Bash(GITHUB_REPOSITORY=owner/repo bun run --filter '@issue-linker/action' test)",
       "Bash(GITHUB_REPOSITORY=owner/repo bun run --filter '@issue-linker/action' test:quiet)",
-      "Bash(git rebase:*)"
+      "Bash(git rebase:*)",
+      "Bash(GITHUB_TOKEN=\"\" GH_TOKEN=\"\" bun run packages/cli/src/cli.ts -t \"feat/issue-3-test\" --check-mode branch --repo \"sugurutakahashi-1234/issue-linker\")",
+      "Bash(GITHUB_TOKEN=\"\" GH_TOKEN=\"\" bun test --no-coverage)"
     ],
     "deny": []
   },

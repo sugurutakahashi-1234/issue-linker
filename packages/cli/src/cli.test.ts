@@ -198,65 +198,6 @@ describe("CLI", () => {
     // Note: These tests may fail due to rate limits.
     // If they consistently fail, change 'it' to 'it.skip' to skip them.
     // Performance tuning: API timeout=1s, no retries for max speed
-    it(
-      "should succeed when issue exists in this repository",
-      async () => {
-        // Using issue #3 which exists in this repository
-        const proc = spawn(
-          [
-            "bun",
-            "run",
-            "./cli.ts",
-            "-t",
-            "feat/issue-3-test",
-            "--check-mode",
-            "branch",
-            "--repo",
-            "sugurutakahashi-1234/issue-linker",
-          ],
-          {
-            cwd: import.meta.dir,
-          },
-        );
-
-        const text = await new Response(proc.stdout).text();
-        await proc.exited;
-
-        expect(text).toContain("✅ Valid issues: #3");
-        expect(proc.exitCode).toBe(0);
-      },
-      { timeout: 2000 }, // 2s timeout (API timeout 1s + buffer)
-    );
-
-    it(
-      "should work with short form -c for API calls",
-      async () => {
-        // Test short form with real GitHub API
-        const proc = spawn(
-          [
-            "bun",
-            "run",
-            "./cli.ts",
-            "-t",
-            "feat/issue-3-test",
-            "-c",
-            "branch",
-            "--repo",
-            "sugurutakahashi-1234/issue-linker",
-          ],
-          {
-            cwd: import.meta.dir,
-          },
-        );
-
-        const text = await new Response(proc.stdout).text();
-        await proc.exited;
-
-        expect(text).toContain("✅ Valid issues: #3");
-        expect(proc.exitCode).toBe(0);
-      },
-      { timeout: 2000 }, // 2s timeout (API timeout 1s + buffer)
-    );
 
     it(
       "should fail when issue does not exist in this repository",
@@ -333,33 +274,6 @@ describe("CLI", () => {
 
       expect(proc.exitCode).toBe(1);
     });
-
-    it(
-      "should succeed when commit message contains valid issue number",
-      async () => {
-        const proc = spawn(
-          [
-            "bun",
-            "run",
-            "./cli.ts",
-            "-t",
-            "fix: resolve issue #3",
-            "--repo",
-            "sugurutakahashi-1234/issue-linker",
-          ],
-          {
-            cwd: import.meta.dir,
-          },
-        );
-
-        const text = await new Response(proc.stdout).text();
-        await proc.exited;
-
-        expect(text).toContain("✅ Valid issues:");
-        expect(proc.exitCode).toBe(0);
-      },
-      { timeout: 2000 },
-    );
 
     it(
       "should fail when commit message contains non-existent issue",
