@@ -185,7 +185,8 @@
       "Bash(GH_HOST=github.enterprise.com bun run packages/cli/src/cli.ts -t \"test-123\" --check-mode branch)",
       "Bash(false)",
       "Bash(GITHUB_REPOSITORY=owner/repo bun run --filter '@issue-linker/action' test)",
-      "Bash(GITHUB_REPOSITORY=owner/repo bun run --filter '@issue-linker/action' test:quiet)"
+      "Bash(GITHUB_REPOSITORY=owner/repo bun run --filter '@issue-linker/action' test:quiet)",
+      "Bash(git rebase:*)"
     ],
     "deny": []
   },
