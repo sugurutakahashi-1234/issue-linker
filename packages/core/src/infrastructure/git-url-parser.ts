@@ -1,6 +1,6 @@
 // Infrastructure layer - Git URL parsing
 
-import type { GitHubRepository } from "../domain/types.js";
+import type { GitHubRepository } from "../domain/validation-schemas.js";
 
 /**
  * Parses owner and repository from a Git remote URL

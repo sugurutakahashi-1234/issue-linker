@@ -1,7 +1,13 @@
 // Infrastructure layer - Validation functions
 
 import micromatch from "micromatch";
-import type { IssueStatus, IssueStatusFilter } from "../domain/types.js";
+import { minimatch } from "minimatch";
+import { EXCLUDE_RULES } from "../domain/constants.js";
+import type {
+  CheckMode,
+  IssueStatus,
+  IssueStatusFilter,
+} from "../domain/validation-schemas.js";
 
 /**
  * Validates if a branch should be excluded from validation
@@ -12,6 +18,29 @@ import type { IssueStatus, IssueStatusFilter } from "../domain/types.js";
 export function isBranchExcluded(branch: string, pattern: string): boolean {
   if (!pattern) return false;
   return micromatch.isMatch(branch, pattern);
+}
+
+/**
+ * Check if text should be excluded based on mode and pattern
+ * @param text - The text to check
+ * @param checkMode - The check mode
+ * @param customExclude - Optional custom exclude pattern
+ * @returns true if text should be excluded
+ */
+export function shouldExclude(
+  text: string,
+  checkMode: CheckMode,
+  customExclude?: string,
+): boolean {
+  // Use custom exclude pattern if provided, otherwise use mode-specific default
+  const pattern = customExclude ?? EXCLUDE_RULES[checkMode];
+
+  // No pattern means no exclusion
+  if (!pattern) {
+    return false;
+  }
+
+  return minimatch(text, pattern);
 }
 
 /**

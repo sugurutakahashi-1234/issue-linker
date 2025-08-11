@@ -14,22 +14,24 @@ flowchart LR
             subgraph packages/core/dist["/dist"]
                 packages/core/dist/index.d.ts["index.d.ts"]
                 subgraph packages/core/dist/domain["/domain"]
-                    packages/core/dist/domain/types.d.ts["types.d.ts"]
+                    packages/core/dist/domain/validation//schemas.d.ts["validation-schemas.d.ts"]
                     packages/core/dist/domain/constants.d.ts["constants.d.ts"]
                     packages/core/dist/domain/errors.d.ts["errors.d.ts"]
+                    packages/core/dist/domain/result.d.ts["result.d.ts"]
                 end
                 subgraph packages/core/dist/application["/application"]
-                    packages/core/dist/application/check//branch//use//case.d.ts["check-branch-use-case.d.ts"]
-                    packages/core/dist/application/check//commit//use//case.d.ts["check-commit-use-case.d.ts"]
+                    packages/core/dist/application/check//message//use//case.d.ts["check-message-use-case.d.ts"]
+                    packages/core/dist/application/get//pull//request//commits//use//case.d.ts["get-pull-request-commits-use-case.d.ts"]
                 end
             end
             subgraph packages/core/src["/src"]
                 packages/core/src/index.ts["index.ts"]
                 subgraph packages/core/src/domain["/domain"]
-                    packages/core/src/domain/types.ts["types.ts"]
+                    packages/core/src/domain/validation//schemas.ts["validation-schemas.ts"]
                     packages/core/src/domain/constants.ts["constants.ts"]
                     packages/core/src/domain/errors.ts["errors.ts"]
-                    packages/core/src/domain/validation//schemas.ts["validation-schemas.ts"]
+                    packages/core/src/domain/result.ts["result.ts"]
+                    packages/core/src/domain/result//factory.ts["result-factory.ts"]
                     packages/core/src/domain/env.ts["env.ts"]
                 end
                 subgraph packages/core/src/infrastructure["/infrastructure"]
@@ -38,21 +40,23 @@ flowchart LR
                     packages/core/src/infrastructure/git//client.ts["git-client.ts"]
                     packages/core/src/infrastructure/git//url//parser.ts["git-url-parser.ts"]
                     packages/core/src/infrastructure/github//client.ts["github-client.ts"]
-                    packages/core/src/infrastructure/issue//extractor.ts["issue-extractor.ts"]
+                    packages/core/src/infrastructure/issue//finder.ts["issue-finder.ts"]
                     packages/core/src/infrastructure/repository//parser.ts["repository-parser.ts"]
                 end
                 subgraph packages/core/src/application["/application"]
-                    packages/core/src/application/check//branch//use//case.ts["check-branch-use-case.ts"]
-                    packages/core/src/application/check//commit//use//case.ts["check-commit-use-case.ts"]
+                    packages/core/src/application/check//message//use//case.ts["check-message-use-case.ts"]
+                    packages/core/src/application/get//pull//request//commits//use//case.ts["get-pull-request-commits-use-case.ts"]
                 end
             end
         end
     end
     subgraph node//modules["node_modules"]
-        node//modules///actions/core/lib/core.d.ts["@actions/core"]
-        node//modules///commander//js/extra//typings/index.d.ts["@commander-js/extra-typings"]
         node//modules/valibot/dist/index.d.cts["valibot"]
+        node//modules///actions/core/lib/core.d.ts["@actions/core"]
+        node//modules///actions/github/lib/github.d.ts["@actions/github"]
+        node//modules///commander//js/extra//typings/index.d.ts["@commander-js/extra-typings"]
         node//modules///types/micromatch/index.d.ts["@types/micromatch"]
+        node//modules/minimatch/dist/commonjs/index.d.ts["minimatch"]
         node//modules///t3//oss/env//core/dist/index.d.ts["@t3-oss/env-core"]
         node//modules/simple//git/dist/typings/index.d.ts["simple-git"]
         node//modules///octokit/plugin//retry/dist//types/index.d.ts["@octokit/plugin-retry"]
@@ -60,62 +64,68 @@ flowchart LR
         node//modules///octokit/request//error/dist//types/index.d.ts["@octokit/request-error"]
         node//modules/octokit/dist//types/index.d.ts["octokit"]
     end
-    packages/core/dist/domain/constants.d.ts-->packages/core/dist/domain/types.d.ts
-    packages/core/dist/application/check//branch//use//case.d.ts-->packages/core/dist/domain/types.d.ts
-    packages/core/dist/application/check//commit//use//case.d.ts-->packages/core/dist/domain/types.d.ts
+    packages/core/dist/domain/validation//schemas.d.ts-->node//modules/valibot/dist/index.d.cts
+    packages/core/dist/domain/constants.d.ts-->packages/core/dist/domain/validation//schemas.d.ts
+    packages/core/dist/domain/result.d.ts-->packages/core/dist/domain/validation//schemas.d.ts
+    packages/core/dist/application/check//message//use//case.d.ts-->packages/core/dist/domain/result.d.ts
+    packages/core/dist/application/check//message//use//case.d.ts-->packages/core/dist/domain/validation//schemas.d.ts
+    packages/core/dist/application/get//pull//request//commits//use//case.d.ts-->packages/core/dist/domain/validation//schemas.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/domain/constants.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/domain/errors.d.ts
-    packages/core/dist/index.d.ts-->packages/core/dist/domain/types.d.ts
-    packages/core/dist/index.d.ts-->packages/core/dist/application/check//branch//use//case.d.ts
-    packages/core/dist/index.d.ts-->packages/core/dist/application/check//commit//use//case.d.ts
+    packages/core/dist/index.d.ts-->packages/core/dist/domain/result.d.ts
+    packages/core/dist/index.d.ts-->packages/core/dist/domain/validation//schemas.d.ts
+    packages/core/dist/index.d.ts-->packages/core/dist/application/check//message//use//case.d.ts
+    packages/core/dist/index.d.ts-->packages/core/dist/application/get//pull//request//commits//use//case.d.ts
     packages/action-->node//modules///actions/core/lib/core.d.ts
+    packages/action-->node//modules///actions/github/lib/github.d.ts
     packages/action-->packages/core/dist/index.d.ts
+    packages/action-->node//modules/valibot/dist/index.d.cts
     packages/cli-->node//modules///commander//js/extra//typings/index.d.ts
     packages/cli-->packages/core/dist/index.d.ts
-    packages/core/src/domain/constants.ts-->packages/core/src/domain/types.ts
+    packages/cli-->node//modules/valibot/dist/index.d.cts
     packages/core/src/domain/validation//schemas.ts-->node//modules/valibot/dist/index.d.cts
+    packages/core/src/domain/validation//schemas.ts-->packages/core/src/domain/constants.ts
+    packages/core/src/domain/constants.ts-->packages/core/src/domain/validation//schemas.ts
+    packages/core/src/domain/result.ts-->packages/core/src/domain/validation//schemas.ts
+    packages/core/src/domain/result//factory.ts-->packages/core/src/domain/result.ts
     packages/core/src/infrastructure/branch//matcher.ts-->node//modules///types/micromatch/index.d.ts
-    packages/core/src/infrastructure/branch//matcher.ts-->packages/core/src/domain/types.ts
+    packages/core/src/infrastructure/branch//matcher.ts-->node//modules/minimatch/dist/commonjs/index.d.ts
+    packages/core/src/infrastructure/branch//matcher.ts-->packages/core/src/domain/constants.ts
+    packages/core/src/infrastructure/branch//matcher.ts-->packages/core/src/domain/validation//schemas.ts
     packages/core/src/domain/env.ts-->node//modules///t3//oss/env//core/dist/index.d.ts
     packages/core/src/domain/env.ts-->node//modules/valibot/dist/index.d.cts
     packages/core/src/infrastructure/env//accessor.ts-->packages/core/src/domain/env.ts
     packages/core/src/infrastructure/git//client.ts-->node//modules/simple//git/dist/typings/index.d.ts
     packages/core/src/infrastructure/git//client.ts-->packages/core/src/domain/errors.ts
-    packages/core/src/infrastructure/git//url//parser.ts-->packages/core/src/domain/types.ts
+    packages/core/src/infrastructure/git//url//parser.ts-->packages/core/src/domain/validation//schemas.ts
     packages/core/src/infrastructure/github//client.ts-->node//modules///octokit/plugin//retry/dist//types/index.d.ts
     packages/core/src/infrastructure/github//client.ts-->node//modules///octokit/plugin//throttling/dist//types/index.d.ts
     packages/core/src/infrastructure/github//client.ts-->node//modules///octokit/request//error/dist//types/index.d.ts
     packages/core/src/infrastructure/github//client.ts-->node//modules/octokit/dist//types/index.d.ts
     packages/core/src/infrastructure/github//client.ts-->packages/core/src/domain/errors.ts
-    packages/core/src/infrastructure/github//client.ts-->packages/core/src/domain/types.ts
+    packages/core/src/infrastructure/github//client.ts-->packages/core/src/domain/validation//schemas.ts
     packages/core/src/infrastructure/github//client.ts-->packages/core/src/infrastructure/env//accessor.ts
-    packages/core/src/application/check//branch//use//case.ts-->node//modules/valibot/dist/index.d.cts
-    packages/core/src/application/check//branch//use//case.ts-->packages/core/src/domain/constants.ts
-    packages/core/src/application/check//branch//use//case.ts-->packages/core/src/domain/errors.ts
-    packages/core/src/application/check//branch//use//case.ts-->packages/core/src/domain/types.ts
-    packages/core/src/application/check//branch//use//case.ts-->packages/core/src/domain/validation//schemas.ts
-    packages/core/src/application/check//branch//use//case.ts-->packages/core/src/infrastructure/branch//matcher.ts
-    packages/core/src/application/check//branch//use//case.ts-->packages/core/src/infrastructure/env//accessor.ts
-    packages/core/src/application/check//branch//use//case.ts-->packages/core/src/infrastructure/git//client.ts
-    packages/core/src/application/check//branch//use//case.ts-->packages/core/src/infrastructure/git//url//parser.ts
-    packages/core/src/application/check//branch//use//case.ts-->packages/core/src/infrastructure/github//client.ts
-    packages/core/src/application/check//branch//use//case.ts-->packages/core/src/infrastructure/issue//extractor.ts
-    packages/core/src/application/check//branch//use//case.ts-->packages/core/src/infrastructure/repository//parser.ts
-    packages/core/src/application/check//commit//use//case.ts-->node//modules/valibot/dist/index.d.cts
-    packages/core/src/application/check//commit//use//case.ts-->packages/core/src/domain/constants.ts
-    packages/core/src/application/check//commit//use//case.ts-->packages/core/src/domain/errors.ts
-    packages/core/src/application/check//commit//use//case.ts-->packages/core/src/domain/types.ts
-    packages/core/src/application/check//commit//use//case.ts-->packages/core/src/domain/validation//schemas.ts
-    packages/core/src/application/check//commit//use//case.ts-->packages/core/src/infrastructure/branch//matcher.ts
-    packages/core/src/application/check//commit//use//case.ts-->packages/core/src/infrastructure/env//accessor.ts
-    packages/core/src/application/check//commit//use//case.ts-->packages/core/src/infrastructure/git//client.ts
-    packages/core/src/application/check//commit//use//case.ts-->packages/core/src/infrastructure/git//url//parser.ts
-    packages/core/src/application/check//commit//use//case.ts-->packages/core/src/infrastructure/github//client.ts
-    packages/core/src/application/check//commit//use//case.ts-->packages/core/src/infrastructure/repository//parser.ts
+    packages/core/src/infrastructure/issue//finder.ts-->packages/core/src/domain/validation//schemas.ts
+    packages/core/src/application/check//message//use//case.ts-->node//modules/valibot/dist/index.d.cts
+    packages/core/src/application/check//message//use//case.ts-->packages/core/src/domain/result.ts
+    packages/core/src/application/check//message//use//case.ts-->packages/core/src/domain/result//factory.ts
+    packages/core/src/application/check//message//use//case.ts-->packages/core/src/domain/validation//schemas.ts
+    packages/core/src/application/check//message//use//case.ts-->packages/core/src/infrastructure/branch//matcher.ts
+    packages/core/src/application/check//message//use//case.ts-->packages/core/src/infrastructure/env//accessor.ts
+    packages/core/src/application/check//message//use//case.ts-->packages/core/src/infrastructure/git//client.ts
+    packages/core/src/application/check//message//use//case.ts-->packages/core/src/infrastructure/git//url//parser.ts
+    packages/core/src/application/check//message//use//case.ts-->packages/core/src/infrastructure/github//client.ts
+    packages/core/src/application/check//message//use//case.ts-->packages/core/src/infrastructure/issue//finder.ts
+    packages/core/src/application/check//message//use//case.ts-->packages/core/src/infrastructure/repository//parser.ts
+    packages/core/src/application/get//pull//request//commits//use//case.ts-->node//modules/valibot/dist/index.d.cts
+    packages/core/src/application/get//pull//request//commits//use//case.ts-->packages/core/src/domain/validation//schemas.ts
+    packages/core/src/application/get//pull//request//commits//use//case.ts-->packages/core/src/infrastructure/env//accessor.ts
+    packages/core/src/application/get//pull//request//commits//use//case.ts-->packages/core/src/infrastructure/github//client.ts
     packages/core/src/index.ts-->packages/core/src/domain/constants.ts
     packages/core/src/index.ts-->packages/core/src/domain/errors.ts
-    packages/core/src/index.ts-->packages/core/src/domain/types.ts
-    packages/core/src/index.ts-->packages/core/src/application/check//branch//use//case.ts
-    packages/core/src/index.ts-->packages/core/src/application/check//commit//use//case.ts
+    packages/core/src/index.ts-->packages/core/src/domain/result.ts
+    packages/core/src/index.ts-->packages/core/src/domain/validation//schemas.ts
+    packages/core/src/index.ts-->packages/core/src/application/check//message//use//case.ts
+    packages/core/src/index.ts-->packages/core/src/application/get//pull//request//commits//use//case.ts
 ```
 

@@ -1,0 +1,229 @@
+name: ci-test-action-marketplace
+
+# NOTE: When updating this file, also update the local version:
+# .github/workflows/local-test-action-marketplace.yml
+#
+# DIFFERENCES from local-test-action-marketplace.yml:
+# 1. Workflow name: 'ci-test-action-marketplace' (vs 'test-action-marketplace')
+# 2. Trigger: PR on '.release-please-manifest.json' changes + workflow_dispatch (vs workflow_dispatch only)
+# 3. Action reference: 'sugurutakahashi-1234/issue-linker@main' (vs './')
+# 4. Jobs are identical except for the action reference path
+#
+# Everything else should be identical to maintain consistency.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - '.release-please-manifest.json'
+  workflow_dispatch:
+
+jobs:
+  # ================================================================
+  # Test 1: Branch validation mode
+  # ================================================================
+  test-validate-branch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    name: Test validate-branch mode
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Test validate-branch mode
+        id: test
+        uses: sugurutakahashi-1234/issue-linker@main
+        with:
+          validate-branch: true
+        continue-on-error: true
+      
+      - name: Verify actionMode
+        run: |
+          RESULTS='${{ steps.test.outputs.results }}'
+          echo "Results: $RESULTS"
+          
+          # Check if validate-branch mode was executed with correct actionMode
+          if echo "$RESULTS" | jq -e '.[] | select(.input.actionMode == "validate-branch")' > /dev/null 2>&1; then
+            echo "✅ validate-branch mode has correct actionMode"
+            exit 0
+          else
+            echo "❌ validate-branch mode does not have correct actionMode"
+            echo "ActionModes found: $(echo "$RESULTS" | jq -r '[.[].input.actionMode // "none"] | unique | join(", ")' 2>/dev/null || echo 'none')"
+            exit 1
+          fi
+
+  # ================================================================
+  # Test 2: PR Title validation mode
+  # ================================================================
+  test-validate-pr-title:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    name: Test validate-pr-title mode
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Test validate-pr-title mode
+        id: test
+        uses: sugurutakahashi-1234/issue-linker@main
+        with:
+          validate-pr-title: true
+        continue-on-error: true
+      
+      - name: Verify actionMode
+        run: |
+          RESULTS='${{ steps.test.outputs.results }}'
+          echo "Results: $RESULTS"
+          
+          # Check if validate-pr-title mode was executed with correct actionMode
+          if echo "$RESULTS" | jq -e '.[] | select(.input.actionMode == "validate-pr-title")' > /dev/null 2>&1; then
+            echo "✅ validate-pr-title mode has correct actionMode"
+            exit 0
+          else
+            echo "❌ validate-pr-title mode does not have correct actionMode"
+            echo "ActionModes found: $(echo "$RESULTS" | jq -r '[.[].input.actionMode // "none"] | unique | join(", ")' 2>/dev/null || echo 'none')"
+            exit 1
+          fi
+
+  # ================================================================
+  # Test 3: PR Body validation mode
+  # ================================================================
+  test-validate-pr-body:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    name: Test validate-pr-body mode
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Test validate-pr-body mode
+        id: test
+        uses: sugurutakahashi-1234/issue-linker@main
+        with:
+          validate-pr-body: true
+        continue-on-error: true
+      
+      - name: Verify actionMode
+        run: |
+          RESULTS='${{ steps.test.outputs.results }}'
+          echo "Results: $RESULTS"
+          
+          # Check if validate-pr-body mode was executed with correct actionMode
+          if echo "$RESULTS" | jq -e '.[] | select(.input.actionMode == "validate-pr-body")' > /dev/null 2>&1; then
+            echo "✅ validate-pr-body mode has correct actionMode"
+            exit 0
+          else
+            echo "❌ validate-pr-body mode does not have correct actionMode"
+            echo "ActionModes found: $(echo "$RESULTS" | jq -r '[.[].input.actionMode // "none"] | unique | join(", ")' 2>/dev/null || echo 'none')"
+            exit 1
+          fi
+
+  # ================================================================
+  # Test 4: Commits validation mode
+  # ================================================================
+  test-validate-commits:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    name: Test validate-commits mode
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Test validate-commits mode
+        id: test
+        uses: sugurutakahashi-1234/issue-linker@main
+        with:
+          validate-commits: true
+        continue-on-error: true
+      
+      - name: Verify execution completed
+        run: |
+          # Note: validate-commits requires actual GitHub API access to fetch PR commits.
+          # In test environment with mock data (test-owner/test-repo), the API call will fail.
+          # This test only verifies that the action executes to completion without crashing,
+          # not the actual validation logic which is tested in unit tests.
+          
+          # Check that outputs were set (even if results is empty)
+          if [[ -n "${{ steps.test.outputs.success }}" ]]; then
+            echo "✅ validate-commits mode executed to completion"
+            echo "   Output success: ${{ steps.test.outputs.success }}"
+            echo "   Output results: ${{ steps.test.outputs.results }}"
+            exit 0
+          else
+            echo "❌ validate-commits mode did not complete execution"
+            exit 1
+          fi
+
+  # ================================================================
+  # Test 5: Custom mode
+  # ================================================================
+  test-custom-mode:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    name: Test custom mode
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Test custom mode
+        id: test
+        uses: sugurutakahashi-1234/issue-linker@main
+        with:
+          text: "This is custom text with #1"
+          check-mode: default
+        continue-on-error: true
+      
+      - name: Verify actionMode
+        run: |
+          RESULTS='${{ steps.test.outputs.results }}'
+          echo "Results: $RESULTS"
+          
+          # Check if custom mode was executed with correct actionMode
+          if echo "$RESULTS" | jq -e '.[] | select(.input.actionMode == "custom")' > /dev/null 2>&1; then
+            echo "✅ custom mode has correct actionMode"
+            exit 0
+          else
+            echo "❌ custom mode does not have correct actionMode"
+            echo "ActionModes found: $(echo "$RESULTS" | jq -r '[.[].input.actionMode // "none"] | unique | join(", ")' 2>/dev/null || echo 'none')"
+            exit 1
+          fi
+
+  # ================================================================
+  # Summary job - Display test results summary
+  # ================================================================
+  test-summary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [
+      test-validate-branch,
+      test-validate-pr-title,
+      test-validate-pr-body,
+      test-validate-commits,
+      test-custom-mode
+    ]
+    if: always()
+    name: Test Summary
+    steps:
+      - name: Show test results
+        run: |
+          echo ""
+          echo "📊 Test Results:"
+          echo ""
+          echo '${{ toJson(needs) }}' | jq -r 'to_entries[] | "  [\(.value.result)] \(.key)"'
+          echo ""
+          
+          # Check if any job failed
+          if echo '${{ toJson(needs) }}' | jq -e 'to_entries[] | select(.value.result != "success")' > /dev/null 2>&1; then
+            echo "❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌"
+            echo "❌                                                    ❌"
+            echo "❌         💥 SOME TESTS FAILED 💥                    ❌"
+            echo "❌                                                    ❌"
+            echo "❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌"
+            exit 1
+          else
+            echo "✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅"
+            echo "✅                                                    ✅"
+            echo "✅          🎉 ALL TESTS PASSED! 🎉                   ✅"
+            echo "✅                                                    ✅"
+            echo "✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅"
+          fi

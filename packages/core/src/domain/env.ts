@@ -11,7 +11,7 @@ export const env = createEnv({
   server: {
     GITHUB_TOKEN: v.optional(v.string()),
     GH_TOKEN: v.optional(v.string()),
-    GITHUB_API_URL: v.optional(v.pipe(v.string(), v.url())),
+    GH_HOST: v.optional(v.string()),
     GITHUB_SERVER_URL: v.optional(v.pipe(v.string(), v.url())),
   },
   runtimeEnv: process.env,

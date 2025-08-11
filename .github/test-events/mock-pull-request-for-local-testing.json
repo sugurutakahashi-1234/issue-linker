@@ -1,0 +1,20 @@
+{
+  "pull_request": {
+    "number": 1,
+    "title": "test: PR title with #1",
+    "body": "test PR body with #1 and #2",
+    "head": {
+      "ref": "test/1-test-branch",
+      "sha": "0000000000000000000000000000000000000000"
+    },
+    "base": {
+      "ref": "main"
+    }
+  },
+  "repository": {
+    "owner": {
+      "login": "test-owner"
+    },
+    "name": "test-repo"
+  }
+}

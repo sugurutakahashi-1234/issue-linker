@@ -1,191 +1,269 @@
-# issue-linker
+# issue-linker 🔗
 
-Validate Git branch names and commit messages against GitHub issue numbers.
+[![npm version](https://badge.fury.io/js/@sugurutakahashi-1234%2Fissue-linker.svg)](https://www.npmjs.com/package/@sugurutakahashi-1234/issue-linker)
+[![GitHub Actions](https://github.com/sugurutakahashi-1234/issue-linker/actions/workflows/ci.yml/badge.svg)](https://github.com/sugurutakahashi-1234/issue-linker/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+Validate text contains valid GitHub issue numbers. Perfect for maintaining traceability between your code and issue tracking!
+
+## Features
+
+- 🔍 **Issue Validation**: Verify issue numbers exist in your GitHub repository
+- 🎯 **Flexible Text Validation**: Check any text for issue references
+- 🌿 **Smart Mode Detection**: Different linking patterns for branches, commits, and general text
+- 🎭 **Customizable Patterns**: Override default exclusion patterns
+- 🚀 **Fast & Lightweight**: Built with performance in mind
+- 🛠️ **Multiple Integrations**: CLI, GitHub Actions, and programmatic API
 
 ## Installation
 
-### CLI
+### CLI Tool
 
 ```bash
-# npm
-npm install -g issue-linker
+# Global installation
+npm install -g @sugurutakahashi-1234/issue-linker
 
-# bun
-bun add -g issue-linker
-```
-
-### GitHub Action
-
-Add to your workflow:
-
-```yaml
-- uses: sugurutakahashi-1234/issue-linker@v1
+# Or use directly with npx
+npx @sugurutakahashi-1234/issue-linker -t "feat/123-new-feature" -c branch
 ```
 
 ## Usage
 
 ### CLI
 
-The `issue-linker` CLI provides two subcommands: `branch` and `commit`.
-
-#### Branch validation
-
-Check if your current branch name contains a valid GitHub issue number:
-
 ```bash
-issue-linker branch
-```
+# Basic usage
+issue-linker -t "your text here"
 
-With options:
+# Check branch names
+issue-linker -t "$(git branch --show-current)" -c branch
+# Or use the long form
+issue-linker -t "$(git branch --show-current)" --check-mode branch
 
-```bash
-# Check specific branch
-issue-linker branch --branch feat/issue-123
+# Check commit messages
+issue-linker -t "$(git log -1 --pretty=%s)" -c commit
+# Or use the long form
+issue-linker -t "$(git log -1 --pretty=%s)" --check-mode commit
 
-# Check specific repository
-issue-linker branch --repo owner/repo
+# Check PR title
+issue-linker -t "$(gh pr view --json title -q .title)"
 
-# Exclude branches from validation
-issue-linker branch --exclude-pattern '{main,master,develop}'
+# With custom repository
+issue-linker -t "feat: add feature #123" --repo owner/repo
 
 # Filter by issue status
-issue-linker branch --issue-status open
+issue-linker -t "fix #456" --issue-status open
+
+# Custom exclude pattern
+issue-linker -t "release/v1.0.0" -c branch --exclude "release/*"
+
+# Show detailed output (verbose mode)
+issue-linker -t "Fix #123" --verbose
+
+# Output as JSON
+issue-linker -t "Fix #123" --json
 ```
 
-#### Commit validation
+#### Check Modes
 
-Check if a commit message contains valid GitHub issue numbers:
+- **`default`**: Finds `#123` format only (for PR titles, descriptions, etc.)
+- **`branch`**: Finds issues from branch naming patterns (`123-feature`, `feat/123`, etc.)
+- **`commit`**: Same as default but excludes merge/rebase commits
 
-```bash
-# Check specific commit message
-issue-linker commit "fix: resolve issue #123"
+### GitHub Actions
 
-# Check latest commit from git log
-issue-linker commit --latest
-
-# Check with specific repository
-issue-linker commit "feat: add feature #456" --repo owner/repo
-
-# Filter by issue status
-issue-linker commit "fix: closes #789" --issue-status open
-```
-
-### GitHub Action
-
-Add to `.github/workflows/validate-branch.yml`:
-
+<!-- x-release-please-start-version -->
 ```yaml
-name: Validate Branch Name
+name: Validate PR
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, edited, synchronize]
 
 jobs:
-  check-branch:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       
-      - uses: sugurutakahashi-1234/issue-linker@v1
+      # Simple mode - automatic validations
+      - name: Validate PR
+        uses: sugurutakahashi-1234/issue-linker@v1.0.0
         with:
-          # Optional: exclude pattern (default: '{main,master,develop}')
-          exclude-pattern: '{main,master,develop,release/*}'
-          
-          # Optional: issue status (default: 'all')
+          validate-branch: true
+          validate-pr-title: true
+          validate-pr-body: true
           issue-status: 'open'
-          
-          # Optional: GitHub token (default: github.token)
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
+<!-- x-release-please-end -->
 
-## Options
+<!-- x-release-please-start-version -->
+```yaml      
+      # Advanced mode - custom text
+      - name: Custom validation
+        uses: sugurutakahashi-1234/issue-linker@v1.0.0
+        with:
+          text: ${{ github.event.pull_request.title }}
+          check-mode: 'default'
+          exclude: 'WIP*'
+```
+<!-- x-release-please-end -->
 
-### Branch Command Options
+## Husky Integration
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--branch` | Branch name to check | Current branch |
-| `--repo` | Repository (owner/repo format) | Current repository |
-| `--exclude-pattern` | Glob pattern to exclude branches | `{main,master,develop}` |
-| `--issue-status` | Filter by issue status (all/open/closed) | `all` |
-| `--github-token` | GitHub token for API access | `GITHUB_TOKEN` env |
+Add to your Git hooks for automatic validation:
 
-### Commit Command Options
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--latest` | Check the latest commit from git log | - |
-| `--repo` | Repository (owner/repo format) | Current repository |
-| `--issue-status` | Filter by issue status (all/open/closed) | `all` |
-| `--github-token` | GitHub token for API access | `GITHUB_TOKEN` env |
-
-### Exclude Pattern Examples
-
-- `'{main,master,develop}'` - Exclude specific branches
-- `'release/*'` - Exclude with wildcard
-- `'{release,hotfix}/*'` - Exclude multiple prefixes
-- `'!(feature|bugfix)/*'` - Exclude all except these
-
-## Development
-
-### Project Structure
-
-This is a monorepo with the following packages:
-
-- `packages/core` - Core business logic (@issue-linker/core)
-- `packages/cli` - CLI tool (issue-linker)
-- `packages/action` - GitHub Action
-
-### Requirements
-
-- Node.js v20+
-- Bun (latest)
-
-### Setup
+### Post-checkout Hook
 
 ```bash
-# Install dependencies
-bun install
+# .husky/post-checkout
 
-# Build all packages
-bun run build
-
-# Run tests
-bun test
-
-# Run CI checks
-bun run ci
+# This hook validates the branch name on branch checkouts.
+# It runs only when a branch is checked out (when $3 is "1"), not a file.
+if [ "$3" = "1" ]; then
+  branch=$(git branch --show-current)
+  bunx @sugurutakahashi-1234/issue-linker -t "$branch" -c branch || {
+    echo "⚠️  Warning: Branch name doesn't contain a valid issue number"
+  }
+fi
 ```
 
-### Testing
+### Commit-msg Hook
 
 ```bash
-# Run all tests
-bun test
+# .husky/commit-msg
 
-# Run tests with coverage
-bun run test:coverage
-
-# Run specific package tests
-bun run --filter '@issue-linker/core' test
+# This hook ensures commit messages contain a valid issue number.
+# It reads the commit message from the file passed as the first argument ($1).
+# If validation fails, the commit is aborted.
+message=$(cat $1)
+bunx @sugurutakahashi-1234/issue-linker -t "$message" -c commit || {
+  echo "❌ Commit message must reference a valid issue number"
+  exit 1
+}
 ```
 
-### Scripts
+## Configuration
 
-- `bun run build` - Build all packages
-- `bun run test` - Run all tests
-- `bun run ci` - Run full CI pipeline
-- `bun run fix` - Auto-fix code style issues
-- `bun run check` - Check code style
+### Environment Variables
 
-## License
+- `GITHUB_TOKEN` or `GH_TOKEN`: GitHub personal access token for API authentication
+- `GH_HOST`: GitHub hostname (e.g., `github.enterprise.com`) - compatible with GitHub CLI
+- `GITHUB_SERVER_URL`: GitHub server URL (automatically set in GitHub Actions)
 
-MIT
+### GitHub Enterprise Support
+
+This tool supports GitHub Enterprise Server. You can configure it in multiple ways:
+
+#### Using CLI option
+```bash
+# Use --hostname or -h to specify your GitHub Enterprise host
+issue-linker -t "Fix #123" --hostname github.enterprise.com
+
+# Short form
+issue-linker -t "Fix #123" -h github.enterprise.com
+```
+
+#### Using environment variable
+```bash
+# Set GH_HOST to use consistently (compatible with GitHub CLI)
+export GH_HOST=github.enterprise.com
+issue-linker -t "Fix #123"
+```
+
+#### In GitHub Actions
+GitHub Actions automatically sets `GITHUB_SERVER_URL` for GitHub Enterprise environments. No additional configuration is needed.
+
+### Options
+
+| Option        | Description                              | Default                  |
+| ------------- | ---------------------------------------- | ------------------------ |
+| `text`        | Text to validate (required)              | -                        |
+| `check-mode`  | Check mode (default/branch/commit)       | `default`                |
+| `exclude`     | Custom exclude pattern (glob)            | Mode-specific defaults   |
+| `issueStatus` | Filter by issue status (all/open/closed) | `all`                    |
+| `repo`        | Repository (owner/repo)                  | Detected from git remote |
+| `githubToken` | GitHub token for API access              | `GITHUB_TOKEN` env       |
+| `hostname`    | GitHub hostname for Enterprise           | `github.com` or `GH_HOST` env |
+
+### Default Exclude Patterns
+
+All exclude patterns use [minimatch](https://github.com/isaacs/minimatch) glob syntax:
+
+- **branch mode**: `{main,master,develop,release/*,hotfix/*}`
+- **commit mode**: `{Rebase*,Merge*,Revert*,fixup!*,squash!*}`
+- **default mode**: No exclusions
+
+## Supported Patterns
+
+### Mode-Specific Detection
+
+#### Default Mode
+```bash
+# Finds #123 format only
+"Fix #123"            ✅
+"#456 and #789"       ✅ (multiple)
+"Issue 123"           ❌
+"feat/123"            ❌
+```
+
+#### Branch Mode
+```bash
+# Various branch patterns (priority order)
+123-feature           ✅ (number at start)
+feat/123-desc        ✅ (after slash)
+#123-feature         ✅ (with hash)
+feature-123-desc     ✅ (after hyphen)
+
+# Excluded by default
+main                 ❌ (excluded)
+release/v1.0.0      ❌ (excluded)
+```
+
+#### Commit Mode
+```bash
+# Same as default mode
+"Fix #123"           ✅
+
+# Excluded by default
+"Merge branch main"  ❌ (excluded)
+"Revert 'feature'"   ❌ (excluded)
+```
+
+## Advanced Usage
+
+### Working with Git Commands
+
+```bash
+# Validate current branch
+issue-linker -t "$(git branch --show-current)" -c branch
+
+# Validate last commit
+issue-linker -t "$(git --no-pager log -1 --pretty=%s)" -c commit
+
+# Validate all commit messages in a PR
+git --no-pager log main..HEAD --pretty=%s | while read msg; do
+  issue-linker -t "$msg" -c commit
+done
+```
+
+### GitHub CLI Integration
+
+```bash
+# Validate PR title
+issue-linker -t "$(gh pr view --json title -q .title)"
+
+# Validate PR body
+issue-linker -t "$(gh pr view --json body -q .body)"
+```
 
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+MIT
 
 ## Author
 

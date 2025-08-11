@@ -7,27 +7,6 @@ import { GitError } from "../domain/errors.js";
 const git: SimpleGit = simpleGit();
 
 /**
- * Get the current branch name
- * @returns Current branch name
- * @throws Error if not in a git repository or other git errors
- */
-export async function getCurrentGitBranch(): Promise<string> {
-  try {
-    const branch = await git.revparse(["--abbrev-ref", "HEAD"]);
-    return branch.trim();
-  } catch (error) {
-    // Improve error messages
-    const message = error instanceof Error ? error.message : String(error);
-
-    if (message.includes("not a git repository")) {
-      throw new GitError("Not in a git repository");
-    }
-
-    throw new GitError(`Failed to get current branch: ${message}`);
-  }
-}
-
-/**
  * Get the remote URL for origin
  * @returns Remote URL
  * @throws Error if no origin remote is found

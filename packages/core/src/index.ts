@@ -2,7 +2,7 @@
 
 // Domain layer exports
 /** @public */
-export { DEFAULT_CHECK_OPTIONS } from "./domain/constants.js";
+export { DEFAULT_OPTIONS, EXCLUDE_RULES } from "./domain/constants.js";
 
 /** @public */
 export {
@@ -11,22 +11,43 @@ export {
   IssueNotFoundError,
   ValidationError,
 } from "./domain/errors.js";
+
 /** @public */
 export type {
-  CheckOptions,
-  CheckReason,
-  CheckResult,
+  ErrorInfo,
+  InputConfig,
+  IssueInfo,
+  IssueValidationResult,
+  ValidationReason,
+} from "./domain/result.js";
+
+/** @public */
+export type {
+  ActionMode,
+  CheckMessageOptions,
+  CheckMode,
+  GetPullRequestCommitsOptions,
   GitHubRepository,
   Issue,
   IssueStatus,
   IssueStatusFilter,
-} from "./domain/types.js";
+  PullRequestCommit,
+} from "./domain/validation-schemas.js";
+
+/** @public */
+export {
+  CheckMessageOptionsSchema,
+  CheckModeSchema,
+  GetPullRequestCommitsOptionsSchema,
+  IssueStatusFilterSchema,
+} from "./domain/validation-schemas.js";
 
 // Infrastructure layer exports (if needed by external packages)
 // None for now
 
 // Application layer exports
 /** @public */
-export { checkBranch } from "./application/check-branch-use-case.js";
+export { checkMessage } from "./application/check-message-use-case.js";
+
 /** @public */
-export { checkCommit } from "./application/check-commit-use-case.js";
+export { getPullRequestCommits } from "./application/get-pull-request-commits-use-case.js";

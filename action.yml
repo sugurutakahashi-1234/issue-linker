@@ -1,52 +1,78 @@
-name: 'Issue Linker Branch Check'
+name: 'Issue Linker'
 
-description: 'Check if branch name contains an existing GitHub issue number'
+description: 'Validate text contains valid GitHub issue numbers'
 
 author: 'Suguru Takahashi'
 
 branding:
-  icon: 'git-branch'
+  icon: 'check-circle'
   color: 'blue'
 
 inputs:
-  branch:
-    description: |
-      Branch name to check
-      Default: current branch
+  # Simple mode (automatic validations)
+  validate-branch:
+    description: 'Validate branch name'
     required: false
+    default: 'false'
+  validate-pr-title:
+    description: 'Validate PR title'
+    required: false
+    default: 'false'
+  validate-pr-body:
+    description: 'Validate PR body'
+    required: false
+    default: 'false'
+  validate-commits:
+    description: 'Validate all commit messages in the PR'
+    required: false
+    default: 'false'
+  
+  # Advanced mode (custom text)
+  text:
+    description: 'Custom text to validate'
+    required: false
+  check-mode:
+    description: |
+      Check mode for finding issue numbers
+      Options: 'default', 'branch', 'commit'
+    required: false
+    default: 'default'
+  exclude:
+    description: 'Custom exclude pattern (overrides check mode defaults)'
+    required: false
+  
+  # Common settings
+  issue-status:
+    description: |
+      Issue status filter
+      Options: 'all', 'open', 'closed'
+    required: false
+    default: 'all'
   repo:
     description: |
       Repository in owner/repo format
       Default: current repository
     required: false
-  exclude-pattern:
-    description: |
-      Glob pattern to exclude branches from validation
-      Default: '{main,master,develop}'
-      Pattern examples:
-        '{main,master,develop}'  - exclude specific branches
-        'release/*'              - exclude with wildcard
-        '{release,hotfix}/*'     - exclude multiple prefixes
-        '!(feature|bugfix)/*'    - exclude all except these
-    required: false
-    default: '{main,master,develop}'
-  issue-status:
-    description: |
-      Filter by issue status
-      Options: 'all', 'open', 'closed'
-      Default: 'all' (checks both open and closed issues)
-    required: false
-    default: 'all'
+    default: ${{ github.repository }}
   github-token:
     description: |
       GitHub token for API access
       Default: uses GITHUB_TOKEN from environment
     required: false
     default: ${{ github.token }}
+  hostname:
+    description: |
+      GitHub hostname for Enterprise Server
+      Default: automatically detected from environment
+    required: false
 
 outputs:
-  status:
-    description: 'Status of the check (ok or failed)'
+  success:
+    description: 'Whether all validations passed'
+  results:
+    description: 'All validation results as JSON'
+  summary:
+    description: 'Summary of validations (JSON)'
 
 runs:
   using: 'node20'

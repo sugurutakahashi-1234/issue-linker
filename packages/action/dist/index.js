@@ -1840,6 +1840,256 @@ class ExecState extends events.EventEmitter {
 
 /***/ }),
 
+/***/ 4108:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Context = void 0;
+const fs_1 = __nccwpck_require__(9896);
+const os_1 = __nccwpck_require__(857);
+class Context {
+    /**
+     * Hydrate the context from the environment
+     */
+    constructor() {
+        var _a, _b, _c;
+        this.payload = {};
+        if (process.env.GITHUB_EVENT_PATH) {
+            if ((0, fs_1.existsSync)(process.env.GITHUB_EVENT_PATH)) {
+                this.payload = JSON.parse((0, fs_1.readFileSync)(process.env.GITHUB_EVENT_PATH, { encoding: 'utf8' }));
+            }
+            else {
+                const path = process.env.GITHUB_EVENT_PATH;
+                process.stdout.write(`GITHUB_EVENT_PATH ${path} does not exist${os_1.EOL}`);
+            }
+        }
+        this.eventName = process.env.GITHUB_EVENT_NAME;
+        this.sha = process.env.GITHUB_SHA;
+        this.ref = process.env.GITHUB_REF;
+        this.workflow = process.env.GITHUB_WORKFLOW;
+        this.action = process.env.GITHUB_ACTION;
+        this.actor = process.env.GITHUB_ACTOR;
+        this.job = process.env.GITHUB_JOB;
+        this.runAttempt = parseInt(process.env.GITHUB_RUN_ATTEMPT, 10);
+        this.runNumber = parseInt(process.env.GITHUB_RUN_NUMBER, 10);
+        this.runId = parseInt(process.env.GITHUB_RUN_ID, 10);
+        this.apiUrl = (_a = process.env.GITHUB_API_URL) !== null && _a !== void 0 ? _a : `https://api.github.com`;
+        this.serverUrl = (_b = process.env.GITHUB_SERVER_URL) !== null && _b !== void 0 ? _b : `https://github.com`;
+        this.graphqlUrl =
+            (_c = process.env.GITHUB_GRAPHQL_URL) !== null && _c !== void 0 ? _c : `https://api.github.com/graphql`;
+    }
+    get issue() {
+        const payload = this.payload;
+        return Object.assign(Object.assign({}, this.repo), { number: (payload.issue || payload.pull_request || payload).number });
+    }
+    get repo() {
+        if (process.env.GITHUB_REPOSITORY) {
+            const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
+            return { owner, repo };
+        }
+        if (this.payload.repository) {
+            return {
+                owner: this.payload.repository.owner.login,
+                repo: this.payload.repository.name
+            };
+        }
+        throw new Error("context.repo requires a GITHUB_REPOSITORY environment variable like 'owner/repo'");
+    }
+}
+exports.Context = Context;
+//# sourceMappingURL=context.js.map
+
+/***/ }),
+
+/***/ 5683:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getOctokit = exports.context = void 0;
+const Context = __importStar(__nccwpck_require__(4108));
+const utils_1 = __nccwpck_require__(9010);
+exports.context = new Context.Context();
+/**
+ * Returns a hydrated octokit ready to use for GitHub Actions
+ *
+ * @param     token    the repo PAT or GITHUB_TOKEN
+ * @param     options  other options to set
+ */
+function getOctokit(token, options, ...additionalPlugins) {
+    const GitHubWithPlugins = utils_1.GitHub.plugin(...additionalPlugins);
+    return new GitHubWithPlugins((0, utils_1.getOctokitOptions)(token, options));
+}
+exports.getOctokit = getOctokit;
+//# sourceMappingURL=github.js.map
+
+/***/ }),
+
+/***/ 4168:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getApiBaseUrl = exports.getProxyFetch = exports.getProxyAgentDispatcher = exports.getProxyAgent = exports.getAuthString = void 0;
+const httpClient = __importStar(__nccwpck_require__(9920));
+const undici_1 = __nccwpck_require__(1684);
+function getAuthString(token, options) {
+    if (!token && !options.auth) {
+        throw new Error('Parameter token or opts.auth is required');
+    }
+    else if (token && options.auth) {
+        throw new Error('Parameters token and opts.auth may not both be specified');
+    }
+    return typeof options.auth === 'string' ? options.auth : `token ${token}`;
+}
+exports.getAuthString = getAuthString;
+function getProxyAgent(destinationUrl) {
+    const hc = new httpClient.HttpClient();
+    return hc.getAgent(destinationUrl);
+}
+exports.getProxyAgent = getProxyAgent;
+function getProxyAgentDispatcher(destinationUrl) {
+    const hc = new httpClient.HttpClient();
+    return hc.getAgentDispatcher(destinationUrl);
+}
+exports.getProxyAgentDispatcher = getProxyAgentDispatcher;
+function getProxyFetch(destinationUrl) {
+    const httpDispatcher = getProxyAgentDispatcher(destinationUrl);
+    const proxyFetch = (url, opts) => __awaiter(this, void 0, void 0, function* () {
+        return (0, undici_1.fetch)(url, Object.assign(Object.assign({}, opts), { dispatcher: httpDispatcher }));
+    });
+    return proxyFetch;
+}
+exports.getProxyFetch = getProxyFetch;
+function getApiBaseUrl() {
+    return process.env['GITHUB_API_URL'] || 'https://api.github.com';
+}
+exports.getApiBaseUrl = getApiBaseUrl;
+//# sourceMappingURL=utils.js.map
+
+/***/ }),
+
+/***/ 9010:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getOctokitOptions = exports.GitHub = exports.defaults = exports.context = void 0;
+const Context = __importStar(__nccwpck_require__(4108));
+const Utils = __importStar(__nccwpck_require__(4168));
+// octokit + plugins
+const core_1 = __nccwpck_require__(7205);
+const plugin_rest_endpoint_methods_1 = __nccwpck_require__(6659);
+const plugin_paginate_rest_1 = __nccwpck_require__(3214);
+exports.context = new Context.Context();
+const baseUrl = Utils.getApiBaseUrl();
+exports.defaults = {
+    baseUrl,
+    request: {
+        agent: Utils.getProxyAgent(baseUrl),
+        fetch: Utils.getProxyFetch(baseUrl)
+    }
+};
+exports.GitHub = core_1.Octokit.plugin(plugin_rest_endpoint_methods_1.restEndpointMethods, plugin_paginate_rest_1.paginateRest).defaults(exports.defaults);
+/**
+ * Convience function to correctly format Octokit Options to pass into the constructor.
+ *
+ * @param     token    the repo PAT or GITHUB_TOKEN
+ * @param     options  other options to set
+ */
+function getOctokitOptions(token, options) {
+    const opts = Object.assign({}, options || {}); // Shallow clone - don't mutate the object provided by the caller
+    // Auth
+    const auth = Utils.getAuthString(token, opts);
+    if (auth) {
+        opts.auth = auth;
+    }
+    return opts;
+}
+exports.getOctokitOptions = getOctokitOptions;
+//# sourceMappingURL=utils.js.map
+
+/***/ }),
+
 /***/ 4220:
 /***/ (function(__unused_webpack_module, exports) {
 
@@ -3317,6 +3567,3880 @@ exports.ud = deferred;
  */
 __webpack_unused_export__ = deferred;
 //# sourceMappingURL=index.js.map
+
+/***/ }),
+
+/***/ 3452:
+/***/ ((module) => {
+
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// pkg/dist-src/index.js
+var dist_src_exports = {};
+__export(dist_src_exports, {
+  createTokenAuth: () => createTokenAuth
+});
+module.exports = __toCommonJS(dist_src_exports);
+
+// pkg/dist-src/auth.js
+var REGEX_IS_INSTALLATION_LEGACY = /^v1\./;
+var REGEX_IS_INSTALLATION = /^ghs_/;
+var REGEX_IS_USER_TO_SERVER = /^ghu_/;
+async function auth(token) {
+  const isApp = token.split(/\./).length === 3;
+  const isInstallation = REGEX_IS_INSTALLATION_LEGACY.test(token) || REGEX_IS_INSTALLATION.test(token);
+  const isUserToServer = REGEX_IS_USER_TO_SERVER.test(token);
+  const tokenType = isApp ? "app" : isInstallation ? "installation" : isUserToServer ? "user-to-server" : "oauth";
+  return {
+    type: "token",
+    token,
+    tokenType
+  };
+}
+
+// pkg/dist-src/with-authorization-prefix.js
+function withAuthorizationPrefix(token) {
+  if (token.split(/\./).length === 3) {
+    return `bearer ${token}`;
+  }
+  return `token ${token}`;
+}
+
+// pkg/dist-src/hook.js
+async function hook(token, request, route, parameters) {
+  const endpoint = request.endpoint.merge(
+    route,
+    parameters
+  );
+  endpoint.headers.authorization = withAuthorizationPrefix(token);
+  return request(endpoint);
+}
+
+// pkg/dist-src/index.js
+var createTokenAuth = function createTokenAuth2(token) {
+  if (!token) {
+    throw new Error("[@octokit/auth-token] No token passed to createTokenAuth");
+  }
+  if (typeof token !== "string") {
+    throw new Error(
+      "[@octokit/auth-token] Token passed to createTokenAuth is not a string"
+    );
+  }
+  token = token.replace(/^(token|bearer) +/i, "");
+  return Object.assign(auth.bind(null, token), {
+    hook: hook.bind(null, token)
+  });
+};
+// Annotate the CommonJS export names for ESM import in node:
+0 && (0);
+
+
+/***/ }),
+
+/***/ 7205:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// pkg/dist-src/index.js
+var index_exports = {};
+__export(index_exports, {
+  Octokit: () => Octokit
+});
+module.exports = __toCommonJS(index_exports);
+var import_universal_user_agent = __nccwpck_require__(9367);
+var import_before_after_hook = __nccwpck_require__(7544);
+var import_request = __nccwpck_require__(3059);
+var import_graphql = __nccwpck_require__(1147);
+var import_auth_token = __nccwpck_require__(3452);
+
+// pkg/dist-src/version.js
+var VERSION = "5.2.2";
+
+// pkg/dist-src/index.js
+var noop = () => {
+};
+var consoleWarn = console.warn.bind(console);
+var consoleError = console.error.bind(console);
+function createLogger(logger = {}) {
+  if (typeof logger.debug !== "function") {
+    logger.debug = noop;
+  }
+  if (typeof logger.info !== "function") {
+    logger.info = noop;
+  }
+  if (typeof logger.warn !== "function") {
+    logger.warn = consoleWarn;
+  }
+  if (typeof logger.error !== "function") {
+    logger.error = consoleError;
+  }
+  return logger;
+}
+var userAgentTrail = `octokit-core.js/${VERSION} ${(0, import_universal_user_agent.getUserAgent)()}`;
+var Octokit = class {
+  static {
+    this.VERSION = VERSION;
+  }
+  static defaults(defaults) {
+    const OctokitWithDefaults = class extends this {
+      constructor(...args) {
+        const options = args[0] || {};
+        if (typeof defaults === "function") {
+          super(defaults(options));
+          return;
+        }
+        super(
+          Object.assign(
+            {},
+            defaults,
+            options,
+            options.userAgent && defaults.userAgent ? {
+              userAgent: `${options.userAgent} ${defaults.userAgent}`
+            } : null
+          )
+        );
+      }
+    };
+    return OctokitWithDefaults;
+  }
+  static {
+    this.plugins = [];
+  }
+  /**
+   * Attach a plugin (or many) to your Octokit instance.
+   *
+   * @example
+   * const API = Octokit.plugin(plugin1, plugin2, plugin3, ...)
+   */
+  static plugin(...newPlugins) {
+    const currentPlugins = this.plugins;
+    const NewOctokit = class extends this {
+      static {
+        this.plugins = currentPlugins.concat(
+          newPlugins.filter((plugin) => !currentPlugins.includes(plugin))
+        );
+      }
+    };
+    return NewOctokit;
+  }
+  constructor(options = {}) {
+    const hook = new import_before_after_hook.Collection();
+    const requestDefaults = {
+      baseUrl: import_request.request.endpoint.DEFAULTS.baseUrl,
+      headers: {},
+      request: Object.assign({}, options.request, {
+        // @ts-ignore internal usage only, no need to type
+        hook: hook.bind(null, "request")
+      }),
+      mediaType: {
+        previews: [],
+        format: ""
+      }
+    };
+    requestDefaults.headers["user-agent"] = options.userAgent ? `${options.userAgent} ${userAgentTrail}` : userAgentTrail;
+    if (options.baseUrl) {
+      requestDefaults.baseUrl = options.baseUrl;
+    }
+    if (options.previews) {
+      requestDefaults.mediaType.previews = options.previews;
+    }
+    if (options.timeZone) {
+      requestDefaults.headers["time-zone"] = options.timeZone;
+    }
+    this.request = import_request.request.defaults(requestDefaults);
+    this.graphql = (0, import_graphql.withCustomRequest)(this.request).defaults(requestDefaults);
+    this.log = createLogger(options.log);
+    this.hook = hook;
+    if (!options.authStrategy) {
+      if (!options.auth) {
+        this.auth = async () => ({
+          type: "unauthenticated"
+        });
+      } else {
+        const auth = (0, import_auth_token.createTokenAuth)(options.auth);
+        hook.wrap("request", auth.hook);
+        this.auth = auth;
+      }
+    } else {
+      const { authStrategy, ...otherOptions } = options;
+      const auth = authStrategy(
+        Object.assign(
+          {
+            request: this.request,
+            log: this.log,
+            // we pass the current octokit instance as well as its constructor options
+            // to allow for authentication strategies that return a new octokit instance
+            // that shares the same internal state as the current one. The original
+            // requirement for this was the "event-octokit" authentication strategy
+            // of https://github.com/probot/octokit-auth-probot.
+            octokit: this,
+            octokitOptions: otherOptions
+          },
+          options.auth
+        )
+      );
+      hook.wrap("request", auth.hook);
+      this.auth = auth;
+    }
+    const classConstructor = this.constructor;
+    for (let i = 0; i < classConstructor.plugins.length; ++i) {
+      Object.assign(this, classConstructor.plugins[i](this, options));
+    }
+  }
+};
+// Annotate the CommonJS export names for ESM import in node:
+0 && (0);
+
+
+/***/ }),
+
+/***/ 3792:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// pkg/dist-src/index.js
+var dist_src_exports = {};
+__export(dist_src_exports, {
+  endpoint: () => endpoint
+});
+module.exports = __toCommonJS(dist_src_exports);
+
+// pkg/dist-src/defaults.js
+var import_universal_user_agent = __nccwpck_require__(9367);
+
+// pkg/dist-src/version.js
+var VERSION = "9.0.6";
+
+// pkg/dist-src/defaults.js
+var userAgent = `octokit-endpoint.js/${VERSION} ${(0, import_universal_user_agent.getUserAgent)()}`;
+var DEFAULTS = {
+  method: "GET",
+  baseUrl: "https://api.github.com",
+  headers: {
+    accept: "application/vnd.github.v3+json",
+    "user-agent": userAgent
+  },
+  mediaType: {
+    format: ""
+  }
+};
+
+// pkg/dist-src/util/lowercase-keys.js
+function lowercaseKeys(object) {
+  if (!object) {
+    return {};
+  }
+  return Object.keys(object).reduce((newObj, key) => {
+    newObj[key.toLowerCase()] = object[key];
+    return newObj;
+  }, {});
+}
+
+// pkg/dist-src/util/is-plain-object.js
+function isPlainObject(value) {
+  if (typeof value !== "object" || value === null)
+    return false;
+  if (Object.prototype.toString.call(value) !== "[object Object]")
+    return false;
+  const proto = Object.getPrototypeOf(value);
+  if (proto === null)
+    return true;
+  const Ctor = Object.prototype.hasOwnProperty.call(proto, "constructor") && proto.constructor;
+  return typeof Ctor === "function" && Ctor instanceof Ctor && Function.prototype.call(Ctor) === Function.prototype.call(value);
+}
+
+// pkg/dist-src/util/merge-deep.js
+function mergeDeep(defaults, options) {
+  const result = Object.assign({}, defaults);
+  Object.keys(options).forEach((key) => {
+    if (isPlainObject(options[key])) {
+      if (!(key in defaults))
+        Object.assign(result, { [key]: options[key] });
+      else
+        result[key] = mergeDeep(defaults[key], options[key]);
+    } else {
+      Object.assign(result, { [key]: options[key] });
+    }
+  });
+  return result;
+}
+
+// pkg/dist-src/util/remove-undefined-properties.js
+function removeUndefinedProperties(obj) {
+  for (const key in obj) {
+    if (obj[key] === void 0) {
+      delete obj[key];
+    }
+  }
+  return obj;
+}
+
+// pkg/dist-src/merge.js
+function merge(defaults, route, options) {
+  if (typeof route === "string") {
+    let [method, url] = route.split(" ");
+    options = Object.assign(url ? { method, url } : { url: method }, options);
+  } else {
+    options = Object.assign({}, route);
+  }
+  options.headers = lowercaseKeys(options.headers);
+  removeUndefinedProperties(options);
+  removeUndefinedProperties(options.headers);
+  const mergedOptions = mergeDeep(defaults || {}, options);
+  if (options.url === "/graphql") {
+    if (defaults && defaults.mediaType.previews?.length) {
+      mergedOptions.mediaType.previews = defaults.mediaType.previews.filter(
+        (preview) => !mergedOptions.mediaType.previews.includes(preview)
+      ).concat(mergedOptions.mediaType.previews);
+    }
+    mergedOptions.mediaType.previews = (mergedOptions.mediaType.previews || []).map((preview) => preview.replace(/-preview/, ""));
+  }
+  return mergedOptions;
+}
+
+// pkg/dist-src/util/add-query-parameters.js
+function addQueryParameters(url, parameters) {
+  const separator = /\?/.test(url) ? "&" : "?";
+  const names = Object.keys(parameters);
+  if (names.length === 0) {
+    return url;
+  }
+  return url + separator + names.map((name) => {
+    if (name === "q") {
+      return "q=" + parameters.q.split("+").map(encodeURIComponent).join("+");
+    }
+    return `${name}=${encodeURIComponent(parameters[name])}`;
+  }).join("&");
+}
+
+// pkg/dist-src/util/extract-url-variable-names.js
+var urlVariableRegex = /\{[^{}}]+\}/g;
+function removeNonChars(variableName) {
+  return variableName.replace(/(?:^\W+)|(?:(?<!\W)\W+$)/g, "").split(/,/);
+}
+function extractUrlVariableNames(url) {
+  const matches = url.match(urlVariableRegex);
+  if (!matches) {
+    return [];
+  }
+  return matches.map(removeNonChars).reduce((a, b) => a.concat(b), []);
+}
+
+// pkg/dist-src/util/omit.js
+function omit(object, keysToOmit) {
+  const result = { __proto__: null };
+  for (const key of Object.keys(object)) {
+    if (keysToOmit.indexOf(key) === -1) {
+      result[key] = object[key];
+    }
+  }
+  return result;
+}
+
+// pkg/dist-src/util/url-template.js
+function encodeReserved(str) {
+  return str.split(/(%[0-9A-Fa-f]{2})/g).map(function(part) {
+    if (!/%[0-9A-Fa-f]/.test(part)) {
+      part = encodeURI(part).replace(/%5B/g, "[").replace(/%5D/g, "]");
+    }
+    return part;
+  }).join("");
+}
+function encodeUnreserved(str) {
+  return encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
+    return "%" + c.charCodeAt(0).toString(16).toUpperCase();
+  });
+}
+function encodeValue(operator, value, key) {
+  value = operator === "+" || operator === "#" ? encodeReserved(value) : encodeUnreserved(value);
+  if (key) {
+    return encodeUnreserved(key) + "=" + value;
+  } else {
+    return value;
+  }
+}
+function isDefined(value) {
+  return value !== void 0 && value !== null;
+}
+function isKeyOperator(operator) {
+  return operator === ";" || operator === "&" || operator === "?";
+}
+function getValues(context, operator, key, modifier) {
+  var value = context[key], result = [];
+  if (isDefined(value) && value !== "") {
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+      value = value.toString();
+      if (modifier && modifier !== "*") {
+        value = value.substring(0, parseInt(modifier, 10));
+      }
+      result.push(
+        encodeValue(operator, value, isKeyOperator(operator) ? key : "")
+      );
+    } else {
+      if (modifier === "*") {
+        if (Array.isArray(value)) {
+          value.filter(isDefined).forEach(function(value2) {
+            result.push(
+              encodeValue(operator, value2, isKeyOperator(operator) ? key : "")
+            );
+          });
+        } else {
+          Object.keys(value).forEach(function(k) {
+            if (isDefined(value[k])) {
+              result.push(encodeValue(operator, value[k], k));
+            }
+          });
+        }
+      } else {
+        const tmp = [];
+        if (Array.isArray(value)) {
+          value.filter(isDefined).forEach(function(value2) {
+            tmp.push(encodeValue(operator, value2));
+          });
+        } else {
+          Object.keys(value).forEach(function(k) {
+            if (isDefined(value[k])) {
+              tmp.push(encodeUnreserved(k));
+              tmp.push(encodeValue(operator, value[k].toString()));
+            }
+          });
+        }
+        if (isKeyOperator(operator)) {
+          result.push(encodeUnreserved(key) + "=" + tmp.join(","));
+        } else if (tmp.length !== 0) {
+          result.push(tmp.join(","));
+        }
+      }
+    }
+  } else {
+    if (operator === ";") {
+      if (isDefined(value)) {
+        result.push(encodeUnreserved(key));
+      }
+    } else if (value === "" && (operator === "&" || operator === "?")) {
+      result.push(encodeUnreserved(key) + "=");
+    } else if (value === "") {
+      result.push("");
+    }
+  }
+  return result;
+}
+function parseUrl(template) {
+  return {
+    expand: expand.bind(null, template)
+  };
+}
+function expand(template, context) {
+  var operators = ["+", "#", ".", "/", ";", "?", "&"];
+  template = template.replace(
+    /\{([^\{\}]+)\}|([^\{\}]+)/g,
+    function(_, expression, literal) {
+      if (expression) {
+        let operator = "";
+        const values = [];
+        if (operators.indexOf(expression.charAt(0)) !== -1) {
+          operator = expression.charAt(0);
+          expression = expression.substr(1);
+        }
+        expression.split(/,/g).forEach(function(variable) {
+          var tmp = /([^:\*]*)(?::(\d+)|(\*))?/.exec(variable);
+          values.push(getValues(context, operator, tmp[1], tmp[2] || tmp[3]));
+        });
+        if (operator && operator !== "+") {
+          var separator = ",";
+          if (operator === "?") {
+            separator = "&";
+          } else if (operator !== "#") {
+            separator = operator;
+          }
+          return (values.length !== 0 ? operator : "") + values.join(separator);
+        } else {
+          return values.join(",");
+        }
+      } else {
+        return encodeReserved(literal);
+      }
+    }
+  );
+  if (template === "/") {
+    return template;
+  } else {
+    return template.replace(/\/$/, "");
+  }
+}
+
+// pkg/dist-src/parse.js
+function parse(options) {
+  let method = options.method.toUpperCase();
+  let url = (options.url || "/").replace(/:([a-z]\w+)/g, "{$1}");
+  let headers = Object.assign({}, options.headers);
+  let body;
+  let parameters = omit(options, [
+    "method",
+    "baseUrl",
+    "url",
+    "headers",
+    "request",
+    "mediaType"
+  ]);
+  const urlVariableNames = extractUrlVariableNames(url);
+  url = parseUrl(url).expand(parameters);
+  if (!/^http/.test(url)) {
+    url = options.baseUrl + url;
+  }
+  const omittedParameters = Object.keys(options).filter((option) => urlVariableNames.includes(option)).concat("baseUrl");
+  const remainingParameters = omit(parameters, omittedParameters);
+  const isBinaryRequest = /application\/octet-stream/i.test(headers.accept);
+  if (!isBinaryRequest) {
+    if (options.mediaType.format) {
+      headers.accept = headers.accept.split(/,/).map(
+        (format) => format.replace(
+          /application\/vnd(\.\w+)(\.v3)?(\.\w+)?(\+json)?$/,
+          `application/vnd$1$2.${options.mediaType.format}`
+        )
+      ).join(",");
+    }
+    if (url.endsWith("/graphql")) {
+      if (options.mediaType.previews?.length) {
+        const previewsFromAcceptHeader = headers.accept.match(/(?<![\w-])[\w-]+(?=-preview)/g) || [];
+        headers.accept = previewsFromAcceptHeader.concat(options.mediaType.previews).map((preview) => {
+          const format = options.mediaType.format ? `.${options.mediaType.format}` : "+json";
+          return `application/vnd.github.${preview}-preview${format}`;
+        }).join(",");
+      }
+    }
+  }
+  if (["GET", "HEAD"].includes(method)) {
+    url = addQueryParameters(url, remainingParameters);
+  } else {
+    if ("data" in remainingParameters) {
+      body = remainingParameters.data;
+    } else {
+      if (Object.keys(remainingParameters).length) {
+        body = remainingParameters;
+      }
+    }
+  }
+  if (!headers["content-type"] && typeof body !== "undefined") {
+    headers["content-type"] = "application/json; charset=utf-8";
+  }
+  if (["PATCH", "PUT"].includes(method) && typeof body === "undefined") {
+    body = "";
+  }
+  return Object.assign(
+    { method, url, headers },
+    typeof body !== "undefined" ? { body } : null,
+    options.request ? { request: options.request } : null
+  );
+}
+
+// pkg/dist-src/endpoint-with-defaults.js
+function endpointWithDefaults(defaults, route, options) {
+  return parse(merge(defaults, route, options));
+}
+
+// pkg/dist-src/with-defaults.js
+function withDefaults(oldDefaults, newDefaults) {
+  const DEFAULTS2 = merge(oldDefaults, newDefaults);
+  const endpoint2 = endpointWithDefaults.bind(null, DEFAULTS2);
+  return Object.assign(endpoint2, {
+    DEFAULTS: DEFAULTS2,
+    defaults: withDefaults.bind(null, DEFAULTS2),
+    merge: merge.bind(null, DEFAULTS2),
+    parse
+  });
+}
+
+// pkg/dist-src/index.js
+var endpoint = withDefaults(null, DEFAULTS);
+// Annotate the CommonJS export names for ESM import in node:
+0 && (0);
+
+
+/***/ }),
+
+/***/ 1147:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// pkg/dist-src/index.js
+var index_exports = {};
+__export(index_exports, {
+  GraphqlResponseError: () => GraphqlResponseError,
+  graphql: () => graphql2,
+  withCustomRequest: () => withCustomRequest
+});
+module.exports = __toCommonJS(index_exports);
+var import_request3 = __nccwpck_require__(3059);
+var import_universal_user_agent = __nccwpck_require__(9367);
+
+// pkg/dist-src/version.js
+var VERSION = "7.1.1";
+
+// pkg/dist-src/with-defaults.js
+var import_request2 = __nccwpck_require__(3059);
+
+// pkg/dist-src/graphql.js
+var import_request = __nccwpck_require__(3059);
+
+// pkg/dist-src/error.js
+function _buildMessageForResponseErrors(data) {
+  return `Request failed due to following response errors:
+` + data.errors.map((e) => ` - ${e.message}`).join("\n");
+}
+var GraphqlResponseError = class extends Error {
+  constructor(request2, headers, response) {
+    super(_buildMessageForResponseErrors(response));
+    this.request = request2;
+    this.headers = headers;
+    this.response = response;
+    this.name = "GraphqlResponseError";
+    this.errors = response.errors;
+    this.data = response.data;
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, this.constructor);
+    }
+  }
+};
+
+// pkg/dist-src/graphql.js
+var NON_VARIABLE_OPTIONS = [
+  "method",
+  "baseUrl",
+  "url",
+  "headers",
+  "request",
+  "query",
+  "mediaType"
+];
+var FORBIDDEN_VARIABLE_OPTIONS = ["query", "method", "url"];
+var GHES_V3_SUFFIX_REGEX = /\/api\/v3\/?$/;
+function graphql(request2, query, options) {
+  if (options) {
+    if (typeof query === "string" && "query" in options) {
+      return Promise.reject(
+        new Error(`[@octokit/graphql] "query" cannot be used as variable name`)
+      );
+    }
+    for (const key in options) {
+      if (!FORBIDDEN_VARIABLE_OPTIONS.includes(key)) continue;
+      return Promise.reject(
+        new Error(
+          `[@octokit/graphql] "${key}" cannot be used as variable name`
+        )
+      );
+    }
+  }
+  const parsedOptions = typeof query === "string" ? Object.assign({ query }, options) : query;
+  const requestOptions = Object.keys(
+    parsedOptions
+  ).reduce((result, key) => {
+    if (NON_VARIABLE_OPTIONS.includes(key)) {
+      result[key] = parsedOptions[key];
+      return result;
+    }
+    if (!result.variables) {
+      result.variables = {};
+    }
+    result.variables[key] = parsedOptions[key];
+    return result;
+  }, {});
+  const baseUrl = parsedOptions.baseUrl || request2.endpoint.DEFAULTS.baseUrl;
+  if (GHES_V3_SUFFIX_REGEX.test(baseUrl)) {
+    requestOptions.url = baseUrl.replace(GHES_V3_SUFFIX_REGEX, "/api/graphql");
+  }
+  return request2(requestOptions).then((response) => {
+    if (response.data.errors) {
+      const headers = {};
+      for (const key of Object.keys(response.headers)) {
+        headers[key] = response.headers[key];
+      }
+      throw new GraphqlResponseError(
+        requestOptions,
+        headers,
+        response.data
+      );
+    }
+    return response.data.data;
+  });
+}
+
+// pkg/dist-src/with-defaults.js
+function withDefaults(request2, newDefaults) {
+  const newRequest = request2.defaults(newDefaults);
+  const newApi = (query, options) => {
+    return graphql(newRequest, query, options);
+  };
+  return Object.assign(newApi, {
+    defaults: withDefaults.bind(null, newRequest),
+    endpoint: newRequest.endpoint
+  });
+}
+
+// pkg/dist-src/index.js
+var graphql2 = withDefaults(import_request3.request, {
+  headers: {
+    "user-agent": `octokit-graphql.js/${VERSION} ${(0, import_universal_user_agent.getUserAgent)()}`
+  },
+  method: "POST",
+  url: "/graphql"
+});
+function withCustomRequest(customRequest) {
+  return withDefaults(customRequest, {
+    method: "POST",
+    url: "/graphql"
+  });
+}
+// Annotate the CommonJS export names for ESM import in node:
+0 && (0);
+
+
+/***/ }),
+
+/***/ 3214:
+/***/ ((module) => {
+
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// pkg/dist-src/index.js
+var dist_src_exports = {};
+__export(dist_src_exports, {
+  composePaginateRest: () => composePaginateRest,
+  isPaginatingEndpoint: () => isPaginatingEndpoint,
+  paginateRest: () => paginateRest,
+  paginatingEndpoints: () => paginatingEndpoints
+});
+module.exports = __toCommonJS(dist_src_exports);
+
+// pkg/dist-src/version.js
+var VERSION = "9.2.2";
+
+// pkg/dist-src/normalize-paginated-list-response.js
+function normalizePaginatedListResponse(response) {
+  if (!response.data) {
+    return {
+      ...response,
+      data: []
+    };
+  }
+  const responseNeedsNormalization = "total_count" in response.data && !("url" in response.data);
+  if (!responseNeedsNormalization)
+    return response;
+  const incompleteResults = response.data.incomplete_results;
+  const repositorySelection = response.data.repository_selection;
+  const totalCount = response.data.total_count;
+  delete response.data.incomplete_results;
+  delete response.data.repository_selection;
+  delete response.data.total_count;
+  const namespaceKey = Object.keys(response.data)[0];
+  const data = response.data[namespaceKey];
+  response.data = data;
+  if (typeof incompleteResults !== "undefined") {
+    response.data.incomplete_results = incompleteResults;
+  }
+  if (typeof repositorySelection !== "undefined") {
+    response.data.repository_selection = repositorySelection;
+  }
+  response.data.total_count = totalCount;
+  return response;
+}
+
+// pkg/dist-src/iterator.js
+function iterator(octokit, route, parameters) {
+  const options = typeof route === "function" ? route.endpoint(parameters) : octokit.request.endpoint(route, parameters);
+  const requestMethod = typeof route === "function" ? route : octokit.request;
+  const method = options.method;
+  const headers = options.headers;
+  let url = options.url;
+  return {
+    [Symbol.asyncIterator]: () => ({
+      async next() {
+        if (!url)
+          return { done: true };
+        try {
+          const response = await requestMethod({ method, url, headers });
+          const normalizedResponse = normalizePaginatedListResponse(response);
+          url = ((normalizedResponse.headers.link || "").match(
+            /<([^<>]+)>;\s*rel="next"/
+          ) || [])[1];
+          return { value: normalizedResponse };
+        } catch (error) {
+          if (error.status !== 409)
+            throw error;
+          url = "";
+          return {
+            value: {
+              status: 200,
+              headers: {},
+              data: []
+            }
+          };
+        }
+      }
+    })
+  };
+}
+
+// pkg/dist-src/paginate.js
+function paginate(octokit, route, parameters, mapFn) {
+  if (typeof parameters === "function") {
+    mapFn = parameters;
+    parameters = void 0;
+  }
+  return gather(
+    octokit,
+    [],
+    iterator(octokit, route, parameters)[Symbol.asyncIterator](),
+    mapFn
+  );
+}
+function gather(octokit, results, iterator2, mapFn) {
+  return iterator2.next().then((result) => {
+    if (result.done) {
+      return results;
+    }
+    let earlyExit = false;
+    function done() {
+      earlyExit = true;
+    }
+    results = results.concat(
+      mapFn ? mapFn(result.value, done) : result.value.data
+    );
+    if (earlyExit) {
+      return results;
+    }
+    return gather(octokit, results, iterator2, mapFn);
+  });
+}
+
+// pkg/dist-src/compose-paginate.js
+var composePaginateRest = Object.assign(paginate, {
+  iterator
+});
+
+// pkg/dist-src/generated/paginating-endpoints.js
+var paginatingEndpoints = [
+  "GET /advisories",
+  "GET /app/hook/deliveries",
+  "GET /app/installation-requests",
+  "GET /app/installations",
+  "GET /assignments/{assignment_id}/accepted_assignments",
+  "GET /classrooms",
+  "GET /classrooms/{classroom_id}/assignments",
+  "GET /enterprises/{enterprise}/dependabot/alerts",
+  "GET /enterprises/{enterprise}/secret-scanning/alerts",
+  "GET /events",
+  "GET /gists",
+  "GET /gists/public",
+  "GET /gists/starred",
+  "GET /gists/{gist_id}/comments",
+  "GET /gists/{gist_id}/commits",
+  "GET /gists/{gist_id}/forks",
+  "GET /installation/repositories",
+  "GET /issues",
+  "GET /licenses",
+  "GET /marketplace_listing/plans",
+  "GET /marketplace_listing/plans/{plan_id}/accounts",
+  "GET /marketplace_listing/stubbed/plans",
+  "GET /marketplace_listing/stubbed/plans/{plan_id}/accounts",
+  "GET /networks/{owner}/{repo}/events",
+  "GET /notifications",
+  "GET /organizations",
+  "GET /orgs/{org}/actions/cache/usage-by-repository",
+  "GET /orgs/{org}/actions/permissions/repositories",
+  "GET /orgs/{org}/actions/runners",
+  "GET /orgs/{org}/actions/secrets",
+  "GET /orgs/{org}/actions/secrets/{secret_name}/repositories",
+  "GET /orgs/{org}/actions/variables",
+  "GET /orgs/{org}/actions/variables/{name}/repositories",
+  "GET /orgs/{org}/blocks",
+  "GET /orgs/{org}/code-scanning/alerts",
+  "GET /orgs/{org}/codespaces",
+  "GET /orgs/{org}/codespaces/secrets",
+  "GET /orgs/{org}/codespaces/secrets/{secret_name}/repositories",
+  "GET /orgs/{org}/copilot/billing/seats",
+  "GET /orgs/{org}/dependabot/alerts",
+  "GET /orgs/{org}/dependabot/secrets",
+  "GET /orgs/{org}/dependabot/secrets/{secret_name}/repositories",
+  "GET /orgs/{org}/events",
+  "GET /orgs/{org}/failed_invitations",
+  "GET /orgs/{org}/hooks",
+  "GET /orgs/{org}/hooks/{hook_id}/deliveries",
+  "GET /orgs/{org}/installations",
+  "GET /orgs/{org}/invitations",
+  "GET /orgs/{org}/invitations/{invitation_id}/teams",
+  "GET /orgs/{org}/issues",
+  "GET /orgs/{org}/members",
+  "GET /orgs/{org}/members/{username}/codespaces",
+  "GET /orgs/{org}/migrations",
+  "GET /orgs/{org}/migrations/{migration_id}/repositories",
+  "GET /orgs/{org}/organization-roles/{role_id}/teams",
+  "GET /orgs/{org}/organization-roles/{role_id}/users",
+  "GET /orgs/{org}/outside_collaborators",
+  "GET /orgs/{org}/packages",
+  "GET /orgs/{org}/packages/{package_type}/{package_name}/versions",
+  "GET /orgs/{org}/personal-access-token-requests",
+  "GET /orgs/{org}/personal-access-token-requests/{pat_request_id}/repositories",
+  "GET /orgs/{org}/personal-access-tokens",
+  "GET /orgs/{org}/personal-access-tokens/{pat_id}/repositories",
+  "GET /orgs/{org}/projects",
+  "GET /orgs/{org}/properties/values",
+  "GET /orgs/{org}/public_members",
+  "GET /orgs/{org}/repos",
+  "GET /orgs/{org}/rulesets",
+  "GET /orgs/{org}/rulesets/rule-suites",
+  "GET /orgs/{org}/secret-scanning/alerts",
+  "GET /orgs/{org}/security-advisories",
+  "GET /orgs/{org}/teams",
+  "GET /orgs/{org}/teams/{team_slug}/discussions",
+  "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments",
+  "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions",
+  "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions",
+  "GET /orgs/{org}/teams/{team_slug}/invitations",
+  "GET /orgs/{org}/teams/{team_slug}/members",
+  "GET /orgs/{org}/teams/{team_slug}/projects",
+  "GET /orgs/{org}/teams/{team_slug}/repos",
+  "GET /orgs/{org}/teams/{team_slug}/teams",
+  "GET /projects/columns/{column_id}/cards",
+  "GET /projects/{project_id}/collaborators",
+  "GET /projects/{project_id}/columns",
+  "GET /repos/{owner}/{repo}/actions/artifacts",
+  "GET /repos/{owner}/{repo}/actions/caches",
+  "GET /repos/{owner}/{repo}/actions/organization-secrets",
+  "GET /repos/{owner}/{repo}/actions/organization-variables",
+  "GET /repos/{owner}/{repo}/actions/runners",
+  "GET /repos/{owner}/{repo}/actions/runs",
+  "GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts",
+  "GET /repos/{owner}/{repo}/actions/runs/{run_id}/attempts/{attempt_number}/jobs",
+  "GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs",
+  "GET /repos/{owner}/{repo}/actions/secrets",
+  "GET /repos/{owner}/{repo}/actions/variables",
+  "GET /repos/{owner}/{repo}/actions/workflows",
+  "GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs",
+  "GET /repos/{owner}/{repo}/activity",
+  "GET /repos/{owner}/{repo}/assignees",
+  "GET /repos/{owner}/{repo}/branches",
+  "GET /repos/{owner}/{repo}/check-runs/{check_run_id}/annotations",
+  "GET /repos/{owner}/{repo}/check-suites/{check_suite_id}/check-runs",
+  "GET /repos/{owner}/{repo}/code-scanning/alerts",
+  "GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}/instances",
+  "GET /repos/{owner}/{repo}/code-scanning/analyses",
+  "GET /repos/{owner}/{repo}/codespaces",
+  "GET /repos/{owner}/{repo}/codespaces/devcontainers",
+  "GET /repos/{owner}/{repo}/codespaces/secrets",
+  "GET /repos/{owner}/{repo}/collaborators",
+  "GET /repos/{owner}/{repo}/comments",
+  "GET /repos/{owner}/{repo}/comments/{comment_id}/reactions",
+  "GET /repos/{owner}/{repo}/commits",
+  "GET /repos/{owner}/{repo}/commits/{commit_sha}/comments",
+  "GET /repos/{owner}/{repo}/commits/{commit_sha}/pulls",
+  "GET /repos/{owner}/{repo}/commits/{ref}/check-runs",
+  "GET /repos/{owner}/{repo}/commits/{ref}/check-suites",
+  "GET /repos/{owner}/{repo}/commits/{ref}/status",
+  "GET /repos/{owner}/{repo}/commits/{ref}/statuses",
+  "GET /repos/{owner}/{repo}/contributors",
+  "GET /repos/{owner}/{repo}/dependabot/alerts",
+  "GET /repos/{owner}/{repo}/dependabot/secrets",
+  "GET /repos/{owner}/{repo}/deployments",
+  "GET /repos/{owner}/{repo}/deployments/{deployment_id}/statuses",
+  "GET /repos/{owner}/{repo}/environments",
+  "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment-branch-policies",
+  "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment_protection_rules/apps",
+  "GET /repos/{owner}/{repo}/events",
+  "GET /repos/{owner}/{repo}/forks",
+  "GET /repos/{owner}/{repo}/hooks",
+  "GET /repos/{owner}/{repo}/hooks/{hook_id}/deliveries",
+  "GET /repos/{owner}/{repo}/invitations",
+  "GET /repos/{owner}/{repo}/issues",
+  "GET /repos/{owner}/{repo}/issues/comments",
+  "GET /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions",
+  "GET /repos/{owner}/{repo}/issues/events",
+  "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
+  "GET /repos/{owner}/{repo}/issues/{issue_number}/events",
+  "GET /repos/{owner}/{repo}/issues/{issue_number}/labels",
+  "GET /repos/{owner}/{repo}/issues/{issue_number}/reactions",
+  "GET /repos/{owner}/{repo}/issues/{issue_number}/timeline",
+  "GET /repos/{owner}/{repo}/keys",
+  "GET /repos/{owner}/{repo}/labels",
+  "GET /repos/{owner}/{repo}/milestones",
+  "GET /repos/{owner}/{repo}/milestones/{milestone_number}/labels",
+  "GET /repos/{owner}/{repo}/notifications",
+  "GET /repos/{owner}/{repo}/pages/builds",
+  "GET /repos/{owner}/{repo}/projects",
+  "GET /repos/{owner}/{repo}/pulls",
+  "GET /repos/{owner}/{repo}/pulls/comments",
+  "GET /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions",
+  "GET /repos/{owner}/{repo}/pulls/{pull_number}/comments",
+  "GET /repos/{owner}/{repo}/pulls/{pull_number}/commits",
+  "GET /repos/{owner}/{repo}/pulls/{pull_number}/files",
+  "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews",
+  "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/comments",
+  "GET /repos/{owner}/{repo}/releases",
+  "GET /repos/{owner}/{repo}/releases/{release_id}/assets",
+  "GET /repos/{owner}/{repo}/releases/{release_id}/reactions",
+  "GET /repos/{owner}/{repo}/rules/branches/{branch}",
+  "GET /repos/{owner}/{repo}/rulesets",
+  "GET /repos/{owner}/{repo}/rulesets/rule-suites",
+  "GET /repos/{owner}/{repo}/secret-scanning/alerts",
+  "GET /repos/{owner}/{repo}/secret-scanning/alerts/{alert_number}/locations",
+  "GET /repos/{owner}/{repo}/security-advisories",
+  "GET /repos/{owner}/{repo}/stargazers",
+  "GET /repos/{owner}/{repo}/subscribers",
+  "GET /repos/{owner}/{repo}/tags",
+  "GET /repos/{owner}/{repo}/teams",
+  "GET /repos/{owner}/{repo}/topics",
+  "GET /repositories",
+  "GET /repositories/{repository_id}/environments/{environment_name}/secrets",
+  "GET /repositories/{repository_id}/environments/{environment_name}/variables",
+  "GET /search/code",
+  "GET /search/commits",
+  "GET /search/issues",
+  "GET /search/labels",
+  "GET /search/repositories",
+  "GET /search/topics",
+  "GET /search/users",
+  "GET /teams/{team_id}/discussions",
+  "GET /teams/{team_id}/discussions/{discussion_number}/comments",
+  "GET /teams/{team_id}/discussions/{discussion_number}/comments/{comment_number}/reactions",
+  "GET /teams/{team_id}/discussions/{discussion_number}/reactions",
+  "GET /teams/{team_id}/invitations",
+  "GET /teams/{team_id}/members",
+  "GET /teams/{team_id}/projects",
+  "GET /teams/{team_id}/repos",
+  "GET /teams/{team_id}/teams",
+  "GET /user/blocks",
+  "GET /user/codespaces",
+  "GET /user/codespaces/secrets",
+  "GET /user/emails",
+  "GET /user/followers",
+  "GET /user/following",
+  "GET /user/gpg_keys",
+  "GET /user/installations",
+  "GET /user/installations/{installation_id}/repositories",
+  "GET /user/issues",
+  "GET /user/keys",
+  "GET /user/marketplace_purchases",
+  "GET /user/marketplace_purchases/stubbed",
+  "GET /user/memberships/orgs",
+  "GET /user/migrations",
+  "GET /user/migrations/{migration_id}/repositories",
+  "GET /user/orgs",
+  "GET /user/packages",
+  "GET /user/packages/{package_type}/{package_name}/versions",
+  "GET /user/public_emails",
+  "GET /user/repos",
+  "GET /user/repository_invitations",
+  "GET /user/social_accounts",
+  "GET /user/ssh_signing_keys",
+  "GET /user/starred",
+  "GET /user/subscriptions",
+  "GET /user/teams",
+  "GET /users",
+  "GET /users/{username}/events",
+  "GET /users/{username}/events/orgs/{org}",
+  "GET /users/{username}/events/public",
+  "GET /users/{username}/followers",
+  "GET /users/{username}/following",
+  "GET /users/{username}/gists",
+  "GET /users/{username}/gpg_keys",
+  "GET /users/{username}/keys",
+  "GET /users/{username}/orgs",
+  "GET /users/{username}/packages",
+  "GET /users/{username}/projects",
+  "GET /users/{username}/received_events",
+  "GET /users/{username}/received_events/public",
+  "GET /users/{username}/repos",
+  "GET /users/{username}/social_accounts",
+  "GET /users/{username}/ssh_signing_keys",
+  "GET /users/{username}/starred",
+  "GET /users/{username}/subscriptions"
+];
+
+// pkg/dist-src/paginating-endpoints.js
+function isPaginatingEndpoint(arg) {
+  if (typeof arg === "string") {
+    return paginatingEndpoints.includes(arg);
+  } else {
+    return false;
+  }
+}
+
+// pkg/dist-src/index.js
+function paginateRest(octokit) {
+  return {
+    paginate: Object.assign(paginate.bind(null, octokit), {
+      iterator: iterator.bind(null, octokit)
+    })
+  };
+}
+paginateRest.VERSION = VERSION;
+// Annotate the CommonJS export names for ESM import in node:
+0 && (0);
+
+
+/***/ }),
+
+/***/ 6659:
+/***/ ((module) => {
+
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// pkg/dist-src/index.js
+var dist_src_exports = {};
+__export(dist_src_exports, {
+  legacyRestEndpointMethods: () => legacyRestEndpointMethods,
+  restEndpointMethods: () => restEndpointMethods
+});
+module.exports = __toCommonJS(dist_src_exports);
+
+// pkg/dist-src/version.js
+var VERSION = "10.4.1";
+
+// pkg/dist-src/generated/endpoints.js
+var Endpoints = {
+  actions: {
+    addCustomLabelsToSelfHostedRunnerForOrg: [
+      "POST /orgs/{org}/actions/runners/{runner_id}/labels"
+    ],
+    addCustomLabelsToSelfHostedRunnerForRepo: [
+      "POST /repos/{owner}/{repo}/actions/runners/{runner_id}/labels"
+    ],
+    addSelectedRepoToOrgSecret: [
+      "PUT /orgs/{org}/actions/secrets/{secret_name}/repositories/{repository_id}"
+    ],
+    addSelectedRepoToOrgVariable: [
+      "PUT /orgs/{org}/actions/variables/{name}/repositories/{repository_id}"
+    ],
+    approveWorkflowRun: [
+      "POST /repos/{owner}/{repo}/actions/runs/{run_id}/approve"
+    ],
+    cancelWorkflowRun: [
+      "POST /repos/{owner}/{repo}/actions/runs/{run_id}/cancel"
+    ],
+    createEnvironmentVariable: [
+      "POST /repositories/{repository_id}/environments/{environment_name}/variables"
+    ],
+    createOrUpdateEnvironmentSecret: [
+      "PUT /repositories/{repository_id}/environments/{environment_name}/secrets/{secret_name}"
+    ],
+    createOrUpdateOrgSecret: ["PUT /orgs/{org}/actions/secrets/{secret_name}"],
+    createOrUpdateRepoSecret: [
+      "PUT /repos/{owner}/{repo}/actions/secrets/{secret_name}"
+    ],
+    createOrgVariable: ["POST /orgs/{org}/actions/variables"],
+    createRegistrationTokenForOrg: [
+      "POST /orgs/{org}/actions/runners/registration-token"
+    ],
+    createRegistrationTokenForRepo: [
+      "POST /repos/{owner}/{repo}/actions/runners/registration-token"
+    ],
+    createRemoveTokenForOrg: ["POST /orgs/{org}/actions/runners/remove-token"],
+    createRemoveTokenForRepo: [
+      "POST /repos/{owner}/{repo}/actions/runners/remove-token"
+    ],
+    createRepoVariable: ["POST /repos/{owner}/{repo}/actions/variables"],
+    createWorkflowDispatch: [
+      "POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches"
+    ],
+    deleteActionsCacheById: [
+      "DELETE /repos/{owner}/{repo}/actions/caches/{cache_id}"
+    ],
+    deleteActionsCacheByKey: [
+      "DELETE /repos/{owner}/{repo}/actions/caches{?key,ref}"
+    ],
+    deleteArtifact: [
+      "DELETE /repos/{owner}/{repo}/actions/artifacts/{artifact_id}"
+    ],
+    deleteEnvironmentSecret: [
+      "DELETE /repositories/{repository_id}/environments/{environment_name}/secrets/{secret_name}"
+    ],
+    deleteEnvironmentVariable: [
+      "DELETE /repositories/{repository_id}/environments/{environment_name}/variables/{name}"
+    ],
+    deleteOrgSecret: ["DELETE /orgs/{org}/actions/secrets/{secret_name}"],
+    deleteOrgVariable: ["DELETE /orgs/{org}/actions/variables/{name}"],
+    deleteRepoSecret: [
+      "DELETE /repos/{owner}/{repo}/actions/secrets/{secret_name}"
+    ],
+    deleteRepoVariable: [
+      "DELETE /repos/{owner}/{repo}/actions/variables/{name}"
+    ],
+    deleteSelfHostedRunnerFromOrg: [
+      "DELETE /orgs/{org}/actions/runners/{runner_id}"
+    ],
+    deleteSelfHostedRunnerFromRepo: [
+      "DELETE /repos/{owner}/{repo}/actions/runners/{runner_id}"
+    ],
+    deleteWorkflowRun: ["DELETE /repos/{owner}/{repo}/actions/runs/{run_id}"],
+    deleteWorkflowRunLogs: [
+      "DELETE /repos/{owner}/{repo}/actions/runs/{run_id}/logs"
+    ],
+    disableSelectedRepositoryGithubActionsOrganization: [
+      "DELETE /orgs/{org}/actions/permissions/repositories/{repository_id}"
+    ],
+    disableWorkflow: [
+      "PUT /repos/{owner}/{repo}/actions/workflows/{workflow_id}/disable"
+    ],
+    downloadArtifact: [
+      "GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}"
+    ],
+    downloadJobLogsForWorkflowRun: [
+      "GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs"
+    ],
+    downloadWorkflowRunAttemptLogs: [
+      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/attempts/{attempt_number}/logs"
+    ],
+    downloadWorkflowRunLogs: [
+      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/logs"
+    ],
+    enableSelectedRepositoryGithubActionsOrganization: [
+      "PUT /orgs/{org}/actions/permissions/repositories/{repository_id}"
+    ],
+    enableWorkflow: [
+      "PUT /repos/{owner}/{repo}/actions/workflows/{workflow_id}/enable"
+    ],
+    forceCancelWorkflowRun: [
+      "POST /repos/{owner}/{repo}/actions/runs/{run_id}/force-cancel"
+    ],
+    generateRunnerJitconfigForOrg: [
+      "POST /orgs/{org}/actions/runners/generate-jitconfig"
+    ],
+    generateRunnerJitconfigForRepo: [
+      "POST /repos/{owner}/{repo}/actions/runners/generate-jitconfig"
+    ],
+    getActionsCacheList: ["GET /repos/{owner}/{repo}/actions/caches"],
+    getActionsCacheUsage: ["GET /repos/{owner}/{repo}/actions/cache/usage"],
+    getActionsCacheUsageByRepoForOrg: [
+      "GET /orgs/{org}/actions/cache/usage-by-repository"
+    ],
+    getActionsCacheUsageForOrg: ["GET /orgs/{org}/actions/cache/usage"],
+    getAllowedActionsOrganization: [
+      "GET /orgs/{org}/actions/permissions/selected-actions"
+    ],
+    getAllowedActionsRepository: [
+      "GET /repos/{owner}/{repo}/actions/permissions/selected-actions"
+    ],
+    getArtifact: ["GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}"],
+    getCustomOidcSubClaimForRepo: [
+      "GET /repos/{owner}/{repo}/actions/oidc/customization/sub"
+    ],
+    getEnvironmentPublicKey: [
+      "GET /repositories/{repository_id}/environments/{environment_name}/secrets/public-key"
+    ],
+    getEnvironmentSecret: [
+      "GET /repositories/{repository_id}/environments/{environment_name}/secrets/{secret_name}"
+    ],
+    getEnvironmentVariable: [
+      "GET /repositories/{repository_id}/environments/{environment_name}/variables/{name}"
+    ],
+    getGithubActionsDefaultWorkflowPermissionsOrganization: [
+      "GET /orgs/{org}/actions/permissions/workflow"
+    ],
+    getGithubActionsDefaultWorkflowPermissionsRepository: [
+      "GET /repos/{owner}/{repo}/actions/permissions/workflow"
+    ],
+    getGithubActionsPermissionsOrganization: [
+      "GET /orgs/{org}/actions/permissions"
+    ],
+    getGithubActionsPermissionsRepository: [
+      "GET /repos/{owner}/{repo}/actions/permissions"
+    ],
+    getJobForWorkflowRun: ["GET /repos/{owner}/{repo}/actions/jobs/{job_id}"],
+    getOrgPublicKey: ["GET /orgs/{org}/actions/secrets/public-key"],
+    getOrgSecret: ["GET /orgs/{org}/actions/secrets/{secret_name}"],
+    getOrgVariable: ["GET /orgs/{org}/actions/variables/{name}"],
+    getPendingDeploymentsForRun: [
+      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/pending_deployments"
+    ],
+    getRepoPermissions: [
+      "GET /repos/{owner}/{repo}/actions/permissions",
+      {},
+      { renamed: ["actions", "getGithubActionsPermissionsRepository"] }
+    ],
+    getRepoPublicKey: ["GET /repos/{owner}/{repo}/actions/secrets/public-key"],
+    getRepoSecret: ["GET /repos/{owner}/{repo}/actions/secrets/{secret_name}"],
+    getRepoVariable: ["GET /repos/{owner}/{repo}/actions/variables/{name}"],
+    getReviewsForRun: [
+      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/approvals"
+    ],
+    getSelfHostedRunnerForOrg: ["GET /orgs/{org}/actions/runners/{runner_id}"],
+    getSelfHostedRunnerForRepo: [
+      "GET /repos/{owner}/{repo}/actions/runners/{runner_id}"
+    ],
+    getWorkflow: ["GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}"],
+    getWorkflowAccessToRepository: [
+      "GET /repos/{owner}/{repo}/actions/permissions/access"
+    ],
+    getWorkflowRun: ["GET /repos/{owner}/{repo}/actions/runs/{run_id}"],
+    getWorkflowRunAttempt: [
+      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/attempts/{attempt_number}"
+    ],
+    getWorkflowRunUsage: [
+      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/timing"
+    ],
+    getWorkflowUsage: [
+      "GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/timing"
+    ],
+    listArtifactsForRepo: ["GET /repos/{owner}/{repo}/actions/artifacts"],
+    listEnvironmentSecrets: [
+      "GET /repositories/{repository_id}/environments/{environment_name}/secrets"
+    ],
+    listEnvironmentVariables: [
+      "GET /repositories/{repository_id}/environments/{environment_name}/variables"
+    ],
+    listJobsForWorkflowRun: [
+      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs"
+    ],
+    listJobsForWorkflowRunAttempt: [
+      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/attempts/{attempt_number}/jobs"
+    ],
+    listLabelsForSelfHostedRunnerForOrg: [
+      "GET /orgs/{org}/actions/runners/{runner_id}/labels"
+    ],
+    listLabelsForSelfHostedRunnerForRepo: [
+      "GET /repos/{owner}/{repo}/actions/runners/{runner_id}/labels"
+    ],
+    listOrgSecrets: ["GET /orgs/{org}/actions/secrets"],
+    listOrgVariables: ["GET /orgs/{org}/actions/variables"],
+    listRepoOrganizationSecrets: [
+      "GET /repos/{owner}/{repo}/actions/organization-secrets"
+    ],
+    listRepoOrganizationVariables: [
+      "GET /repos/{owner}/{repo}/actions/organization-variables"
+    ],
+    listRepoSecrets: ["GET /repos/{owner}/{repo}/actions/secrets"],
+    listRepoVariables: ["GET /repos/{owner}/{repo}/actions/variables"],
+    listRepoWorkflows: ["GET /repos/{owner}/{repo}/actions/workflows"],
+    listRunnerApplicationsForOrg: ["GET /orgs/{org}/actions/runners/downloads"],
+    listRunnerApplicationsForRepo: [
+      "GET /repos/{owner}/{repo}/actions/runners/downloads"
+    ],
+    listSelectedReposForOrgSecret: [
+      "GET /orgs/{org}/actions/secrets/{secret_name}/repositories"
+    ],
+    listSelectedReposForOrgVariable: [
+      "GET /orgs/{org}/actions/variables/{name}/repositories"
+    ],
+    listSelectedRepositoriesEnabledGithubActionsOrganization: [
+      "GET /orgs/{org}/actions/permissions/repositories"
+    ],
+    listSelfHostedRunnersForOrg: ["GET /orgs/{org}/actions/runners"],
+    listSelfHostedRunnersForRepo: ["GET /repos/{owner}/{repo}/actions/runners"],
+    listWorkflowRunArtifacts: [
+      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts"
+    ],
+    listWorkflowRuns: [
+      "GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs"
+    ],
+    listWorkflowRunsForRepo: ["GET /repos/{owner}/{repo}/actions/runs"],
+    reRunJobForWorkflowRun: [
+      "POST /repos/{owner}/{repo}/actions/jobs/{job_id}/rerun"
+    ],
+    reRunWorkflow: ["POST /repos/{owner}/{repo}/actions/runs/{run_id}/rerun"],
+    reRunWorkflowFailedJobs: [
+      "POST /repos/{owner}/{repo}/actions/runs/{run_id}/rerun-failed-jobs"
+    ],
+    removeAllCustomLabelsFromSelfHostedRunnerForOrg: [
+      "DELETE /orgs/{org}/actions/runners/{runner_id}/labels"
+    ],
+    removeAllCustomLabelsFromSelfHostedRunnerForRepo: [
+      "DELETE /repos/{owner}/{repo}/actions/runners/{runner_id}/labels"
+    ],
+    removeCustomLabelFromSelfHostedRunnerForOrg: [
+      "DELETE /orgs/{org}/actions/runners/{runner_id}/labels/{name}"
+    ],
+    removeCustomLabelFromSelfHostedRunnerForRepo: [
+      "DELETE /repos/{owner}/{repo}/actions/runners/{runner_id}/labels/{name}"
+    ],
+    removeSelectedRepoFromOrgSecret: [
+      "DELETE /orgs/{org}/actions/secrets/{secret_name}/repositories/{repository_id}"
+    ],
+    removeSelectedRepoFromOrgVariable: [
+      "DELETE /orgs/{org}/actions/variables/{name}/repositories/{repository_id}"
+    ],
+    reviewCustomGatesForRun: [
+      "POST /repos/{owner}/{repo}/actions/runs/{run_id}/deployment_protection_rule"
+    ],
+    reviewPendingDeploymentsForRun: [
+      "POST /repos/{owner}/{repo}/actions/runs/{run_id}/pending_deployments"
+    ],
+    setAllowedActionsOrganization: [
+      "PUT /orgs/{org}/actions/permissions/selected-actions"
+    ],
+    setAllowedActionsRepository: [
+      "PUT /repos/{owner}/{repo}/actions/permissions/selected-actions"
+    ],
+    setCustomLabelsForSelfHostedRunnerForOrg: [
+      "PUT /orgs/{org}/actions/runners/{runner_id}/labels"
+    ],
+    setCustomLabelsForSelfHostedRunnerForRepo: [
+      "PUT /repos/{owner}/{repo}/actions/runners/{runner_id}/labels"
+    ],
+    setCustomOidcSubClaimForRepo: [
+      "PUT /repos/{owner}/{repo}/actions/oidc/customization/sub"
+    ],
+    setGithubActionsDefaultWorkflowPermissionsOrganization: [
+      "PUT /orgs/{org}/actions/permissions/workflow"
+    ],
+    setGithubActionsDefaultWorkflowPermissionsRepository: [
+      "PUT /repos/{owner}/{repo}/actions/permissions/workflow"
+    ],
+    setGithubActionsPermissionsOrganization: [
+      "PUT /orgs/{org}/actions/permissions"
+    ],
+    setGithubActionsPermissionsRepository: [
+      "PUT /repos/{owner}/{repo}/actions/permissions"
+    ],
+    setSelectedReposForOrgSecret: [
+      "PUT /orgs/{org}/actions/secrets/{secret_name}/repositories"
+    ],
+    setSelectedReposForOrgVariable: [
+      "PUT /orgs/{org}/actions/variables/{name}/repositories"
+    ],
+    setSelectedRepositoriesEnabledGithubActionsOrganization: [
+      "PUT /orgs/{org}/actions/permissions/repositories"
+    ],
+    setWorkflowAccessToRepository: [
+      "PUT /repos/{owner}/{repo}/actions/permissions/access"
+    ],
+    updateEnvironmentVariable: [
+      "PATCH /repositories/{repository_id}/environments/{environment_name}/variables/{name}"
+    ],
+    updateOrgVariable: ["PATCH /orgs/{org}/actions/variables/{name}"],
+    updateRepoVariable: [
+      "PATCH /repos/{owner}/{repo}/actions/variables/{name}"
+    ]
+  },
+  activity: {
+    checkRepoIsStarredByAuthenticatedUser: ["GET /user/starred/{owner}/{repo}"],
+    deleteRepoSubscription: ["DELETE /repos/{owner}/{repo}/subscription"],
+    deleteThreadSubscription: [
+      "DELETE /notifications/threads/{thread_id}/subscription"
+    ],
+    getFeeds: ["GET /feeds"],
+    getRepoSubscription: ["GET /repos/{owner}/{repo}/subscription"],
+    getThread: ["GET /notifications/threads/{thread_id}"],
+    getThreadSubscriptionForAuthenticatedUser: [
+      "GET /notifications/threads/{thread_id}/subscription"
+    ],
+    listEventsForAuthenticatedUser: ["GET /users/{username}/events"],
+    listNotificationsForAuthenticatedUser: ["GET /notifications"],
+    listOrgEventsForAuthenticatedUser: [
+      "GET /users/{username}/events/orgs/{org}"
+    ],
+    listPublicEvents: ["GET /events"],
+    listPublicEventsForRepoNetwork: ["GET /networks/{owner}/{repo}/events"],
+    listPublicEventsForUser: ["GET /users/{username}/events/public"],
+    listPublicOrgEvents: ["GET /orgs/{org}/events"],
+    listReceivedEventsForUser: ["GET /users/{username}/received_events"],
+    listReceivedPublicEventsForUser: [
+      "GET /users/{username}/received_events/public"
+    ],
+    listRepoEvents: ["GET /repos/{owner}/{repo}/events"],
+    listRepoNotificationsForAuthenticatedUser: [
+      "GET /repos/{owner}/{repo}/notifications"
+    ],
+    listReposStarredByAuthenticatedUser: ["GET /user/starred"],
+    listReposStarredByUser: ["GET /users/{username}/starred"],
+    listReposWatchedByUser: ["GET /users/{username}/subscriptions"],
+    listStargazersForRepo: ["GET /repos/{owner}/{repo}/stargazers"],
+    listWatchedReposForAuthenticatedUser: ["GET /user/subscriptions"],
+    listWatchersForRepo: ["GET /repos/{owner}/{repo}/subscribers"],
+    markNotificationsAsRead: ["PUT /notifications"],
+    markRepoNotificationsAsRead: ["PUT /repos/{owner}/{repo}/notifications"],
+    markThreadAsDone: ["DELETE /notifications/threads/{thread_id}"],
+    markThreadAsRead: ["PATCH /notifications/threads/{thread_id}"],
+    setRepoSubscription: ["PUT /repos/{owner}/{repo}/subscription"],
+    setThreadSubscription: [
+      "PUT /notifications/threads/{thread_id}/subscription"
+    ],
+    starRepoForAuthenticatedUser: ["PUT /user/starred/{owner}/{repo}"],
+    unstarRepoForAuthenticatedUser: ["DELETE /user/starred/{owner}/{repo}"]
+  },
+  apps: {
+    addRepoToInstallation: [
+      "PUT /user/installations/{installation_id}/repositories/{repository_id}",
+      {},
+      { renamed: ["apps", "addRepoToInstallationForAuthenticatedUser"] }
+    ],
+    addRepoToInstallationForAuthenticatedUser: [
+      "PUT /user/installations/{installation_id}/repositories/{repository_id}"
+    ],
+    checkToken: ["POST /applications/{client_id}/token"],
+    createFromManifest: ["POST /app-manifests/{code}/conversions"],
+    createInstallationAccessToken: [
+      "POST /app/installations/{installation_id}/access_tokens"
+    ],
+    deleteAuthorization: ["DELETE /applications/{client_id}/grant"],
+    deleteInstallation: ["DELETE /app/installations/{installation_id}"],
+    deleteToken: ["DELETE /applications/{client_id}/token"],
+    getAuthenticated: ["GET /app"],
+    getBySlug: ["GET /apps/{app_slug}"],
+    getInstallation: ["GET /app/installations/{installation_id}"],
+    getOrgInstallation: ["GET /orgs/{org}/installation"],
+    getRepoInstallation: ["GET /repos/{owner}/{repo}/installation"],
+    getSubscriptionPlanForAccount: [
+      "GET /marketplace_listing/accounts/{account_id}"
+    ],
+    getSubscriptionPlanForAccountStubbed: [
+      "GET /marketplace_listing/stubbed/accounts/{account_id}"
+    ],
+    getUserInstallation: ["GET /users/{username}/installation"],
+    getWebhookConfigForApp: ["GET /app/hook/config"],
+    getWebhookDelivery: ["GET /app/hook/deliveries/{delivery_id}"],
+    listAccountsForPlan: ["GET /marketplace_listing/plans/{plan_id}/accounts"],
+    listAccountsForPlanStubbed: [
+      "GET /marketplace_listing/stubbed/plans/{plan_id}/accounts"
+    ],
+    listInstallationReposForAuthenticatedUser: [
+      "GET /user/installations/{installation_id}/repositories"
+    ],
+    listInstallationRequestsForAuthenticatedApp: [
+      "GET /app/installation-requests"
+    ],
+    listInstallations: ["GET /app/installations"],
+    listInstallationsForAuthenticatedUser: ["GET /user/installations"],
+    listPlans: ["GET /marketplace_listing/plans"],
+    listPlansStubbed: ["GET /marketplace_listing/stubbed/plans"],
+    listReposAccessibleToInstallation: ["GET /installation/repositories"],
+    listSubscriptionsForAuthenticatedUser: ["GET /user/marketplace_purchases"],
+    listSubscriptionsForAuthenticatedUserStubbed: [
+      "GET /user/marketplace_purchases/stubbed"
+    ],
+    listWebhookDeliveries: ["GET /app/hook/deliveries"],
+    redeliverWebhookDelivery: [
+      "POST /app/hook/deliveries/{delivery_id}/attempts"
+    ],
+    removeRepoFromInstallation: [
+      "DELETE /user/installations/{installation_id}/repositories/{repository_id}",
+      {},
+      { renamed: ["apps", "removeRepoFromInstallationForAuthenticatedUser"] }
+    ],
+    removeRepoFromInstallationForAuthenticatedUser: [
+      "DELETE /user/installations/{installation_id}/repositories/{repository_id}"
+    ],
+    resetToken: ["PATCH /applications/{client_id}/token"],
+    revokeInstallationAccessToken: ["DELETE /installation/token"],
+    scopeToken: ["POST /applications/{client_id}/token/scoped"],
+    suspendInstallation: ["PUT /app/installations/{installation_id}/suspended"],
+    unsuspendInstallation: [
+      "DELETE /app/installations/{installation_id}/suspended"
+    ],
+    updateWebhookConfigForApp: ["PATCH /app/hook/config"]
+  },
+  billing: {
+    getGithubActionsBillingOrg: ["GET /orgs/{org}/settings/billing/actions"],
+    getGithubActionsBillingUser: [
+      "GET /users/{username}/settings/billing/actions"
+    ],
+    getGithubPackagesBillingOrg: ["GET /orgs/{org}/settings/billing/packages"],
+    getGithubPackagesBillingUser: [
+      "GET /users/{username}/settings/billing/packages"
+    ],
+    getSharedStorageBillingOrg: [
+      "GET /orgs/{org}/settings/billing/shared-storage"
+    ],
+    getSharedStorageBillingUser: [
+      "GET /users/{username}/settings/billing/shared-storage"
+    ]
+  },
+  checks: {
+    create: ["POST /repos/{owner}/{repo}/check-runs"],
+    createSuite: ["POST /repos/{owner}/{repo}/check-suites"],
+    get: ["GET /repos/{owner}/{repo}/check-runs/{check_run_id}"],
+    getSuite: ["GET /repos/{owner}/{repo}/check-suites/{check_suite_id}"],
+    listAnnotations: [
+      "GET /repos/{owner}/{repo}/check-runs/{check_run_id}/annotations"
+    ],
+    listForRef: ["GET /repos/{owner}/{repo}/commits/{ref}/check-runs"],
+    listForSuite: [
+      "GET /repos/{owner}/{repo}/check-suites/{check_suite_id}/check-runs"
+    ],
+    listSuitesForRef: ["GET /repos/{owner}/{repo}/commits/{ref}/check-suites"],
+    rerequestRun: [
+      "POST /repos/{owner}/{repo}/check-runs/{check_run_id}/rerequest"
+    ],
+    rerequestSuite: [
+      "POST /repos/{owner}/{repo}/check-suites/{check_suite_id}/rerequest"
+    ],
+    setSuitesPreferences: [
+      "PATCH /repos/{owner}/{repo}/check-suites/preferences"
+    ],
+    update: ["PATCH /repos/{owner}/{repo}/check-runs/{check_run_id}"]
+  },
+  codeScanning: {
+    deleteAnalysis: [
+      "DELETE /repos/{owner}/{repo}/code-scanning/analyses/{analysis_id}{?confirm_delete}"
+    ],
+    getAlert: [
+      "GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}",
+      {},
+      { renamedParameters: { alert_id: "alert_number" } }
+    ],
+    getAnalysis: [
+      "GET /repos/{owner}/{repo}/code-scanning/analyses/{analysis_id}"
+    ],
+    getCodeqlDatabase: [
+      "GET /repos/{owner}/{repo}/code-scanning/codeql/databases/{language}"
+    ],
+    getDefaultSetup: ["GET /repos/{owner}/{repo}/code-scanning/default-setup"],
+    getSarif: ["GET /repos/{owner}/{repo}/code-scanning/sarifs/{sarif_id}"],
+    listAlertInstances: [
+      "GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}/instances"
+    ],
+    listAlertsForOrg: ["GET /orgs/{org}/code-scanning/alerts"],
+    listAlertsForRepo: ["GET /repos/{owner}/{repo}/code-scanning/alerts"],
+    listAlertsInstances: [
+      "GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}/instances",
+      {},
+      { renamed: ["codeScanning", "listAlertInstances"] }
+    ],
+    listCodeqlDatabases: [
+      "GET /repos/{owner}/{repo}/code-scanning/codeql/databases"
+    ],
+    listRecentAnalyses: ["GET /repos/{owner}/{repo}/code-scanning/analyses"],
+    updateAlert: [
+      "PATCH /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}"
+    ],
+    updateDefaultSetup: [
+      "PATCH /repos/{owner}/{repo}/code-scanning/default-setup"
+    ],
+    uploadSarif: ["POST /repos/{owner}/{repo}/code-scanning/sarifs"]
+  },
+  codesOfConduct: {
+    getAllCodesOfConduct: ["GET /codes_of_conduct"],
+    getConductCode: ["GET /codes_of_conduct/{key}"]
+  },
+  codespaces: {
+    addRepositoryForSecretForAuthenticatedUser: [
+      "PUT /user/codespaces/secrets/{secret_name}/repositories/{repository_id}"
+    ],
+    addSelectedRepoToOrgSecret: [
+      "PUT /orgs/{org}/codespaces/secrets/{secret_name}/repositories/{repository_id}"
+    ],
+    checkPermissionsForDevcontainer: [
+      "GET /repos/{owner}/{repo}/codespaces/permissions_check"
+    ],
+    codespaceMachinesForAuthenticatedUser: [
+      "GET /user/codespaces/{codespace_name}/machines"
+    ],
+    createForAuthenticatedUser: ["POST /user/codespaces"],
+    createOrUpdateOrgSecret: [
+      "PUT /orgs/{org}/codespaces/secrets/{secret_name}"
+    ],
+    createOrUpdateRepoSecret: [
+      "PUT /repos/{owner}/{repo}/codespaces/secrets/{secret_name}"
+    ],
+    createOrUpdateSecretForAuthenticatedUser: [
+      "PUT /user/codespaces/secrets/{secret_name}"
+    ],
+    createWithPrForAuthenticatedUser: [
+      "POST /repos/{owner}/{repo}/pulls/{pull_number}/codespaces"
+    ],
+    createWithRepoForAuthenticatedUser: [
+      "POST /repos/{owner}/{repo}/codespaces"
+    ],
+    deleteForAuthenticatedUser: ["DELETE /user/codespaces/{codespace_name}"],
+    deleteFromOrganization: [
+      "DELETE /orgs/{org}/members/{username}/codespaces/{codespace_name}"
+    ],
+    deleteOrgSecret: ["DELETE /orgs/{org}/codespaces/secrets/{secret_name}"],
+    deleteRepoSecret: [
+      "DELETE /repos/{owner}/{repo}/codespaces/secrets/{secret_name}"
+    ],
+    deleteSecretForAuthenticatedUser: [
+      "DELETE /user/codespaces/secrets/{secret_name}"
+    ],
+    exportForAuthenticatedUser: [
+      "POST /user/codespaces/{codespace_name}/exports"
+    ],
+    getCodespacesForUserInOrg: [
+      "GET /orgs/{org}/members/{username}/codespaces"
+    ],
+    getExportDetailsForAuthenticatedUser: [
+      "GET /user/codespaces/{codespace_name}/exports/{export_id}"
+    ],
+    getForAuthenticatedUser: ["GET /user/codespaces/{codespace_name}"],
+    getOrgPublicKey: ["GET /orgs/{org}/codespaces/secrets/public-key"],
+    getOrgSecret: ["GET /orgs/{org}/codespaces/secrets/{secret_name}"],
+    getPublicKeyForAuthenticatedUser: [
+      "GET /user/codespaces/secrets/public-key"
+    ],
+    getRepoPublicKey: [
+      "GET /repos/{owner}/{repo}/codespaces/secrets/public-key"
+    ],
+    getRepoSecret: [
+      "GET /repos/{owner}/{repo}/codespaces/secrets/{secret_name}"
+    ],
+    getSecretForAuthenticatedUser: [
+      "GET /user/codespaces/secrets/{secret_name}"
+    ],
+    listDevcontainersInRepositoryForAuthenticatedUser: [
+      "GET /repos/{owner}/{repo}/codespaces/devcontainers"
+    ],
+    listForAuthenticatedUser: ["GET /user/codespaces"],
+    listInOrganization: [
+      "GET /orgs/{org}/codespaces",
+      {},
+      { renamedParameters: { org_id: "org" } }
+    ],
+    listInRepositoryForAuthenticatedUser: [
+      "GET /repos/{owner}/{repo}/codespaces"
+    ],
+    listOrgSecrets: ["GET /orgs/{org}/codespaces/secrets"],
+    listRepoSecrets: ["GET /repos/{owner}/{repo}/codespaces/secrets"],
+    listRepositoriesForSecretForAuthenticatedUser: [
+      "GET /user/codespaces/secrets/{secret_name}/repositories"
+    ],
+    listSecretsForAuthenticatedUser: ["GET /user/codespaces/secrets"],
+    listSelectedReposForOrgSecret: [
+      "GET /orgs/{org}/codespaces/secrets/{secret_name}/repositories"
+    ],
+    preFlightWithRepoForAuthenticatedUser: [
+      "GET /repos/{owner}/{repo}/codespaces/new"
+    ],
+    publishForAuthenticatedUser: [
+      "POST /user/codespaces/{codespace_name}/publish"
+    ],
+    removeRepositoryForSecretForAuthenticatedUser: [
+      "DELETE /user/codespaces/secrets/{secret_name}/repositories/{repository_id}"
+    ],
+    removeSelectedRepoFromOrgSecret: [
+      "DELETE /orgs/{org}/codespaces/secrets/{secret_name}/repositories/{repository_id}"
+    ],
+    repoMachinesForAuthenticatedUser: [
+      "GET /repos/{owner}/{repo}/codespaces/machines"
+    ],
+    setRepositoriesForSecretForAuthenticatedUser: [
+      "PUT /user/codespaces/secrets/{secret_name}/repositories"
+    ],
+    setSelectedReposForOrgSecret: [
+      "PUT /orgs/{org}/codespaces/secrets/{secret_name}/repositories"
+    ],
+    startForAuthenticatedUser: ["POST /user/codespaces/{codespace_name}/start"],
+    stopForAuthenticatedUser: ["POST /user/codespaces/{codespace_name}/stop"],
+    stopInOrganization: [
+      "POST /orgs/{org}/members/{username}/codespaces/{codespace_name}/stop"
+    ],
+    updateForAuthenticatedUser: ["PATCH /user/codespaces/{codespace_name}"]
+  },
+  copilot: {
+    addCopilotSeatsForTeams: [
+      "POST /orgs/{org}/copilot/billing/selected_teams"
+    ],
+    addCopilotSeatsForUsers: [
+      "POST /orgs/{org}/copilot/billing/selected_users"
+    ],
+    cancelCopilotSeatAssignmentForTeams: [
+      "DELETE /orgs/{org}/copilot/billing/selected_teams"
+    ],
+    cancelCopilotSeatAssignmentForUsers: [
+      "DELETE /orgs/{org}/copilot/billing/selected_users"
+    ],
+    getCopilotOrganizationDetails: ["GET /orgs/{org}/copilot/billing"],
+    getCopilotSeatDetailsForUser: [
+      "GET /orgs/{org}/members/{username}/copilot"
+    ],
+    listCopilotSeats: ["GET /orgs/{org}/copilot/billing/seats"]
+  },
+  dependabot: {
+    addSelectedRepoToOrgSecret: [
+      "PUT /orgs/{org}/dependabot/secrets/{secret_name}/repositories/{repository_id}"
+    ],
+    createOrUpdateOrgSecret: [
+      "PUT /orgs/{org}/dependabot/secrets/{secret_name}"
+    ],
+    createOrUpdateRepoSecret: [
+      "PUT /repos/{owner}/{repo}/dependabot/secrets/{secret_name}"
+    ],
+    deleteOrgSecret: ["DELETE /orgs/{org}/dependabot/secrets/{secret_name}"],
+    deleteRepoSecret: [
+      "DELETE /repos/{owner}/{repo}/dependabot/secrets/{secret_name}"
+    ],
+    getAlert: ["GET /repos/{owner}/{repo}/dependabot/alerts/{alert_number}"],
+    getOrgPublicKey: ["GET /orgs/{org}/dependabot/secrets/public-key"],
+    getOrgSecret: ["GET /orgs/{org}/dependabot/secrets/{secret_name}"],
+    getRepoPublicKey: [
+      "GET /repos/{owner}/{repo}/dependabot/secrets/public-key"
+    ],
+    getRepoSecret: [
+      "GET /repos/{owner}/{repo}/dependabot/secrets/{secret_name}"
+    ],
+    listAlertsForEnterprise: [
+      "GET /enterprises/{enterprise}/dependabot/alerts"
+    ],
+    listAlertsForOrg: ["GET /orgs/{org}/dependabot/alerts"],
+    listAlertsForRepo: ["GET /repos/{owner}/{repo}/dependabot/alerts"],
+    listOrgSecrets: ["GET /orgs/{org}/dependabot/secrets"],
+    listRepoSecrets: ["GET /repos/{owner}/{repo}/dependabot/secrets"],
+    listSelectedReposForOrgSecret: [
+      "GET /orgs/{org}/dependabot/secrets/{secret_name}/repositories"
+    ],
+    removeSelectedRepoFromOrgSecret: [
+      "DELETE /orgs/{org}/dependabot/secrets/{secret_name}/repositories/{repository_id}"
+    ],
+    setSelectedReposForOrgSecret: [
+      "PUT /orgs/{org}/dependabot/secrets/{secret_name}/repositories"
+    ],
+    updateAlert: [
+      "PATCH /repos/{owner}/{repo}/dependabot/alerts/{alert_number}"
+    ]
+  },
+  dependencyGraph: {
+    createRepositorySnapshot: [
+      "POST /repos/{owner}/{repo}/dependency-graph/snapshots"
+    ],
+    diffRange: [
+      "GET /repos/{owner}/{repo}/dependency-graph/compare/{basehead}"
+    ],
+    exportSbom: ["GET /repos/{owner}/{repo}/dependency-graph/sbom"]
+  },
+  emojis: { get: ["GET /emojis"] },
+  gists: {
+    checkIsStarred: ["GET /gists/{gist_id}/star"],
+    create: ["POST /gists"],
+    createComment: ["POST /gists/{gist_id}/comments"],
+    delete: ["DELETE /gists/{gist_id}"],
+    deleteComment: ["DELETE /gists/{gist_id}/comments/{comment_id}"],
+    fork: ["POST /gists/{gist_id}/forks"],
+    get: ["GET /gists/{gist_id}"],
+    getComment: ["GET /gists/{gist_id}/comments/{comment_id}"],
+    getRevision: ["GET /gists/{gist_id}/{sha}"],
+    list: ["GET /gists"],
+    listComments: ["GET /gists/{gist_id}/comments"],
+    listCommits: ["GET /gists/{gist_id}/commits"],
+    listForUser: ["GET /users/{username}/gists"],
+    listForks: ["GET /gists/{gist_id}/forks"],
+    listPublic: ["GET /gists/public"],
+    listStarred: ["GET /gists/starred"],
+    star: ["PUT /gists/{gist_id}/star"],
+    unstar: ["DELETE /gists/{gist_id}/star"],
+    update: ["PATCH /gists/{gist_id}"],
+    updateComment: ["PATCH /gists/{gist_id}/comments/{comment_id}"]
+  },
+  git: {
+    createBlob: ["POST /repos/{owner}/{repo}/git/blobs"],
+    createCommit: ["POST /repos/{owner}/{repo}/git/commits"],
+    createRef: ["POST /repos/{owner}/{repo}/git/refs"],
+    createTag: ["POST /repos/{owner}/{repo}/git/tags"],
+    createTree: ["POST /repos/{owner}/{repo}/git/trees"],
+    deleteRef: ["DELETE /repos/{owner}/{repo}/git/refs/{ref}"],
+    getBlob: ["GET /repos/{owner}/{repo}/git/blobs/{file_sha}"],
+    getCommit: ["GET /repos/{owner}/{repo}/git/commits/{commit_sha}"],
+    getRef: ["GET /repos/{owner}/{repo}/git/ref/{ref}"],
+    getTag: ["GET /repos/{owner}/{repo}/git/tags/{tag_sha}"],
+    getTree: ["GET /repos/{owner}/{repo}/git/trees/{tree_sha}"],
+    listMatchingRefs: ["GET /repos/{owner}/{repo}/git/matching-refs/{ref}"],
+    updateRef: ["PATCH /repos/{owner}/{repo}/git/refs/{ref}"]
+  },
+  gitignore: {
+    getAllTemplates: ["GET /gitignore/templates"],
+    getTemplate: ["GET /gitignore/templates/{name}"]
+  },
+  interactions: {
+    getRestrictionsForAuthenticatedUser: ["GET /user/interaction-limits"],
+    getRestrictionsForOrg: ["GET /orgs/{org}/interaction-limits"],
+    getRestrictionsForRepo: ["GET /repos/{owner}/{repo}/interaction-limits"],
+    getRestrictionsForYourPublicRepos: [
+      "GET /user/interaction-limits",
+      {},
+      { renamed: ["interactions", "getRestrictionsForAuthenticatedUser"] }
+    ],
+    removeRestrictionsForAuthenticatedUser: ["DELETE /user/interaction-limits"],
+    removeRestrictionsForOrg: ["DELETE /orgs/{org}/interaction-limits"],
+    removeRestrictionsForRepo: [
+      "DELETE /repos/{owner}/{repo}/interaction-limits"
+    ],
+    removeRestrictionsForYourPublicRepos: [
+      "DELETE /user/interaction-limits",
+      {},
+      { renamed: ["interactions", "removeRestrictionsForAuthenticatedUser"] }
+    ],
+    setRestrictionsForAuthenticatedUser: ["PUT /user/interaction-limits"],
+    setRestrictionsForOrg: ["PUT /orgs/{org}/interaction-limits"],
+    setRestrictionsForRepo: ["PUT /repos/{owner}/{repo}/interaction-limits"],
+    setRestrictionsForYourPublicRepos: [
+      "PUT /user/interaction-limits",
+      {},
+      { renamed: ["interactions", "setRestrictionsForAuthenticatedUser"] }
+    ]
+  },
+  issues: {
+    addAssignees: [
+      "POST /repos/{owner}/{repo}/issues/{issue_number}/assignees"
+    ],
+    addLabels: ["POST /repos/{owner}/{repo}/issues/{issue_number}/labels"],
+    checkUserCanBeAssigned: ["GET /repos/{owner}/{repo}/assignees/{assignee}"],
+    checkUserCanBeAssignedToIssue: [
+      "GET /repos/{owner}/{repo}/issues/{issue_number}/assignees/{assignee}"
+    ],
+    create: ["POST /repos/{owner}/{repo}/issues"],
+    createComment: [
+      "POST /repos/{owner}/{repo}/issues/{issue_number}/comments"
+    ],
+    createLabel: ["POST /repos/{owner}/{repo}/labels"],
+    createMilestone: ["POST /repos/{owner}/{repo}/milestones"],
+    deleteComment: [
+      "DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}"
+    ],
+    deleteLabel: ["DELETE /repos/{owner}/{repo}/labels/{name}"],
+    deleteMilestone: [
+      "DELETE /repos/{owner}/{repo}/milestones/{milestone_number}"
+    ],
+    get: ["GET /repos/{owner}/{repo}/issues/{issue_number}"],
+    getComment: ["GET /repos/{owner}/{repo}/issues/comments/{comment_id}"],
+    getEvent: ["GET /repos/{owner}/{repo}/issues/events/{event_id}"],
+    getLabel: ["GET /repos/{owner}/{repo}/labels/{name}"],
+    getMilestone: ["GET /repos/{owner}/{repo}/milestones/{milestone_number}"],
+    list: ["GET /issues"],
+    listAssignees: ["GET /repos/{owner}/{repo}/assignees"],
+    listComments: ["GET /repos/{owner}/{repo}/issues/{issue_number}/comments"],
+    listCommentsForRepo: ["GET /repos/{owner}/{repo}/issues/comments"],
+    listEvents: ["GET /repos/{owner}/{repo}/issues/{issue_number}/events"],
+    listEventsForRepo: ["GET /repos/{owner}/{repo}/issues/events"],
+    listEventsForTimeline: [
+      "GET /repos/{owner}/{repo}/issues/{issue_number}/timeline"
+    ],
+    listForAuthenticatedUser: ["GET /user/issues"],
+    listForOrg: ["GET /orgs/{org}/issues"],
+    listForRepo: ["GET /repos/{owner}/{repo}/issues"],
+    listLabelsForMilestone: [
+      "GET /repos/{owner}/{repo}/milestones/{milestone_number}/labels"
+    ],
+    listLabelsForRepo: ["GET /repos/{owner}/{repo}/labels"],
+    listLabelsOnIssue: [
+      "GET /repos/{owner}/{repo}/issues/{issue_number}/labels"
+    ],
+    listMilestones: ["GET /repos/{owner}/{repo}/milestones"],
+    lock: ["PUT /repos/{owner}/{repo}/issues/{issue_number}/lock"],
+    removeAllLabels: [
+      "DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels"
+    ],
+    removeAssignees: [
+      "DELETE /repos/{owner}/{repo}/issues/{issue_number}/assignees"
+    ],
+    removeLabel: [
+      "DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}"
+    ],
+    setLabels: ["PUT /repos/{owner}/{repo}/issues/{issue_number}/labels"],
+    unlock: ["DELETE /repos/{owner}/{repo}/issues/{issue_number}/lock"],
+    update: ["PATCH /repos/{owner}/{repo}/issues/{issue_number}"],
+    updateComment: ["PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}"],
+    updateLabel: ["PATCH /repos/{owner}/{repo}/labels/{name}"],
+    updateMilestone: [
+      "PATCH /repos/{owner}/{repo}/milestones/{milestone_number}"
+    ]
+  },
+  licenses: {
+    get: ["GET /licenses/{license}"],
+    getAllCommonlyUsed: ["GET /licenses"],
+    getForRepo: ["GET /repos/{owner}/{repo}/license"]
+  },
+  markdown: {
+    render: ["POST /markdown"],
+    renderRaw: [
+      "POST /markdown/raw",
+      { headers: { "content-type": "text/plain; charset=utf-8" } }
+    ]
+  },
+  meta: {
+    get: ["GET /meta"],
+    getAllVersions: ["GET /versions"],
+    getOctocat: ["GET /octocat"],
+    getZen: ["GET /zen"],
+    root: ["GET /"]
+  },
+  migrations: {
+    cancelImport: [
+      "DELETE /repos/{owner}/{repo}/import",
+      {},
+      {
+        deprecated: "octokit.rest.migrations.cancelImport() is deprecated, see https://docs.github.com/rest/migrations/source-imports#cancel-an-import"
+      }
+    ],
+    deleteArchiveForAuthenticatedUser: [
+      "DELETE /user/migrations/{migration_id}/archive"
+    ],
+    deleteArchiveForOrg: [
+      "DELETE /orgs/{org}/migrations/{migration_id}/archive"
+    ],
+    downloadArchiveForOrg: [
+      "GET /orgs/{org}/migrations/{migration_id}/archive"
+    ],
+    getArchiveForAuthenticatedUser: [
+      "GET /user/migrations/{migration_id}/archive"
+    ],
+    getCommitAuthors: [
+      "GET /repos/{owner}/{repo}/import/authors",
+      {},
+      {
+        deprecated: "octokit.rest.migrations.getCommitAuthors() is deprecated, see https://docs.github.com/rest/migrations/source-imports#get-commit-authors"
+      }
+    ],
+    getImportStatus: [
+      "GET /repos/{owner}/{repo}/import",
+      {},
+      {
+        deprecated: "octokit.rest.migrations.getImportStatus() is deprecated, see https://docs.github.com/rest/migrations/source-imports#get-an-import-status"
+      }
+    ],
+    getLargeFiles: [
+      "GET /repos/{owner}/{repo}/import/large_files",
+      {},
+      {
+        deprecated: "octokit.rest.migrations.getLargeFiles() is deprecated, see https://docs.github.com/rest/migrations/source-imports#get-large-files"
+      }
+    ],
+    getStatusForAuthenticatedUser: ["GET /user/migrations/{migration_id}"],
+    getStatusForOrg: ["GET /orgs/{org}/migrations/{migration_id}"],
+    listForAuthenticatedUser: ["GET /user/migrations"],
+    listForOrg: ["GET /orgs/{org}/migrations"],
+    listReposForAuthenticatedUser: [
+      "GET /user/migrations/{migration_id}/repositories"
+    ],
+    listReposForOrg: ["GET /orgs/{org}/migrations/{migration_id}/repositories"],
+    listReposForUser: [
+      "GET /user/migrations/{migration_id}/repositories",
+      {},
+      { renamed: ["migrations", "listReposForAuthenticatedUser"] }
+    ],
+    mapCommitAuthor: [
+      "PATCH /repos/{owner}/{repo}/import/authors/{author_id}",
+      {},
+      {
+        deprecated: "octokit.rest.migrations.mapCommitAuthor() is deprecated, see https://docs.github.com/rest/migrations/source-imports#map-a-commit-author"
+      }
+    ],
+    setLfsPreference: [
+      "PATCH /repos/{owner}/{repo}/import/lfs",
+      {},
+      {
+        deprecated: "octokit.rest.migrations.setLfsPreference() is deprecated, see https://docs.github.com/rest/migrations/source-imports#update-git-lfs-preference"
+      }
+    ],
+    startForAuthenticatedUser: ["POST /user/migrations"],
+    startForOrg: ["POST /orgs/{org}/migrations"],
+    startImport: [
+      "PUT /repos/{owner}/{repo}/import",
+      {},
+      {
+        deprecated: "octokit.rest.migrations.startImport() is deprecated, see https://docs.github.com/rest/migrations/source-imports#start-an-import"
+      }
+    ],
+    unlockRepoForAuthenticatedUser: [
+      "DELETE /user/migrations/{migration_id}/repos/{repo_name}/lock"
+    ],
+    unlockRepoForOrg: [
+      "DELETE /orgs/{org}/migrations/{migration_id}/repos/{repo_name}/lock"
+    ],
+    updateImport: [
+      "PATCH /repos/{owner}/{repo}/import",
+      {},
+      {
+        deprecated: "octokit.rest.migrations.updateImport() is deprecated, see https://docs.github.com/rest/migrations/source-imports#update-an-import"
+      }
+    ]
+  },
+  oidc: {
+    getOidcCustomSubTemplateForOrg: [
+      "GET /orgs/{org}/actions/oidc/customization/sub"
+    ],
+    updateOidcCustomSubTemplateForOrg: [
+      "PUT /orgs/{org}/actions/oidc/customization/sub"
+    ]
+  },
+  orgs: {
+    addSecurityManagerTeam: [
+      "PUT /orgs/{org}/security-managers/teams/{team_slug}"
+    ],
+    assignTeamToOrgRole: [
+      "PUT /orgs/{org}/organization-roles/teams/{team_slug}/{role_id}"
+    ],
+    assignUserToOrgRole: [
+      "PUT /orgs/{org}/organization-roles/users/{username}/{role_id}"
+    ],
+    blockUser: ["PUT /orgs/{org}/blocks/{username}"],
+    cancelInvitation: ["DELETE /orgs/{org}/invitations/{invitation_id}"],
+    checkBlockedUser: ["GET /orgs/{org}/blocks/{username}"],
+    checkMembershipForUser: ["GET /orgs/{org}/members/{username}"],
+    checkPublicMembershipForUser: ["GET /orgs/{org}/public_members/{username}"],
+    convertMemberToOutsideCollaborator: [
+      "PUT /orgs/{org}/outside_collaborators/{username}"
+    ],
+    createCustomOrganizationRole: ["POST /orgs/{org}/organization-roles"],
+    createInvitation: ["POST /orgs/{org}/invitations"],
+    createOrUpdateCustomProperties: ["PATCH /orgs/{org}/properties/schema"],
+    createOrUpdateCustomPropertiesValuesForRepos: [
+      "PATCH /orgs/{org}/properties/values"
+    ],
+    createOrUpdateCustomProperty: [
+      "PUT /orgs/{org}/properties/schema/{custom_property_name}"
+    ],
+    createWebhook: ["POST /orgs/{org}/hooks"],
+    delete: ["DELETE /orgs/{org}"],
+    deleteCustomOrganizationRole: [
+      "DELETE /orgs/{org}/organization-roles/{role_id}"
+    ],
+    deleteWebhook: ["DELETE /orgs/{org}/hooks/{hook_id}"],
+    enableOrDisableSecurityProductOnAllOrgRepos: [
+      "POST /orgs/{org}/{security_product}/{enablement}"
+    ],
+    get: ["GET /orgs/{org}"],
+    getAllCustomProperties: ["GET /orgs/{org}/properties/schema"],
+    getCustomProperty: [
+      "GET /orgs/{org}/properties/schema/{custom_property_name}"
+    ],
+    getMembershipForAuthenticatedUser: ["GET /user/memberships/orgs/{org}"],
+    getMembershipForUser: ["GET /orgs/{org}/memberships/{username}"],
+    getOrgRole: ["GET /orgs/{org}/organization-roles/{role_id}"],
+    getWebhook: ["GET /orgs/{org}/hooks/{hook_id}"],
+    getWebhookConfigForOrg: ["GET /orgs/{org}/hooks/{hook_id}/config"],
+    getWebhookDelivery: [
+      "GET /orgs/{org}/hooks/{hook_id}/deliveries/{delivery_id}"
+    ],
+    list: ["GET /organizations"],
+    listAppInstallations: ["GET /orgs/{org}/installations"],
+    listBlockedUsers: ["GET /orgs/{org}/blocks"],
+    listCustomPropertiesValuesForRepos: ["GET /orgs/{org}/properties/values"],
+    listFailedInvitations: ["GET /orgs/{org}/failed_invitations"],
+    listForAuthenticatedUser: ["GET /user/orgs"],
+    listForUser: ["GET /users/{username}/orgs"],
+    listInvitationTeams: ["GET /orgs/{org}/invitations/{invitation_id}/teams"],
+    listMembers: ["GET /orgs/{org}/members"],
+    listMembershipsForAuthenticatedUser: ["GET /user/memberships/orgs"],
+    listOrgRoleTeams: ["GET /orgs/{org}/organization-roles/{role_id}/teams"],
+    listOrgRoleUsers: ["GET /orgs/{org}/organization-roles/{role_id}/users"],
+    listOrgRoles: ["GET /orgs/{org}/organization-roles"],
+    listOrganizationFineGrainedPermissions: [
+      "GET /orgs/{org}/organization-fine-grained-permissions"
+    ],
+    listOutsideCollaborators: ["GET /orgs/{org}/outside_collaborators"],
+    listPatGrantRepositories: [
+      "GET /orgs/{org}/personal-access-tokens/{pat_id}/repositories"
+    ],
+    listPatGrantRequestRepositories: [
+      "GET /orgs/{org}/personal-access-token-requests/{pat_request_id}/repositories"
+    ],
+    listPatGrantRequests: ["GET /orgs/{org}/personal-access-token-requests"],
+    listPatGrants: ["GET /orgs/{org}/personal-access-tokens"],
+    listPendingInvitations: ["GET /orgs/{org}/invitations"],
+    listPublicMembers: ["GET /orgs/{org}/public_members"],
+    listSecurityManagerTeams: ["GET /orgs/{org}/security-managers"],
+    listWebhookDeliveries: ["GET /orgs/{org}/hooks/{hook_id}/deliveries"],
+    listWebhooks: ["GET /orgs/{org}/hooks"],
+    patchCustomOrganizationRole: [
+      "PATCH /orgs/{org}/organization-roles/{role_id}"
+    ],
+    pingWebhook: ["POST /orgs/{org}/hooks/{hook_id}/pings"],
+    redeliverWebhookDelivery: [
+      "POST /orgs/{org}/hooks/{hook_id}/deliveries/{delivery_id}/attempts"
+    ],
+    removeCustomProperty: [
+      "DELETE /orgs/{org}/properties/schema/{custom_property_name}"
+    ],
+    removeMember: ["DELETE /orgs/{org}/members/{username}"],
+    removeMembershipForUser: ["DELETE /orgs/{org}/memberships/{username}"],
+    removeOutsideCollaborator: [
+      "DELETE /orgs/{org}/outside_collaborators/{username}"
+    ],
+    removePublicMembershipForAuthenticatedUser: [
+      "DELETE /orgs/{org}/public_members/{username}"
+    ],
+    removeSecurityManagerTeam: [
+      "DELETE /orgs/{org}/security-managers/teams/{team_slug}"
+    ],
+    reviewPatGrantRequest: [
+      "POST /orgs/{org}/personal-access-token-requests/{pat_request_id}"
+    ],
+    reviewPatGrantRequestsInBulk: [
+      "POST /orgs/{org}/personal-access-token-requests"
+    ],
+    revokeAllOrgRolesTeam: [
+      "DELETE /orgs/{org}/organization-roles/teams/{team_slug}"
+    ],
+    revokeAllOrgRolesUser: [
+      "DELETE /orgs/{org}/organization-roles/users/{username}"
+    ],
+    revokeOrgRoleTeam: [
+      "DELETE /orgs/{org}/organization-roles/teams/{team_slug}/{role_id}"
+    ],
+    revokeOrgRoleUser: [
+      "DELETE /orgs/{org}/organization-roles/users/{username}/{role_id}"
+    ],
+    setMembershipForUser: ["PUT /orgs/{org}/memberships/{username}"],
+    setPublicMembershipForAuthenticatedUser: [
+      "PUT /orgs/{org}/public_members/{username}"
+    ],
+    unblockUser: ["DELETE /orgs/{org}/blocks/{username}"],
+    update: ["PATCH /orgs/{org}"],
+    updateMembershipForAuthenticatedUser: [
+      "PATCH /user/memberships/orgs/{org}"
+    ],
+    updatePatAccess: ["POST /orgs/{org}/personal-access-tokens/{pat_id}"],
+    updatePatAccesses: ["POST /orgs/{org}/personal-access-tokens"],
+    updateWebhook: ["PATCH /orgs/{org}/hooks/{hook_id}"],
+    updateWebhookConfigForOrg: ["PATCH /orgs/{org}/hooks/{hook_id}/config"]
+  },
+  packages: {
+    deletePackageForAuthenticatedUser: [
+      "DELETE /user/packages/{package_type}/{package_name}"
+    ],
+    deletePackageForOrg: [
+      "DELETE /orgs/{org}/packages/{package_type}/{package_name}"
+    ],
+    deletePackageForUser: [
+      "DELETE /users/{username}/packages/{package_type}/{package_name}"
+    ],
+    deletePackageVersionForAuthenticatedUser: [
+      "DELETE /user/packages/{package_type}/{package_name}/versions/{package_version_id}"
+    ],
+    deletePackageVersionForOrg: [
+      "DELETE /orgs/{org}/packages/{package_type}/{package_name}/versions/{package_version_id}"
+    ],
+    deletePackageVersionForUser: [
+      "DELETE /users/{username}/packages/{package_type}/{package_name}/versions/{package_version_id}"
+    ],
+    getAllPackageVersionsForAPackageOwnedByAnOrg: [
+      "GET /orgs/{org}/packages/{package_type}/{package_name}/versions",
+      {},
+      { renamed: ["packages", "getAllPackageVersionsForPackageOwnedByOrg"] }
+    ],
+    getAllPackageVersionsForAPackageOwnedByTheAuthenticatedUser: [
+      "GET /user/packages/{package_type}/{package_name}/versions",
+      {},
+      {
+        renamed: [
+          "packages",
+          "getAllPackageVersionsForPackageOwnedByAuthenticatedUser"
+        ]
+      }
+    ],
+    getAllPackageVersionsForPackageOwnedByAuthenticatedUser: [
+      "GET /user/packages/{package_type}/{package_name}/versions"
+    ],
+    getAllPackageVersionsForPackageOwnedByOrg: [
+      "GET /orgs/{org}/packages/{package_type}/{package_name}/versions"
+    ],
+    getAllPackageVersionsForPackageOwnedByUser: [
+      "GET /users/{username}/packages/{package_type}/{package_name}/versions"
+    ],
+    getPackageForAuthenticatedUser: [
+      "GET /user/packages/{package_type}/{package_name}"
+    ],
+    getPackageForOrganization: [
+      "GET /orgs/{org}/packages/{package_type}/{package_name}"
+    ],
+    getPackageForUser: [
+      "GET /users/{username}/packages/{package_type}/{package_name}"
+    ],
+    getPackageVersionForAuthenticatedUser: [
+      "GET /user/packages/{package_type}/{package_name}/versions/{package_version_id}"
+    ],
+    getPackageVersionForOrganization: [
+      "GET /orgs/{org}/packages/{package_type}/{package_name}/versions/{package_version_id}"
+    ],
+    getPackageVersionForUser: [
+      "GET /users/{username}/packages/{package_type}/{package_name}/versions/{package_version_id}"
+    ],
+    listDockerMigrationConflictingPackagesForAuthenticatedUser: [
+      "GET /user/docker/conflicts"
+    ],
+    listDockerMigrationConflictingPackagesForOrganization: [
+      "GET /orgs/{org}/docker/conflicts"
+    ],
+    listDockerMigrationConflictingPackagesForUser: [
+      "GET /users/{username}/docker/conflicts"
+    ],
+    listPackagesForAuthenticatedUser: ["GET /user/packages"],
+    listPackagesForOrganization: ["GET /orgs/{org}/packages"],
+    listPackagesForUser: ["GET /users/{username}/packages"],
+    restorePackageForAuthenticatedUser: [
+      "POST /user/packages/{package_type}/{package_name}/restore{?token}"
+    ],
+    restorePackageForOrg: [
+      "POST /orgs/{org}/packages/{package_type}/{package_name}/restore{?token}"
+    ],
+    restorePackageForUser: [
+      "POST /users/{username}/packages/{package_type}/{package_name}/restore{?token}"
+    ],
+    restorePackageVersionForAuthenticatedUser: [
+      "POST /user/packages/{package_type}/{package_name}/versions/{package_version_id}/restore"
+    ],
+    restorePackageVersionForOrg: [
+      "POST /orgs/{org}/packages/{package_type}/{package_name}/versions/{package_version_id}/restore"
+    ],
+    restorePackageVersionForUser: [
+      "POST /users/{username}/packages/{package_type}/{package_name}/versions/{package_version_id}/restore"
+    ]
+  },
+  projects: {
+    addCollaborator: ["PUT /projects/{project_id}/collaborators/{username}"],
+    createCard: ["POST /projects/columns/{column_id}/cards"],
+    createColumn: ["POST /projects/{project_id}/columns"],
+    createForAuthenticatedUser: ["POST /user/projects"],
+    createForOrg: ["POST /orgs/{org}/projects"],
+    createForRepo: ["POST /repos/{owner}/{repo}/projects"],
+    delete: ["DELETE /projects/{project_id}"],
+    deleteCard: ["DELETE /projects/columns/cards/{card_id}"],
+    deleteColumn: ["DELETE /projects/columns/{column_id}"],
+    get: ["GET /projects/{project_id}"],
+    getCard: ["GET /projects/columns/cards/{card_id}"],
+    getColumn: ["GET /projects/columns/{column_id}"],
+    getPermissionForUser: [
+      "GET /projects/{project_id}/collaborators/{username}/permission"
+    ],
+    listCards: ["GET /projects/columns/{column_id}/cards"],
+    listCollaborators: ["GET /projects/{project_id}/collaborators"],
+    listColumns: ["GET /projects/{project_id}/columns"],
+    listForOrg: ["GET /orgs/{org}/projects"],
+    listForRepo: ["GET /repos/{owner}/{repo}/projects"],
+    listForUser: ["GET /users/{username}/projects"],
+    moveCard: ["POST /projects/columns/cards/{card_id}/moves"],
+    moveColumn: ["POST /projects/columns/{column_id}/moves"],
+    removeCollaborator: [
+      "DELETE /projects/{project_id}/collaborators/{username}"
+    ],
+    update: ["PATCH /projects/{project_id}"],
+    updateCard: ["PATCH /projects/columns/cards/{card_id}"],
+    updateColumn: ["PATCH /projects/columns/{column_id}"]
+  },
+  pulls: {
+    checkIfMerged: ["GET /repos/{owner}/{repo}/pulls/{pull_number}/merge"],
+    create: ["POST /repos/{owner}/{repo}/pulls"],
+    createReplyForReviewComment: [
+      "POST /repos/{owner}/{repo}/pulls/{pull_number}/comments/{comment_id}/replies"
+    ],
+    createReview: ["POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews"],
+    createReviewComment: [
+      "POST /repos/{owner}/{repo}/pulls/{pull_number}/comments"
+    ],
+    deletePendingReview: [
+      "DELETE /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}"
+    ],
+    deleteReviewComment: [
+      "DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}"
+    ],
+    dismissReview: [
+      "PUT /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/dismissals"
+    ],
+    get: ["GET /repos/{owner}/{repo}/pulls/{pull_number}"],
+    getReview: [
+      "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}"
+    ],
+    getReviewComment: ["GET /repos/{owner}/{repo}/pulls/comments/{comment_id}"],
+    list: ["GET /repos/{owner}/{repo}/pulls"],
+    listCommentsForReview: [
+      "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/comments"
+    ],
+    listCommits: ["GET /repos/{owner}/{repo}/pulls/{pull_number}/commits"],
+    listFiles: ["GET /repos/{owner}/{repo}/pulls/{pull_number}/files"],
+    listRequestedReviewers: [
+      "GET /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers"
+    ],
+    listReviewComments: [
+      "GET /repos/{owner}/{repo}/pulls/{pull_number}/comments"
+    ],
+    listReviewCommentsForRepo: ["GET /repos/{owner}/{repo}/pulls/comments"],
+    listReviews: ["GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews"],
+    merge: ["PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge"],
+    removeRequestedReviewers: [
+      "DELETE /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers"
+    ],
+    requestReviewers: [
+      "POST /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers"
+    ],
+    submitReview: [
+      "POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/events"
+    ],
+    update: ["PATCH /repos/{owner}/{repo}/pulls/{pull_number}"],
+    updateBranch: [
+      "PUT /repos/{owner}/{repo}/pulls/{pull_number}/update-branch"
+    ],
+    updateReview: [
+      "PUT /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}"
+    ],
+    updateReviewComment: [
+      "PATCH /repos/{owner}/{repo}/pulls/comments/{comment_id}"
+    ]
+  },
+  rateLimit: { get: ["GET /rate_limit"] },
+  reactions: {
+    createForCommitComment: [
+      "POST /repos/{owner}/{repo}/comments/{comment_id}/reactions"
+    ],
+    createForIssue: [
+      "POST /repos/{owner}/{repo}/issues/{issue_number}/reactions"
+    ],
+    createForIssueComment: [
+      "POST /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions"
+    ],
+    createForPullRequestReviewComment: [
+      "POST /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions"
+    ],
+    createForRelease: [
+      "POST /repos/{owner}/{repo}/releases/{release_id}/reactions"
+    ],
+    createForTeamDiscussionCommentInOrg: [
+      "POST /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions"
+    ],
+    createForTeamDiscussionInOrg: [
+      "POST /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions"
+    ],
+    deleteForCommitComment: [
+      "DELETE /repos/{owner}/{repo}/comments/{comment_id}/reactions/{reaction_id}"
+    ],
+    deleteForIssue: [
+      "DELETE /repos/{owner}/{repo}/issues/{issue_number}/reactions/{reaction_id}"
+    ],
+    deleteForIssueComment: [
+      "DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions/{reaction_id}"
+    ],
+    deleteForPullRequestComment: [
+      "DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions/{reaction_id}"
+    ],
+    deleteForRelease: [
+      "DELETE /repos/{owner}/{repo}/releases/{release_id}/reactions/{reaction_id}"
+    ],
+    deleteForTeamDiscussion: [
+      "DELETE /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions/{reaction_id}"
+    ],
+    deleteForTeamDiscussionComment: [
+      "DELETE /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions/{reaction_id}"
+    ],
+    listForCommitComment: [
+      "GET /repos/{owner}/{repo}/comments/{comment_id}/reactions"
+    ],
+    listForIssue: ["GET /repos/{owner}/{repo}/issues/{issue_number}/reactions"],
+    listForIssueComment: [
+      "GET /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions"
+    ],
+    listForPullRequestReviewComment: [
+      "GET /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions"
+    ],
+    listForRelease: [
+      "GET /repos/{owner}/{repo}/releases/{release_id}/reactions"
+    ],
+    listForTeamDiscussionCommentInOrg: [
+      "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions"
+    ],
+    listForTeamDiscussionInOrg: [
+      "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions"
+    ]
+  },
+  repos: {
+    acceptInvitation: [
+      "PATCH /user/repository_invitations/{invitation_id}",
+      {},
+      { renamed: ["repos", "acceptInvitationForAuthenticatedUser"] }
+    ],
+    acceptInvitationForAuthenticatedUser: [
+      "PATCH /user/repository_invitations/{invitation_id}"
+    ],
+    addAppAccessRestrictions: [
+      "POST /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/apps",
+      {},
+      { mapToData: "apps" }
+    ],
+    addCollaborator: ["PUT /repos/{owner}/{repo}/collaborators/{username}"],
+    addStatusCheckContexts: [
+      "POST /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks/contexts",
+      {},
+      { mapToData: "contexts" }
+    ],
+    addTeamAccessRestrictions: [
+      "POST /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/teams",
+      {},
+      { mapToData: "teams" }
+    ],
+    addUserAccessRestrictions: [
+      "POST /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/users",
+      {},
+      { mapToData: "users" }
+    ],
+    cancelPagesDeployment: [
+      "POST /repos/{owner}/{repo}/pages/deployments/{pages_deployment_id}/cancel"
+    ],
+    checkAutomatedSecurityFixes: [
+      "GET /repos/{owner}/{repo}/automated-security-fixes"
+    ],
+    checkCollaborator: ["GET /repos/{owner}/{repo}/collaborators/{username}"],
+    checkVulnerabilityAlerts: [
+      "GET /repos/{owner}/{repo}/vulnerability-alerts"
+    ],
+    codeownersErrors: ["GET /repos/{owner}/{repo}/codeowners/errors"],
+    compareCommits: ["GET /repos/{owner}/{repo}/compare/{base}...{head}"],
+    compareCommitsWithBasehead: [
+      "GET /repos/{owner}/{repo}/compare/{basehead}"
+    ],
+    createAutolink: ["POST /repos/{owner}/{repo}/autolinks"],
+    createCommitComment: [
+      "POST /repos/{owner}/{repo}/commits/{commit_sha}/comments"
+    ],
+    createCommitSignatureProtection: [
+      "POST /repos/{owner}/{repo}/branches/{branch}/protection/required_signatures"
+    ],
+    createCommitStatus: ["POST /repos/{owner}/{repo}/statuses/{sha}"],
+    createDeployKey: ["POST /repos/{owner}/{repo}/keys"],
+    createDeployment: ["POST /repos/{owner}/{repo}/deployments"],
+    createDeploymentBranchPolicy: [
+      "POST /repos/{owner}/{repo}/environments/{environment_name}/deployment-branch-policies"
+    ],
+    createDeploymentProtectionRule: [
+      "POST /repos/{owner}/{repo}/environments/{environment_name}/deployment_protection_rules"
+    ],
+    createDeploymentStatus: [
+      "POST /repos/{owner}/{repo}/deployments/{deployment_id}/statuses"
+    ],
+    createDispatchEvent: ["POST /repos/{owner}/{repo}/dispatches"],
+    createForAuthenticatedUser: ["POST /user/repos"],
+    createFork: ["POST /repos/{owner}/{repo}/forks"],
+    createInOrg: ["POST /orgs/{org}/repos"],
+    createOrUpdateCustomPropertiesValues: [
+      "PATCH /repos/{owner}/{repo}/properties/values"
+    ],
+    createOrUpdateEnvironment: [
+      "PUT /repos/{owner}/{repo}/environments/{environment_name}"
+    ],
+    createOrUpdateFileContents: ["PUT /repos/{owner}/{repo}/contents/{path}"],
+    createOrgRuleset: ["POST /orgs/{org}/rulesets"],
+    createPagesDeployment: ["POST /repos/{owner}/{repo}/pages/deployments"],
+    createPagesSite: ["POST /repos/{owner}/{repo}/pages"],
+    createRelease: ["POST /repos/{owner}/{repo}/releases"],
+    createRepoRuleset: ["POST /repos/{owner}/{repo}/rulesets"],
+    createTagProtection: ["POST /repos/{owner}/{repo}/tags/protection"],
+    createUsingTemplate: [
+      "POST /repos/{template_owner}/{template_repo}/generate"
+    ],
+    createWebhook: ["POST /repos/{owner}/{repo}/hooks"],
+    declineInvitation: [
+      "DELETE /user/repository_invitations/{invitation_id}",
+      {},
+      { renamed: ["repos", "declineInvitationForAuthenticatedUser"] }
+    ],
+    declineInvitationForAuthenticatedUser: [
+      "DELETE /user/repository_invitations/{invitation_id}"
+    ],
+    delete: ["DELETE /repos/{owner}/{repo}"],
+    deleteAccessRestrictions: [
+      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/restrictions"
+    ],
+    deleteAdminBranchProtection: [
+      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/enforce_admins"
+    ],
+    deleteAnEnvironment: [
+      "DELETE /repos/{owner}/{repo}/environments/{environment_name}"
+    ],
+    deleteAutolink: ["DELETE /repos/{owner}/{repo}/autolinks/{autolink_id}"],
+    deleteBranchProtection: [
+      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection"
+    ],
+    deleteCommitComment: ["DELETE /repos/{owner}/{repo}/comments/{comment_id}"],
+    deleteCommitSignatureProtection: [
+      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/required_signatures"
+    ],
+    deleteDeployKey: ["DELETE /repos/{owner}/{repo}/keys/{key_id}"],
+    deleteDeployment: [
+      "DELETE /repos/{owner}/{repo}/deployments/{deployment_id}"
+    ],
+    deleteDeploymentBranchPolicy: [
+      "DELETE /repos/{owner}/{repo}/environments/{environment_name}/deployment-branch-policies/{branch_policy_id}"
+    ],
+    deleteFile: ["DELETE /repos/{owner}/{repo}/contents/{path}"],
+    deleteInvitation: [
+      "DELETE /repos/{owner}/{repo}/invitations/{invitation_id}"
+    ],
+    deleteOrgRuleset: ["DELETE /orgs/{org}/rulesets/{ruleset_id}"],
+    deletePagesSite: ["DELETE /repos/{owner}/{repo}/pages"],
+    deletePullRequestReviewProtection: [
+      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/required_pull_request_reviews"
+    ],
+    deleteRelease: ["DELETE /repos/{owner}/{repo}/releases/{release_id}"],
+    deleteReleaseAsset: [
+      "DELETE /repos/{owner}/{repo}/releases/assets/{asset_id}"
+    ],
+    deleteRepoRuleset: ["DELETE /repos/{owner}/{repo}/rulesets/{ruleset_id}"],
+    deleteTagProtection: [
+      "DELETE /repos/{owner}/{repo}/tags/protection/{tag_protection_id}"
+    ],
+    deleteWebhook: ["DELETE /repos/{owner}/{repo}/hooks/{hook_id}"],
+    disableAutomatedSecurityFixes: [
+      "DELETE /repos/{owner}/{repo}/automated-security-fixes"
+    ],
+    disableDeploymentProtectionRule: [
+      "DELETE /repos/{owner}/{repo}/environments/{environment_name}/deployment_protection_rules/{protection_rule_id}"
+    ],
+    disablePrivateVulnerabilityReporting: [
+      "DELETE /repos/{owner}/{repo}/private-vulnerability-reporting"
+    ],
+    disableVulnerabilityAlerts: [
+      "DELETE /repos/{owner}/{repo}/vulnerability-alerts"
+    ],
+    downloadArchive: [
+      "GET /repos/{owner}/{repo}/zipball/{ref}",
+      {},
+      { renamed: ["repos", "downloadZipballArchive"] }
+    ],
+    downloadTarballArchive: ["GET /repos/{owner}/{repo}/tarball/{ref}"],
+    downloadZipballArchive: ["GET /repos/{owner}/{repo}/zipball/{ref}"],
+    enableAutomatedSecurityFixes: [
+      "PUT /repos/{owner}/{repo}/automated-security-fixes"
+    ],
+    enablePrivateVulnerabilityReporting: [
+      "PUT /repos/{owner}/{repo}/private-vulnerability-reporting"
+    ],
+    enableVulnerabilityAlerts: [
+      "PUT /repos/{owner}/{repo}/vulnerability-alerts"
+    ],
+    generateReleaseNotes: [
+      "POST /repos/{owner}/{repo}/releases/generate-notes"
+    ],
+    get: ["GET /repos/{owner}/{repo}"],
+    getAccessRestrictions: [
+      "GET /repos/{owner}/{repo}/branches/{branch}/protection/restrictions"
+    ],
+    getAdminBranchProtection: [
+      "GET /repos/{owner}/{repo}/branches/{branch}/protection/enforce_admins"
+    ],
+    getAllDeploymentProtectionRules: [
+      "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment_protection_rules"
+    ],
+    getAllEnvironments: ["GET /repos/{owner}/{repo}/environments"],
+    getAllStatusCheckContexts: [
+      "GET /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks/contexts"
+    ],
+    getAllTopics: ["GET /repos/{owner}/{repo}/topics"],
+    getAppsWithAccessToProtectedBranch: [
+      "GET /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/apps"
+    ],
+    getAutolink: ["GET /repos/{owner}/{repo}/autolinks/{autolink_id}"],
+    getBranch: ["GET /repos/{owner}/{repo}/branches/{branch}"],
+    getBranchProtection: [
+      "GET /repos/{owner}/{repo}/branches/{branch}/protection"
+    ],
+    getBranchRules: ["GET /repos/{owner}/{repo}/rules/branches/{branch}"],
+    getClones: ["GET /repos/{owner}/{repo}/traffic/clones"],
+    getCodeFrequencyStats: ["GET /repos/{owner}/{repo}/stats/code_frequency"],
+    getCollaboratorPermissionLevel: [
+      "GET /repos/{owner}/{repo}/collaborators/{username}/permission"
+    ],
+    getCombinedStatusForRef: ["GET /repos/{owner}/{repo}/commits/{ref}/status"],
+    getCommit: ["GET /repos/{owner}/{repo}/commits/{ref}"],
+    getCommitActivityStats: ["GET /repos/{owner}/{repo}/stats/commit_activity"],
+    getCommitComment: ["GET /repos/{owner}/{repo}/comments/{comment_id}"],
+    getCommitSignatureProtection: [
+      "GET /repos/{owner}/{repo}/branches/{branch}/protection/required_signatures"
+    ],
+    getCommunityProfileMetrics: ["GET /repos/{owner}/{repo}/community/profile"],
+    getContent: ["GET /repos/{owner}/{repo}/contents/{path}"],
+    getContributorsStats: ["GET /repos/{owner}/{repo}/stats/contributors"],
+    getCustomDeploymentProtectionRule: [
+      "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment_protection_rules/{protection_rule_id}"
+    ],
+    getCustomPropertiesValues: ["GET /repos/{owner}/{repo}/properties/values"],
+    getDeployKey: ["GET /repos/{owner}/{repo}/keys/{key_id}"],
+    getDeployment: ["GET /repos/{owner}/{repo}/deployments/{deployment_id}"],
+    getDeploymentBranchPolicy: [
+      "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment-branch-policies/{branch_policy_id}"
+    ],
+    getDeploymentStatus: [
+      "GET /repos/{owner}/{repo}/deployments/{deployment_id}/statuses/{status_id}"
+    ],
+    getEnvironment: [
+      "GET /repos/{owner}/{repo}/environments/{environment_name}"
+    ],
+    getLatestPagesBuild: ["GET /repos/{owner}/{repo}/pages/builds/latest"],
+    getLatestRelease: ["GET /repos/{owner}/{repo}/releases/latest"],
+    getOrgRuleSuite: ["GET /orgs/{org}/rulesets/rule-suites/{rule_suite_id}"],
+    getOrgRuleSuites: ["GET /orgs/{org}/rulesets/rule-suites"],
+    getOrgRuleset: ["GET /orgs/{org}/rulesets/{ruleset_id}"],
+    getOrgRulesets: ["GET /orgs/{org}/rulesets"],
+    getPages: ["GET /repos/{owner}/{repo}/pages"],
+    getPagesBuild: ["GET /repos/{owner}/{repo}/pages/builds/{build_id}"],
+    getPagesDeployment: [
+      "GET /repos/{owner}/{repo}/pages/deployments/{pages_deployment_id}"
+    ],
+    getPagesHealthCheck: ["GET /repos/{owner}/{repo}/pages/health"],
+    getParticipationStats: ["GET /repos/{owner}/{repo}/stats/participation"],
+    getPullRequestReviewProtection: [
+      "GET /repos/{owner}/{repo}/branches/{branch}/protection/required_pull_request_reviews"
+    ],
+    getPunchCardStats: ["GET /repos/{owner}/{repo}/stats/punch_card"],
+    getReadme: ["GET /repos/{owner}/{repo}/readme"],
+    getReadmeInDirectory: ["GET /repos/{owner}/{repo}/readme/{dir}"],
+    getRelease: ["GET /repos/{owner}/{repo}/releases/{release_id}"],
+    getReleaseAsset: ["GET /repos/{owner}/{repo}/releases/assets/{asset_id}"],
+    getReleaseByTag: ["GET /repos/{owner}/{repo}/releases/tags/{tag}"],
+    getRepoRuleSuite: [
+      "GET /repos/{owner}/{repo}/rulesets/rule-suites/{rule_suite_id}"
+    ],
+    getRepoRuleSuites: ["GET /repos/{owner}/{repo}/rulesets/rule-suites"],
+    getRepoRuleset: ["GET /repos/{owner}/{repo}/rulesets/{ruleset_id}"],
+    getRepoRulesets: ["GET /repos/{owner}/{repo}/rulesets"],
+    getStatusChecksProtection: [
+      "GET /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks"
+    ],
+    getTeamsWithAccessToProtectedBranch: [
+      "GET /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/teams"
+    ],
+    getTopPaths: ["GET /repos/{owner}/{repo}/traffic/popular/paths"],
+    getTopReferrers: ["GET /repos/{owner}/{repo}/traffic/popular/referrers"],
+    getUsersWithAccessToProtectedBranch: [
+      "GET /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/users"
+    ],
+    getViews: ["GET /repos/{owner}/{repo}/traffic/views"],
+    getWebhook: ["GET /repos/{owner}/{repo}/hooks/{hook_id}"],
+    getWebhookConfigForRepo: [
+      "GET /repos/{owner}/{repo}/hooks/{hook_id}/config"
+    ],
+    getWebhookDelivery: [
+      "GET /repos/{owner}/{repo}/hooks/{hook_id}/deliveries/{delivery_id}"
+    ],
+    listActivities: ["GET /repos/{owner}/{repo}/activity"],
+    listAutolinks: ["GET /repos/{owner}/{repo}/autolinks"],
+    listBranches: ["GET /repos/{owner}/{repo}/branches"],
+    listBranchesForHeadCommit: [
+      "GET /repos/{owner}/{repo}/commits/{commit_sha}/branches-where-head"
+    ],
+    listCollaborators: ["GET /repos/{owner}/{repo}/collaborators"],
+    listCommentsForCommit: [
+      "GET /repos/{owner}/{repo}/commits/{commit_sha}/comments"
+    ],
+    listCommitCommentsForRepo: ["GET /repos/{owner}/{repo}/comments"],
+    listCommitStatusesForRef: [
+      "GET /repos/{owner}/{repo}/commits/{ref}/statuses"
+    ],
+    listCommits: ["GET /repos/{owner}/{repo}/commits"],
+    listContributors: ["GET /repos/{owner}/{repo}/contributors"],
+    listCustomDeploymentRuleIntegrations: [
+      "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment_protection_rules/apps"
+    ],
+    listDeployKeys: ["GET /repos/{owner}/{repo}/keys"],
+    listDeploymentBranchPolicies: [
+      "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment-branch-policies"
+    ],
+    listDeploymentStatuses: [
+      "GET /repos/{owner}/{repo}/deployments/{deployment_id}/statuses"
+    ],
+    listDeployments: ["GET /repos/{owner}/{repo}/deployments"],
+    listForAuthenticatedUser: ["GET /user/repos"],
+    listForOrg: ["GET /orgs/{org}/repos"],
+    listForUser: ["GET /users/{username}/repos"],
+    listForks: ["GET /repos/{owner}/{repo}/forks"],
+    listInvitations: ["GET /repos/{owner}/{repo}/invitations"],
+    listInvitationsForAuthenticatedUser: ["GET /user/repository_invitations"],
+    listLanguages: ["GET /repos/{owner}/{repo}/languages"],
+    listPagesBuilds: ["GET /repos/{owner}/{repo}/pages/builds"],
+    listPublic: ["GET /repositories"],
+    listPullRequestsAssociatedWithCommit: [
+      "GET /repos/{owner}/{repo}/commits/{commit_sha}/pulls"
+    ],
+    listReleaseAssets: [
+      "GET /repos/{owner}/{repo}/releases/{release_id}/assets"
+    ],
+    listReleases: ["GET /repos/{owner}/{repo}/releases"],
+    listTagProtection: ["GET /repos/{owner}/{repo}/tags/protection"],
+    listTags: ["GET /repos/{owner}/{repo}/tags"],
+    listTeams: ["GET /repos/{owner}/{repo}/teams"],
+    listWebhookDeliveries: [
+      "GET /repos/{owner}/{repo}/hooks/{hook_id}/deliveries"
+    ],
+    listWebhooks: ["GET /repos/{owner}/{repo}/hooks"],
+    merge: ["POST /repos/{owner}/{repo}/merges"],
+    mergeUpstream: ["POST /repos/{owner}/{repo}/merge-upstream"],
+    pingWebhook: ["POST /repos/{owner}/{repo}/hooks/{hook_id}/pings"],
+    redeliverWebhookDelivery: [
+      "POST /repos/{owner}/{repo}/hooks/{hook_id}/deliveries/{delivery_id}/attempts"
+    ],
+    removeAppAccessRestrictions: [
+      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/apps",
+      {},
+      { mapToData: "apps" }
+    ],
+    removeCollaborator: [
+      "DELETE /repos/{owner}/{repo}/collaborators/{username}"
+    ],
+    removeStatusCheckContexts: [
+      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks/contexts",
+      {},
+      { mapToData: "contexts" }
+    ],
+    removeStatusCheckProtection: [
+      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks"
+    ],
+    removeTeamAccessRestrictions: [
+      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/teams",
+      {},
+      { mapToData: "teams" }
+    ],
+    removeUserAccessRestrictions: [
+      "DELETE /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/users",
+      {},
+      { mapToData: "users" }
+    ],
+    renameBranch: ["POST /repos/{owner}/{repo}/branches/{branch}/rename"],
+    replaceAllTopics: ["PUT /repos/{owner}/{repo}/topics"],
+    requestPagesBuild: ["POST /repos/{owner}/{repo}/pages/builds"],
+    setAdminBranchProtection: [
+      "POST /repos/{owner}/{repo}/branches/{branch}/protection/enforce_admins"
+    ],
+    setAppAccessRestrictions: [
+      "PUT /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/apps",
+      {},
+      { mapToData: "apps" }
+    ],
+    setStatusCheckContexts: [
+      "PUT /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks/contexts",
+      {},
+      { mapToData: "contexts" }
+    ],
+    setTeamAccessRestrictions: [
+      "PUT /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/teams",
+      {},
+      { mapToData: "teams" }
+    ],
+    setUserAccessRestrictions: [
+      "PUT /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/users",
+      {},
+      { mapToData: "users" }
+    ],
+    testPushWebhook: ["POST /repos/{owner}/{repo}/hooks/{hook_id}/tests"],
+    transfer: ["POST /repos/{owner}/{repo}/transfer"],
+    update: ["PATCH /repos/{owner}/{repo}"],
+    updateBranchProtection: [
+      "PUT /repos/{owner}/{repo}/branches/{branch}/protection"
+    ],
+    updateCommitComment: ["PATCH /repos/{owner}/{repo}/comments/{comment_id}"],
+    updateDeploymentBranchPolicy: [
+      "PUT /repos/{owner}/{repo}/environments/{environment_name}/deployment-branch-policies/{branch_policy_id}"
+    ],
+    updateInformationAboutPagesSite: ["PUT /repos/{owner}/{repo}/pages"],
+    updateInvitation: [
+      "PATCH /repos/{owner}/{repo}/invitations/{invitation_id}"
+    ],
+    updateOrgRuleset: ["PUT /orgs/{org}/rulesets/{ruleset_id}"],
+    updatePullRequestReviewProtection: [
+      "PATCH /repos/{owner}/{repo}/branches/{branch}/protection/required_pull_request_reviews"
+    ],
+    updateRelease: ["PATCH /repos/{owner}/{repo}/releases/{release_id}"],
+    updateReleaseAsset: [
+      "PATCH /repos/{owner}/{repo}/releases/assets/{asset_id}"
+    ],
+    updateRepoRuleset: ["PUT /repos/{owner}/{repo}/rulesets/{ruleset_id}"],
+    updateStatusCheckPotection: [
+      "PATCH /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks",
+      {},
+      { renamed: ["repos", "updateStatusCheckProtection"] }
+    ],
+    updateStatusCheckProtection: [
+      "PATCH /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks"
+    ],
+    updateWebhook: ["PATCH /repos/{owner}/{repo}/hooks/{hook_id}"],
+    updateWebhookConfigForRepo: [
+      "PATCH /repos/{owner}/{repo}/hooks/{hook_id}/config"
+    ],
+    uploadReleaseAsset: [
+      "POST /repos/{owner}/{repo}/releases/{release_id}/assets{?name,label}",
+      { baseUrl: "https://uploads.github.com" }
+    ]
+  },
+  search: {
+    code: ["GET /search/code"],
+    commits: ["GET /search/commits"],
+    issuesAndPullRequests: ["GET /search/issues"],
+    labels: ["GET /search/labels"],
+    repos: ["GET /search/repositories"],
+    topics: ["GET /search/topics"],
+    users: ["GET /search/users"]
+  },
+  secretScanning: {
+    getAlert: [
+      "GET /repos/{owner}/{repo}/secret-scanning/alerts/{alert_number}"
+    ],
+    listAlertsForEnterprise: [
+      "GET /enterprises/{enterprise}/secret-scanning/alerts"
+    ],
+    listAlertsForOrg: ["GET /orgs/{org}/secret-scanning/alerts"],
+    listAlertsForRepo: ["GET /repos/{owner}/{repo}/secret-scanning/alerts"],
+    listLocationsForAlert: [
+      "GET /repos/{owner}/{repo}/secret-scanning/alerts/{alert_number}/locations"
+    ],
+    updateAlert: [
+      "PATCH /repos/{owner}/{repo}/secret-scanning/alerts/{alert_number}"
+    ]
+  },
+  securityAdvisories: {
+    createFork: [
+      "POST /repos/{owner}/{repo}/security-advisories/{ghsa_id}/forks"
+    ],
+    createPrivateVulnerabilityReport: [
+      "POST /repos/{owner}/{repo}/security-advisories/reports"
+    ],
+    createRepositoryAdvisory: [
+      "POST /repos/{owner}/{repo}/security-advisories"
+    ],
+    createRepositoryAdvisoryCveRequest: [
+      "POST /repos/{owner}/{repo}/security-advisories/{ghsa_id}/cve"
+    ],
+    getGlobalAdvisory: ["GET /advisories/{ghsa_id}"],
+    getRepositoryAdvisory: [
+      "GET /repos/{owner}/{repo}/security-advisories/{ghsa_id}"
+    ],
+    listGlobalAdvisories: ["GET /advisories"],
+    listOrgRepositoryAdvisories: ["GET /orgs/{org}/security-advisories"],
+    listRepositoryAdvisories: ["GET /repos/{owner}/{repo}/security-advisories"],
+    updateRepositoryAdvisory: [
+      "PATCH /repos/{owner}/{repo}/security-advisories/{ghsa_id}"
+    ]
+  },
+  teams: {
+    addOrUpdateMembershipForUserInOrg: [
+      "PUT /orgs/{org}/teams/{team_slug}/memberships/{username}"
+    ],
+    addOrUpdateProjectPermissionsInOrg: [
+      "PUT /orgs/{org}/teams/{team_slug}/projects/{project_id}"
+    ],
+    addOrUpdateRepoPermissionsInOrg: [
+      "PUT /orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}"
+    ],
+    checkPermissionsForProjectInOrg: [
+      "GET /orgs/{org}/teams/{team_slug}/projects/{project_id}"
+    ],
+    checkPermissionsForRepoInOrg: [
+      "GET /orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}"
+    ],
+    create: ["POST /orgs/{org}/teams"],
+    createDiscussionCommentInOrg: [
+      "POST /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments"
+    ],
+    createDiscussionInOrg: ["POST /orgs/{org}/teams/{team_slug}/discussions"],
+    deleteDiscussionCommentInOrg: [
+      "DELETE /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}"
+    ],
+    deleteDiscussionInOrg: [
+      "DELETE /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}"
+    ],
+    deleteInOrg: ["DELETE /orgs/{org}/teams/{team_slug}"],
+    getByName: ["GET /orgs/{org}/teams/{team_slug}"],
+    getDiscussionCommentInOrg: [
+      "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}"
+    ],
+    getDiscussionInOrg: [
+      "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}"
+    ],
+    getMembershipForUserInOrg: [
+      "GET /orgs/{org}/teams/{team_slug}/memberships/{username}"
+    ],
+    list: ["GET /orgs/{org}/teams"],
+    listChildInOrg: ["GET /orgs/{org}/teams/{team_slug}/teams"],
+    listDiscussionCommentsInOrg: [
+      "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments"
+    ],
+    listDiscussionsInOrg: ["GET /orgs/{org}/teams/{team_slug}/discussions"],
+    listForAuthenticatedUser: ["GET /user/teams"],
+    listMembersInOrg: ["GET /orgs/{org}/teams/{team_slug}/members"],
+    listPendingInvitationsInOrg: [
+      "GET /orgs/{org}/teams/{team_slug}/invitations"
+    ],
+    listProjectsInOrg: ["GET /orgs/{org}/teams/{team_slug}/projects"],
+    listReposInOrg: ["GET /orgs/{org}/teams/{team_slug}/repos"],
+    removeMembershipForUserInOrg: [
+      "DELETE /orgs/{org}/teams/{team_slug}/memberships/{username}"
+    ],
+    removeProjectInOrg: [
+      "DELETE /orgs/{org}/teams/{team_slug}/projects/{project_id}"
+    ],
+    removeRepoInOrg: [
+      "DELETE /orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}"
+    ],
+    updateDiscussionCommentInOrg: [
+      "PATCH /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}"
+    ],
+    updateDiscussionInOrg: [
+      "PATCH /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}"
+    ],
+    updateInOrg: ["PATCH /orgs/{org}/teams/{team_slug}"]
+  },
+  users: {
+    addEmailForAuthenticated: [
+      "POST /user/emails",
+      {},
+      { renamed: ["users", "addEmailForAuthenticatedUser"] }
+    ],
+    addEmailForAuthenticatedUser: ["POST /user/emails"],
+    addSocialAccountForAuthenticatedUser: ["POST /user/social_accounts"],
+    block: ["PUT /user/blocks/{username}"],
+    checkBlocked: ["GET /user/blocks/{username}"],
+    checkFollowingForUser: ["GET /users/{username}/following/{target_user}"],
+    checkPersonIsFollowedByAuthenticated: ["GET /user/following/{username}"],
+    createGpgKeyForAuthenticated: [
+      "POST /user/gpg_keys",
+      {},
+      { renamed: ["users", "createGpgKeyForAuthenticatedUser"] }
+    ],
+    createGpgKeyForAuthenticatedUser: ["POST /user/gpg_keys"],
+    createPublicSshKeyForAuthenticated: [
+      "POST /user/keys",
+      {},
+      { renamed: ["users", "createPublicSshKeyForAuthenticatedUser"] }
+    ],
+    createPublicSshKeyForAuthenticatedUser: ["POST /user/keys"],
+    createSshSigningKeyForAuthenticatedUser: ["POST /user/ssh_signing_keys"],
+    deleteEmailForAuthenticated: [
+      "DELETE /user/emails",
+      {},
+      { renamed: ["users", "deleteEmailForAuthenticatedUser"] }
+    ],
+    deleteEmailForAuthenticatedUser: ["DELETE /user/emails"],
+    deleteGpgKeyForAuthenticated: [
+      "DELETE /user/gpg_keys/{gpg_key_id}",
+      {},
+      { renamed: ["users", "deleteGpgKeyForAuthenticatedUser"] }
+    ],
+    deleteGpgKeyForAuthenticatedUser: ["DELETE /user/gpg_keys/{gpg_key_id}"],
+    deletePublicSshKeyForAuthenticated: [
+      "DELETE /user/keys/{key_id}",
+      {},
+      { renamed: ["users", "deletePublicSshKeyForAuthenticatedUser"] }
+    ],
+    deletePublicSshKeyForAuthenticatedUser: ["DELETE /user/keys/{key_id}"],
+    deleteSocialAccountForAuthenticatedUser: ["DELETE /user/social_accounts"],
+    deleteSshSigningKeyForAuthenticatedUser: [
+      "DELETE /user/ssh_signing_keys/{ssh_signing_key_id}"
+    ],
+    follow: ["PUT /user/following/{username}"],
+    getAuthenticated: ["GET /user"],
+    getByUsername: ["GET /users/{username}"],
+    getContextForUser: ["GET /users/{username}/hovercard"],
+    getGpgKeyForAuthenticated: [
+      "GET /user/gpg_keys/{gpg_key_id}",
+      {},
+      { renamed: ["users", "getGpgKeyForAuthenticatedUser"] }
+    ],
+    getGpgKeyForAuthenticatedUser: ["GET /user/gpg_keys/{gpg_key_id}"],
+    getPublicSshKeyForAuthenticated: [
+      "GET /user/keys/{key_id}",
+      {},
+      { renamed: ["users", "getPublicSshKeyForAuthenticatedUser"] }
+    ],
+    getPublicSshKeyForAuthenticatedUser: ["GET /user/keys/{key_id}"],
+    getSshSigningKeyForAuthenticatedUser: [
+      "GET /user/ssh_signing_keys/{ssh_signing_key_id}"
+    ],
+    list: ["GET /users"],
+    listBlockedByAuthenticated: [
+      "GET /user/blocks",
+      {},
+      { renamed: ["users", "listBlockedByAuthenticatedUser"] }
+    ],
+    listBlockedByAuthenticatedUser: ["GET /user/blocks"],
+    listEmailsForAuthenticated: [
+      "GET /user/emails",
+      {},
+      { renamed: ["users", "listEmailsForAuthenticatedUser"] }
+    ],
+    listEmailsForAuthenticatedUser: ["GET /user/emails"],
+    listFollowedByAuthenticated: [
+      "GET /user/following",
+      {},
+      { renamed: ["users", "listFollowedByAuthenticatedUser"] }
+    ],
+    listFollowedByAuthenticatedUser: ["GET /user/following"],
+    listFollowersForAuthenticatedUser: ["GET /user/followers"],
+    listFollowersForUser: ["GET /users/{username}/followers"],
+    listFollowingForUser: ["GET /users/{username}/following"],
+    listGpgKeysForAuthenticated: [
+      "GET /user/gpg_keys",
+      {},
+      { renamed: ["users", "listGpgKeysForAuthenticatedUser"] }
+    ],
+    listGpgKeysForAuthenticatedUser: ["GET /user/gpg_keys"],
+    listGpgKeysForUser: ["GET /users/{username}/gpg_keys"],
+    listPublicEmailsForAuthenticated: [
+      "GET /user/public_emails",
+      {},
+      { renamed: ["users", "listPublicEmailsForAuthenticatedUser"] }
+    ],
+    listPublicEmailsForAuthenticatedUser: ["GET /user/public_emails"],
+    listPublicKeysForUser: ["GET /users/{username}/keys"],
+    listPublicSshKeysForAuthenticated: [
+      "GET /user/keys",
+      {},
+      { renamed: ["users", "listPublicSshKeysForAuthenticatedUser"] }
+    ],
+    listPublicSshKeysForAuthenticatedUser: ["GET /user/keys"],
+    listSocialAccountsForAuthenticatedUser: ["GET /user/social_accounts"],
+    listSocialAccountsForUser: ["GET /users/{username}/social_accounts"],
+    listSshSigningKeysForAuthenticatedUser: ["GET /user/ssh_signing_keys"],
+    listSshSigningKeysForUser: ["GET /users/{username}/ssh_signing_keys"],
+    setPrimaryEmailVisibilityForAuthenticated: [
+      "PATCH /user/email/visibility",
+      {},
+      { renamed: ["users", "setPrimaryEmailVisibilityForAuthenticatedUser"] }
+    ],
+    setPrimaryEmailVisibilityForAuthenticatedUser: [
+      "PATCH /user/email/visibility"
+    ],
+    unblock: ["DELETE /user/blocks/{username}"],
+    unfollow: ["DELETE /user/following/{username}"],
+    updateAuthenticated: ["PATCH /user"]
+  }
+};
+var endpoints_default = Endpoints;
+
+// pkg/dist-src/endpoints-to-methods.js
+var endpointMethodsMap = /* @__PURE__ */ new Map();
+for (const [scope, endpoints] of Object.entries(endpoints_default)) {
+  for (const [methodName, endpoint] of Object.entries(endpoints)) {
+    const [route, defaults, decorations] = endpoint;
+    const [method, url] = route.split(/ /);
+    const endpointDefaults = Object.assign(
+      {
+        method,
+        url
+      },
+      defaults
+    );
+    if (!endpointMethodsMap.has(scope)) {
+      endpointMethodsMap.set(scope, /* @__PURE__ */ new Map());
+    }
+    endpointMethodsMap.get(scope).set(methodName, {
+      scope,
+      methodName,
+      endpointDefaults,
+      decorations
+    });
+  }
+}
+var handler = {
+  has({ scope }, methodName) {
+    return endpointMethodsMap.get(scope).has(methodName);
+  },
+  getOwnPropertyDescriptor(target, methodName) {
+    return {
+      value: this.get(target, methodName),
+      // ensures method is in the cache
+      configurable: true,
+      writable: true,
+      enumerable: true
+    };
+  },
+  defineProperty(target, methodName, descriptor) {
+    Object.defineProperty(target.cache, methodName, descriptor);
+    return true;
+  },
+  deleteProperty(target, methodName) {
+    delete target.cache[methodName];
+    return true;
+  },
+  ownKeys({ scope }) {
+    return [...endpointMethodsMap.get(scope).keys()];
+  },
+  set(target, methodName, value) {
+    return target.cache[methodName] = value;
+  },
+  get({ octokit, scope, cache }, methodName) {
+    if (cache[methodName]) {
+      return cache[methodName];
+    }
+    const method = endpointMethodsMap.get(scope).get(methodName);
+    if (!method) {
+      return void 0;
+    }
+    const { endpointDefaults, decorations } = method;
+    if (decorations) {
+      cache[methodName] = decorate(
+        octokit,
+        scope,
+        methodName,
+        endpointDefaults,
+        decorations
+      );
+    } else {
+      cache[methodName] = octokit.request.defaults(endpointDefaults);
+    }
+    return cache[methodName];
+  }
+};
+function endpointsToMethods(octokit) {
+  const newMethods = {};
+  for (const scope of endpointMethodsMap.keys()) {
+    newMethods[scope] = new Proxy({ octokit, scope, cache: {} }, handler);
+  }
+  return newMethods;
+}
+function decorate(octokit, scope, methodName, defaults, decorations) {
+  const requestWithDefaults = octokit.request.defaults(defaults);
+  function withDecorations(...args) {
+    let options = requestWithDefaults.endpoint.merge(...args);
+    if (decorations.mapToData) {
+      options = Object.assign({}, options, {
+        data: options[decorations.mapToData],
+        [decorations.mapToData]: void 0
+      });
+      return requestWithDefaults(options);
+    }
+    if (decorations.renamed) {
+      const [newScope, newMethodName] = decorations.renamed;
+      octokit.log.warn(
+        `octokit.${scope}.${methodName}() has been renamed to octokit.${newScope}.${newMethodName}()`
+      );
+    }
+    if (decorations.deprecated) {
+      octokit.log.warn(decorations.deprecated);
+    }
+    if (decorations.renamedParameters) {
+      const options2 = requestWithDefaults.endpoint.merge(...args);
+      for (const [name, alias] of Object.entries(
+        decorations.renamedParameters
+      )) {
+        if (name in options2) {
+          octokit.log.warn(
+            `"${name}" parameter is deprecated for "octokit.${scope}.${methodName}()". Use "${alias}" instead`
+          );
+          if (!(alias in options2)) {
+            options2[alias] = options2[name];
+          }
+          delete options2[name];
+        }
+      }
+      return requestWithDefaults(options2);
+    }
+    return requestWithDefaults(...args);
+  }
+  return Object.assign(withDecorations, requestWithDefaults);
+}
+
+// pkg/dist-src/index.js
+function restEndpointMethods(octokit) {
+  const api = endpointsToMethods(octokit);
+  return {
+    rest: api
+  };
+}
+restEndpointMethods.VERSION = VERSION;
+function legacyRestEndpointMethods(octokit) {
+  const api = endpointsToMethods(octokit);
+  return {
+    ...api,
+    rest: api
+  };
+}
+legacyRestEndpointMethods.VERSION = VERSION;
+// Annotate the CommonJS export names for ESM import in node:
+0 && (0);
+
+
+/***/ }),
+
+/***/ 3059:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// pkg/dist-src/index.js
+var dist_src_exports = {};
+__export(dist_src_exports, {
+  request: () => request
+});
+module.exports = __toCommonJS(dist_src_exports);
+var import_endpoint = __nccwpck_require__(3792);
+var import_universal_user_agent = __nccwpck_require__(9367);
+
+// pkg/dist-src/version.js
+var VERSION = "8.4.1";
+
+// pkg/dist-src/is-plain-object.js
+function isPlainObject(value) {
+  if (typeof value !== "object" || value === null)
+    return false;
+  if (Object.prototype.toString.call(value) !== "[object Object]")
+    return false;
+  const proto = Object.getPrototypeOf(value);
+  if (proto === null)
+    return true;
+  const Ctor = Object.prototype.hasOwnProperty.call(proto, "constructor") && proto.constructor;
+  return typeof Ctor === "function" && Ctor instanceof Ctor && Function.prototype.call(Ctor) === Function.prototype.call(value);
+}
+
+// pkg/dist-src/fetch-wrapper.js
+var import_request_error = __nccwpck_require__(115);
+
+// pkg/dist-src/get-buffer-response.js
+function getBufferResponse(response) {
+  return response.arrayBuffer();
+}
+
+// pkg/dist-src/fetch-wrapper.js
+function fetchWrapper(requestOptions) {
+  var _a, _b, _c, _d;
+  const log = requestOptions.request && requestOptions.request.log ? requestOptions.request.log : console;
+  const parseSuccessResponseBody = ((_a = requestOptions.request) == null ? void 0 : _a.parseSuccessResponseBody) !== false;
+  if (isPlainObject(requestOptions.body) || Array.isArray(requestOptions.body)) {
+    requestOptions.body = JSON.stringify(requestOptions.body);
+  }
+  let headers = {};
+  let status;
+  let url;
+  let { fetch } = globalThis;
+  if ((_b = requestOptions.request) == null ? void 0 : _b.fetch) {
+    fetch = requestOptions.request.fetch;
+  }
+  if (!fetch) {
+    throw new Error(
+      "fetch is not set. Please pass a fetch implementation as new Octokit({ request: { fetch }}). Learn more at https://github.com/octokit/octokit.js/#fetch-missing"
+    );
+  }
+  return fetch(requestOptions.url, {
+    method: requestOptions.method,
+    body: requestOptions.body,
+    redirect: (_c = requestOptions.request) == null ? void 0 : _c.redirect,
+    headers: requestOptions.headers,
+    signal: (_d = requestOptions.request) == null ? void 0 : _d.signal,
+    // duplex must be set if request.body is ReadableStream or Async Iterables.
+    // See https://fetch.spec.whatwg.org/#dom-requestinit-duplex.
+    ...requestOptions.body && { duplex: "half" }
+  }).then(async (response) => {
+    url = response.url;
+    status = response.status;
+    for (const keyAndValue of response.headers) {
+      headers[keyAndValue[0]] = keyAndValue[1];
+    }
+    if ("deprecation" in headers) {
+      const matches = headers.link && headers.link.match(/<([^<>]+)>; rel="deprecation"/);
+      const deprecationLink = matches && matches.pop();
+      log.warn(
+        `[@octokit/request] "${requestOptions.method} ${requestOptions.url}" is deprecated. It is scheduled to be removed on ${headers.sunset}${deprecationLink ? `. See ${deprecationLink}` : ""}`
+      );
+    }
+    if (status === 204 || status === 205) {
+      return;
+    }
+    if (requestOptions.method === "HEAD") {
+      if (status < 400) {
+        return;
+      }
+      throw new import_request_error.RequestError(response.statusText, status, {
+        response: {
+          url,
+          status,
+          headers,
+          data: void 0
+        },
+        request: requestOptions
+      });
+    }
+    if (status === 304) {
+      throw new import_request_error.RequestError("Not modified", status, {
+        response: {
+          url,
+          status,
+          headers,
+          data: await getResponseData(response)
+        },
+        request: requestOptions
+      });
+    }
+    if (status >= 400) {
+      const data = await getResponseData(response);
+      const error = new import_request_error.RequestError(toErrorMessage(data), status, {
+        response: {
+          url,
+          status,
+          headers,
+          data
+        },
+        request: requestOptions
+      });
+      throw error;
+    }
+    return parseSuccessResponseBody ? await getResponseData(response) : response.body;
+  }).then((data) => {
+    return {
+      status,
+      url,
+      headers,
+      data
+    };
+  }).catch((error) => {
+    if (error instanceof import_request_error.RequestError)
+      throw error;
+    else if (error.name === "AbortError")
+      throw error;
+    let message = error.message;
+    if (error.name === "TypeError" && "cause" in error) {
+      if (error.cause instanceof Error) {
+        message = error.cause.message;
+      } else if (typeof error.cause === "string") {
+        message = error.cause;
+      }
+    }
+    throw new import_request_error.RequestError(message, 500, {
+      request: requestOptions
+    });
+  });
+}
+async function getResponseData(response) {
+  const contentType = response.headers.get("content-type");
+  if (/application\/json/.test(contentType)) {
+    return response.json().catch(() => response.text()).catch(() => "");
+  }
+  if (!contentType || /^text\/|charset=utf-8$/.test(contentType)) {
+    return response.text();
+  }
+  return getBufferResponse(response);
+}
+function toErrorMessage(data) {
+  if (typeof data === "string")
+    return data;
+  let suffix;
+  if ("documentation_url" in data) {
+    suffix = ` - ${data.documentation_url}`;
+  } else {
+    suffix = "";
+  }
+  if ("message" in data) {
+    if (Array.isArray(data.errors)) {
+      return `${data.message}: ${data.errors.map(JSON.stringify).join(", ")}${suffix}`;
+    }
+    return `${data.message}${suffix}`;
+  }
+  return `Unknown error: ${JSON.stringify(data)}`;
+}
+
+// pkg/dist-src/with-defaults.js
+function withDefaults(oldEndpoint, newDefaults) {
+  const endpoint2 = oldEndpoint.defaults(newDefaults);
+  const newApi = function(route, parameters) {
+    const endpointOptions = endpoint2.merge(route, parameters);
+    if (!endpointOptions.request || !endpointOptions.request.hook) {
+      return fetchWrapper(endpoint2.parse(endpointOptions));
+    }
+    const request2 = (route2, parameters2) => {
+      return fetchWrapper(
+        endpoint2.parse(endpoint2.merge(route2, parameters2))
+      );
+    };
+    Object.assign(request2, {
+      endpoint: endpoint2,
+      defaults: withDefaults.bind(null, endpoint2)
+    });
+    return endpointOptions.request.hook(request2, endpointOptions);
+  };
+  return Object.assign(newApi, {
+    endpoint: endpoint2,
+    defaults: withDefaults.bind(null, endpoint2)
+  });
+}
+
+// pkg/dist-src/index.js
+var request = withDefaults(import_endpoint.endpoint, {
+  headers: {
+    "user-agent": `octokit-request.js/${VERSION} ${(0, import_universal_user_agent.getUserAgent)()}`
+  }
+});
+// Annotate the CommonJS export names for ESM import in node:
+0 && (0);
+
+
+/***/ }),
+
+/***/ 115:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// pkg/dist-src/index.js
+var dist_src_exports = {};
+__export(dist_src_exports, {
+  RequestError: () => RequestError
+});
+module.exports = __toCommonJS(dist_src_exports);
+var import_deprecation = __nccwpck_require__(5802);
+var import_once = __toESM(__nccwpck_require__(423));
+var logOnceCode = (0, import_once.default)((deprecation) => console.warn(deprecation));
+var logOnceHeaders = (0, import_once.default)((deprecation) => console.warn(deprecation));
+var RequestError = class extends Error {
+  constructor(message, statusCode, options) {
+    super(message);
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, this.constructor);
+    }
+    this.name = "HttpError";
+    this.status = statusCode;
+    let headers;
+    if ("headers" in options && typeof options.headers !== "undefined") {
+      headers = options.headers;
+    }
+    if ("response" in options) {
+      this.response = options.response;
+      headers = options.response.headers;
+    }
+    const requestCopy = Object.assign({}, options.request);
+    if (options.request.headers.authorization) {
+      requestCopy.headers = Object.assign({}, options.request.headers, {
+        authorization: options.request.headers.authorization.replace(
+          /(?<! ) .*$/,
+          " [REDACTED]"
+        )
+      });
+    }
+    requestCopy.url = requestCopy.url.replace(/\bclient_secret=\w+/g, "client_secret=[REDACTED]").replace(/\baccess_token=\w+/g, "access_token=[REDACTED]");
+    this.request = requestCopy;
+    Object.defineProperty(this, "code", {
+      get() {
+        logOnceCode(
+          new import_deprecation.Deprecation(
+            "[@octokit/request-error] `error.code` is deprecated, use `error.status`."
+          )
+        );
+        return statusCode;
+      }
+    });
+    Object.defineProperty(this, "headers", {
+      get() {
+        logOnceHeaders(
+          new import_deprecation.Deprecation(
+            "[@octokit/request-error] `error.headers` is deprecated, use `error.response.headers`."
+          )
+        );
+        return headers || {};
+      }
+    });
+  }
+};
+// Annotate the CommonJS export names for ESM import in node:
+0 && (0);
+
+
+/***/ }),
+
+/***/ 7544:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+var register = __nccwpck_require__(6371);
+var addHook = __nccwpck_require__(8191);
+var removeHook = __nccwpck_require__(8802);
+
+// bind with array of arguments: https://stackoverflow.com/a/21792913
+var bind = Function.bind;
+var bindable = bind.bind(bind);
+
+function bindApi(hook, state, name) {
+  var removeHookRef = bindable(removeHook, null).apply(
+    null,
+    name ? [state, name] : [state]
+  );
+  hook.api = { remove: removeHookRef };
+  hook.remove = removeHookRef;
+  ["before", "error", "after", "wrap"].forEach(function (kind) {
+    var args = name ? [state, kind, name] : [state, kind];
+    hook[kind] = hook.api[kind] = bindable(addHook, null).apply(null, args);
+  });
+}
+
+function HookSingular() {
+  var singularHookName = "h";
+  var singularHookState = {
+    registry: {},
+  };
+  var singularHook = register.bind(null, singularHookState, singularHookName);
+  bindApi(singularHook, singularHookState, singularHookName);
+  return singularHook;
+}
+
+function HookCollection() {
+  var state = {
+    registry: {},
+  };
+
+  var hook = register.bind(null, state);
+  bindApi(hook, state);
+
+  return hook;
+}
+
+var collectionHookDeprecationMessageDisplayed = false;
+function Hook() {
+  if (!collectionHookDeprecationMessageDisplayed) {
+    console.warn(
+      '[before-after-hook]: "Hook()" repurposing warning, use "Hook.Collection()". Read more: https://git.io/upgrade-before-after-hook-to-1.4'
+    );
+    collectionHookDeprecationMessageDisplayed = true;
+  }
+  return HookCollection();
+}
+
+Hook.Singular = HookSingular.bind();
+Hook.Collection = HookCollection.bind();
+
+module.exports = Hook;
+// expose constructors as a named property for TypeScript
+module.exports.Hook = Hook;
+module.exports.Singular = Hook.Singular;
+module.exports.Collection = Hook.Collection;
+
+
+/***/ }),
+
+/***/ 8191:
+/***/ ((module) => {
+
+module.exports = addHook;
+
+function addHook(state, kind, name, hook) {
+  var orig = hook;
+  if (!state.registry[name]) {
+    state.registry[name] = [];
+  }
+
+  if (kind === "before") {
+    hook = function (method, options) {
+      return Promise.resolve()
+        .then(orig.bind(null, options))
+        .then(method.bind(null, options));
+    };
+  }
+
+  if (kind === "after") {
+    hook = function (method, options) {
+      var result;
+      return Promise.resolve()
+        .then(method.bind(null, options))
+        .then(function (result_) {
+          result = result_;
+          return orig(result, options);
+        })
+        .then(function () {
+          return result;
+        });
+    };
+  }
+
+  if (kind === "error") {
+    hook = function (method, options) {
+      return Promise.resolve()
+        .then(method.bind(null, options))
+        .catch(function (error) {
+          return orig(error, options);
+        });
+    };
+  }
+
+  state.registry[name].push({
+    hook: hook,
+    orig: orig,
+  });
+}
+
+
+/***/ }),
+
+/***/ 6371:
+/***/ ((module) => {
+
+module.exports = register;
+
+function register(state, name, method, options) {
+  if (typeof method !== "function") {
+    throw new Error("method for before hook must be a function");
+  }
+
+  if (!options) {
+    options = {};
+  }
+
+  if (Array.isArray(name)) {
+    return name.reverse().reduce(function (callback, name) {
+      return register.bind(null, state, name, callback, options);
+    }, method)();
+  }
+
+  return Promise.resolve().then(function () {
+    if (!state.registry[name]) {
+      return method(options);
+    }
+
+    return state.registry[name].reduce(function (method, registered) {
+      return registered.hook.bind(null, method, options);
+    }, method)();
+  });
+}
+
+
+/***/ }),
+
+/***/ 8802:
+/***/ ((module) => {
+
+module.exports = removeHook;
+
+function removeHook(state, name, method) {
+  if (!state.registry[name]) {
+    return;
+  }
+
+  var index = state.registry[name]
+    .map(function (registered) {
+      return registered.orig;
+    })
+    .indexOf(method);
+
+  if (index === -1) {
+    return;
+  }
+
+  state.registry[name].splice(index, 1);
+}
+
 
 /***/ }),
 
@@ -6649,6 +10773,33 @@ formatters.O = function (v) {
 
 /***/ }),
 
+/***/ 5802:
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+
+class Deprecation extends Error {
+  constructor(message) {
+    super(message); // Maintains proper stack trace (only available on V8)
+
+    /* istanbul ignore next */
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, this.constructor);
+    }
+
+    this.name = 'Deprecation';
+  }
+
+}
+
+exports.Deprecation = Deprecation;
+
+
+/***/ }),
+
 /***/ 9073:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -9701,6 +13852,55 @@ function fmtLong(ms) {
 function plural(ms, msAbs, n, name) {
   var isPlural = msAbs >= n * 1.5;
   return Math.round(ms / n) + ' ' + name + (isPlural ? 's' : '');
+}
+
+
+/***/ }),
+
+/***/ 423:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+var wrappy = __nccwpck_require__(7460)
+module.exports = wrappy(once)
+module.exports.strict = wrappy(onceStrict)
+
+once.proto = once(function () {
+  Object.defineProperty(Function.prototype, 'once', {
+    value: function () {
+      return once(this)
+    },
+    configurable: true
+  })
+
+  Object.defineProperty(Function.prototype, 'onceStrict', {
+    value: function () {
+      return onceStrict(this)
+    },
+    configurable: true
+  })
+})
+
+function once (fn) {
+  var f = function () {
+    if (f.called) return f.value
+    f.called = true
+    return f.value = fn.apply(this, arguments)
+  }
+  f.called = false
+  return f
+}
+
+function onceStrict (fn) {
+  var f = function () {
+    if (f.called)
+      throw new Error(f.onceError)
+    f.called = true
+    return f.value = fn.apply(this, arguments)
+  }
+  var name = fn.name || 'Function wrapped with `once`'
+  f.onceError = name + " shouldn't be called more than once"
+  f.called = false
+  return f
 }
 
 
@@ -32993,6 +37193,71 @@ module.exports = {
 
 /***/ }),
 
+/***/ 9367:
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+
+function getUserAgent() {
+  if (typeof navigator === "object" && "userAgent" in navigator) {
+    return navigator.userAgent;
+  }
+
+  if (typeof process === "object" && process.version !== undefined) {
+    return `Node.js/${process.version.substr(1)} (${process.platform}; ${process.arch})`;
+  }
+
+  return "<environment undetectable>";
+}
+
+exports.getUserAgent = getUserAgent;
+//# sourceMappingURL=index.js.map
+
+
+/***/ }),
+
+/***/ 7460:
+/***/ ((module) => {
+
+// Returns a wrapper function that returns a wrapped callback
+// The wrapper function should do some stuff, and return a
+// presumably different callback function.
+// This makes sure that own properties are retained, so that
+// decorations and such are not lost along the way.
+module.exports = wrappy
+function wrappy (fn, cb) {
+  if (fn && cb) return wrappy(fn)(cb)
+
+  if (typeof fn !== 'function')
+    throw new TypeError('need wrapper function')
+
+  Object.keys(fn).forEach(function (k) {
+    wrapper[k] = fn[k]
+  })
+
+  return wrapper
+
+  function wrapper() {
+    var args = new Array(arguments.length)
+    for (var i = 0; i < args.length; i++) {
+      args[i] = arguments[i]
+    }
+    var ret = fn.apply(this, args)
+    var cb = args[args.length-1]
+    if (typeof ret === 'function' && ret !== cb) {
+      Object.keys(cb).forEach(function (k) {
+        ret[k] = cb[k]
+      })
+    }
+    return ret
+  }
+}
+
+
+/***/ }),
+
 /***/ 2613:
 /***/ ((module) => {
 
@@ -35007,7 +39272,7402 @@ __webpack_unused_export__ = defaultContentType
 
 /***/ }),
 
-/***/ 1767:
+/***/ 9487:
+/***/ ((module) => {
+
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// src/index.ts
+var index_exports = {};
+__export(index_exports, {
+  BASE64_REGEX: () => BASE64_REGEX,
+  BIC_REGEX: () => BIC_REGEX,
+  CUID2_REGEX: () => CUID2_REGEX,
+  DECIMAL_REGEX: () => DECIMAL_REGEX,
+  DIGITS_REGEX: () => DIGITS_REGEX,
+  EMAIL_REGEX: () => EMAIL_REGEX,
+  EMOJI_REGEX: () => EMOJI_REGEX,
+  HEXADECIMAL_REGEX: () => HEXADECIMAL_REGEX,
+  HEX_COLOR_REGEX: () => HEX_COLOR_REGEX,
+  IMEI_REGEX: () => IMEI_REGEX,
+  IPV4_REGEX: () => IPV4_REGEX,
+  IPV6_REGEX: () => IPV6_REGEX,
+  IP_REGEX: () => IP_REGEX,
+  ISO_DATE_REGEX: () => ISO_DATE_REGEX,
+  ISO_DATE_TIME_REGEX: () => ISO_DATE_TIME_REGEX,
+  ISO_TIMESTAMP_REGEX: () => ISO_TIMESTAMP_REGEX,
+  ISO_TIME_REGEX: () => ISO_TIME_REGEX,
+  ISO_TIME_SECOND_REGEX: () => ISO_TIME_SECOND_REGEX,
+  ISO_WEEK_REGEX: () => ISO_WEEK_REGEX,
+  MAC48_REGEX: () => MAC48_REGEX,
+  MAC64_REGEX: () => MAC64_REGEX,
+  MAC_REGEX: () => MAC_REGEX,
+  NANO_ID_REGEX: () => NANO_ID_REGEX,
+  OCTAL_REGEX: () => OCTAL_REGEX,
+  RFC_EMAIL_REGEX: () => RFC_EMAIL_REGEX,
+  SLUG_REGEX: () => SLUG_REGEX,
+  ULID_REGEX: () => ULID_REGEX,
+  UUID_REGEX: () => UUID_REGEX,
+  ValiError: () => ValiError,
+  _addIssue: () => _addIssue,
+  _getByteCount: () => _getByteCount,
+  _getGraphemeCount: () => _getGraphemeCount,
+  _getLastMetadata: () => _getLastMetadata,
+  _getStandardProps: () => _getStandardProps,
+  _getWordCount: () => _getWordCount,
+  _isLuhnAlgo: () => _isLuhnAlgo,
+  _isValidObjectKey: () => _isValidObjectKey,
+  _joinExpects: () => _joinExpects,
+  _stringify: () => _stringify,
+  any: () => any,
+  args: () => args,
+  argsAsync: () => argsAsync,
+  array: () => array,
+  arrayAsync: () => arrayAsync,
+  assert: () => assert,
+  awaitAsync: () => awaitAsync,
+  base64: () => base64,
+  bic: () => bic,
+  bigint: () => bigint,
+  blob: () => blob,
+  boolean: () => boolean,
+  brand: () => brand,
+  bytes: () => bytes,
+  check: () => check,
+  checkAsync: () => checkAsync,
+  checkItems: () => checkItems,
+  checkItemsAsync: () => checkItemsAsync,
+  config: () => config,
+  creditCard: () => creditCard,
+  cuid2: () => cuid2,
+  custom: () => custom,
+  customAsync: () => customAsync,
+  date: () => date,
+  decimal: () => decimal,
+  deleteGlobalConfig: () => deleteGlobalConfig,
+  deleteGlobalMessage: () => deleteGlobalMessage,
+  deleteSchemaMessage: () => deleteSchemaMessage,
+  deleteSpecificMessage: () => deleteSpecificMessage,
+  description: () => description,
+  digits: () => digits,
+  email: () => email,
+  emoji: () => emoji,
+  empty: () => empty,
+  endsWith: () => endsWith,
+  entries: () => entries,
+  entriesFromList: () => entriesFromList,
+  entriesFromObjects: () => entriesFromObjects,
+  enum: () => enum_,
+  enum_: () => enum_,
+  everyItem: () => everyItem,
+  exactOptional: () => exactOptional,
+  exactOptionalAsync: () => exactOptionalAsync,
+  excludes: () => excludes,
+  fallback: () => fallback,
+  fallbackAsync: () => fallbackAsync,
+  file: () => file,
+  filterItems: () => filterItems,
+  findItem: () => findItem,
+  finite: () => finite,
+  flatten: () => flatten,
+  flavor: () => flavor,
+  forward: () => forward,
+  forwardAsync: () => forwardAsync,
+  function: () => function_,
+  function_: () => function_,
+  getDefault: () => getDefault,
+  getDefaults: () => getDefaults,
+  getDefaultsAsync: () => getDefaultsAsync,
+  getDescription: () => getDescription,
+  getDotPath: () => getDotPath,
+  getFallback: () => getFallback,
+  getFallbacks: () => getFallbacks,
+  getFallbacksAsync: () => getFallbacksAsync,
+  getGlobalConfig: () => getGlobalConfig,
+  getGlobalMessage: () => getGlobalMessage,
+  getMetadata: () => getMetadata,
+  getSchemaMessage: () => getSchemaMessage,
+  getSpecificMessage: () => getSpecificMessage,
+  getTitle: () => getTitle,
+  graphemes: () => graphemes,
+  gtValue: () => gtValue,
+  hash: () => hash,
+  hexColor: () => hexColor,
+  hexadecimal: () => hexadecimal,
+  imei: () => imei,
+  includes: () => includes,
+  instance: () => instance,
+  integer: () => integer,
+  intersect: () => intersect,
+  intersectAsync: () => intersectAsync,
+  ip: () => ip,
+  ipv4: () => ipv4,
+  ipv6: () => ipv6,
+  is: () => is,
+  isOfKind: () => isOfKind,
+  isOfType: () => isOfType,
+  isValiError: () => isValiError,
+  isoDate: () => isoDate,
+  isoDateTime: () => isoDateTime,
+  isoTime: () => isoTime,
+  isoTimeSecond: () => isoTimeSecond,
+  isoTimestamp: () => isoTimestamp,
+  isoWeek: () => isoWeek,
+  keyof: () => keyof,
+  lazy: () => lazy,
+  lazyAsync: () => lazyAsync,
+  length: () => length,
+  literal: () => literal,
+  looseObject: () => looseObject,
+  looseObjectAsync: () => looseObjectAsync,
+  looseTuple: () => looseTuple,
+  looseTupleAsync: () => looseTupleAsync,
+  ltValue: () => ltValue,
+  mac: () => mac,
+  mac48: () => mac48,
+  mac64: () => mac64,
+  map: () => map,
+  mapAsync: () => mapAsync,
+  mapItems: () => mapItems,
+  maxBytes: () => maxBytes,
+  maxEntries: () => maxEntries,
+  maxGraphemes: () => maxGraphemes,
+  maxLength: () => maxLength,
+  maxSize: () => maxSize,
+  maxValue: () => maxValue,
+  maxWords: () => maxWords,
+  message: () => message,
+  metadata: () => metadata,
+  mimeType: () => mimeType,
+  minBytes: () => minBytes,
+  minEntries: () => minEntries,
+  minGraphemes: () => minGraphemes,
+  minLength: () => minLength,
+  minSize: () => minSize,
+  minValue: () => minValue,
+  minWords: () => minWords,
+  multipleOf: () => multipleOf,
+  nan: () => nan,
+  nanoid: () => nanoid,
+  never: () => never,
+  nonEmpty: () => nonEmpty,
+  nonNullable: () => nonNullable,
+  nonNullableAsync: () => nonNullableAsync,
+  nonNullish: () => nonNullish,
+  nonNullishAsync: () => nonNullishAsync,
+  nonOptional: () => nonOptional,
+  nonOptionalAsync: () => nonOptionalAsync,
+  normalize: () => normalize,
+  notBytes: () => notBytes,
+  notEntries: () => notEntries,
+  notGraphemes: () => notGraphemes,
+  notLength: () => notLength,
+  notSize: () => notSize,
+  notValue: () => notValue,
+  notValues: () => notValues,
+  notWords: () => notWords,
+  null: () => null_,
+  null_: () => null_,
+  nullable: () => nullable,
+  nullableAsync: () => nullableAsync,
+  nullish: () => nullish,
+  nullishAsync: () => nullishAsync,
+  number: () => number,
+  object: () => object,
+  objectAsync: () => objectAsync,
+  objectWithRest: () => objectWithRest,
+  objectWithRestAsync: () => objectWithRestAsync,
+  octal: () => octal,
+  omit: () => omit,
+  optional: () => optional,
+  optionalAsync: () => optionalAsync,
+  parse: () => parse,
+  parseAsync: () => parseAsync,
+  parseJson: () => parseJson,
+  parser: () => parser,
+  parserAsync: () => parserAsync,
+  partial: () => partial,
+  partialAsync: () => partialAsync,
+  partialCheck: () => partialCheck,
+  partialCheckAsync: () => partialCheckAsync,
+  pick: () => pick,
+  picklist: () => picklist,
+  pipe: () => pipe,
+  pipeAsync: () => pipeAsync,
+  promise: () => promise,
+  rawCheck: () => rawCheck,
+  rawCheckAsync: () => rawCheckAsync,
+  rawTransform: () => rawTransform,
+  rawTransformAsync: () => rawTransformAsync,
+  readonly: () => readonly,
+  record: () => record,
+  recordAsync: () => recordAsync,
+  reduceItems: () => reduceItems,
+  regex: () => regex,
+  required: () => required,
+  requiredAsync: () => requiredAsync,
+  returns: () => returns,
+  returnsAsync: () => returnsAsync,
+  rfcEmail: () => rfcEmail,
+  safeInteger: () => safeInteger,
+  safeParse: () => safeParse,
+  safeParseAsync: () => safeParseAsync,
+  safeParser: () => safeParser,
+  safeParserAsync: () => safeParserAsync,
+  set: () => set,
+  setAsync: () => setAsync,
+  setGlobalConfig: () => setGlobalConfig,
+  setGlobalMessage: () => setGlobalMessage,
+  setSchemaMessage: () => setSchemaMessage,
+  setSpecificMessage: () => setSpecificMessage,
+  size: () => size,
+  slug: () => slug,
+  someItem: () => someItem,
+  sortItems: () => sortItems,
+  startsWith: () => startsWith,
+  strictObject: () => strictObject,
+  strictObjectAsync: () => strictObjectAsync,
+  strictTuple: () => strictTuple,
+  strictTupleAsync: () => strictTupleAsync,
+  string: () => string,
+  stringifyJson: () => stringifyJson,
+  summarize: () => summarize,
+  symbol: () => symbol,
+  title: () => title,
+  toLowerCase: () => toLowerCase,
+  toMaxValue: () => toMaxValue,
+  toMinValue: () => toMinValue,
+  toUpperCase: () => toUpperCase,
+  transform: () => transform,
+  transformAsync: () => transformAsync,
+  trim: () => trim,
+  trimEnd: () => trimEnd,
+  trimStart: () => trimStart,
+  tuple: () => tuple,
+  tupleAsync: () => tupleAsync,
+  tupleWithRest: () => tupleWithRest,
+  tupleWithRestAsync: () => tupleWithRestAsync,
+  ulid: () => ulid,
+  undefined: () => undefined_,
+  undefined_: () => undefined_,
+  undefinedable: () => undefinedable,
+  undefinedableAsync: () => undefinedableAsync,
+  union: () => union,
+  unionAsync: () => unionAsync,
+  unknown: () => unknown,
+  unwrap: () => unwrap,
+  url: () => url,
+  uuid: () => uuid,
+  value: () => value,
+  values: () => values,
+  variant: () => variant,
+  variantAsync: () => variantAsync,
+  void: () => void_,
+  void_: () => void_,
+  words: () => words
+});
+module.exports = __toCommonJS(index_exports);
+
+// src/storages/globalConfig/globalConfig.ts
+var store;
+function setGlobalConfig(config2) {
+  store = { ...store, ...config2 };
+}
+// @__NO_SIDE_EFFECTS__
+function getGlobalConfig(config2) {
+  return {
+    lang: config2?.lang ?? store?.lang,
+    message: config2?.message,
+    abortEarly: config2?.abortEarly ?? store?.abortEarly,
+    abortPipeEarly: config2?.abortPipeEarly ?? store?.abortPipeEarly
+  };
+}
+function deleteGlobalConfig() {
+  store = void 0;
+}
+
+// src/storages/globalMessage/globalMessage.ts
+var store2;
+function setGlobalMessage(message2, lang) {
+  if (!store2) store2 = /* @__PURE__ */ new Map();
+  store2.set(lang, message2);
+}
+// @__NO_SIDE_EFFECTS__
+function getGlobalMessage(lang) {
+  return store2?.get(lang);
+}
+function deleteGlobalMessage(lang) {
+  store2?.delete(lang);
+}
+
+// src/storages/schemaMessage/schemaMessage.ts
+var store3;
+function setSchemaMessage(message2, lang) {
+  if (!store3) store3 = /* @__PURE__ */ new Map();
+  store3.set(lang, message2);
+}
+// @__NO_SIDE_EFFECTS__
+function getSchemaMessage(lang) {
+  return store3?.get(lang);
+}
+function deleteSchemaMessage(lang) {
+  store3?.delete(lang);
+}
+
+// src/storages/specificMessage/specificMessage.ts
+var store4;
+function setSpecificMessage(reference, message2, lang) {
+  if (!store4) store4 = /* @__PURE__ */ new Map();
+  if (!store4.get(reference)) store4.set(reference, /* @__PURE__ */ new Map());
+  store4.get(reference).set(lang, message2);
+}
+// @__NO_SIDE_EFFECTS__
+function getSpecificMessage(reference, lang) {
+  return store4?.get(reference)?.get(lang);
+}
+function deleteSpecificMessage(reference, lang) {
+  store4?.get(reference)?.delete(lang);
+}
+
+// src/utils/_stringify/_stringify.ts
+// @__NO_SIDE_EFFECTS__
+function _stringify(input) {
+  const type = typeof input;
+  if (type === "string") {
+    return `"${input}"`;
+  }
+  if (type === "number" || type === "bigint" || type === "boolean") {
+    return `${input}`;
+  }
+  if (type === "object" || type === "function") {
+    return (input && Object.getPrototypeOf(input)?.constructor?.name) ?? "null";
+  }
+  return type;
+}
+
+// src/utils/_addIssue/_addIssue.ts
+function _addIssue(context, label, dataset, config2, other) {
+  const input = other && "input" in other ? other.input : dataset.value;
+  const expected = other?.expected ?? context.expects ?? null;
+  const received = other?.received ?? _stringify(input);
+  const issue = {
+    kind: context.kind,
+    type: context.type,
+    input,
+    expected,
+    received,
+    message: `Invalid ${label}: ${expected ? `Expected ${expected} but r` : "R"}eceived ${received}`,
+    requirement: context.requirement,
+    path: other?.path,
+    issues: other?.issues,
+    lang: config2.lang,
+    abortEarly: config2.abortEarly,
+    abortPipeEarly: config2.abortPipeEarly
+  };
+  const isSchema = context.kind === "schema";
+  const message2 = other?.message ?? context.message ?? getSpecificMessage(context.reference, issue.lang) ?? (isSchema ? getSchemaMessage(issue.lang) : null) ?? config2.message ?? getGlobalMessage(issue.lang);
+  if (message2 !== void 0) {
+    issue.message = typeof message2 === "function" ? (
+      // @ts-expect-error
+      message2(issue)
+    ) : message2;
+  }
+  if (isSchema) {
+    dataset.typed = false;
+  }
+  if (dataset.issues) {
+    dataset.issues.push(issue);
+  } else {
+    dataset.issues = [issue];
+  }
+}
+
+// src/utils/_getByteCount/_getByteCount.ts
+var textEncoder;
+// @__NO_SIDE_EFFECTS__
+function _getByteCount(input) {
+  if (!textEncoder) {
+    textEncoder = new TextEncoder();
+  }
+  return textEncoder.encode(input).length;
+}
+
+// src/utils/_getGraphemeCount/_getGraphemeCount.ts
+var segmenter;
+// @__NO_SIDE_EFFECTS__
+function _getGraphemeCount(input) {
+  if (!segmenter) {
+    segmenter = new Intl.Segmenter();
+  }
+  const segments = segmenter.segment(input);
+  let count = 0;
+  for (const _ of segments) {
+    count++;
+  }
+  return count;
+}
+
+// src/utils/_getLastMetadata/_getLastMetadata.ts
+// @__NO_SIDE_EFFECTS__
+function _getLastMetadata(schema, type) {
+  if ("pipe" in schema) {
+    const nestedSchemas = [];
+    for (let index = schema.pipe.length - 1; index >= 0; index--) {
+      const item = schema.pipe[index];
+      if (item.kind === "schema" && "pipe" in item) {
+        nestedSchemas.push(item);
+      } else if (item.kind === "metadata" && item.type === type) {
+        return item[type];
+      }
+    }
+    for (const nestedSchema of nestedSchemas) {
+      const result = /* @__PURE__ */ _getLastMetadata(nestedSchema, type);
+      if (result !== void 0) {
+        return result;
+      }
+    }
+  }
+}
+
+// src/utils/_getStandardProps/_getStandardProps.ts
+// @__NO_SIDE_EFFECTS__
+function _getStandardProps(context) {
+  return {
+    version: 1,
+    vendor: "valibot",
+    validate(value2) {
+      return context["~run"]({ value: value2 }, getGlobalConfig());
+    }
+  };
+}
+
+// src/utils/_getWordCount/_getWordCount.ts
+var store5;
+// @__NO_SIDE_EFFECTS__
+function _getWordCount(locales, input) {
+  if (!store5) {
+    store5 = /* @__PURE__ */ new Map();
+  }
+  if (!store5.get(locales)) {
+    store5.set(locales, new Intl.Segmenter(locales, { granularity: "word" }));
+  }
+  const segments = store5.get(locales).segment(input);
+  let count = 0;
+  for (const segment of segments) {
+    if (segment.isWordLike) {
+      count++;
+    }
+  }
+  return count;
+}
+
+// src/utils/_isLuhnAlgo/_isLuhnAlgo.ts
+var NON_DIGIT_REGEX = /\D/gu;
+// @__NO_SIDE_EFFECTS__
+function _isLuhnAlgo(input) {
+  const number2 = input.replace(NON_DIGIT_REGEX, "");
+  let length2 = number2.length;
+  let bit = 1;
+  let sum = 0;
+  while (length2) {
+    const value2 = +number2[--length2];
+    bit ^= 1;
+    sum += bit ? [0, 2, 4, 6, 8, 1, 3, 5, 7, 9][value2] : value2;
+  }
+  return sum % 10 === 0;
+}
+
+// src/utils/_isValidObjectKey/_isValidObjectKey.ts
+// @__NO_SIDE_EFFECTS__
+function _isValidObjectKey(object2, key) {
+  return Object.hasOwn(object2, key) && key !== "__proto__" && key !== "prototype" && key !== "constructor";
+}
+
+// src/utils/_joinExpects/_joinExpects.ts
+// @__NO_SIDE_EFFECTS__
+function _joinExpects(values2, separator) {
+  const list = [...new Set(values2)];
+  if (list.length > 1) {
+    return `(${list.join(` ${separator} `)})`;
+  }
+  return list[0] ?? "never";
+}
+
+// src/utils/entriesFromList/entriesFromList.ts
+// @__NO_SIDE_EFFECTS__
+function entriesFromList(list, schema) {
+  const entries2 = {};
+  for (const key of list) {
+    entries2[key] = schema;
+  }
+  return entries2;
+}
+
+// src/utils/entriesFromObjects/entriesFromObjects.ts
+// @__NO_SIDE_EFFECTS__
+function entriesFromObjects(schemas) {
+  const entries2 = {};
+  for (const schema of schemas) {
+    Object.assign(entries2, schema.entries);
+  }
+  return entries2;
+}
+
+// src/utils/getDotPath/getDotPath.ts
+// @__NO_SIDE_EFFECTS__
+function getDotPath(issue) {
+  if (issue.path) {
+    let key = "";
+    for (const item of issue.path) {
+      if (typeof item.key === "string" || typeof item.key === "number") {
+        if (key) {
+          key += `.${item.key}`;
+        } else {
+          key += item.key;
+        }
+      } else {
+        return null;
+      }
+    }
+    return key;
+  }
+  return null;
+}
+
+// src/utils/isOfKind/isOfKind.ts
+// @__NO_SIDE_EFFECTS__
+function isOfKind(kind, object2) {
+  return object2.kind === kind;
+}
+
+// src/utils/isOfType/isOfType.ts
+// @__NO_SIDE_EFFECTS__
+function isOfType(type, object2) {
+  return object2.type === type;
+}
+
+// src/utils/isValiError/isValiError.ts
+// @__NO_SIDE_EFFECTS__
+function isValiError(error) {
+  return error instanceof ValiError;
+}
+
+// src/utils/ValiError/ValiError.ts
+var ValiError = class extends Error {
+  /**
+   * Creates a Valibot error with useful information.
+   *
+   * @param issues The error issues.
+   */
+  constructor(issues) {
+    super(issues[0].message);
+    this.name = "ValiError";
+    this.issues = issues;
+  }
+};
+
+// src/actions/args/args.ts
+// @__NO_SIDE_EFFECTS__
+function args(schema) {
+  return {
+    kind: "transformation",
+    type: "args",
+    reference: args,
+    async: false,
+    schema,
+    "~run"(dataset, config2) {
+      const func = dataset.value;
+      dataset.value = (...args_) => {
+        const argsDataset = this.schema["~run"]({ value: args_ }, config2);
+        if (argsDataset.issues) {
+          throw new ValiError(argsDataset.issues);
+        }
+        return func(...argsDataset.value);
+      };
+      return dataset;
+    }
+  };
+}
+
+// src/actions/args/argsAsync.ts
+// @__NO_SIDE_EFFECTS__
+function argsAsync(schema) {
+  return {
+    kind: "transformation",
+    type: "args",
+    reference: argsAsync,
+    async: false,
+    schema,
+    "~run"(dataset, config2) {
+      const func = dataset.value;
+      dataset.value = async (...args2) => {
+        const argsDataset = await schema["~run"]({ value: args2 }, config2);
+        if (argsDataset.issues) {
+          throw new ValiError(argsDataset.issues);
+        }
+        return func(...argsDataset.value);
+      };
+      return dataset;
+    }
+  };
+}
+
+// src/actions/await/awaitAsync.ts
+// @__NO_SIDE_EFFECTS__
+function awaitAsync() {
+  return {
+    kind: "transformation",
+    type: "await",
+    reference: awaitAsync,
+    async: true,
+    async "~run"(dataset) {
+      dataset.value = await dataset.value;
+      return dataset;
+    }
+  };
+}
+
+// src/regex.ts
+var BASE64_REGEX = /^(?:[\da-z+/]{4})*(?:[\da-z+/]{2}==|[\da-z+/]{3}=)?$/iu;
+var BIC_REGEX = /^[A-Z]{6}(?!00)[\dA-Z]{2}(?:[\dA-Z]{3})?$/u;
+var CUID2_REGEX = /^[a-z][\da-z]*$/u;
+var DECIMAL_REGEX = /^[+-]?(?:\d*\.)?\d+$/u;
+var DIGITS_REGEX = /^\d+$/u;
+var EMAIL_REGEX = /^[\w+-]+(?:\.[\w+-]+)*@[\da-z]+(?:[.-][\da-z]+)*\.[a-z]{2,}$/iu;
+var EMOJI_REGEX = (
+  // eslint-disable-next-line redos-detector/no-unsafe-regex, regexp/no-dupe-disjunctions -- false positives
+  /^(?:[\u{1F1E6}-\u{1F1FF}]{2}|\u{1F3F4}[\u{E0061}-\u{E007A}]{2}[\u{E0030}-\u{E0039}\u{E0061}-\u{E007A}]{1,3}\u{E007F}|(?:\p{Emoji}\uFE0F\u20E3?|\p{Emoji_Modifier_Base}\p{Emoji_Modifier}?|\p{Emoji_Presentation})(?:\u200D(?:\p{Emoji}\uFE0F\u20E3?|\p{Emoji_Modifier_Base}\p{Emoji_Modifier}?|\p{Emoji_Presentation}))*)+$/u
+);
+var HEXADECIMAL_REGEX = /^(?:0[hx])?[\da-fA-F]+$/u;
+var HEX_COLOR_REGEX = /^#(?:[\da-fA-F]{3,4}|[\da-fA-F]{6}|[\da-fA-F]{8})$/u;
+var IMEI_REGEX = /^\d{15}$|^\d{2}-\d{6}-\d{6}-\d$/u;
+var IPV4_REGEX = (
+  // eslint-disable-next-line redos-detector/no-unsafe-regex -- false positive
+  /^(?:(?:[1-9]|1\d|2[0-4])?\d|25[0-5])(?:\.(?:(?:[1-9]|1\d|2[0-4])?\d|25[0-5])){3}$/u
+);
+var IPV6_REGEX = /^(?:(?:[\da-f]{1,4}:){7}[\da-f]{1,4}|(?:[\da-f]{1,4}:){1,7}:|(?:[\da-f]{1,4}:){1,6}:[\da-f]{1,4}|(?:[\da-f]{1,4}:){1,5}(?::[\da-f]{1,4}){1,2}|(?:[\da-f]{1,4}:){1,4}(?::[\da-f]{1,4}){1,3}|(?:[\da-f]{1,4}:){1,3}(?::[\da-f]{1,4}){1,4}|(?:[\da-f]{1,4}:){1,2}(?::[\da-f]{1,4}){1,5}|[\da-f]{1,4}:(?::[\da-f]{1,4}){1,6}|:(?:(?::[\da-f]{1,4}){1,7}|:)|fe80:(?::[\da-f]{0,4}){0,4}%[\da-z]+|::(?:f{4}(?::0{1,4})?:)?(?:(?:25[0-5]|(?:2[0-4]|1?\d)?\d)\.){3}(?:25[0-5]|(?:2[0-4]|1?\d)?\d)|(?:[\da-f]{1,4}:){1,4}:(?:(?:25[0-5]|(?:2[0-4]|1?\d)?\d)\.){3}(?:25[0-5]|(?:2[0-4]|1?\d)?\d))$/iu;
+var IP_REGEX = /^(?:(?:[1-9]|1\d|2[0-4])?\d|25[0-5])(?:\.(?:(?:[1-9]|1\d|2[0-4])?\d|25[0-5])){3}$|^(?:(?:[\da-f]{1,4}:){7}[\da-f]{1,4}|(?:[\da-f]{1,4}:){1,7}:|(?:[\da-f]{1,4}:){1,6}:[\da-f]{1,4}|(?:[\da-f]{1,4}:){1,5}(?::[\da-f]{1,4}){1,2}|(?:[\da-f]{1,4}:){1,4}(?::[\da-f]{1,4}){1,3}|(?:[\da-f]{1,4}:){1,3}(?::[\da-f]{1,4}){1,4}|(?:[\da-f]{1,4}:){1,2}(?::[\da-f]{1,4}){1,5}|[\da-f]{1,4}:(?::[\da-f]{1,4}){1,6}|:(?:(?::[\da-f]{1,4}){1,7}|:)|fe80:(?::[\da-f]{0,4}){0,4}%[\da-z]+|::(?:f{4}(?::0{1,4})?:)?(?:(?:25[0-5]|(?:2[0-4]|1?\d)?\d)\.){3}(?:25[0-5]|(?:2[0-4]|1?\d)?\d)|(?:[\da-f]{1,4}:){1,4}:(?:(?:25[0-5]|(?:2[0-4]|1?\d)?\d)\.){3}(?:25[0-5]|(?:2[0-4]|1?\d)?\d))$/iu;
+var ISO_DATE_REGEX = /^\d{4}-(?:0[1-9]|1[0-2])-(?:[12]\d|0[1-9]|3[01])$/u;
+var ISO_DATE_TIME_REGEX = /^\d{4}-(?:0[1-9]|1[0-2])-(?:[12]\d|0[1-9]|3[01])[T ](?:0\d|1\d|2[0-3]):[0-5]\d$/u;
+var ISO_TIME_REGEX = /^(?:0\d|1\d|2[0-3]):[0-5]\d$/u;
+var ISO_TIME_SECOND_REGEX = /^(?:0\d|1\d|2[0-3])(?::[0-5]\d){2}$/u;
+var ISO_TIMESTAMP_REGEX = /^\d{4}-(?:0[1-9]|1[0-2])-(?:[12]\d|0[1-9]|3[01])[T ](?:0\d|1\d|2[0-3])(?::[0-5]\d){2}(?:\.\d{1,9})?(?:Z|[+-](?:0\d|1\d|2[0-3])(?::?[0-5]\d)?)$/u;
+var ISO_WEEK_REGEX = /^\d{4}-W(?:0[1-9]|[1-4]\d|5[0-3])$/u;
+var MAC48_REGEX = /^(?:[\da-f]{2}:){5}[\da-f]{2}$|^(?:[\da-f]{2}-){5}[\da-f]{2}$|^(?:[\da-f]{4}\.){2}[\da-f]{4}$/iu;
+var MAC64_REGEX = /^(?:[\da-f]{2}:){7}[\da-f]{2}$|^(?:[\da-f]{2}-){7}[\da-f]{2}$|^(?:[\da-f]{4}\.){3}[\da-f]{4}$|^(?:[\da-f]{4}:){3}[\da-f]{4}$/iu;
+var MAC_REGEX = /^(?:[\da-f]{2}:){5}[\da-f]{2}$|^(?:[\da-f]{2}-){5}[\da-f]{2}$|^(?:[\da-f]{4}\.){2}[\da-f]{4}$|^(?:[\da-f]{2}:){7}[\da-f]{2}$|^(?:[\da-f]{2}-){7}[\da-f]{2}$|^(?:[\da-f]{4}\.){3}[\da-f]{4}$|^(?:[\da-f]{4}:){3}[\da-f]{4}$/iu;
+var NANO_ID_REGEX = /^[\w-]+$/u;
+var OCTAL_REGEX = /^(?:0o)?[0-7]+$/u;
+var RFC_EMAIL_REGEX = (
+  // eslint-disable-next-line regexp/prefer-w, no-useless-escape, regexp/no-useless-escape, regexp/require-unicode-regexp
+  /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
+);
+var SLUG_REGEX = /^[\da-z]+(?:[-_][\da-z]+)*$/u;
+var ULID_REGEX = /^[\da-hjkmnp-tv-zA-HJKMNP-TV-Z]{26}$/u;
+var UUID_REGEX = /^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/iu;
+
+// src/actions/base64/base64.ts
+// @__NO_SIDE_EFFECTS__
+function base64(message2) {
+  return {
+    kind: "validation",
+    type: "base64",
+    reference: base64,
+    async: false,
+    expects: null,
+    requirement: BASE64_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "Base64", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/bic/bic.ts
+// @__NO_SIDE_EFFECTS__
+function bic(message2) {
+  return {
+    kind: "validation",
+    type: "bic",
+    reference: bic,
+    async: false,
+    expects: null,
+    requirement: BIC_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "BIC", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/brand/brand.ts
+// @__NO_SIDE_EFFECTS__
+function brand(name) {
+  return {
+    kind: "transformation",
+    type: "brand",
+    reference: brand,
+    async: false,
+    name,
+    "~run"(dataset) {
+      return dataset;
+    }
+  };
+}
+
+// src/actions/bytes/bytes.ts
+// @__NO_SIDE_EFFECTS__
+function bytes(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "bytes",
+    reference: bytes,
+    async: false,
+    expects: `${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed) {
+        const length2 = _getByteCount(dataset.value);
+        if (length2 !== this.requirement) {
+          _addIssue(this, "bytes", dataset, config2, {
+            received: `${length2}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/check/check.ts
+// @__NO_SIDE_EFFECTS__
+function check(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "check",
+    reference: check,
+    async: false,
+    expects: null,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement(dataset.value)) {
+        _addIssue(this, "input", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/check/checkAsync.ts
+// @__NO_SIDE_EFFECTS__
+function checkAsync(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "check",
+    reference: checkAsync,
+    async: true,
+    expects: null,
+    requirement,
+    message: message2,
+    async "~run"(dataset, config2) {
+      if (dataset.typed && !await this.requirement(dataset.value)) {
+        _addIssue(this, "input", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/checkItems/checkItems.ts
+// @__NO_SIDE_EFFECTS__
+function checkItems(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "check_items",
+    reference: checkItems,
+    async: false,
+    expects: null,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed) {
+        for (let index = 0; index < dataset.value.length; index++) {
+          const item = dataset.value[index];
+          if (!this.requirement(item, index, dataset.value)) {
+            _addIssue(this, "item", dataset, config2, {
+              input: item,
+              path: [
+                {
+                  type: "array",
+                  origin: "value",
+                  input: dataset.value,
+                  key: index,
+                  value: item
+                }
+              ]
+            });
+          }
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/checkItems/checkItemsAsync.ts
+// @__NO_SIDE_EFFECTS__
+function checkItemsAsync(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "check_items",
+    reference: checkItemsAsync,
+    async: true,
+    expects: null,
+    requirement,
+    message: message2,
+    async "~run"(dataset, config2) {
+      if (dataset.typed) {
+        const requirementResults = await Promise.all(
+          dataset.value.map(this.requirement)
+        );
+        for (let index = 0; index < dataset.value.length; index++) {
+          if (!requirementResults[index]) {
+            const item = dataset.value[index];
+            _addIssue(this, "item", dataset, config2, {
+              input: item,
+              path: [
+                {
+                  type: "array",
+                  origin: "value",
+                  input: dataset.value,
+                  key: index,
+                  value: item
+                }
+              ]
+            });
+          }
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/creditCard/creditCard.ts
+var CREDIT_CARD_REGEX = /^(?:\d{14,19}|\d{4}(?: \d{3,6}){2,4}|\d{4}(?:-\d{3,6}){2,4})$/u;
+var SANITIZE_REGEX = /[- ]/gu;
+var PROVIDER_REGEX_LIST = [
+  // American Express
+  /^3[47]\d{13}$/u,
+  // Diners Club
+  /^3(?:0[0-5]|[68]\d)\d{11,13}$/u,
+  // Discover
+  /^6(?:011|5\d{2})\d{12,15}$/u,
+  // JCB
+  /^(?:2131|1800|35\d{3})\d{11}$/u,
+  // Mastercard
+  // eslint-disable-next-line redos-detector/no-unsafe-regex
+  /^5[1-5]\d{2}|(?:222\d|22[3-9]\d|2[3-6]\d{2}|27[01]\d|2720)\d{12}$/u,
+  // UnionPay
+  /^(?:6[27]\d{14,17}|81\d{14,17})$/u,
+  // Visa
+  /^4\d{12}(?:\d{3,6})?$/u
+];
+// @__NO_SIDE_EFFECTS__
+function creditCard(message2) {
+  return {
+    kind: "validation",
+    type: "credit_card",
+    reference: creditCard,
+    async: false,
+    expects: null,
+    requirement(input) {
+      let sanitized;
+      return CREDIT_CARD_REGEX.test(input) && // Remove any hyphens and blanks
+      (sanitized = input.replace(SANITIZE_REGEX, "")) && // Check if it matches a provider
+      PROVIDER_REGEX_LIST.some((regex2) => regex2.test(sanitized)) && // Check if passes luhn algorithm
+      _isLuhnAlgo(sanitized);
+    },
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement(dataset.value)) {
+        _addIssue(this, "credit card", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/cuid2/cuid2.ts
+// @__NO_SIDE_EFFECTS__
+function cuid2(message2) {
+  return {
+    kind: "validation",
+    type: "cuid2",
+    reference: cuid2,
+    async: false,
+    expects: null,
+    requirement: CUID2_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "Cuid2", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/decimal/decimal.ts
+// @__NO_SIDE_EFFECTS__
+function decimal(message2) {
+  return {
+    kind: "validation",
+    type: "decimal",
+    reference: decimal,
+    async: false,
+    expects: null,
+    requirement: DECIMAL_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "decimal", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/description/description.ts
+// @__NO_SIDE_EFFECTS__
+function description(description_) {
+  return {
+    kind: "metadata",
+    type: "description",
+    reference: description,
+    description: description_
+  };
+}
+
+// src/actions/digits/digits.ts
+// @__NO_SIDE_EFFECTS__
+function digits(message2) {
+  return {
+    kind: "validation",
+    type: "digits",
+    reference: digits,
+    async: false,
+    expects: null,
+    requirement: DIGITS_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "digits", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/email/email.ts
+// @__NO_SIDE_EFFECTS__
+function email(message2) {
+  return {
+    kind: "validation",
+    type: "email",
+    reference: email,
+    expects: null,
+    async: false,
+    requirement: EMAIL_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "email", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/emoji/emoji.ts
+// @__NO_SIDE_EFFECTS__
+function emoji(message2) {
+  return {
+    kind: "validation",
+    type: "emoji",
+    reference: emoji,
+    async: false,
+    expects: null,
+    requirement: EMOJI_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "emoji", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/empty/empty.ts
+// @__NO_SIDE_EFFECTS__
+function empty(message2) {
+  return {
+    kind: "validation",
+    type: "empty",
+    reference: empty,
+    async: false,
+    expects: "0",
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && dataset.value.length > 0) {
+        _addIssue(this, "length", dataset, config2, {
+          received: `${dataset.value.length}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/endsWith/endsWith.ts
+// @__NO_SIDE_EFFECTS__
+function endsWith(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "ends_with",
+    reference: endsWith,
+    async: false,
+    expects: `"${requirement}"`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !dataset.value.endsWith(this.requirement)) {
+        _addIssue(this, "end", dataset, config2, {
+          received: `"${dataset.value.slice(-this.requirement.length)}"`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/entries/entries.ts
+// @__NO_SIDE_EFFECTS__
+function entries(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "entries",
+    reference: entries,
+    async: false,
+    expects: `${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (!dataset.typed) return dataset;
+      const count = Object.keys(dataset.value).length;
+      if (dataset.typed && count !== this.requirement) {
+        _addIssue(this, "entries", dataset, config2, {
+          received: `${count}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/everyItem/everyItem.ts
+// @__NO_SIDE_EFFECTS__
+function everyItem(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "every_item",
+    reference: everyItem,
+    async: false,
+    expects: null,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !dataset.value.every(this.requirement)) {
+        _addIssue(this, "item", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/excludes/excludes.ts
+// @__NO_SIDE_EFFECTS__
+function excludes(requirement, message2) {
+  const received = _stringify(requirement);
+  return {
+    kind: "validation",
+    type: "excludes",
+    reference: excludes,
+    async: false,
+    expects: `!${received}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && dataset.value.includes(this.requirement)) {
+        _addIssue(this, "content", dataset, config2, { received });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/filterItems/filterItems.ts
+// @__NO_SIDE_EFFECTS__
+function filterItems(operation) {
+  return {
+    kind: "transformation",
+    type: "filter_items",
+    reference: filterItems,
+    async: false,
+    operation,
+    "~run"(dataset) {
+      dataset.value = dataset.value.filter(this.operation);
+      return dataset;
+    }
+  };
+}
+
+// src/actions/findItem/findItem.ts
+// @__NO_SIDE_EFFECTS__
+function findItem(operation) {
+  return {
+    kind: "transformation",
+    type: "find_item",
+    reference: findItem,
+    async: false,
+    operation,
+    "~run"(dataset) {
+      dataset.value = dataset.value.find(this.operation);
+      return dataset;
+    }
+  };
+}
+
+// src/actions/finite/finite.ts
+// @__NO_SIDE_EFFECTS__
+function finite(message2) {
+  return {
+    kind: "validation",
+    type: "finite",
+    reference: finite,
+    async: false,
+    expects: null,
+    requirement: Number.isFinite,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement(dataset.value)) {
+        _addIssue(this, "finite", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/flavor/flavor.ts
+// @__NO_SIDE_EFFECTS__
+function flavor(name) {
+  return {
+    kind: "transformation",
+    type: "flavor",
+    reference: flavor,
+    async: false,
+    name,
+    "~run"(dataset) {
+      return dataset;
+    }
+  };
+}
+
+// src/actions/graphemes/graphemes.ts
+// @__NO_SIDE_EFFECTS__
+function graphemes(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "graphemes",
+    reference: graphemes,
+    async: false,
+    expects: `${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed) {
+        const count = _getGraphemeCount(dataset.value);
+        if (count !== this.requirement) {
+          _addIssue(this, "graphemes", dataset, config2, {
+            received: `${count}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/gtValue/gtValue.ts
+// @__NO_SIDE_EFFECTS__
+function gtValue(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "gt_value",
+    reference: gtValue,
+    async: false,
+    expects: `>${requirement instanceof Date ? requirement.toJSON() : _stringify(requirement)}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !(dataset.value > this.requirement)) {
+        _addIssue(this, "value", dataset, config2, {
+          received: dataset.value instanceof Date ? dataset.value.toJSON() : _stringify(dataset.value)
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/hash/hash.ts
+var HASH_LENGTHS = {
+  md4: 32,
+  md5: 32,
+  sha1: 40,
+  sha256: 64,
+  sha384: 96,
+  sha512: 128,
+  ripemd128: 32,
+  ripemd160: 40,
+  tiger128: 32,
+  tiger160: 40,
+  tiger192: 48,
+  crc32: 8,
+  crc32b: 8,
+  adler32: 8
+};
+// @__NO_SIDE_EFFECTS__
+function hash(types, message2) {
+  return {
+    kind: "validation",
+    type: "hash",
+    reference: hash,
+    expects: null,
+    async: false,
+    requirement: RegExp(
+      types.map((type) => `^[a-f0-9]{${HASH_LENGTHS[type]}}$`).join("|"),
+      "iu"
+    ),
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "hash", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/hexadecimal/hexadecimal.ts
+// @__NO_SIDE_EFFECTS__
+function hexadecimal(message2) {
+  return {
+    kind: "validation",
+    type: "hexadecimal",
+    reference: hexadecimal,
+    async: false,
+    expects: null,
+    requirement: HEXADECIMAL_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "hexadecimal", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/hexColor/hexColor.ts
+// @__NO_SIDE_EFFECTS__
+function hexColor(message2) {
+  return {
+    kind: "validation",
+    type: "hex_color",
+    reference: hexColor,
+    async: false,
+    expects: null,
+    requirement: HEX_COLOR_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "hex color", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/imei/imei.ts
+// @__NO_SIDE_EFFECTS__
+function imei(message2) {
+  return {
+    kind: "validation",
+    type: "imei",
+    reference: imei,
+    async: false,
+    expects: null,
+    requirement(input) {
+      return IMEI_REGEX.test(input) && _isLuhnAlgo(input);
+    },
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement(dataset.value)) {
+        _addIssue(this, "IMEI", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/includes/includes.ts
+// @__NO_SIDE_EFFECTS__
+function includes(requirement, message2) {
+  const expects = _stringify(requirement);
+  return {
+    kind: "validation",
+    type: "includes",
+    reference: includes,
+    async: false,
+    expects,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !dataset.value.includes(this.requirement)) {
+        _addIssue(this, "content", dataset, config2, {
+          received: `!${expects}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/integer/integer.ts
+// @__NO_SIDE_EFFECTS__
+function integer(message2) {
+  return {
+    kind: "validation",
+    type: "integer",
+    reference: integer,
+    async: false,
+    expects: null,
+    requirement: Number.isInteger,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement(dataset.value)) {
+        _addIssue(this, "integer", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/ip/ip.ts
+// @__NO_SIDE_EFFECTS__
+function ip(message2) {
+  return {
+    kind: "validation",
+    type: "ip",
+    reference: ip,
+    async: false,
+    expects: null,
+    requirement: IP_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "IP", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/ipv4/ipv4.ts
+// @__NO_SIDE_EFFECTS__
+function ipv4(message2) {
+  return {
+    kind: "validation",
+    type: "ipv4",
+    reference: ipv4,
+    async: false,
+    expects: null,
+    requirement: IPV4_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "IPv4", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/ipv6/ipv6.ts
+// @__NO_SIDE_EFFECTS__
+function ipv6(message2) {
+  return {
+    kind: "validation",
+    type: "ipv6",
+    reference: ipv6,
+    async: false,
+    expects: null,
+    requirement: IPV6_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "IPv6", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/isoDate/isoDate.ts
+// @__NO_SIDE_EFFECTS__
+function isoDate(message2) {
+  return {
+    kind: "validation",
+    type: "iso_date",
+    reference: isoDate,
+    async: false,
+    expects: null,
+    requirement: ISO_DATE_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "date", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/isoDateTime/isoDateTime.ts
+// @__NO_SIDE_EFFECTS__
+function isoDateTime(message2) {
+  return {
+    kind: "validation",
+    type: "iso_date_time",
+    reference: isoDateTime,
+    async: false,
+    expects: null,
+    requirement: ISO_DATE_TIME_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "date-time", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/isoTime/isoTime.ts
+// @__NO_SIDE_EFFECTS__
+function isoTime(message2) {
+  return {
+    kind: "validation",
+    type: "iso_time",
+    reference: isoTime,
+    async: false,
+    expects: null,
+    requirement: ISO_TIME_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "time", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/isoTimeSecond/isoTimeSecond.ts
+// @__NO_SIDE_EFFECTS__
+function isoTimeSecond(message2) {
+  return {
+    kind: "validation",
+    type: "iso_time_second",
+    reference: isoTimeSecond,
+    async: false,
+    expects: null,
+    requirement: ISO_TIME_SECOND_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "time-second", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/isoTimestamp/isoTimestamp.ts
+// @__NO_SIDE_EFFECTS__
+function isoTimestamp(message2) {
+  return {
+    kind: "validation",
+    type: "iso_timestamp",
+    reference: isoTimestamp,
+    async: false,
+    expects: null,
+    requirement: ISO_TIMESTAMP_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "timestamp", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/isoWeek/isoWeek.ts
+// @__NO_SIDE_EFFECTS__
+function isoWeek(message2) {
+  return {
+    kind: "validation",
+    type: "iso_week",
+    reference: isoWeek,
+    async: false,
+    expects: null,
+    requirement: ISO_WEEK_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "week", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/length/length.ts
+// @__NO_SIDE_EFFECTS__
+function length(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "length",
+    reference: length,
+    async: false,
+    expects: `${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && dataset.value.length !== this.requirement) {
+        _addIssue(this, "length", dataset, config2, {
+          received: `${dataset.value.length}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/ltValue/ltValue.ts
+// @__NO_SIDE_EFFECTS__
+function ltValue(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "lt_value",
+    reference: ltValue,
+    async: false,
+    expects: `<${requirement instanceof Date ? requirement.toJSON() : _stringify(requirement)}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !(dataset.value < this.requirement)) {
+        _addIssue(this, "value", dataset, config2, {
+          received: dataset.value instanceof Date ? dataset.value.toJSON() : _stringify(dataset.value)
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/mac/mac.ts
+// @__NO_SIDE_EFFECTS__
+function mac(message2) {
+  return {
+    kind: "validation",
+    type: "mac",
+    reference: mac,
+    async: false,
+    expects: null,
+    requirement: MAC_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "MAC", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/mac48/mac48.ts
+// @__NO_SIDE_EFFECTS__
+function mac48(message2) {
+  return {
+    kind: "validation",
+    type: "mac48",
+    reference: mac48,
+    async: false,
+    expects: null,
+    requirement: MAC48_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "48-bit MAC", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/mac64/mac64.ts
+// @__NO_SIDE_EFFECTS__
+function mac64(message2) {
+  return {
+    kind: "validation",
+    type: "mac64",
+    reference: mac64,
+    async: false,
+    expects: null,
+    requirement: MAC64_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "64-bit MAC", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/mapItems/mapItems.ts
+// @__NO_SIDE_EFFECTS__
+function mapItems(operation) {
+  return {
+    kind: "transformation",
+    type: "map_items",
+    reference: mapItems,
+    async: false,
+    operation,
+    "~run"(dataset) {
+      dataset.value = dataset.value.map(this.operation);
+      return dataset;
+    }
+  };
+}
+
+// src/actions/maxBytes/maxBytes.ts
+// @__NO_SIDE_EFFECTS__
+function maxBytes(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "max_bytes",
+    reference: maxBytes,
+    async: false,
+    expects: `<=${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed) {
+        const length2 = _getByteCount(dataset.value);
+        if (length2 > this.requirement) {
+          _addIssue(this, "bytes", dataset, config2, {
+            received: `${length2}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/maxEntries/maxEntries.ts
+// @__NO_SIDE_EFFECTS__
+function maxEntries(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "max_entries",
+    reference: maxEntries,
+    async: false,
+    expects: `<=${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (!dataset.typed) return dataset;
+      const count = Object.keys(dataset.value).length;
+      if (dataset.typed && count > this.requirement) {
+        _addIssue(this, "entries", dataset, config2, {
+          received: `${count}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/maxGraphemes/maxGraphemes.ts
+// @__NO_SIDE_EFFECTS__
+function maxGraphemes(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "max_graphemes",
+    reference: maxGraphemes,
+    async: false,
+    expects: `<=${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed) {
+        const count = _getGraphemeCount(dataset.value);
+        if (count > this.requirement) {
+          _addIssue(this, "graphemes", dataset, config2, {
+            received: `${count}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/maxLength/maxLength.ts
+// @__NO_SIDE_EFFECTS__
+function maxLength(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "max_length",
+    reference: maxLength,
+    async: false,
+    expects: `<=${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && dataset.value.length > this.requirement) {
+        _addIssue(this, "length", dataset, config2, {
+          received: `${dataset.value.length}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/maxSize/maxSize.ts
+// @__NO_SIDE_EFFECTS__
+function maxSize(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "max_size",
+    reference: maxSize,
+    async: false,
+    expects: `<=${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && dataset.value.size > this.requirement) {
+        _addIssue(this, "size", dataset, config2, {
+          received: `${dataset.value.size}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/maxValue/maxValue.ts
+// @__NO_SIDE_EFFECTS__
+function maxValue(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "max_value",
+    reference: maxValue,
+    async: false,
+    expects: `<=${requirement instanceof Date ? requirement.toJSON() : _stringify(requirement)}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !(dataset.value <= this.requirement)) {
+        _addIssue(this, "value", dataset, config2, {
+          received: dataset.value instanceof Date ? dataset.value.toJSON() : _stringify(dataset.value)
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/maxWords/maxWords.ts
+// @__NO_SIDE_EFFECTS__
+function maxWords(locales, requirement, message2) {
+  return {
+    kind: "validation",
+    type: "max_words",
+    reference: maxWords,
+    async: false,
+    expects: `<=${requirement}`,
+    locales,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed) {
+        const count = _getWordCount(this.locales, dataset.value);
+        if (count > this.requirement) {
+          _addIssue(this, "words", dataset, config2, {
+            received: `${count}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/metadata/metadata.ts
+// @__NO_SIDE_EFFECTS__
+function metadata(metadata_) {
+  return {
+    kind: "metadata",
+    type: "metadata",
+    reference: metadata,
+    metadata: metadata_
+  };
+}
+
+// src/actions/mimeType/mimeType.ts
+// @__NO_SIDE_EFFECTS__
+function mimeType(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "mime_type",
+    reference: mimeType,
+    async: false,
+    expects: _joinExpects(
+      requirement.map((option) => `"${option}"`),
+      "|"
+    ),
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.includes(dataset.value.type)) {
+        _addIssue(this, "MIME type", dataset, config2, {
+          received: `"${dataset.value.type}"`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/minBytes/minBytes.ts
+// @__NO_SIDE_EFFECTS__
+function minBytes(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "min_bytes",
+    reference: minBytes,
+    async: false,
+    expects: `>=${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed) {
+        const length2 = _getByteCount(dataset.value);
+        if (length2 < this.requirement) {
+          _addIssue(this, "bytes", dataset, config2, {
+            received: `${length2}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/minEntries/minEntries.ts
+// @__NO_SIDE_EFFECTS__
+function minEntries(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "min_entries",
+    reference: minEntries,
+    async: false,
+    expects: `>=${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (!dataset.typed) return dataset;
+      const count = Object.keys(dataset.value).length;
+      if (dataset.typed && count < this.requirement) {
+        _addIssue(this, "entries", dataset, config2, {
+          received: `${count}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/minGraphemes/minGraphemes.ts
+// @__NO_SIDE_EFFECTS__
+function minGraphemes(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "min_graphemes",
+    reference: minGraphemes,
+    async: false,
+    expects: `>=${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed) {
+        const count = _getGraphemeCount(dataset.value);
+        if (count < this.requirement) {
+          _addIssue(this, "graphemes", dataset, config2, {
+            received: `${count}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/minLength/minLength.ts
+// @__NO_SIDE_EFFECTS__
+function minLength(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "min_length",
+    reference: minLength,
+    async: false,
+    expects: `>=${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && dataset.value.length < this.requirement) {
+        _addIssue(this, "length", dataset, config2, {
+          received: `${dataset.value.length}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/minSize/minSize.ts
+// @__NO_SIDE_EFFECTS__
+function minSize(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "min_size",
+    reference: minSize,
+    async: false,
+    expects: `>=${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && dataset.value.size < this.requirement) {
+        _addIssue(this, "size", dataset, config2, {
+          received: `${dataset.value.size}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/minValue/minValue.ts
+// @__NO_SIDE_EFFECTS__
+function minValue(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "min_value",
+    reference: minValue,
+    async: false,
+    expects: `>=${requirement instanceof Date ? requirement.toJSON() : _stringify(requirement)}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !(dataset.value >= this.requirement)) {
+        _addIssue(this, "value", dataset, config2, {
+          received: dataset.value instanceof Date ? dataset.value.toJSON() : _stringify(dataset.value)
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/minWords/minWords.ts
+// @__NO_SIDE_EFFECTS__
+function minWords(locales, requirement, message2) {
+  return {
+    kind: "validation",
+    type: "min_words",
+    reference: minWords,
+    async: false,
+    expects: `>=${requirement}`,
+    locales,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed) {
+        const count = _getWordCount(this.locales, dataset.value);
+        if (count < this.requirement) {
+          _addIssue(this, "words", dataset, config2, {
+            received: `${count}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/multipleOf/multipleOf.ts
+// @__NO_SIDE_EFFECTS__
+function multipleOf(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "multiple_of",
+    reference: multipleOf,
+    async: false,
+    expects: `%${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && dataset.value % this.requirement != 0) {
+        _addIssue(this, "multiple", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/nanoid/nanoid.ts
+// @__NO_SIDE_EFFECTS__
+function nanoid(message2) {
+  return {
+    kind: "validation",
+    type: "nanoid",
+    reference: nanoid,
+    async: false,
+    expects: null,
+    requirement: NANO_ID_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "Nano ID", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/nonEmpty/nonEmpty.ts
+// @__NO_SIDE_EFFECTS__
+function nonEmpty(message2) {
+  return {
+    kind: "validation",
+    type: "non_empty",
+    reference: nonEmpty,
+    async: false,
+    expects: "!0",
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && dataset.value.length === 0) {
+        _addIssue(this, "length", dataset, config2, {
+          received: "0"
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/normalize/normalize.ts
+// @__NO_SIDE_EFFECTS__
+function normalize(form) {
+  return {
+    kind: "transformation",
+    type: "normalize",
+    reference: normalize,
+    async: false,
+    form,
+    "~run"(dataset) {
+      dataset.value = dataset.value.normalize(this.form);
+      return dataset;
+    }
+  };
+}
+
+// src/actions/notBytes/notBytes.ts
+// @__NO_SIDE_EFFECTS__
+function notBytes(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "not_bytes",
+    reference: notBytes,
+    async: false,
+    expects: `!${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed) {
+        const length2 = _getByteCount(dataset.value);
+        if (length2 === this.requirement) {
+          _addIssue(this, "bytes", dataset, config2, {
+            received: `${length2}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/notEntries/notEntries.ts
+// @__NO_SIDE_EFFECTS__
+function notEntries(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "not_entries",
+    reference: notEntries,
+    async: false,
+    expects: `!${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (!dataset.typed) return dataset;
+      const count = Object.keys(dataset.value).length;
+      if (dataset.typed && count === this.requirement) {
+        _addIssue(this, "entries", dataset, config2, {
+          received: `${count}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/notGraphemes/notGraphemes.ts
+// @__NO_SIDE_EFFECTS__
+function notGraphemes(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "not_graphemes",
+    reference: notGraphemes,
+    async: false,
+    expects: `!${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed) {
+        const count = _getGraphemeCount(dataset.value);
+        if (count === this.requirement) {
+          _addIssue(this, "graphemes", dataset, config2, {
+            received: `${count}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/notLength/notLength.ts
+// @__NO_SIDE_EFFECTS__
+function notLength(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "not_length",
+    reference: notLength,
+    async: false,
+    expects: `!${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && dataset.value.length === this.requirement) {
+        _addIssue(this, "length", dataset, config2, {
+          received: `${dataset.value.length}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/notSize/notSize.ts
+// @__NO_SIDE_EFFECTS__
+function notSize(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "not_size",
+    reference: notSize,
+    async: false,
+    expects: `!${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && dataset.value.size === this.requirement) {
+        _addIssue(this, "size", dataset, config2, {
+          received: `${dataset.value.size}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/notValue/notValue.ts
+// @__NO_SIDE_EFFECTS__
+function notValue(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "not_value",
+    reference: notValue,
+    async: false,
+    expects: requirement instanceof Date ? `!${requirement.toJSON()}` : `!${_stringify(requirement)}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && this.requirement <= dataset.value && this.requirement >= dataset.value) {
+        _addIssue(this, "value", dataset, config2, {
+          received: dataset.value instanceof Date ? dataset.value.toJSON() : _stringify(dataset.value)
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/notValues/notValues.ts
+// @__NO_SIDE_EFFECTS__
+function notValues(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "not_values",
+    reference: notValues,
+    async: false,
+    expects: `!${_joinExpects(
+      requirement.map(
+        (value2) => value2 instanceof Date ? value2.toJSON() : _stringify(value2)
+      ),
+      "|"
+    )}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && this.requirement.some(
+        (value2) => value2 <= dataset.value && value2 >= dataset.value
+      )) {
+        _addIssue(this, "value", dataset, config2, {
+          received: dataset.value instanceof Date ? dataset.value.toJSON() : _stringify(dataset.value)
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/notWords/notWords.ts
+// @__NO_SIDE_EFFECTS__
+function notWords(locales, requirement, message2) {
+  return {
+    kind: "validation",
+    type: "not_words",
+    reference: notWords,
+    async: false,
+    expects: `!${requirement}`,
+    locales,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed) {
+        const count = _getWordCount(this.locales, dataset.value);
+        if (count === this.requirement) {
+          _addIssue(this, "words", dataset, config2, {
+            received: `${count}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/octal/octal.ts
+// @__NO_SIDE_EFFECTS__
+function octal(message2) {
+  return {
+    kind: "validation",
+    type: "octal",
+    reference: octal,
+    async: false,
+    expects: null,
+    requirement: OCTAL_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "octal", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/parseJson/parseJson.ts
+// @__NO_SIDE_EFFECTS__
+function parseJson(config2, message2) {
+  return {
+    kind: "transformation",
+    type: "parse_json",
+    reference: parseJson,
+    config: config2,
+    message: message2,
+    async: false,
+    "~run"(dataset, config3) {
+      try {
+        dataset.value = JSON.parse(dataset.value, this.config?.reviver);
+      } catch (error) {
+        if (error instanceof Error) {
+          _addIssue(this, "JSON", dataset, config3, {
+            received: `"${error.message}"`
+          });
+          dataset.typed = false;
+        } else {
+          throw error;
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/partialCheck/utils/_isPartiallyTyped/_isPartiallyTyped.ts
+// @__NO_SIDE_EFFECTS__
+function _isPartiallyTyped(dataset, paths) {
+  if (dataset.issues) {
+    for (const path of paths) {
+      for (const issue of dataset.issues) {
+        let typed = false;
+        const bound = Math.min(path.length, issue.path?.length ?? 0);
+        for (let index = 0; index < bound; index++) {
+          if (
+            // @ts-expect-error
+            path[index] !== issue.path[index].key && // @ts-expect-error
+            (path[index] !== "$" || issue.path[index].type !== "array")
+          ) {
+            typed = true;
+            break;
+          }
+        }
+        if (!typed) {
+          return false;
+        }
+      }
+    }
+  }
+  return true;
+}
+
+// src/actions/partialCheck/partialCheck.ts
+// @__NO_SIDE_EFFECTS__
+function partialCheck(paths, requirement, message2) {
+  return {
+    kind: "validation",
+    type: "partial_check",
+    reference: partialCheck,
+    async: false,
+    expects: null,
+    paths,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if ((dataset.typed || _isPartiallyTyped(dataset, paths)) && // @ts-expect-error
+      !this.requirement(dataset.value)) {
+        _addIssue(this, "input", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/partialCheck/partialCheckAsync.ts
+// @__NO_SIDE_EFFECTS__
+function partialCheckAsync(paths, requirement, message2) {
+  return {
+    kind: "validation",
+    type: "partial_check",
+    reference: partialCheckAsync,
+    async: true,
+    expects: null,
+    paths,
+    requirement,
+    message: message2,
+    async "~run"(dataset, config2) {
+      if ((dataset.typed || _isPartiallyTyped(dataset, paths)) && // @ts-expect-error
+      !await this.requirement(dataset.value)) {
+        _addIssue(this, "input", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/rawCheck/rawCheck.ts
+// @__NO_SIDE_EFFECTS__
+function rawCheck(action) {
+  return {
+    kind: "validation",
+    type: "raw_check",
+    reference: rawCheck,
+    async: false,
+    expects: null,
+    "~run"(dataset, config2) {
+      action({
+        dataset,
+        config: config2,
+        addIssue: (info) => _addIssue(this, info?.label ?? "input", dataset, config2, info)
+      });
+      return dataset;
+    }
+  };
+}
+
+// src/actions/rawCheck/rawCheckAsync.ts
+// @__NO_SIDE_EFFECTS__
+function rawCheckAsync(action) {
+  return {
+    kind: "validation",
+    type: "raw_check",
+    reference: rawCheckAsync,
+    async: true,
+    expects: null,
+    async "~run"(dataset, config2) {
+      await action({
+        dataset,
+        config: config2,
+        addIssue: (info) => _addIssue(this, info?.label ?? "input", dataset, config2, info)
+      });
+      return dataset;
+    }
+  };
+}
+
+// src/actions/rawTransform/rawTransform.ts
+// @__NO_SIDE_EFFECTS__
+function rawTransform(action) {
+  return {
+    kind: "transformation",
+    type: "raw_transform",
+    reference: rawTransform,
+    async: false,
+    "~run"(dataset, config2) {
+      const output = action({
+        dataset,
+        config: config2,
+        addIssue: (info) => _addIssue(this, info?.label ?? "input", dataset, config2, info),
+        NEVER: null
+      });
+      if (dataset.issues) {
+        dataset.typed = false;
+      } else {
+        dataset.value = output;
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/rawTransform/rawTransformAsync.ts
+// @__NO_SIDE_EFFECTS__
+function rawTransformAsync(action) {
+  return {
+    kind: "transformation",
+    type: "raw_transform",
+    reference: rawTransformAsync,
+    async: true,
+    async "~run"(dataset, config2) {
+      const output = await action({
+        dataset,
+        config: config2,
+        addIssue: (info) => _addIssue(this, info?.label ?? "input", dataset, config2, info),
+        NEVER: null
+      });
+      if (dataset.issues) {
+        dataset.typed = false;
+      } else {
+        dataset.value = output;
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/readonly/readonly.ts
+// @__NO_SIDE_EFFECTS__
+function readonly() {
+  return {
+    kind: "transformation",
+    type: "readonly",
+    reference: readonly,
+    async: false,
+    "~run"(dataset) {
+      return dataset;
+    }
+  };
+}
+
+// src/actions/reduceItems/reduceItems.ts
+// @__NO_SIDE_EFFECTS__
+function reduceItems(operation, initial) {
+  return {
+    kind: "transformation",
+    type: "reduce_items",
+    reference: reduceItems,
+    async: false,
+    operation,
+    initial,
+    "~run"(dataset) {
+      dataset.value = dataset.value.reduce(this.operation, this.initial);
+      return dataset;
+    }
+  };
+}
+
+// src/actions/regex/regex.ts
+// @__NO_SIDE_EFFECTS__
+function regex(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "regex",
+    reference: regex,
+    async: false,
+    expects: `${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "format", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/returns/returns.ts
+// @__NO_SIDE_EFFECTS__
+function returns(schema) {
+  return {
+    kind: "transformation",
+    type: "returns",
+    reference: returns,
+    async: false,
+    schema,
+    "~run"(dataset, config2) {
+      const func = dataset.value;
+      dataset.value = (...args_) => {
+        const returnsDataset = this.schema["~run"](
+          { value: func(...args_) },
+          config2
+        );
+        if (returnsDataset.issues) {
+          throw new ValiError(returnsDataset.issues);
+        }
+        return returnsDataset.value;
+      };
+      return dataset;
+    }
+  };
+}
+
+// src/actions/returns/returnsAsync.ts
+// @__NO_SIDE_EFFECTS__
+function returnsAsync(schema) {
+  return {
+    kind: "transformation",
+    type: "returns",
+    reference: returnsAsync,
+    async: false,
+    schema,
+    "~run"(dataset, config2) {
+      const func = dataset.value;
+      dataset.value = async (...args_) => {
+        const returnsDataset = await this.schema["~run"](
+          { value: await func(...args_) },
+          config2
+        );
+        if (returnsDataset.issues) {
+          throw new ValiError(returnsDataset.issues);
+        }
+        return returnsDataset.value;
+      };
+      return dataset;
+    }
+  };
+}
+
+// src/actions/rfcEmail/rfcEmail.ts
+// @__NO_SIDE_EFFECTS__
+function rfcEmail(message2) {
+  return {
+    kind: "validation",
+    type: "rfc_email",
+    reference: rfcEmail,
+    expects: null,
+    async: false,
+    requirement: RFC_EMAIL_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "email", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/safeInteger/safeInteger.ts
+// @__NO_SIDE_EFFECTS__
+function safeInteger(message2) {
+  return {
+    kind: "validation",
+    type: "safe_integer",
+    reference: safeInteger,
+    async: false,
+    expects: null,
+    requirement: Number.isSafeInteger,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement(dataset.value)) {
+        _addIssue(this, "safe integer", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/size/size.ts
+// @__NO_SIDE_EFFECTS__
+function size(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "size",
+    reference: size,
+    async: false,
+    expects: `${requirement}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && dataset.value.size !== this.requirement) {
+        _addIssue(this, "size", dataset, config2, {
+          received: `${dataset.value.size}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/slug/slug.ts
+// @__NO_SIDE_EFFECTS__
+function slug(message2) {
+  return {
+    kind: "validation",
+    type: "slug",
+    reference: slug,
+    async: false,
+    expects: null,
+    requirement: SLUG_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "slug", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/someItem/someItem.ts
+// @__NO_SIDE_EFFECTS__
+function someItem(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "some_item",
+    reference: someItem,
+    async: false,
+    expects: null,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !dataset.value.some(this.requirement)) {
+        _addIssue(this, "item", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/sortItems/sortItems.ts
+// @__NO_SIDE_EFFECTS__
+function sortItems(operation) {
+  return {
+    kind: "transformation",
+    type: "sort_items",
+    reference: sortItems,
+    async: false,
+    operation,
+    "~run"(dataset) {
+      dataset.value = dataset.value.sort(this.operation);
+      return dataset;
+    }
+  };
+}
+
+// src/actions/startsWith/startsWith.ts
+// @__NO_SIDE_EFFECTS__
+function startsWith(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "starts_with",
+    reference: startsWith,
+    async: false,
+    expects: `"${requirement}"`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !dataset.value.startsWith(this.requirement)) {
+        _addIssue(this, "start", dataset, config2, {
+          received: `"${dataset.value.slice(0, this.requirement.length)}"`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/stringifyJson/stringifyJson.ts
+// @__NO_SIDE_EFFECTS__
+function stringifyJson(config2, message2) {
+  return {
+    kind: "transformation",
+    type: "stringify_json",
+    reference: stringifyJson,
+    message: message2,
+    config: config2,
+    async: false,
+    "~run"(dataset, config3) {
+      try {
+        const output = JSON.stringify(
+          dataset.value,
+          // @ts-expect-error
+          this.config?.replacer,
+          this.config?.space
+        );
+        if (output === void 0) {
+          _addIssue(this, "JSON", dataset, config3);
+          dataset.typed = false;
+        }
+        dataset.value = output;
+      } catch (error) {
+        if (error instanceof Error) {
+          _addIssue(this, "JSON", dataset, config3, {
+            received: `"${error.message}"`
+          });
+          dataset.typed = false;
+        } else {
+          throw error;
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/title/title.ts
+// @__NO_SIDE_EFFECTS__
+function title(title_) {
+  return {
+    kind: "metadata",
+    type: "title",
+    reference: title,
+    title: title_
+  };
+}
+
+// src/actions/toLowerCase/toLowerCase.ts
+// @__NO_SIDE_EFFECTS__
+function toLowerCase() {
+  return {
+    kind: "transformation",
+    type: "to_lower_case",
+    reference: toLowerCase,
+    async: false,
+    "~run"(dataset) {
+      dataset.value = dataset.value.toLowerCase();
+      return dataset;
+    }
+  };
+}
+
+// src/actions/toMaxValue/toMaxValue.ts
+// @__NO_SIDE_EFFECTS__
+function toMaxValue(requirement) {
+  return {
+    kind: "transformation",
+    type: "to_max_value",
+    reference: toMaxValue,
+    async: false,
+    requirement,
+    "~run"(dataset) {
+      dataset.value = dataset.value > this.requirement ? this.requirement : dataset.value;
+      return dataset;
+    }
+  };
+}
+
+// src/actions/toMinValue/toMinValue.ts
+// @__NO_SIDE_EFFECTS__
+function toMinValue(requirement) {
+  return {
+    kind: "transformation",
+    type: "to_min_value",
+    reference: toMinValue,
+    async: false,
+    requirement,
+    "~run"(dataset) {
+      dataset.value = dataset.value < this.requirement ? this.requirement : dataset.value;
+      return dataset;
+    }
+  };
+}
+
+// src/actions/toUpperCase/toUpperCase.ts
+// @__NO_SIDE_EFFECTS__
+function toUpperCase() {
+  return {
+    kind: "transformation",
+    type: "to_upper_case",
+    reference: toUpperCase,
+    async: false,
+    "~run"(dataset) {
+      dataset.value = dataset.value.toUpperCase();
+      return dataset;
+    }
+  };
+}
+
+// src/actions/transform/transform.ts
+// @__NO_SIDE_EFFECTS__
+function transform(operation) {
+  return {
+    kind: "transformation",
+    type: "transform",
+    reference: transform,
+    async: false,
+    operation,
+    "~run"(dataset) {
+      dataset.value = this.operation(dataset.value);
+      return dataset;
+    }
+  };
+}
+
+// src/actions/transform/transformAsync.ts
+// @__NO_SIDE_EFFECTS__
+function transformAsync(operation) {
+  return {
+    kind: "transformation",
+    type: "transform",
+    reference: transformAsync,
+    async: true,
+    operation,
+    async "~run"(dataset) {
+      dataset.value = await this.operation(dataset.value);
+      return dataset;
+    }
+  };
+}
+
+// src/actions/trim/trim.ts
+// @__NO_SIDE_EFFECTS__
+function trim() {
+  return {
+    kind: "transformation",
+    type: "trim",
+    reference: trim,
+    async: false,
+    "~run"(dataset) {
+      dataset.value = dataset.value.trim();
+      return dataset;
+    }
+  };
+}
+
+// src/actions/trimEnd/trimEnd.ts
+// @__NO_SIDE_EFFECTS__
+function trimEnd() {
+  return {
+    kind: "transformation",
+    type: "trim_end",
+    reference: trimEnd,
+    async: false,
+    "~run"(dataset) {
+      dataset.value = dataset.value.trimEnd();
+      return dataset;
+    }
+  };
+}
+
+// src/actions/trimStart/trimStart.ts
+// @__NO_SIDE_EFFECTS__
+function trimStart() {
+  return {
+    kind: "transformation",
+    type: "trim_start",
+    reference: trimStart,
+    async: false,
+    "~run"(dataset) {
+      dataset.value = dataset.value.trimStart();
+      return dataset;
+    }
+  };
+}
+
+// src/actions/ulid/ulid.ts
+// @__NO_SIDE_EFFECTS__
+function ulid(message2) {
+  return {
+    kind: "validation",
+    type: "ulid",
+    reference: ulid,
+    async: false,
+    expects: null,
+    requirement: ULID_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "ULID", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/url/url.ts
+// @__NO_SIDE_EFFECTS__
+function url(message2) {
+  return {
+    kind: "validation",
+    type: "url",
+    reference: url,
+    async: false,
+    expects: null,
+    requirement(input) {
+      try {
+        new URL(input);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement(dataset.value)) {
+        _addIssue(this, "URL", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/uuid/uuid.ts
+// @__NO_SIDE_EFFECTS__
+function uuid(message2) {
+  return {
+    kind: "validation",
+    type: "uuid",
+    reference: uuid,
+    async: false,
+    expects: null,
+    requirement: UUID_REGEX,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "UUID", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/value/value.ts
+// @__NO_SIDE_EFFECTS__
+function value(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "value",
+    reference: value,
+    async: false,
+    expects: requirement instanceof Date ? requirement.toJSON() : _stringify(requirement),
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !(this.requirement <= dataset.value && this.requirement >= dataset.value)) {
+        _addIssue(this, "value", dataset, config2, {
+          received: dataset.value instanceof Date ? dataset.value.toJSON() : _stringify(dataset.value)
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/values/values.ts
+// @__NO_SIDE_EFFECTS__
+function values(requirement, message2) {
+  return {
+    kind: "validation",
+    type: "values",
+    reference: values,
+    async: false,
+    expects: `${_joinExpects(
+      requirement.map(
+        (value2) => value2 instanceof Date ? value2.toJSON() : _stringify(value2)
+      ),
+      "|"
+    )}`,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed && !this.requirement.some(
+        (value2) => value2 <= dataset.value && value2 >= dataset.value
+      )) {
+        _addIssue(this, "value", dataset, config2, {
+          received: dataset.value instanceof Date ? dataset.value.toJSON() : _stringify(dataset.value)
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/words/words.ts
+// @__NO_SIDE_EFFECTS__
+function words(locales, requirement, message2) {
+  return {
+    kind: "validation",
+    type: "words",
+    reference: words,
+    async: false,
+    expects: `${requirement}`,
+    locales,
+    requirement,
+    message: message2,
+    "~run"(dataset, config2) {
+      if (dataset.typed) {
+        const count = _getWordCount(this.locales, dataset.value);
+        if (count !== this.requirement) {
+          _addIssue(this, "words", dataset, config2, {
+            received: `${count}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/methods/assert/assert.ts
+function assert(schema, input) {
+  const issues = schema["~run"]({ value: input }, { abortEarly: true }).issues;
+  if (issues) {
+    throw new ValiError(issues);
+  }
+}
+
+// src/methods/config/config.ts
+// @__NO_SIDE_EFFECTS__
+function config(schema, config2) {
+  return {
+    ...schema,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config_) {
+      return schema["~run"](dataset, { ...config_, ...config2 });
+    }
+  };
+}
+
+// src/methods/getFallback/getFallback.ts
+// @__NO_SIDE_EFFECTS__
+function getFallback(schema, dataset, config2) {
+  return typeof schema.fallback === "function" ? (
+    // @ts-expect-error
+    schema.fallback(dataset, config2)
+  ) : (
+    // @ts-expect-error
+    schema.fallback
+  );
+}
+
+// src/methods/fallback/fallback.ts
+// @__NO_SIDE_EFFECTS__
+function fallback(schema, fallback2) {
+  return {
+    ...schema,
+    fallback: fallback2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const outputDataset = schema["~run"](dataset, config2);
+      return outputDataset.issues ? { typed: true, value: getFallback(this, outputDataset, config2) } : outputDataset;
+    }
+  };
+}
+
+// src/methods/fallback/fallbackAsync.ts
+// @__NO_SIDE_EFFECTS__
+function fallbackAsync(schema, fallback2) {
+  return {
+    ...schema,
+    fallback: fallback2,
+    async: true,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const outputDataset = await schema["~run"](dataset, config2);
+      return outputDataset.issues ? {
+        typed: true,
+        value: await getFallback(this, outputDataset, config2)
+      } : outputDataset;
+    }
+  };
+}
+
+// src/methods/flatten/flatten.ts
+// @__NO_SIDE_EFFECTS__
+function flatten(issues) {
+  const flatErrors = {};
+  for (const issue of issues) {
+    if (issue.path) {
+      const dotPath = getDotPath(issue);
+      if (dotPath) {
+        if (!flatErrors.nested) {
+          flatErrors.nested = {};
+        }
+        if (flatErrors.nested[dotPath]) {
+          flatErrors.nested[dotPath].push(issue.message);
+        } else {
+          flatErrors.nested[dotPath] = [issue.message];
+        }
+      } else {
+        if (flatErrors.other) {
+          flatErrors.other.push(issue.message);
+        } else {
+          flatErrors.other = [issue.message];
+        }
+      }
+    } else {
+      if (flatErrors.root) {
+        flatErrors.root.push(issue.message);
+      } else {
+        flatErrors.root = [issue.message];
+      }
+    }
+  }
+  return flatErrors;
+}
+
+// src/methods/forward/forward.ts
+// @__NO_SIDE_EFFECTS__
+function forward(action, path) {
+  return {
+    ...action,
+    "~run"(dataset, config2) {
+      const prevIssues = dataset.issues && [...dataset.issues];
+      dataset = action["~run"](dataset, config2);
+      if (dataset.issues) {
+        for (const issue of dataset.issues) {
+          if (!prevIssues?.includes(issue)) {
+            let pathInput = dataset.value;
+            for (const key of path) {
+              const pathValue = pathInput[key];
+              const pathItem = {
+                type: "unknown",
+                origin: "value",
+                input: pathInput,
+                key,
+                value: pathValue
+              };
+              if (issue.path) {
+                issue.path.push(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              if (!pathValue) {
+                break;
+              }
+              pathInput = pathValue;
+            }
+          }
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/methods/forward/forwardAsync.ts
+// @__NO_SIDE_EFFECTS__
+function forwardAsync(action, path) {
+  return {
+    ...action,
+    async: true,
+    async "~run"(dataset, config2) {
+      const prevIssues = dataset.issues && [...dataset.issues];
+      dataset = await action["~run"](dataset, config2);
+      if (dataset.issues) {
+        for (const issue of dataset.issues) {
+          if (!prevIssues?.includes(issue)) {
+            let pathInput = dataset.value;
+            for (const key of path) {
+              const pathValue = pathInput[key];
+              const pathItem = {
+                type: "unknown",
+                origin: "value",
+                input: pathInput,
+                key,
+                value: pathValue
+              };
+              if (issue.path) {
+                issue.path.push(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              if (!pathValue) {
+                break;
+              }
+              pathInput = pathValue;
+            }
+          }
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/methods/getDefault/getDefault.ts
+// @__NO_SIDE_EFFECTS__
+function getDefault(schema, dataset, config2) {
+  return typeof schema.default === "function" ? (
+    // @ts-expect-error
+    schema.default(dataset, config2)
+  ) : (
+    // @ts-expect-error
+    schema.default
+  );
+}
+
+// src/methods/getDefaults/getDefaults.ts
+// @__NO_SIDE_EFFECTS__
+function getDefaults(schema) {
+  if ("entries" in schema) {
+    const object2 = {};
+    for (const key in schema.entries) {
+      object2[key] = /* @__PURE__ */ getDefaults(schema.entries[key]);
+    }
+    return object2;
+  }
+  if ("items" in schema) {
+    return schema.items.map(getDefaults);
+  }
+  return getDefault(schema);
+}
+
+// src/methods/getDefaults/getDefaultsAsync.ts
+// @__NO_SIDE_EFFECTS__
+async function getDefaultsAsync(schema) {
+  if ("entries" in schema) {
+    return Object.fromEntries(
+      await Promise.all(
+        Object.entries(schema.entries).map(async ([key, value2]) => [
+          key,
+          await /* @__PURE__ */ getDefaultsAsync(value2)
+        ])
+      )
+    );
+  }
+  if ("items" in schema) {
+    return Promise.all(schema.items.map(getDefaultsAsync));
+  }
+  return getDefault(schema);
+}
+
+// src/methods/getDescription/getDescription.ts
+// @__NO_SIDE_EFFECTS__
+function getDescription(schema) {
+  return _getLastMetadata(schema, "description");
+}
+
+// src/methods/getFallbacks/getFallbacks.ts
+// @__NO_SIDE_EFFECTS__
+function getFallbacks(schema) {
+  if ("entries" in schema) {
+    const object2 = {};
+    for (const key in schema.entries) {
+      object2[key] = /* @__PURE__ */ getFallbacks(schema.entries[key]);
+    }
+    return object2;
+  }
+  if ("items" in schema) {
+    return schema.items.map(getFallbacks);
+  }
+  return getFallback(schema);
+}
+
+// src/methods/getFallbacks/getFallbacksAsync.ts
+// @__NO_SIDE_EFFECTS__
+async function getFallbacksAsync(schema) {
+  if ("entries" in schema) {
+    return Object.fromEntries(
+      await Promise.all(
+        Object.entries(schema.entries).map(async ([key, value2]) => [
+          key,
+          await /* @__PURE__ */ getFallbacksAsync(value2)
+        ])
+      )
+    );
+  }
+  if ("items" in schema) {
+    return Promise.all(schema.items.map(getFallbacksAsync));
+  }
+  return getFallback(schema);
+}
+
+// src/methods/getMetadata/getMetadata.ts
+// @__NO_SIDE_EFFECTS__
+function getMetadata(schema) {
+  const result = {};
+  function depthFirstMerge(schema2) {
+    if ("pipe" in schema2) {
+      for (const item of schema2.pipe) {
+        if (item.kind === "schema" && "pipe" in item) {
+          depthFirstMerge(item);
+        } else if (item.kind === "metadata" && item.type === "metadata") {
+          Object.assign(result, item.metadata);
+        }
+      }
+    }
+  }
+  depthFirstMerge(schema);
+  return result;
+}
+
+// src/methods/getTitle/getTitle.ts
+// @__NO_SIDE_EFFECTS__
+function getTitle(schema) {
+  return _getLastMetadata(schema, "title");
+}
+
+// src/methods/is/is.ts
+// @__NO_SIDE_EFFECTS__
+function is(schema, input) {
+  return !schema["~run"]({ value: input }, { abortEarly: true }).issues;
+}
+
+// src/schemas/any/any.ts
+// @__NO_SIDE_EFFECTS__
+function any() {
+  return {
+    kind: "schema",
+    type: "any",
+    reference: any,
+    expects: "any",
+    async: false,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset) {
+      dataset.typed = true;
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/array/array.ts
+// @__NO_SIDE_EFFECTS__
+function array(item, message2) {
+  return {
+    kind: "schema",
+    type: "array",
+    reference: array,
+    expects: "Array",
+    async: false,
+    item,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        for (let key = 0; key < input.length; key++) {
+          const value2 = input[key];
+          const itemDataset = this.item["~run"]({ value: value2 }, config2);
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/array/arrayAsync.ts
+// @__NO_SIDE_EFFECTS__
+function arrayAsync(item, message2) {
+  return {
+    kind: "schema",
+    type: "array",
+    reference: arrayAsync,
+    expects: "Array",
+    async: true,
+    item,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        const itemDatasets = await Promise.all(
+          input.map((value2) => this.item["~run"]({ value: value2 }, config2))
+        );
+        for (let key = 0; key < itemDatasets.length; key++) {
+          const itemDataset = itemDatasets[key];
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: input[key]
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/bigint/bigint.ts
+// @__NO_SIDE_EFFECTS__
+function bigint(message2) {
+  return {
+    kind: "schema",
+    type: "bigint",
+    reference: bigint,
+    expects: "bigint",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (typeof dataset.value === "bigint") {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/blob/blob.ts
+// @__NO_SIDE_EFFECTS__
+function blob(message2) {
+  return {
+    kind: "schema",
+    type: "blob",
+    reference: blob,
+    expects: "Blob",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value instanceof Blob) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/boolean/boolean.ts
+// @__NO_SIDE_EFFECTS__
+function boolean(message2) {
+  return {
+    kind: "schema",
+    type: "boolean",
+    reference: boolean,
+    expects: "boolean",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (typeof dataset.value === "boolean") {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/custom/custom.ts
+// @__NO_SIDE_EFFECTS__
+function custom(check2, message2) {
+  return {
+    kind: "schema",
+    type: "custom",
+    reference: custom,
+    expects: "unknown",
+    async: false,
+    check: check2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (this.check(dataset.value)) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/custom/customAsync.ts
+// @__NO_SIDE_EFFECTS__
+function customAsync(check2, message2) {
+  return {
+    kind: "schema",
+    type: "custom",
+    reference: customAsync,
+    expects: "unknown",
+    async: true,
+    check: check2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      if (await this.check(dataset.value)) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/date/date.ts
+// @__NO_SIDE_EFFECTS__
+function date(message2) {
+  return {
+    kind: "schema",
+    type: "date",
+    reference: date,
+    expects: "Date",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value instanceof Date) {
+        if (!isNaN(dataset.value)) {
+          dataset.typed = true;
+        } else {
+          _addIssue(this, "type", dataset, config2, {
+            received: '"Invalid Date"'
+          });
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/enum/enum.ts
+// @__NO_SIDE_EFFECTS__
+function enum_(enum__, message2) {
+  const options = [];
+  for (const key in enum__) {
+    if (`${+key}` !== key || typeof enum__[key] !== "string" || !Object.is(enum__[enum__[key]], +key)) {
+      options.push(enum__[key]);
+    }
+  }
+  return {
+    kind: "schema",
+    type: "enum",
+    reference: enum_,
+    expects: _joinExpects(options.map(_stringify), "|"),
+    async: false,
+    enum: enum__,
+    options,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (this.options.includes(dataset.value)) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/exactOptional/exactOptional.ts
+// @__NO_SIDE_EFFECTS__
+function exactOptional(wrapped, default_) {
+  return {
+    kind: "schema",
+    type: "exact_optional",
+    reference: exactOptional,
+    expects: wrapped.expects,
+    async: false,
+    wrapped,
+    default: default_,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      return this.wrapped["~run"](dataset, config2);
+    }
+  };
+}
+
+// src/schemas/exactOptional/exactOptionalAsync.ts
+// @__NO_SIDE_EFFECTS__
+function exactOptionalAsync(wrapped, default_) {
+  return {
+    kind: "schema",
+    type: "exact_optional",
+    reference: exactOptionalAsync,
+    expects: wrapped.expects,
+    async: true,
+    wrapped,
+    default: default_,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      return this.wrapped["~run"](dataset, config2);
+    }
+  };
+}
+
+// src/schemas/file/file.ts
+// @__NO_SIDE_EFFECTS__
+function file(message2) {
+  return {
+    kind: "schema",
+    type: "file",
+    reference: file,
+    expects: "File",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value instanceof File) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/function/function.ts
+// @__NO_SIDE_EFFECTS__
+function function_(message2) {
+  return {
+    kind: "schema",
+    type: "function",
+    reference: function_,
+    expects: "Function",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (typeof dataset.value === "function") {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/instance/instance.ts
+// @__NO_SIDE_EFFECTS__
+function instance(class_, message2) {
+  return {
+    kind: "schema",
+    type: "instance",
+    reference: instance,
+    expects: class_.name,
+    async: false,
+    class: class_,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value instanceof this.class) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/intersect/utils/_merge/_merge.ts
+// @__NO_SIDE_EFFECTS__
+function _merge(value1, value2) {
+  if (typeof value1 === typeof value2) {
+    if (value1 === value2 || value1 instanceof Date && value2 instanceof Date && +value1 === +value2) {
+      return { value: value1 };
+    }
+    if (value1 && value2 && value1.constructor === Object && value2.constructor === Object) {
+      for (const key in value2) {
+        if (key in value1) {
+          const dataset = /* @__PURE__ */ _merge(value1[key], value2[key]);
+          if (dataset.issue) {
+            return dataset;
+          }
+          value1[key] = dataset.value;
+        } else {
+          value1[key] = value2[key];
+        }
+      }
+      return { value: value1 };
+    }
+    if (Array.isArray(value1) && Array.isArray(value2)) {
+      if (value1.length === value2.length) {
+        for (let index = 0; index < value1.length; index++) {
+          const dataset = /* @__PURE__ */ _merge(value1[index], value2[index]);
+          if (dataset.issue) {
+            return dataset;
+          }
+          value1[index] = dataset.value;
+        }
+        return { value: value1 };
+      }
+    }
+  }
+  return { issue: true };
+}
+
+// src/schemas/intersect/intersect.ts
+// @__NO_SIDE_EFFECTS__
+function intersect(options, message2) {
+  return {
+    kind: "schema",
+    type: "intersect",
+    reference: intersect,
+    expects: _joinExpects(
+      options.map((option) => option.expects),
+      "&"
+    ),
+    async: false,
+    options,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (this.options.length) {
+        const input = dataset.value;
+        let outputs;
+        dataset.typed = true;
+        for (const schema of this.options) {
+          const optionDataset = schema["~run"]({ value: input }, config2);
+          if (optionDataset.issues) {
+            if (dataset.issues) {
+              dataset.issues.push(...optionDataset.issues);
+            } else {
+              dataset.issues = optionDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!optionDataset.typed) {
+            dataset.typed = false;
+          }
+          if (dataset.typed) {
+            if (outputs) {
+              outputs.push(optionDataset.value);
+            } else {
+              outputs = [optionDataset.value];
+            }
+          }
+        }
+        if (dataset.typed) {
+          dataset.value = outputs[0];
+          for (let index = 1; index < outputs.length; index++) {
+            const mergeDataset = _merge(dataset.value, outputs[index]);
+            if (mergeDataset.issue) {
+              _addIssue(this, "type", dataset, config2, {
+                received: "unknown"
+              });
+              break;
+            }
+            dataset.value = mergeDataset.value;
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/intersect/intersectAsync.ts
+// @__NO_SIDE_EFFECTS__
+function intersectAsync(options, message2) {
+  return {
+    kind: "schema",
+    type: "intersect",
+    reference: intersectAsync,
+    expects: _joinExpects(
+      options.map((option) => option.expects),
+      "&"
+    ),
+    async: true,
+    options,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      if (this.options.length) {
+        const input = dataset.value;
+        let outputs;
+        dataset.typed = true;
+        const optionDatasets = await Promise.all(
+          this.options.map((schema) => schema["~run"]({ value: input }, config2))
+        );
+        for (const optionDataset of optionDatasets) {
+          if (optionDataset.issues) {
+            if (dataset.issues) {
+              dataset.issues.push(...optionDataset.issues);
+            } else {
+              dataset.issues = optionDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!optionDataset.typed) {
+            dataset.typed = false;
+          }
+          if (dataset.typed) {
+            if (outputs) {
+              outputs.push(optionDataset.value);
+            } else {
+              outputs = [optionDataset.value];
+            }
+          }
+        }
+        if (dataset.typed) {
+          dataset.value = outputs[0];
+          for (let index = 1; index < outputs.length; index++) {
+            const mergeDataset = _merge(dataset.value, outputs[index]);
+            if (mergeDataset.issue) {
+              _addIssue(this, "type", dataset, config2, {
+                received: "unknown"
+              });
+              break;
+            }
+            dataset.value = mergeDataset.value;
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/lazy/lazy.ts
+// @__NO_SIDE_EFFECTS__
+function lazy(getter) {
+  return {
+    kind: "schema",
+    type: "lazy",
+    reference: lazy,
+    expects: "unknown",
+    async: false,
+    getter,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      return this.getter(dataset.value)["~run"](dataset, config2);
+    }
+  };
+}
+
+// src/schemas/lazy/lazyAsync.ts
+// @__NO_SIDE_EFFECTS__
+function lazyAsync(getter) {
+  return {
+    kind: "schema",
+    type: "lazy",
+    reference: lazyAsync,
+    expects: "unknown",
+    async: true,
+    getter,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      return (await this.getter(dataset.value))["~run"](dataset, config2);
+    }
+  };
+}
+
+// src/schemas/literal/literal.ts
+// @__NO_SIDE_EFFECTS__
+function literal(literal_, message2) {
+  return {
+    kind: "schema",
+    type: "literal",
+    reference: literal,
+    expects: _stringify(literal_),
+    async: false,
+    literal: literal_,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value === this.literal) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/looseObject/looseObject.ts
+// @__NO_SIDE_EFFECTS__
+function looseObject(entries2, message2) {
+  return {
+    kind: "schema",
+    type: "loose_object",
+    reference: looseObject,
+    expects: "Object",
+    async: false,
+    entries: entries2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        for (const key in this.entries) {
+          const valueSchema = this.entries[key];
+          if (key in input || (valueSchema.type === "exact_optional" || valueSchema.type === "optional" || valueSchema.type === "nullish") && // @ts-expect-error
+          valueSchema.default !== void 0) {
+            const value2 = key in input ? (
+              // @ts-expect-error
+              input[key]
+            ) : getDefault(valueSchema);
+            const valueDataset = valueSchema["~run"]({ value: value2 }, config2);
+            if (valueDataset.issues) {
+              const pathItem = {
+                type: "object",
+                origin: "value",
+                input,
+                key,
+                value: value2
+              };
+              for (const issue of valueDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = valueDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!valueDataset.typed) {
+              dataset.typed = false;
+            }
+            dataset.value[key] = valueDataset.value;
+          } else if (valueSchema.fallback !== void 0) {
+            dataset.value[key] = getFallback(valueSchema);
+          } else if (valueSchema.type !== "exact_optional" && valueSchema.type !== "optional" && valueSchema.type !== "nullish") {
+            _addIssue(this, "key", dataset, config2, {
+              input: void 0,
+              expected: `"${key}"`,
+              path: [
+                {
+                  type: "object",
+                  origin: "key",
+                  input,
+                  key,
+                  // @ts-expect-error
+                  value: input[key]
+                }
+              ]
+            });
+            if (config2.abortEarly) {
+              break;
+            }
+          }
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (const key in input) {
+            if (_isValidObjectKey(input, key) && !(key in this.entries)) {
+              dataset.value[key] = input[key];
+            }
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/looseObject/looseObjectAsync.ts
+// @__NO_SIDE_EFFECTS__
+function looseObjectAsync(entries2, message2) {
+  return {
+    kind: "schema",
+    type: "loose_object",
+    reference: looseObjectAsync,
+    expects: "Object",
+    async: true,
+    entries: entries2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        const valueDatasets = await Promise.all(
+          Object.entries(this.entries).map(async ([key, valueSchema]) => {
+            if (key in input || (valueSchema.type === "exact_optional" || valueSchema.type === "optional" || valueSchema.type === "nullish") && // @ts-expect-error
+            valueSchema.default !== void 0) {
+              const value2 = key in input ? (
+                // @ts-expect-error
+                input[key]
+              ) : await getDefault(valueSchema);
+              return [
+                key,
+                value2,
+                valueSchema,
+                await valueSchema["~run"]({ value: value2 }, config2)
+              ];
+            }
+            return [
+              key,
+              // @ts-expect-error
+              input[key],
+              valueSchema,
+              null
+            ];
+          })
+        );
+        for (const [key, value2, valueSchema, valueDataset] of valueDatasets) {
+          if (valueDataset) {
+            if (valueDataset.issues) {
+              const pathItem = {
+                type: "object",
+                origin: "value",
+                input,
+                key,
+                value: value2
+              };
+              for (const issue of valueDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = valueDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!valueDataset.typed) {
+              dataset.typed = false;
+            }
+            dataset.value[key] = valueDataset.value;
+          } else if (valueSchema.fallback !== void 0) {
+            dataset.value[key] = await getFallback(valueSchema);
+          } else if (valueSchema.type !== "exact_optional" && valueSchema.type !== "optional" && valueSchema.type !== "nullish") {
+            _addIssue(this, "key", dataset, config2, {
+              input: void 0,
+              expected: `"${key}"`,
+              path: [
+                {
+                  type: "object",
+                  origin: "key",
+                  input,
+                  key,
+                  value: value2
+                }
+              ]
+            });
+            if (config2.abortEarly) {
+              break;
+            }
+          }
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (const key in input) {
+            if (_isValidObjectKey(input, key) && !(key in this.entries)) {
+              dataset.value[key] = input[key];
+            }
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/looseTuple/looseTuple.ts
+// @__NO_SIDE_EFFECTS__
+function looseTuple(items, message2) {
+  return {
+    kind: "schema",
+    type: "loose_tuple",
+    reference: looseTuple,
+    expects: "Array",
+    async: false,
+    items,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        for (let key = 0; key < this.items.length; key++) {
+          const value2 = input[key];
+          const itemDataset = this.items[key]["~run"]({ value: value2 }, config2);
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (let key = this.items.length; key < input.length; key++) {
+            dataset.value.push(input[key]);
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/looseTuple/looseTupleAsync.ts
+// @__NO_SIDE_EFFECTS__
+function looseTupleAsync(items, message2) {
+  return {
+    kind: "schema",
+    type: "loose_tuple",
+    reference: looseTupleAsync,
+    expects: "Array",
+    async: true,
+    items,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        const itemDatasets = await Promise.all(
+          this.items.map(async (item, key) => {
+            const value2 = input[key];
+            return [key, value2, await item["~run"]({ value: value2 }, config2)];
+          })
+        );
+        for (const [key, value2, itemDataset] of itemDatasets) {
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (let key = this.items.length; key < input.length; key++) {
+            dataset.value.push(input[key]);
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/map/map.ts
+// @__NO_SIDE_EFFECTS__
+function map(key, value2, message2) {
+  return {
+    kind: "schema",
+    type: "map",
+    reference: map,
+    expects: "Map",
+    async: false,
+    key,
+    value: value2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input instanceof Map) {
+        dataset.typed = true;
+        dataset.value = /* @__PURE__ */ new Map();
+        for (const [inputKey, inputValue] of input) {
+          const keyDataset = this.key["~run"]({ value: inputKey }, config2);
+          if (keyDataset.issues) {
+            const pathItem = {
+              type: "map",
+              origin: "key",
+              input,
+              key: inputKey,
+              value: inputValue
+            };
+            for (const issue of keyDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = keyDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          const valueDataset = this.value["~run"](
+            { value: inputValue },
+            config2
+          );
+          if (valueDataset.issues) {
+            const pathItem = {
+              type: "map",
+              origin: "value",
+              input,
+              key: inputKey,
+              value: inputValue
+            };
+            for (const issue of valueDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = valueDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!keyDataset.typed || !valueDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.set(keyDataset.value, valueDataset.value);
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/map/mapAsync.ts
+// @__NO_SIDE_EFFECTS__
+function mapAsync(key, value2, message2) {
+  return {
+    kind: "schema",
+    type: "map",
+    reference: mapAsync,
+    expects: "Map",
+    async: true,
+    key,
+    value: value2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input instanceof Map) {
+        dataset.typed = true;
+        dataset.value = /* @__PURE__ */ new Map();
+        const datasets = await Promise.all(
+          [...input].map(
+            ([inputKey, inputValue]) => Promise.all([
+              inputKey,
+              inputValue,
+              this.key["~run"]({ value: inputKey }, config2),
+              this.value["~run"]({ value: inputValue }, config2)
+            ])
+          )
+        );
+        for (const [
+          inputKey,
+          inputValue,
+          keyDataset,
+          valueDataset
+        ] of datasets) {
+          if (keyDataset.issues) {
+            const pathItem = {
+              type: "map",
+              origin: "key",
+              input,
+              key: inputKey,
+              value: inputValue
+            };
+            for (const issue of keyDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = keyDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (valueDataset.issues) {
+            const pathItem = {
+              type: "map",
+              origin: "value",
+              input,
+              key: inputKey,
+              value: inputValue
+            };
+            for (const issue of valueDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = valueDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!keyDataset.typed || !valueDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.set(keyDataset.value, valueDataset.value);
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/nan/nan.ts
+// @__NO_SIDE_EFFECTS__
+function nan(message2) {
+  return {
+    kind: "schema",
+    type: "nan",
+    reference: nan,
+    expects: "NaN",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (Number.isNaN(dataset.value)) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/never/never.ts
+// @__NO_SIDE_EFFECTS__
+function never(message2) {
+  return {
+    kind: "schema",
+    type: "never",
+    reference: never,
+    expects: "never",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      _addIssue(this, "type", dataset, config2);
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/nonNullable/nonNullable.ts
+// @__NO_SIDE_EFFECTS__
+function nonNullable(wrapped, message2) {
+  return {
+    kind: "schema",
+    type: "non_nullable",
+    reference: nonNullable,
+    expects: "!null",
+    async: false,
+    wrapped,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value !== null) {
+        dataset = this.wrapped["~run"](dataset, config2);
+      }
+      if (dataset.value === null) {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/nonNullable/nonNullableAsync.ts
+// @__NO_SIDE_EFFECTS__
+function nonNullableAsync(wrapped, message2) {
+  return {
+    kind: "schema",
+    type: "non_nullable",
+    reference: nonNullableAsync,
+    expects: "!null",
+    async: true,
+    wrapped,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      if (dataset.value !== null) {
+        dataset = await this.wrapped["~run"](dataset, config2);
+      }
+      if (dataset.value === null) {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/nonNullish/nonNullish.ts
+// @__NO_SIDE_EFFECTS__
+function nonNullish(wrapped, message2) {
+  return {
+    kind: "schema",
+    type: "non_nullish",
+    reference: nonNullish,
+    expects: "(!null & !undefined)",
+    async: false,
+    wrapped,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (!(dataset.value === null || dataset.value === void 0)) {
+        dataset = this.wrapped["~run"](dataset, config2);
+      }
+      if (dataset.value === null || dataset.value === void 0) {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/nonNullish/nonNullishAsync.ts
+// @__NO_SIDE_EFFECTS__
+function nonNullishAsync(wrapped, message2) {
+  return {
+    kind: "schema",
+    type: "non_nullish",
+    reference: nonNullishAsync,
+    expects: "(!null & !undefined)",
+    async: true,
+    wrapped,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      if (!(dataset.value === null || dataset.value === void 0)) {
+        dataset = await this.wrapped["~run"](dataset, config2);
+      }
+      if (dataset.value === null || dataset.value === void 0) {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/nonOptional/nonOptional.ts
+// @__NO_SIDE_EFFECTS__
+function nonOptional(wrapped, message2) {
+  return {
+    kind: "schema",
+    type: "non_optional",
+    reference: nonOptional,
+    expects: "!undefined",
+    async: false,
+    wrapped,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value !== void 0) {
+        dataset = this.wrapped["~run"](dataset, config2);
+      }
+      if (dataset.value === void 0) {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/nonOptional/nonOptionalAsync.ts
+// @__NO_SIDE_EFFECTS__
+function nonOptionalAsync(wrapped, message2) {
+  return {
+    kind: "schema",
+    type: "non_optional",
+    reference: nonOptionalAsync,
+    expects: "!undefined",
+    async: true,
+    wrapped,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      if (dataset.value !== void 0) {
+        dataset = await this.wrapped["~run"](dataset, config2);
+      }
+      if (dataset.value === void 0) {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/null/null.ts
+// @__NO_SIDE_EFFECTS__
+function null_(message2) {
+  return {
+    kind: "schema",
+    type: "null",
+    reference: null_,
+    expects: "null",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value === null) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/nullable/nullable.ts
+// @__NO_SIDE_EFFECTS__
+function nullable(wrapped, default_) {
+  return {
+    kind: "schema",
+    type: "nullable",
+    reference: nullable,
+    expects: `(${wrapped.expects} | null)`,
+    async: false,
+    wrapped,
+    default: default_,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value === null) {
+        if (this.default !== void 0) {
+          dataset.value = getDefault(this, dataset, config2);
+        }
+        if (dataset.value === null) {
+          dataset.typed = true;
+          return dataset;
+        }
+      }
+      return this.wrapped["~run"](dataset, config2);
+    }
+  };
+}
+
+// src/schemas/nullable/nullableAsync.ts
+// @__NO_SIDE_EFFECTS__
+function nullableAsync(wrapped, default_) {
+  return {
+    kind: "schema",
+    type: "nullable",
+    reference: nullableAsync,
+    expects: `(${wrapped.expects} | null)`,
+    async: true,
+    wrapped,
+    default: default_,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      if (dataset.value === null) {
+        if (this.default !== void 0) {
+          dataset.value = await getDefault(this, dataset, config2);
+        }
+        if (dataset.value === null) {
+          dataset.typed = true;
+          return dataset;
+        }
+      }
+      return this.wrapped["~run"](dataset, config2);
+    }
+  };
+}
+
+// src/schemas/nullish/nullish.ts
+// @__NO_SIDE_EFFECTS__
+function nullish(wrapped, default_) {
+  return {
+    kind: "schema",
+    type: "nullish",
+    reference: nullish,
+    expects: `(${wrapped.expects} | null | undefined)`,
+    async: false,
+    wrapped,
+    default: default_,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value === null || dataset.value === void 0) {
+        if (this.default !== void 0) {
+          dataset.value = getDefault(this, dataset, config2);
+        }
+        if (dataset.value === null || dataset.value === void 0) {
+          dataset.typed = true;
+          return dataset;
+        }
+      }
+      return this.wrapped["~run"](dataset, config2);
+    }
+  };
+}
+
+// src/schemas/nullish/nullishAsync.ts
+// @__NO_SIDE_EFFECTS__
+function nullishAsync(wrapped, default_) {
+  return {
+    kind: "schema",
+    type: "nullish",
+    reference: nullishAsync,
+    expects: `(${wrapped.expects} | null | undefined)`,
+    async: true,
+    wrapped,
+    default: default_,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      if (dataset.value === null || dataset.value === void 0) {
+        if (this.default !== void 0) {
+          dataset.value = await getDefault(this, dataset, config2);
+        }
+        if (dataset.value === null || dataset.value === void 0) {
+          dataset.typed = true;
+          return dataset;
+        }
+      }
+      return this.wrapped["~run"](dataset, config2);
+    }
+  };
+}
+
+// src/schemas/number/number.ts
+// @__NO_SIDE_EFFECTS__
+function number(message2) {
+  return {
+    kind: "schema",
+    type: "number",
+    reference: number,
+    expects: "number",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (typeof dataset.value === "number" && !isNaN(dataset.value)) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/object/object.ts
+// @__NO_SIDE_EFFECTS__
+function object(entries2, message2) {
+  return {
+    kind: "schema",
+    type: "object",
+    reference: object,
+    expects: "Object",
+    async: false,
+    entries: entries2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        for (const key in this.entries) {
+          const valueSchema = this.entries[key];
+          if (key in input || (valueSchema.type === "exact_optional" || valueSchema.type === "optional" || valueSchema.type === "nullish") && // @ts-expect-error
+          valueSchema.default !== void 0) {
+            const value2 = key in input ? (
+              // @ts-expect-error
+              input[key]
+            ) : getDefault(valueSchema);
+            const valueDataset = valueSchema["~run"]({ value: value2 }, config2);
+            if (valueDataset.issues) {
+              const pathItem = {
+                type: "object",
+                origin: "value",
+                input,
+                key,
+                value: value2
+              };
+              for (const issue of valueDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = valueDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!valueDataset.typed) {
+              dataset.typed = false;
+            }
+            dataset.value[key] = valueDataset.value;
+          } else if (valueSchema.fallback !== void 0) {
+            dataset.value[key] = getFallback(valueSchema);
+          } else if (valueSchema.type !== "exact_optional" && valueSchema.type !== "optional" && valueSchema.type !== "nullish") {
+            _addIssue(this, "key", dataset, config2, {
+              input: void 0,
+              expected: `"${key}"`,
+              path: [
+                {
+                  type: "object",
+                  origin: "key",
+                  input,
+                  key,
+                  // @ts-expect-error
+                  value: input[key]
+                }
+              ]
+            });
+            if (config2.abortEarly) {
+              break;
+            }
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/object/objectAsync.ts
+// @__NO_SIDE_EFFECTS__
+function objectAsync(entries2, message2) {
+  return {
+    kind: "schema",
+    type: "object",
+    reference: objectAsync,
+    expects: "Object",
+    async: true,
+    entries: entries2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        const valueDatasets = await Promise.all(
+          Object.entries(this.entries).map(async ([key, valueSchema]) => {
+            if (key in input || (valueSchema.type === "exact_optional" || valueSchema.type === "optional" || valueSchema.type === "nullish") && // @ts-expect-error
+            valueSchema.default !== void 0) {
+              const value2 = key in input ? (
+                // @ts-expect-error
+                input[key]
+              ) : await getDefault(valueSchema);
+              return [
+                key,
+                value2,
+                valueSchema,
+                await valueSchema["~run"]({ value: value2 }, config2)
+              ];
+            }
+            return [
+              key,
+              // @ts-expect-error
+              input[key],
+              valueSchema,
+              null
+            ];
+          })
+        );
+        for (const [key, value2, valueSchema, valueDataset] of valueDatasets) {
+          if (valueDataset) {
+            if (valueDataset.issues) {
+              const pathItem = {
+                type: "object",
+                origin: "value",
+                input,
+                key,
+                value: value2
+              };
+              for (const issue of valueDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = valueDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!valueDataset.typed) {
+              dataset.typed = false;
+            }
+            dataset.value[key] = valueDataset.value;
+          } else if (valueSchema.fallback !== void 0) {
+            dataset.value[key] = await getFallback(valueSchema);
+          } else if (valueSchema.type !== "exact_optional" && valueSchema.type !== "optional" && valueSchema.type !== "nullish") {
+            _addIssue(this, "key", dataset, config2, {
+              input: void 0,
+              expected: `"${key}"`,
+              path: [
+                {
+                  type: "object",
+                  origin: "key",
+                  input,
+                  key,
+                  value: value2
+                }
+              ]
+            });
+            if (config2.abortEarly) {
+              break;
+            }
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/objectWithRest/objectWithRest.ts
+// @__NO_SIDE_EFFECTS__
+function objectWithRest(entries2, rest, message2) {
+  return {
+    kind: "schema",
+    type: "object_with_rest",
+    reference: objectWithRest,
+    expects: "Object",
+    async: false,
+    entries: entries2,
+    rest,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        for (const key in this.entries) {
+          const valueSchema = this.entries[key];
+          if (key in input || (valueSchema.type === "exact_optional" || valueSchema.type === "optional" || valueSchema.type === "nullish") && // @ts-expect-error
+          valueSchema.default !== void 0) {
+            const value2 = key in input ? (
+              // @ts-expect-error
+              input[key]
+            ) : getDefault(valueSchema);
+            const valueDataset = valueSchema["~run"]({ value: value2 }, config2);
+            if (valueDataset.issues) {
+              const pathItem = {
+                type: "object",
+                origin: "value",
+                input,
+                key,
+                value: value2
+              };
+              for (const issue of valueDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = valueDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!valueDataset.typed) {
+              dataset.typed = false;
+            }
+            dataset.value[key] = valueDataset.value;
+          } else if (valueSchema.fallback !== void 0) {
+            dataset.value[key] = getFallback(valueSchema);
+          } else if (valueSchema.type !== "exact_optional" && valueSchema.type !== "optional" && valueSchema.type !== "nullish") {
+            _addIssue(this, "key", dataset, config2, {
+              input: void 0,
+              expected: `"${key}"`,
+              path: [
+                {
+                  type: "object",
+                  origin: "key",
+                  input,
+                  key,
+                  // @ts-expect-error
+                  value: input[key]
+                }
+              ]
+            });
+            if (config2.abortEarly) {
+              break;
+            }
+          }
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (const key in input) {
+            if (_isValidObjectKey(input, key) && !(key in this.entries)) {
+              const valueDataset = this.rest["~run"](
+                // @ts-expect-error
+                { value: input[key] },
+                config2
+              );
+              if (valueDataset.issues) {
+                const pathItem = {
+                  type: "object",
+                  origin: "value",
+                  input,
+                  key,
+                  // @ts-expect-error
+                  value: input[key]
+                };
+                for (const issue of valueDataset.issues) {
+                  if (issue.path) {
+                    issue.path.unshift(pathItem);
+                  } else {
+                    issue.path = [pathItem];
+                  }
+                  dataset.issues?.push(issue);
+                }
+                if (!dataset.issues) {
+                  dataset.issues = valueDataset.issues;
+                }
+                if (config2.abortEarly) {
+                  dataset.typed = false;
+                  break;
+                }
+              }
+              if (!valueDataset.typed) {
+                dataset.typed = false;
+              }
+              dataset.value[key] = valueDataset.value;
+            }
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/objectWithRest/objectWithRestAsync.ts
+// @__NO_SIDE_EFFECTS__
+function objectWithRestAsync(entries2, rest, message2) {
+  return {
+    kind: "schema",
+    type: "object_with_rest",
+    reference: objectWithRestAsync,
+    expects: "Object",
+    async: true,
+    entries: entries2,
+    rest,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        const [normalDatasets, restDatasets] = await Promise.all([
+          // If key is present or its an optional schema with a default value,
+          // parse input of key or default value asynchronously
+          Promise.all(
+            Object.entries(this.entries).map(async ([key, valueSchema]) => {
+              if (key in input || (valueSchema.type === "exact_optional" || valueSchema.type === "optional" || valueSchema.type === "nullish") && // @ts-expect-error
+              valueSchema.default !== void 0) {
+                const value2 = key in input ? (
+                  // @ts-expect-error
+                  input[key]
+                ) : await getDefault(valueSchema);
+                return [
+                  key,
+                  value2,
+                  valueSchema,
+                  await valueSchema["~run"]({ value: value2 }, config2)
+                ];
+              }
+              return [
+                key,
+                // @ts-expect-error
+                input[key],
+                valueSchema,
+                null
+              ];
+            })
+          ),
+          // Parse other entries with rest schema asynchronously
+          // Hint: We exclude specific keys for security reasons
+          Promise.all(
+            Object.entries(input).filter(
+              ([key]) => _isValidObjectKey(input, key) && !(key in this.entries)
+            ).map(
+              async ([key, value2]) => [
+                key,
+                value2,
+                await this.rest["~run"]({ value: value2 }, config2)
+              ]
+            )
+          )
+        ]);
+        for (const [key, value2, valueSchema, valueDataset] of normalDatasets) {
+          if (valueDataset) {
+            if (valueDataset.issues) {
+              const pathItem = {
+                type: "object",
+                origin: "value",
+                input,
+                key,
+                value: value2
+              };
+              for (const issue of valueDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = valueDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!valueDataset.typed) {
+              dataset.typed = false;
+            }
+            dataset.value[key] = valueDataset.value;
+          } else if (valueSchema.fallback !== void 0) {
+            dataset.value[key] = await getFallback(valueSchema);
+          } else if (valueSchema.type !== "exact_optional" && valueSchema.type !== "optional" && valueSchema.type !== "nullish") {
+            _addIssue(this, "key", dataset, config2, {
+              input: void 0,
+              expected: `"${key}"`,
+              path: [
+                {
+                  type: "object",
+                  origin: "key",
+                  input,
+                  key,
+                  value: value2
+                }
+              ]
+            });
+            if (config2.abortEarly) {
+              break;
+            }
+          }
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (const [key, value2, valueDataset] of restDatasets) {
+            if (valueDataset.issues) {
+              const pathItem = {
+                type: "object",
+                origin: "value",
+                input,
+                key,
+                value: value2
+              };
+              for (const issue of valueDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = valueDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!valueDataset.typed) {
+              dataset.typed = false;
+            }
+            dataset.value[key] = valueDataset.value;
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/optional/optional.ts
+// @__NO_SIDE_EFFECTS__
+function optional(wrapped, default_) {
+  return {
+    kind: "schema",
+    type: "optional",
+    reference: optional,
+    expects: `(${wrapped.expects} | undefined)`,
+    async: false,
+    wrapped,
+    default: default_,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value === void 0) {
+        if (this.default !== void 0) {
+          dataset.value = getDefault(this, dataset, config2);
+        }
+        if (dataset.value === void 0) {
+          dataset.typed = true;
+          return dataset;
+        }
+      }
+      return this.wrapped["~run"](dataset, config2);
+    }
+  };
+}
+
+// src/schemas/optional/optionalAsync.ts
+// @__NO_SIDE_EFFECTS__
+function optionalAsync(wrapped, default_) {
+  return {
+    kind: "schema",
+    type: "optional",
+    reference: optionalAsync,
+    expects: `(${wrapped.expects} | undefined)`,
+    async: true,
+    wrapped,
+    default: default_,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      if (dataset.value === void 0) {
+        if (this.default !== void 0) {
+          dataset.value = await getDefault(this, dataset, config2);
+        }
+        if (dataset.value === void 0) {
+          dataset.typed = true;
+          return dataset;
+        }
+      }
+      return this.wrapped["~run"](dataset, config2);
+    }
+  };
+}
+
+// src/schemas/picklist/picklist.ts
+// @__NO_SIDE_EFFECTS__
+function picklist(options, message2) {
+  return {
+    kind: "schema",
+    type: "picklist",
+    reference: picklist,
+    expects: _joinExpects(options.map(_stringify), "|"),
+    async: false,
+    options,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (this.options.includes(dataset.value)) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/promise/promise.ts
+// @__NO_SIDE_EFFECTS__
+function promise(message2) {
+  return {
+    kind: "schema",
+    type: "promise",
+    reference: promise,
+    expects: "Promise",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value instanceof Promise) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/record/record.ts
+// @__NO_SIDE_EFFECTS__
+function record(key, value2, message2) {
+  return {
+    kind: "schema",
+    type: "record",
+    reference: record,
+    expects: "Object",
+    async: false,
+    key,
+    value: value2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        for (const entryKey in input) {
+          if (_isValidObjectKey(input, entryKey)) {
+            const entryValue = input[entryKey];
+            const keyDataset = this.key["~run"]({ value: entryKey }, config2);
+            if (keyDataset.issues) {
+              const pathItem = {
+                type: "object",
+                origin: "key",
+                input,
+                key: entryKey,
+                value: entryValue
+              };
+              for (const issue of keyDataset.issues) {
+                issue.path = [pathItem];
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = keyDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            const valueDataset = this.value["~run"](
+              { value: entryValue },
+              config2
+            );
+            if (valueDataset.issues) {
+              const pathItem = {
+                type: "object",
+                origin: "value",
+                input,
+                key: entryKey,
+                value: entryValue
+              };
+              for (const issue of valueDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = valueDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!keyDataset.typed || !valueDataset.typed) {
+              dataset.typed = false;
+            }
+            if (keyDataset.typed) {
+              dataset.value[keyDataset.value] = valueDataset.value;
+            }
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/record/recordAsync.ts
+// @__NO_SIDE_EFFECTS__
+function recordAsync(key, value2, message2) {
+  return {
+    kind: "schema",
+    type: "record",
+    reference: recordAsync,
+    expects: "Object",
+    async: true,
+    key,
+    value: value2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        const datasets = await Promise.all(
+          Object.entries(input).filter(([key2]) => _isValidObjectKey(input, key2)).map(
+            ([entryKey, entryValue]) => Promise.all([
+              entryKey,
+              entryValue,
+              this.key["~run"]({ value: entryKey }, config2),
+              this.value["~run"]({ value: entryValue }, config2)
+            ])
+          )
+        );
+        for (const [
+          entryKey,
+          entryValue,
+          keyDataset,
+          valueDataset
+        ] of datasets) {
+          if (keyDataset.issues) {
+            const pathItem = {
+              type: "object",
+              origin: "key",
+              input,
+              key: entryKey,
+              value: entryValue
+            };
+            for (const issue of keyDataset.issues) {
+              issue.path = [pathItem];
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = keyDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (valueDataset.issues) {
+            const pathItem = {
+              type: "object",
+              origin: "value",
+              input,
+              key: entryKey,
+              value: entryValue
+            };
+            for (const issue of valueDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = valueDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!keyDataset.typed || !valueDataset.typed) {
+            dataset.typed = false;
+          }
+          if (keyDataset.typed) {
+            dataset.value[keyDataset.value] = valueDataset.value;
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/set/set.ts
+// @__NO_SIDE_EFFECTS__
+function set(value2, message2) {
+  return {
+    kind: "schema",
+    type: "set",
+    reference: set,
+    expects: "Set",
+    async: false,
+    value: value2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input instanceof Set) {
+        dataset.typed = true;
+        dataset.value = /* @__PURE__ */ new Set();
+        for (const inputValue of input) {
+          const valueDataset = this.value["~run"](
+            { value: inputValue },
+            config2
+          );
+          if (valueDataset.issues) {
+            const pathItem = {
+              type: "set",
+              origin: "value",
+              input,
+              key: null,
+              value: inputValue
+            };
+            for (const issue of valueDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = valueDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!valueDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.add(valueDataset.value);
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/set/setAsync.ts
+// @__NO_SIDE_EFFECTS__
+function setAsync(value2, message2) {
+  return {
+    kind: "schema",
+    type: "set",
+    reference: setAsync,
+    expects: "Set",
+    async: true,
+    value: value2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input instanceof Set) {
+        dataset.typed = true;
+        dataset.value = /* @__PURE__ */ new Set();
+        const valueDatasets = await Promise.all(
+          [...input].map(
+            async (inputValue) => [
+              inputValue,
+              await this.value["~run"]({ value: inputValue }, config2)
+            ]
+          )
+        );
+        for (const [inputValue, valueDataset] of valueDatasets) {
+          if (valueDataset.issues) {
+            const pathItem = {
+              type: "set",
+              origin: "value",
+              input,
+              key: null,
+              value: inputValue
+            };
+            for (const issue of valueDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = valueDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!valueDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.add(valueDataset.value);
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/strictObject/strictObject.ts
+// @__NO_SIDE_EFFECTS__
+function strictObject(entries2, message2) {
+  return {
+    kind: "schema",
+    type: "strict_object",
+    reference: strictObject,
+    expects: "Object",
+    async: false,
+    entries: entries2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        for (const key in this.entries) {
+          const valueSchema = this.entries[key];
+          if (key in input || (valueSchema.type === "exact_optional" || valueSchema.type === "optional" || valueSchema.type === "nullish") && // @ts-expect-error
+          valueSchema.default !== void 0) {
+            const value2 = key in input ? (
+              // @ts-expect-error
+              input[key]
+            ) : getDefault(valueSchema);
+            const valueDataset = valueSchema["~run"]({ value: value2 }, config2);
+            if (valueDataset.issues) {
+              const pathItem = {
+                type: "object",
+                origin: "value",
+                input,
+                key,
+                value: value2
+              };
+              for (const issue of valueDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = valueDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!valueDataset.typed) {
+              dataset.typed = false;
+            }
+            dataset.value[key] = valueDataset.value;
+          } else if (valueSchema.fallback !== void 0) {
+            dataset.value[key] = getFallback(valueSchema);
+          } else if (valueSchema.type !== "exact_optional" && valueSchema.type !== "optional" && valueSchema.type !== "nullish") {
+            _addIssue(this, "key", dataset, config2, {
+              input: void 0,
+              expected: `"${key}"`,
+              path: [
+                {
+                  type: "object",
+                  origin: "key",
+                  input,
+                  key,
+                  // @ts-expect-error
+                  value: input[key]
+                }
+              ]
+            });
+            if (config2.abortEarly) {
+              break;
+            }
+          }
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (const key in input) {
+            if (!(key in this.entries)) {
+              _addIssue(this, "key", dataset, config2, {
+                input: key,
+                expected: "never",
+                path: [
+                  {
+                    type: "object",
+                    origin: "key",
+                    input,
+                    key,
+                    // @ts-expect-error
+                    value: input[key]
+                  }
+                ]
+              });
+              break;
+            }
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/strictObject/strictObjectAsync.ts
+// @__NO_SIDE_EFFECTS__
+function strictObjectAsync(entries2, message2) {
+  return {
+    kind: "schema",
+    type: "strict_object",
+    reference: strictObjectAsync,
+    expects: "Object",
+    async: true,
+    entries: entries2,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        const valueDatasets = await Promise.all(
+          Object.entries(this.entries).map(async ([key, valueSchema]) => {
+            if (key in input || (valueSchema.type === "exact_optional" || valueSchema.type === "optional" || valueSchema.type === "nullish") && // @ts-expect-error
+            valueSchema.default !== void 0) {
+              const value2 = key in input ? (
+                // @ts-expect-error
+                input[key]
+              ) : await getDefault(valueSchema);
+              return [
+                key,
+                value2,
+                valueSchema,
+                await valueSchema["~run"]({ value: value2 }, config2)
+              ];
+            }
+            return [
+              key,
+              // @ts-expect-error
+              input[key],
+              valueSchema,
+              null
+            ];
+          })
+        );
+        for (const [key, value2, valueSchema, valueDataset] of valueDatasets) {
+          if (valueDataset) {
+            if (valueDataset.issues) {
+              const pathItem = {
+                type: "object",
+                origin: "value",
+                input,
+                key,
+                value: value2
+              };
+              for (const issue of valueDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = valueDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!valueDataset.typed) {
+              dataset.typed = false;
+            }
+            dataset.value[key] = valueDataset.value;
+          } else if (valueSchema.fallback !== void 0) {
+            dataset.value[key] = await getFallback(valueSchema);
+          } else if (valueSchema.type !== "exact_optional" && valueSchema.type !== "optional" && valueSchema.type !== "nullish") {
+            _addIssue(this, "key", dataset, config2, {
+              input: void 0,
+              expected: `"${key}"`,
+              path: [
+                {
+                  type: "object",
+                  origin: "key",
+                  input,
+                  key,
+                  value: value2
+                }
+              ]
+            });
+            if (config2.abortEarly) {
+              break;
+            }
+          }
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (const key in input) {
+            if (!(key in this.entries)) {
+              _addIssue(this, "key", dataset, config2, {
+                input: key,
+                expected: "never",
+                path: [
+                  {
+                    type: "object",
+                    origin: "key",
+                    input,
+                    key,
+                    // @ts-expect-error
+                    value: input[key]
+                  }
+                ]
+              });
+              break;
+            }
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/strictTuple/strictTuple.ts
+// @__NO_SIDE_EFFECTS__
+function strictTuple(items, message2) {
+  return {
+    kind: "schema",
+    type: "strict_tuple",
+    reference: strictTuple,
+    expects: "Array",
+    async: false,
+    items,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        for (let key = 0; key < this.items.length; key++) {
+          const value2 = input[key];
+          const itemDataset = this.items[key]["~run"]({ value: value2 }, config2);
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+        if (!(dataset.issues && config2.abortEarly) && this.items.length < input.length) {
+          _addIssue(this, "type", dataset, config2, {
+            input: input[this.items.length],
+            expected: "never",
+            path: [
+              {
+                type: "array",
+                origin: "value",
+                input,
+                key: this.items.length,
+                value: input[this.items.length]
+              }
+            ]
+          });
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/strictTuple/strictTupleAsync.ts
+// @__NO_SIDE_EFFECTS__
+function strictTupleAsync(items, message2) {
+  return {
+    kind: "schema",
+    type: "strict_tuple",
+    reference: strictTupleAsync,
+    expects: "Array",
+    async: true,
+    items,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        const itemDatasets = await Promise.all(
+          this.items.map(async (item, key) => {
+            const value2 = input[key];
+            return [key, value2, await item["~run"]({ value: value2 }, config2)];
+          })
+        );
+        for (const [key, value2, itemDataset] of itemDatasets) {
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+        if (!(dataset.issues && config2.abortEarly) && this.items.length < input.length) {
+          _addIssue(this, "type", dataset, config2, {
+            input: input[this.items.length],
+            expected: "never",
+            path: [
+              {
+                type: "array",
+                origin: "value",
+                input,
+                key: this.items.length,
+                value: input[this.items.length]
+              }
+            ]
+          });
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/string/string.ts
+// @__NO_SIDE_EFFECTS__
+function string(message2) {
+  return {
+    kind: "schema",
+    type: "string",
+    reference: string,
+    expects: "string",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (typeof dataset.value === "string") {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/symbol/symbol.ts
+// @__NO_SIDE_EFFECTS__
+function symbol(message2) {
+  return {
+    kind: "schema",
+    type: "symbol",
+    reference: symbol,
+    expects: "symbol",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (typeof dataset.value === "symbol") {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/tuple/tuple.ts
+// @__NO_SIDE_EFFECTS__
+function tuple(items, message2) {
+  return {
+    kind: "schema",
+    type: "tuple",
+    reference: tuple,
+    expects: "Array",
+    async: false,
+    items,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        for (let key = 0; key < this.items.length; key++) {
+          const value2 = input[key];
+          const itemDataset = this.items[key]["~run"]({ value: value2 }, config2);
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/tuple/tupleAsync.ts
+// @__NO_SIDE_EFFECTS__
+function tupleAsync(items, message2) {
+  return {
+    kind: "schema",
+    type: "tuple",
+    reference: tupleAsync,
+    expects: "Array",
+    async: true,
+    items,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        const itemDatasets = await Promise.all(
+          this.items.map(async (item, key) => {
+            const value2 = input[key];
+            return [key, value2, await item["~run"]({ value: value2 }, config2)];
+          })
+        );
+        for (const [key, value2, itemDataset] of itemDatasets) {
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/tupleWithRest/tupleWithRest.ts
+// @__NO_SIDE_EFFECTS__
+function tupleWithRest(items, rest, message2) {
+  return {
+    kind: "schema",
+    type: "tuple_with_rest",
+    reference: tupleWithRest,
+    expects: "Array",
+    async: false,
+    items,
+    rest,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        for (let key = 0; key < this.items.length; key++) {
+          const value2 = input[key];
+          const itemDataset = this.items[key]["~run"]({ value: value2 }, config2);
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (let key = this.items.length; key < input.length; key++) {
+            const value2 = input[key];
+            const itemDataset = this.rest["~run"]({ value: value2 }, config2);
+            if (itemDataset.issues) {
+              const pathItem = {
+                type: "array",
+                origin: "value",
+                input,
+                key,
+                value: value2
+              };
+              for (const issue of itemDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = itemDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!itemDataset.typed) {
+              dataset.typed = false;
+            }
+            dataset.value.push(itemDataset.value);
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/tupleWithRest/tupleWithRestAsync.ts
+// @__NO_SIDE_EFFECTS__
+function tupleWithRestAsync(items, rest, message2) {
+  return {
+    kind: "schema",
+    type: "tuple_with_rest",
+    reference: tupleWithRestAsync,
+    expects: "Array",
+    async: true,
+    items,
+    rest,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        const [normalDatasets, restDatasets] = await Promise.all([
+          // Parse schema of each normal item
+          Promise.all(
+            this.items.map(async (item, key) => {
+              const value2 = input[key];
+              return [
+                key,
+                value2,
+                await item["~run"]({ value: value2 }, config2)
+              ];
+            })
+          ),
+          // Parse other items with rest schema
+          Promise.all(
+            input.slice(this.items.length).map(async (value2, key) => {
+              return [
+                key + this.items.length,
+                value2,
+                await this.rest["~run"]({ value: value2 }, config2)
+              ];
+            })
+          )
+        ]);
+        for (const [key, value2, itemDataset] of normalDatasets) {
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (const [key, value2, itemDataset] of restDatasets) {
+            if (itemDataset.issues) {
+              const pathItem = {
+                type: "array",
+                origin: "value",
+                input,
+                key,
+                value: value2
+              };
+              for (const issue of itemDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = itemDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!itemDataset.typed) {
+              dataset.typed = false;
+            }
+            dataset.value.push(itemDataset.value);
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/undefined/undefined.ts
+// @__NO_SIDE_EFFECTS__
+function undefined_(message2) {
+  return {
+    kind: "schema",
+    type: "undefined",
+    reference: undefined_,
+    expects: "undefined",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value === void 0) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/undefinedable/undefinedable.ts
+// @__NO_SIDE_EFFECTS__
+function undefinedable(wrapped, default_) {
+  return {
+    kind: "schema",
+    type: "undefinedable",
+    reference: undefinedable,
+    expects: `(${wrapped.expects} | undefined)`,
+    async: false,
+    wrapped,
+    default: default_,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value === void 0) {
+        if (this.default !== void 0) {
+          dataset.value = getDefault(this, dataset, config2);
+        }
+        if (dataset.value === void 0) {
+          dataset.typed = true;
+          return dataset;
+        }
+      }
+      return this.wrapped["~run"](dataset, config2);
+    }
+  };
+}
+
+// src/schemas/undefinedable/undefinedableAsync.ts
+// @__NO_SIDE_EFFECTS__
+function undefinedableAsync(wrapped, default_) {
+  return {
+    kind: "schema",
+    type: "undefinedable",
+    reference: undefinedableAsync,
+    expects: `(${wrapped.expects} | undefined)`,
+    async: true,
+    wrapped,
+    default: default_,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      if (dataset.value === void 0) {
+        if (this.default !== void 0) {
+          dataset.value = await getDefault(this, dataset, config2);
+        }
+        if (dataset.value === void 0) {
+          dataset.typed = true;
+          return dataset;
+        }
+      }
+      return this.wrapped["~run"](dataset, config2);
+    }
+  };
+}
+
+// src/schemas/union/utils/_subIssues/_subIssues.ts
+// @__NO_SIDE_EFFECTS__
+function _subIssues(datasets) {
+  let issues;
+  if (datasets) {
+    for (const dataset of datasets) {
+      if (issues) {
+        issues.push(...dataset.issues);
+      } else {
+        issues = dataset.issues;
+      }
+    }
+  }
+  return issues;
+}
+
+// src/schemas/union/union.ts
+// @__NO_SIDE_EFFECTS__
+function union(options, message2) {
+  return {
+    kind: "schema",
+    type: "union",
+    reference: union,
+    expects: _joinExpects(
+      options.map((option) => option.expects),
+      "|"
+    ),
+    async: false,
+    options,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      let validDataset;
+      let typedDatasets;
+      let untypedDatasets;
+      for (const schema of this.options) {
+        const optionDataset = schema["~run"]({ value: dataset.value }, config2);
+        if (optionDataset.typed) {
+          if (optionDataset.issues) {
+            if (typedDatasets) {
+              typedDatasets.push(optionDataset);
+            } else {
+              typedDatasets = [optionDataset];
+            }
+          } else {
+            validDataset = optionDataset;
+            break;
+          }
+        } else {
+          if (untypedDatasets) {
+            untypedDatasets.push(optionDataset);
+          } else {
+            untypedDatasets = [optionDataset];
+          }
+        }
+      }
+      if (validDataset) {
+        return validDataset;
+      }
+      if (typedDatasets) {
+        if (typedDatasets.length === 1) {
+          return typedDatasets[0];
+        }
+        _addIssue(this, "type", dataset, config2, {
+          issues: _subIssues(typedDatasets)
+        });
+        dataset.typed = true;
+      } else if (untypedDatasets?.length === 1) {
+        return untypedDatasets[0];
+      } else {
+        _addIssue(this, "type", dataset, config2, {
+          issues: _subIssues(untypedDatasets)
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/union/unionAsync.ts
+// @__NO_SIDE_EFFECTS__
+function unionAsync(options, message2) {
+  return {
+    kind: "schema",
+    type: "union",
+    reference: unionAsync,
+    expects: _joinExpects(
+      options.map((option) => option.expects),
+      "|"
+    ),
+    async: true,
+    options,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      let validDataset;
+      let typedDatasets;
+      let untypedDatasets;
+      for (const schema of this.options) {
+        const optionDataset = await schema["~run"](
+          { value: dataset.value },
+          config2
+        );
+        if (optionDataset.typed) {
+          if (optionDataset.issues) {
+            if (typedDatasets) {
+              typedDatasets.push(optionDataset);
+            } else {
+              typedDatasets = [optionDataset];
+            }
+          } else {
+            validDataset = optionDataset;
+            break;
+          }
+        } else {
+          if (untypedDatasets) {
+            untypedDatasets.push(optionDataset);
+          } else {
+            untypedDatasets = [optionDataset];
+          }
+        }
+      }
+      if (validDataset) {
+        return validDataset;
+      }
+      if (typedDatasets) {
+        if (typedDatasets.length === 1) {
+          return typedDatasets[0];
+        }
+        _addIssue(this, "type", dataset, config2, {
+          issues: _subIssues(typedDatasets)
+        });
+        dataset.typed = true;
+      } else if (untypedDatasets?.length === 1) {
+        return untypedDatasets[0];
+      } else {
+        _addIssue(this, "type", dataset, config2, {
+          issues: _subIssues(untypedDatasets)
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/unknown/unknown.ts
+// @__NO_SIDE_EFFECTS__
+function unknown() {
+  return {
+    kind: "schema",
+    type: "unknown",
+    reference: unknown,
+    expects: "unknown",
+    async: false,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset) {
+      dataset.typed = true;
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/variant/variant.ts
+// @__NO_SIDE_EFFECTS__
+function variant(key, options, message2) {
+  return {
+    kind: "schema",
+    type: "variant",
+    reference: variant,
+    expects: "Object",
+    async: false,
+    key,
+    options,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        let outputDataset;
+        let maxDiscriminatorPriority = 0;
+        let invalidDiscriminatorKey = this.key;
+        let expectedDiscriminators = [];
+        const parseOptions = (variant2, allKeys) => {
+          for (const schema of variant2.options) {
+            if (schema.type === "variant") {
+              parseOptions(schema, new Set(allKeys).add(schema.key));
+            } else {
+              let keysAreValid = true;
+              let currentPriority = 0;
+              for (const currentKey of allKeys) {
+                const discriminatorSchema = schema.entries[currentKey];
+                if (currentKey in input ? discriminatorSchema["~run"](
+                  // @ts-expect-error
+                  { typed: false, value: input[currentKey] },
+                  { abortEarly: true }
+                ).issues : discriminatorSchema.type !== "exact_optional" && discriminatorSchema.type !== "optional" && discriminatorSchema.type !== "nullish") {
+                  keysAreValid = false;
+                  if (invalidDiscriminatorKey !== currentKey && (maxDiscriminatorPriority < currentPriority || maxDiscriminatorPriority === currentPriority && currentKey in input && !(invalidDiscriminatorKey in input))) {
+                    maxDiscriminatorPriority = currentPriority;
+                    invalidDiscriminatorKey = currentKey;
+                    expectedDiscriminators = [];
+                  }
+                  if (invalidDiscriminatorKey === currentKey) {
+                    expectedDiscriminators.push(
+                      schema.entries[currentKey].expects
+                    );
+                  }
+                  break;
+                }
+                currentPriority++;
+              }
+              if (keysAreValid) {
+                const optionDataset = schema["~run"]({ value: input }, config2);
+                if (!outputDataset || !outputDataset.typed && optionDataset.typed) {
+                  outputDataset = optionDataset;
+                }
+              }
+            }
+            if (outputDataset && !outputDataset.issues) {
+              break;
+            }
+          }
+        };
+        parseOptions(this, /* @__PURE__ */ new Set([this.key]));
+        if (outputDataset) {
+          return outputDataset;
+        }
+        _addIssue(this, "type", dataset, config2, {
+          // @ts-expect-error
+          input: input[invalidDiscriminatorKey],
+          expected: _joinExpects(expectedDiscriminators, "|"),
+          path: [
+            {
+              type: "object",
+              origin: "value",
+              input,
+              key: invalidDiscriminatorKey,
+              // @ts-expect-error
+              value: input[invalidDiscriminatorKey]
+            }
+          ]
+        });
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/variant/variantAsync.ts
+// @__NO_SIDE_EFFECTS__
+function variantAsync(key, options, message2) {
+  return {
+    kind: "schema",
+    type: "variant",
+    reference: variantAsync,
+    expects: "Object",
+    async: true,
+    key,
+    options,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        let outputDataset;
+        let maxDiscriminatorPriority = 0;
+        let invalidDiscriminatorKey = this.key;
+        let expectedDiscriminators = [];
+        const parseOptions = async (variant2, allKeys) => {
+          for (const schema of variant2.options) {
+            if (schema.type === "variant") {
+              await parseOptions(schema, new Set(allKeys).add(schema.key));
+            } else {
+              let keysAreValid = true;
+              let currentPriority = 0;
+              for (const currentKey of allKeys) {
+                const discriminatorSchema = schema.entries[currentKey];
+                if (currentKey in input ? (await discriminatorSchema["~run"](
+                  // @ts-expect-error
+                  { typed: false, value: input[currentKey] },
+                  { abortEarly: true }
+                )).issues : discriminatorSchema.type !== "exact_optional" && discriminatorSchema.type !== "optional" && discriminatorSchema.type !== "nullish") {
+                  keysAreValid = false;
+                  if (invalidDiscriminatorKey !== currentKey && (maxDiscriminatorPriority < currentPriority || maxDiscriminatorPriority === currentPriority && currentKey in input && !(invalidDiscriminatorKey in input))) {
+                    maxDiscriminatorPriority = currentPriority;
+                    invalidDiscriminatorKey = currentKey;
+                    expectedDiscriminators = [];
+                  }
+                  if (invalidDiscriminatorKey === currentKey) {
+                    expectedDiscriminators.push(
+                      schema.entries[currentKey].expects
+                    );
+                  }
+                  break;
+                }
+                currentPriority++;
+              }
+              if (keysAreValid) {
+                const optionDataset = await schema["~run"](
+                  { value: input },
+                  config2
+                );
+                if (!outputDataset || !outputDataset.typed && optionDataset.typed) {
+                  outputDataset = optionDataset;
+                }
+              }
+            }
+            if (outputDataset && !outputDataset.issues) {
+              break;
+            }
+          }
+        };
+        await parseOptions(this, /* @__PURE__ */ new Set([this.key]));
+        if (outputDataset) {
+          return outputDataset;
+        }
+        _addIssue(this, "type", dataset, config2, {
+          // @ts-expect-error
+          input: input[invalidDiscriminatorKey],
+          expected: _joinExpects(expectedDiscriminators, "|"),
+          path: [
+            {
+              type: "object",
+              origin: "value",
+              input,
+              key: invalidDiscriminatorKey,
+              // @ts-expect-error
+              value: input[invalidDiscriminatorKey]
+            }
+          ]
+        });
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/void/void.ts
+// @__NO_SIDE_EFFECTS__
+function void_(message2) {
+  return {
+    kind: "schema",
+    type: "void",
+    reference: void_,
+    expects: "void",
+    async: false,
+    message: message2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      if (dataset.value === void 0) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/methods/keyof/keyof.ts
+// @__NO_SIDE_EFFECTS__
+function keyof(schema, message2) {
+  return picklist(Object.keys(schema.entries), message2);
+}
+
+// src/methods/message/message.ts
+// @__NO_SIDE_EFFECTS__
+function message(schema, message_) {
+  return {
+    ...schema,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      return schema["~run"](dataset, { ...config2, message: message_ });
+    }
+  };
+}
+
+// src/methods/omit/omit.ts
+// @__NO_SIDE_EFFECTS__
+function omit(schema, keys) {
+  const entries2 = {
+    ...schema.entries
+  };
+  for (const key of keys) {
+    delete entries2[key];
+  }
+  return {
+    ...schema,
+    entries: entries2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    }
+  };
+}
+
+// src/methods/parse/parse.ts
+function parse(schema, input, config2) {
+  const dataset = schema["~run"]({ value: input }, getGlobalConfig(config2));
+  if (dataset.issues) {
+    throw new ValiError(dataset.issues);
+  }
+  return dataset.value;
+}
+
+// src/methods/parse/parseAsync.ts
+async function parseAsync(schema, input, config2) {
+  const dataset = await schema["~run"](
+    { value: input },
+    getGlobalConfig(config2)
+  );
+  if (dataset.issues) {
+    throw new ValiError(dataset.issues);
+  }
+  return dataset.value;
+}
+
+// src/methods/parser/parser.ts
+// @__NO_SIDE_EFFECTS__
+function parser(schema, config2) {
+  const func = (input) => parse(schema, input, config2);
+  func.schema = schema;
+  func.config = config2;
+  return func;
+}
+
+// src/methods/parser/parserAsync.ts
+// @__NO_SIDE_EFFECTS__
+function parserAsync(schema, config2) {
+  const func = (input) => parseAsync(schema, input, config2);
+  func.schema = schema;
+  func.config = config2;
+  return func;
+}
+
+// src/methods/partial/partial.ts
+// @__NO_SIDE_EFFECTS__
+function partial(schema, keys) {
+  const entries2 = {};
+  for (const key in schema.entries) {
+    entries2[key] = !keys || keys.includes(key) ? optional(schema.entries[key]) : schema.entries[key];
+  }
+  return {
+    ...schema,
+    entries: entries2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    }
+  };
+}
+
+// src/methods/partial/partialAsync.ts
+// @__NO_SIDE_EFFECTS__
+function partialAsync(schema, keys) {
+  const entries2 = {};
+  for (const key in schema.entries) {
+    entries2[key] = !keys || keys.includes(key) ? optionalAsync(schema.entries[key]) : schema.entries[key];
+  }
+  return {
+    ...schema,
+    entries: entries2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    }
+  };
+}
+
+// src/methods/pick/pick.ts
+// @__NO_SIDE_EFFECTS__
+function pick(schema, keys) {
+  const entries2 = {};
+  for (const key of keys) {
+    entries2[key] = schema.entries[key];
+  }
+  return {
+    ...schema,
+    entries: entries2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    }
+  };
+}
+
+// src/methods/pipe/pipe.ts
+// @__NO_SIDE_EFFECTS__
+function pipe(...pipe2) {
+  return {
+    ...pipe2[0],
+    pipe: pipe2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    "~run"(dataset, config2) {
+      for (const item of pipe2) {
+        if (item.kind !== "metadata") {
+          if (dataset.issues && (item.kind === "schema" || item.kind === "transformation")) {
+            dataset.typed = false;
+            break;
+          }
+          if (!dataset.issues || !config2.abortEarly && !config2.abortPipeEarly) {
+            dataset = item["~run"](dataset, config2);
+          }
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/methods/pipe/pipeAsync.ts
+// @__NO_SIDE_EFFECTS__
+function pipeAsync(...pipe2) {
+  return {
+    ...pipe2[0],
+    pipe: pipe2,
+    async: true,
+    get "~standard"() {
+      return _getStandardProps(this);
+    },
+    async "~run"(dataset, config2) {
+      for (const item of pipe2) {
+        if (item.kind !== "metadata") {
+          if (dataset.issues && (item.kind === "schema" || item.kind === "transformation")) {
+            dataset.typed = false;
+            break;
+          }
+          if (!dataset.issues || !config2.abortEarly && !config2.abortPipeEarly) {
+            dataset = await item["~run"](dataset, config2);
+          }
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/methods/required/required.ts
+// @__NO_SIDE_EFFECTS__
+function required(schema, arg2, arg3) {
+  const keys = Array.isArray(arg2) ? arg2 : void 0;
+  const message2 = Array.isArray(arg2) ? arg3 : arg2;
+  const entries2 = {};
+  for (const key in schema.entries) {
+    entries2[key] = !keys || keys.includes(key) ? nonOptional(schema.entries[key], message2) : schema.entries[key];
+  }
+  return {
+    ...schema,
+    entries: entries2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    }
+  };
+}
+
+// src/methods/required/requiredAsync.ts
+// @__NO_SIDE_EFFECTS__
+function requiredAsync(schema, arg2, arg3) {
+  const keys = Array.isArray(arg2) ? arg2 : void 0;
+  const message2 = Array.isArray(arg2) ? arg3 : arg2;
+  const entries2 = {};
+  for (const key in schema.entries) {
+    entries2[key] = !keys || keys.includes(key) ? nonOptionalAsync(schema.entries[key], message2) : schema.entries[key];
+  }
+  return {
+    ...schema,
+    entries: entries2,
+    get "~standard"() {
+      return _getStandardProps(this);
+    }
+  };
+}
+
+// src/methods/safeParse/safeParse.ts
+// @__NO_SIDE_EFFECTS__
+function safeParse(schema, input, config2) {
+  const dataset = schema["~run"]({ value: input }, getGlobalConfig(config2));
+  return {
+    typed: dataset.typed,
+    success: !dataset.issues,
+    output: dataset.value,
+    issues: dataset.issues
+  };
+}
+
+// src/methods/safeParse/safeParseAsync.ts
+// @__NO_SIDE_EFFECTS__
+async function safeParseAsync(schema, input, config2) {
+  const dataset = await schema["~run"](
+    { value: input },
+    getGlobalConfig(config2)
+  );
+  return {
+    typed: dataset.typed,
+    success: !dataset.issues,
+    output: dataset.value,
+    issues: dataset.issues
+  };
+}
+
+// src/methods/safeParser/safeParser.ts
+// @__NO_SIDE_EFFECTS__
+function safeParser(schema, config2) {
+  const func = (input) => safeParse(schema, input, config2);
+  func.schema = schema;
+  func.config = config2;
+  return func;
+}
+
+// src/methods/safeParser/safeParserAsync.ts
+// @__NO_SIDE_EFFECTS__
+function safeParserAsync(schema, config2) {
+  const func = (input) => safeParseAsync(schema, input, config2);
+  func.schema = schema;
+  func.config = config2;
+  return func;
+}
+
+// src/methods/summarize/summarize.ts
+// @__NO_SIDE_EFFECTS__
+function summarize(issues) {
+  let summary = "";
+  for (const issue of issues) {
+    if (summary) {
+      summary += "\n";
+    }
+    summary += `\xD7 ${issue.message}`;
+    const dotPath = getDotPath(issue);
+    if (dotPath) {
+      summary += `
+  \u2192 at ${dotPath}`;
+    }
+  }
+  return summary;
+}
+
+// src/methods/unwrap/unwrap.ts
+// @__NO_SIDE_EFFECTS__
+function unwrap(schema) {
+  return schema.wrapped;
+}
+// Annotate the CommonJS export names for ESM import in node:
+0 && (0);
+
+
+/***/ }),
+
+/***/ 7213:
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
 
 // ESM COMPAT FLAG
@@ -35015,25 +46675,48 @@ __nccwpck_require__.r(__webpack_exports__);
 
 // EXPORTS
 __nccwpck_require__.d(__webpack_exports__, {
-  DEFAULT_CHECK_OPTIONS: () => (/* reexport */ DEFAULT_CHECK_OPTIONS),
+  CheckMessageOptionsSchema: () => (/* reexport */ CheckMessageOptionsSchema),
+  CheckModeSchema: () => (/* reexport */ CheckModeSchema),
+  DEFAULT_OPTIONS: () => (/* reexport */ DEFAULT_OPTIONS),
+  EXCLUDE_RULES: () => (/* reexport */ EXCLUDE_RULES),
+  GetPullRequestCommitsOptionsSchema: () => (/* reexport */ GetPullRequestCommitsOptionsSchema),
   GitError: () => (/* reexport */ GitError),
   GitHubError: () => (/* reexport */ GitHubError),
   IssueNotFoundError: () => (/* reexport */ IssueNotFoundError),
+  IssueStatusFilterSchema: () => (/* reexport */ IssueStatusFilterSchema),
   ValidationError: () => (/* reexport */ ValidationError),
-  checkBranch: () => (/* reexport */ checkBranch),
-  checkCommit: () => (/* reexport */ checkCommit)
+  checkMessage: () => (/* reexport */ checkMessage),
+  getPullRequestCommits: () => (/* reexport */ getPullRequestCommits)
 });
 
 ;// CONCATENATED MODULE: ../core/dist/domain/constants.js
 // Constants for issue-linker
+// ===== Default Values =====
 /**
- * Default values for check options
+ * Default options for all check operations
+ * Single source of truth for all default values
  */
-const DEFAULT_CHECK_OPTIONS = {
-    /** Default glob pattern to exclude branches */
-    excludePattern: "{main,master,develop}",
+const DEFAULT_OPTIONS = {
+    /** Default check mode */
+    mode: "default",
     /** Default issue status filter */
     issueStatus: "all",
+    /** Default exclude pattern (undefined means no exclusion) */
+    exclude: undefined,
+    /** Default repository (undefined means auto-detect from git) */
+    repo: undefined,
+    /** Default GitHub token (undefined means use environment variable) */
+    githubToken: undefined,
+};
+// ===== Exclude Rules =====
+/**
+ * Mode-specific exclude rules
+ * All patterns use minimatch syntax
+ */
+const EXCLUDE_RULES = {
+    default: undefined,
+    branch: "{main,master,develop,release/*,hotfix/*}",
+    commit: "{Rebase*,Merge*,Revert*,fixup!*,squash!*}",
 };
 //# sourceMappingURL=constants.js.map
 ;// CONCATENATED MODULE: ../core/dist/domain/errors.js
@@ -42162,36 +53845,2204 @@ function unwrap(schema) {
 
 
 ;// CONCATENATED MODULE: ../core/dist/domain/validation-schemas.js
-// Domain layer - Validation schemas using Valibot
+// Domain layer - Centralized valibot validation schemas
+// Define schemas once and derive TypeScript types from them
 
-/**
- * Schema for IssueStatusFilter validation
- */
-const IssueStatusFilterSchema = union([
-    literal("all"),
-    literal("open"),
-    literal("closed"),
+
+// ===== Base Schemas =====
+// Issue status schemas
+const IssueStatusSchema = picklist(["open", "closed"]);
+const IssueStatusFilterSchema = picklist(["all", "open", "closed"]);
+// Mode schemas
+const CheckModeSchema = picklist(["default", "branch", "commit"]);
+const ActionModeSchema = picklist([
+    "validate-branch",
+    "validate-pr-title",
+    "validate-pr-body",
+    "validate-commits",
+    "custom",
 ]);
-/**
- * Schema for repository format validation
- * Validates "owner/repo" format
- */
-const RepositoryFormatSchema = pipe(string(), regex(/^[^/]+\/[^/]+$/, 'Repository must be in "owner/repo" format'));
-/**
- * Schema for CheckOptions validation
- */
-const CheckOptionsSchema = object({
-    branch: optional(string()),
-    repo: optional(RepositoryFormatSchema),
-    excludePattern: optional(string()),
-    issueStatus: optional(IssueStatusFilterSchema),
+// GitHub error type schema
+const GitHubErrorTypeSchema = picklist([
+    "not-found",
+    "unauthorized",
+    "api-error",
+    "network-error",
+]);
+// ===== Complex Schemas =====
+// Pull request commit author schema
+const PullRequestCommitAuthorSchema = object({
+    name: string(),
+    email: string(),
+});
+// Pull request commit schema
+const PullRequestCommitSchema = object({
+    sha: string(),
+    message: string(),
+    author: PullRequestCommitAuthorSchema,
+});
+// GitHub issue schema
+const IssueSchema = object({
+    number: number(),
+    state: IssueStatusSchema,
+    title: optional(string()),
+    body: optional(string()),
+});
+// GitHub repository schema
+const GitHubRepositorySchema = object({
+    owner: string(),
+    repo: string(),
+});
+// GitHub issue result schema
+const GitHubIssueResultSchema = object({
+    found: dist_boolean(),
+    issue: optional(IssueSchema),
+    error: optional(object({
+        type: GitHubErrorTypeSchema,
+        message: string(),
+    })),
+});
+// ===== Options Schemas =====
+// GetPullRequestCommits options schema
+const GetPullRequestCommitsOptionsSchema = object({
+    owner: pipe(string(), minLength(1, "Owner is required")),
+    repo: pipe(string(), minLength(1, "Repository is required")),
+    prNumber: pipe(number(), minValue(1, "Pull request number must be positive")),
     githubToken: optional(string()),
 });
+// CheckMessage options schema
+const CheckMessageOptionsSchema = object({
+    text: string(),
+    checkMode: optional(CheckModeSchema, DEFAULT_OPTIONS.mode),
+    exclude: optional(string()),
+    issueStatus: optional(IssueStatusFilterSchema, DEFAULT_OPTIONS.issueStatus),
+    repo: optional(string()),
+    githubToken: optional(string()),
+    hostname: optional(string()),
+    actionMode: optional(ActionModeSchema),
+});
 //# sourceMappingURL=validation-schemas.js.map
+;// CONCATENATED MODULE: ../core/dist/domain/result-factory.js
+// Factory functions for creating IssueValidationResult objects
+/**
+ * Create a result for when text is excluded from validation
+ */
+function createExcludedResult(input) {
+    return {
+        success: true,
+        message: "Text was excluded from validation",
+        reason: "excluded",
+        input,
+    };
+}
+/**
+ * Create a result for when no issue numbers are found
+ */
+function createNoIssuesResult(input) {
+    return {
+        success: false,
+        message: "No issue number found in text",
+        reason: "no-issues",
+        input,
+    };
+}
+/**
+ * Create a result for when valid issues are found
+ */
+function createValidResult(issues, input) {
+    return {
+        success: true,
+        message: `Valid issue(s) found: #${issues.valid.join(", #")} in ${input.repo}`,
+        reason: "valid",
+        input,
+        issues,
+    };
+}
+/**
+ * Create a result for when invalid issues are found
+ */
+function createInvalidResult(issues, input) {
+    // Build detailed message
+    const parts = [];
+    if (issues.notFound.length > 0) {
+        parts.push(`Issues not found: #${issues.notFound.join(", #")}`);
+    }
+    if (issues.wrongState.length > 0) {
+        parts.push(`Wrong state: #${issues.wrongState.join(", #")}`);
+    }
+    const message = `${parts.join("; ")} in ${input.repo}`;
+    return {
+        success: false,
+        message,
+        reason: "invalid-issues",
+        input,
+        issues,
+    };
+}
+/**
+ * Create a result for when an error occurs
+ */
+function createErrorResult(error, input) {
+    const errorInfo = {
+        type: error instanceof Error ? error.constructor.name : "UnknownError",
+        message: error instanceof Error ? error.message : String(error),
+        ...(error instanceof Error && error.stack && { stack: error.stack }),
+    };
+    return {
+        success: false,
+        message: errorInfo.message,
+        reason: "error",
+        input,
+        error: errorInfo,
+    };
+}
+//# sourceMappingURL=result-factory.js.map
 // EXTERNAL MODULE: ../../node_modules/micromatch/index.js
-var micromatch = __nccwpck_require__(7805);
+var node_modules_micromatch = __nccwpck_require__(7805);
+;// CONCATENATED MODULE: ../../node_modules/@isaacs/balanced-match/dist/esm/index.js
+const balanced = (a, b, str) => {
+    const ma = a instanceof RegExp ? maybeMatch(a, str) : a;
+    const mb = b instanceof RegExp ? maybeMatch(b, str) : b;
+    const r = ma !== null && mb != null && range(ma, mb, str);
+    return (r && {
+        start: r[0],
+        end: r[1],
+        pre: str.slice(0, r[0]),
+        body: str.slice(r[0] + ma.length, r[1]),
+        post: str.slice(r[1] + mb.length),
+    });
+};
+const maybeMatch = (reg, str) => {
+    const m = str.match(reg);
+    return m ? m[0] : null;
+};
+const range = (a, b, str) => {
+    let begs, beg, left, right = undefined, result;
+    let ai = str.indexOf(a);
+    let bi = str.indexOf(b, ai + 1);
+    let i = ai;
+    if (ai >= 0 && bi > 0) {
+        if (a === b) {
+            return [ai, bi];
+        }
+        begs = [];
+        left = str.length;
+        while (i >= 0 && !result) {
+            if (i === ai) {
+                begs.push(i);
+                ai = str.indexOf(a, i + 1);
+            }
+            else if (begs.length === 1) {
+                const r = begs.pop();
+                if (r !== undefined)
+                    result = [r, bi];
+            }
+            else {
+                beg = begs.pop();
+                if (beg !== undefined && beg < left) {
+                    left = beg;
+                    right = bi;
+                }
+                bi = str.indexOf(b, i + 1);
+            }
+            i = ai < bi && ai >= 0 ? ai : bi;
+        }
+        if (begs.length && right !== undefined) {
+            result = [left, right];
+        }
+    }
+    return result;
+};
+//# sourceMappingURL=index.js.map
+;// CONCATENATED MODULE: ../../node_modules/@isaacs/brace-expansion/dist/esm/index.js
+
+const escSlash = '\0SLASH' + Math.random() + '\0';
+const escOpen = '\0OPEN' + Math.random() + '\0';
+const escClose = '\0CLOSE' + Math.random() + '\0';
+const escComma = '\0COMMA' + Math.random() + '\0';
+const escPeriod = '\0PERIOD' + Math.random() + '\0';
+const escSlashPattern = new RegExp(escSlash, 'g');
+const escOpenPattern = new RegExp(escOpen, 'g');
+const escClosePattern = new RegExp(escClose, 'g');
+const escCommaPattern = new RegExp(escComma, 'g');
+const escPeriodPattern = new RegExp(escPeriod, 'g');
+const slashPattern = /\\\\/g;
+const openPattern = /\\{/g;
+const closePattern = /\\}/g;
+const commaPattern = /\\,/g;
+const periodPattern = /\\./g;
+function numeric(str) {
+    return !isNaN(str) ? parseInt(str, 10) : str.charCodeAt(0);
+}
+function escapeBraces(str) {
+    return str
+        .replace(slashPattern, escSlash)
+        .replace(openPattern, escOpen)
+        .replace(closePattern, escClose)
+        .replace(commaPattern, escComma)
+        .replace(periodPattern, escPeriod);
+}
+function unescapeBraces(str) {
+    return str
+        .replace(escSlashPattern, '\\')
+        .replace(escOpenPattern, '{')
+        .replace(escClosePattern, '}')
+        .replace(escCommaPattern, ',')
+        .replace(escPeriodPattern, '.');
+}
+/**
+ * Basically just str.split(","), but handling cases
+ * where we have nested braced sections, which should be
+ * treated as individual members, like {a,{b,c},d}
+ */
+function parseCommaParts(str) {
+    if (!str) {
+        return [''];
+    }
+    const parts = [];
+    const m = balanced('{', '}', str);
+    if (!m) {
+        return str.split(',');
+    }
+    const { pre, body, post } = m;
+    const p = pre.split(',');
+    p[p.length - 1] += '{' + body + '}';
+    const postParts = parseCommaParts(post);
+    if (post.length) {
+        ;
+        p[p.length - 1] += postParts.shift();
+        p.push.apply(p, postParts);
+    }
+    parts.push.apply(parts, p);
+    return parts;
+}
+function expand(str) {
+    if (!str) {
+        return [];
+    }
+    // I don't know why Bash 4.3 does this, but it does.
+    // Anything starting with {} will have the first two bytes preserved
+    // but *only* at the top level, so {},a}b will not expand to anything,
+    // but a{},b}c will be expanded to [a}c,abc].
+    // One could argue that this is a bug in Bash, but since the goal of
+    // this module is to match Bash's rules, we escape a leading {}
+    if (str.slice(0, 2) === '{}') {
+        str = '\\{\\}' + str.slice(2);
+    }
+    return expand_(escapeBraces(str), true).map(unescapeBraces);
+}
+function embrace(str) {
+    return '{' + str + '}';
+}
+function isPadded(el) {
+    return /^-?0\d/.test(el);
+}
+function lte(i, y) {
+    return i <= y;
+}
+function gte(i, y) {
+    return i >= y;
+}
+function expand_(str, isTop) {
+    /** @type {string[]} */
+    const expansions = [];
+    const m = balanced('{', '}', str);
+    if (!m)
+        return [str];
+    // no need to expand pre, since it is guaranteed to be free of brace-sets
+    const pre = m.pre;
+    const post = m.post.length ? expand_(m.post, false) : [''];
+    if (/\$$/.test(m.pre)) {
+        for (let k = 0; k < post.length; k++) {
+            const expansion = pre + '{' + m.body + '}' + post[k];
+            expansions.push(expansion);
+        }
+    }
+    else {
+        const isNumericSequence = /^-?\d+\.\.-?\d+(?:\.\.-?\d+)?$/.test(m.body);
+        const isAlphaSequence = /^[a-zA-Z]\.\.[a-zA-Z](?:\.\.-?\d+)?$/.test(m.body);
+        const isSequence = isNumericSequence || isAlphaSequence;
+        const isOptions = m.body.indexOf(',') >= 0;
+        if (!isSequence && !isOptions) {
+            // {a},b}
+            if (m.post.match(/,(?!,).*\}/)) {
+                str = m.pre + '{' + m.body + escClose + m.post;
+                return expand_(str);
+            }
+            return [str];
+        }
+        let n;
+        if (isSequence) {
+            n = m.body.split(/\.\./);
+        }
+        else {
+            n = parseCommaParts(m.body);
+            if (n.length === 1 && n[0] !== undefined) {
+                // x{{a,b}}y ==> x{a}y x{b}y
+                n = expand_(n[0], false).map(embrace);
+                //XXX is this necessary? Can't seem to hit it in tests.
+                /* c8 ignore start */
+                if (n.length === 1) {
+                    return post.map(p => m.pre + n[0] + p);
+                }
+                /* c8 ignore stop */
+            }
+        }
+        // at this point, n is the parts, and we know it's not a comma set
+        // with a single entry.
+        let N;
+        if (isSequence && n[0] !== undefined && n[1] !== undefined) {
+            const x = numeric(n[0]);
+            const y = numeric(n[1]);
+            const width = Math.max(n[0].length, n[1].length);
+            let incr = n.length === 3 && n[2] !== undefined ? Math.abs(numeric(n[2])) : 1;
+            let test = lte;
+            const reverse = y < x;
+            if (reverse) {
+                incr *= -1;
+                test = gte;
+            }
+            const pad = n.some(isPadded);
+            N = [];
+            for (let i = x; test(i, y); i += incr) {
+                let c;
+                if (isAlphaSequence) {
+                    c = String.fromCharCode(i);
+                    if (c === '\\') {
+                        c = '';
+                    }
+                }
+                else {
+                    c = String(i);
+                    if (pad) {
+                        const need = width - c.length;
+                        if (need > 0) {
+                            const z = new Array(need + 1).join('0');
+                            if (i < 0) {
+                                c = '-' + z + c.slice(1);
+                            }
+                            else {
+                                c = z + c;
+                            }
+                        }
+                    }
+                }
+                N.push(c);
+            }
+        }
+        else {
+            N = [];
+            for (let j = 0; j < n.length; j++) {
+                N.push.apply(N, expand_(n[j], false));
+            }
+        }
+        for (let j = 0; j < N.length; j++) {
+            for (let k = 0; k < post.length; k++) {
+                const expansion = pre + N[j] + post[k];
+                if (!isTop || isSequence || expansion) {
+                    expansions.push(expansion);
+                }
+            }
+        }
+    }
+    return expansions;
+}
+//# sourceMappingURL=index.js.map
+;// CONCATENATED MODULE: ../../node_modules/minimatch/dist/esm/assert-valid-pattern.js
+const MAX_PATTERN_LENGTH = 1024 * 64;
+const assertValidPattern = (pattern) => {
+    if (typeof pattern !== 'string') {
+        throw new TypeError('invalid pattern');
+    }
+    if (pattern.length > MAX_PATTERN_LENGTH) {
+        throw new TypeError('pattern is too long');
+    }
+};
+//# sourceMappingURL=assert-valid-pattern.js.map
+;// CONCATENATED MODULE: ../../node_modules/minimatch/dist/esm/brace-expressions.js
+// translate the various posix character classes into unicode properties
+// this works across all unicode locales
+// { <posix class>: [<translation>, /u flag required, negated]
+const posixClasses = {
+    '[:alnum:]': ['\\p{L}\\p{Nl}\\p{Nd}', true],
+    '[:alpha:]': ['\\p{L}\\p{Nl}', true],
+    '[:ascii:]': ['\\x' + '00-\\x' + '7f', false],
+    '[:blank:]': ['\\p{Zs}\\t', true],
+    '[:cntrl:]': ['\\p{Cc}', true],
+    '[:digit:]': ['\\p{Nd}', true],
+    '[:graph:]': ['\\p{Z}\\p{C}', true, true],
+    '[:lower:]': ['\\p{Ll}', true],
+    '[:print:]': ['\\p{C}', true],
+    '[:punct:]': ['\\p{P}', true],
+    '[:space:]': ['\\p{Z}\\t\\r\\n\\v\\f', true],
+    '[:upper:]': ['\\p{Lu}', true],
+    '[:word:]': ['\\p{L}\\p{Nl}\\p{Nd}\\p{Pc}', true],
+    '[:xdigit:]': ['A-Fa-f0-9', false],
+};
+// only need to escape a few things inside of brace expressions
+// escapes: [ \ ] -
+const braceEscape = (s) => s.replace(/[[\]\\-]/g, '\\$&');
+// escape all regexp magic characters
+const regexpEscape = (s) => s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+// everything has already been escaped, we just have to join
+const rangesToString = (ranges) => ranges.join('');
+// takes a glob string at a posix brace expression, and returns
+// an equivalent regular expression source, and boolean indicating
+// whether the /u flag needs to be applied, and the number of chars
+// consumed to parse the character class.
+// This also removes out of order ranges, and returns ($.) if the
+// entire class just no good.
+const parseClass = (glob, position) => {
+    const pos = position;
+    /* c8 ignore start */
+    if (glob.charAt(pos) !== '[') {
+        throw new Error('not in a brace expression');
+    }
+    /* c8 ignore stop */
+    const ranges = [];
+    const negs = [];
+    let i = pos + 1;
+    let sawStart = false;
+    let uflag = false;
+    let escaping = false;
+    let negate = false;
+    let endPos = pos;
+    let rangeStart = '';
+    WHILE: while (i < glob.length) {
+        const c = glob.charAt(i);
+        if ((c === '!' || c === '^') && i === pos + 1) {
+            negate = true;
+            i++;
+            continue;
+        }
+        if (c === ']' && sawStart && !escaping) {
+            endPos = i + 1;
+            break;
+        }
+        sawStart = true;
+        if (c === '\\') {
+            if (!escaping) {
+                escaping = true;
+                i++;
+                continue;
+            }
+            // escaped \ char, fall through and treat like normal char
+        }
+        if (c === '[' && !escaping) {
+            // either a posix class, a collation equivalent, or just a [
+            for (const [cls, [unip, u, neg]] of Object.entries(posixClasses)) {
+                if (glob.startsWith(cls, i)) {
+                    // invalid, [a-[] is fine, but not [a-[:alpha]]
+                    if (rangeStart) {
+                        return ['$.', false, glob.length - pos, true];
+                    }
+                    i += cls.length;
+                    if (neg)
+                        negs.push(unip);
+                    else
+                        ranges.push(unip);
+                    uflag = uflag || u;
+                    continue WHILE;
+                }
+            }
+        }
+        // now it's just a normal character, effectively
+        escaping = false;
+        if (rangeStart) {
+            // throw this range away if it's not valid, but others
+            // can still match.
+            if (c > rangeStart) {
+                ranges.push(braceEscape(rangeStart) + '-' + braceEscape(c));
+            }
+            else if (c === rangeStart) {
+                ranges.push(braceEscape(c));
+            }
+            rangeStart = '';
+            i++;
+            continue;
+        }
+        // now might be the start of a range.
+        // can be either c-d or c-] or c<more...>] or c] at this point
+        if (glob.startsWith('-]', i + 1)) {
+            ranges.push(braceEscape(c + '-'));
+            i += 2;
+            continue;
+        }
+        if (glob.startsWith('-', i + 1)) {
+            rangeStart = c;
+            i += 2;
+            continue;
+        }
+        // not the start of a range, just a single character
+        ranges.push(braceEscape(c));
+        i++;
+    }
+    if (endPos < i) {
+        // didn't see the end of the class, not a valid class,
+        // but might still be valid as a literal match.
+        return ['', false, 0, false];
+    }
+    // if we got no ranges and no negates, then we have a range that
+    // cannot possibly match anything, and that poisons the whole glob
+    if (!ranges.length && !negs.length) {
+        return ['$.', false, glob.length - pos, true];
+    }
+    // if we got one positive range, and it's a single character, then that's
+    // not actually a magic pattern, it's just that one literal character.
+    // we should not treat that as "magic", we should just return the literal
+    // character. [_] is a perfectly valid way to escape glob magic chars.
+    if (negs.length === 0 &&
+        ranges.length === 1 &&
+        /^\\?.$/.test(ranges[0]) &&
+        !negate) {
+        const r = ranges[0].length === 2 ? ranges[0].slice(-1) : ranges[0];
+        return [regexpEscape(r), false, endPos - pos, false];
+    }
+    const sranges = '[' + (negate ? '^' : '') + rangesToString(ranges) + ']';
+    const snegs = '[' + (negate ? '' : '^') + rangesToString(negs) + ']';
+    const comb = ranges.length && negs.length
+        ? '(' + sranges + '|' + snegs + ')'
+        : ranges.length
+            ? sranges
+            : snegs;
+    return [comb, uflag, endPos - pos, true];
+};
+//# sourceMappingURL=brace-expressions.js.map
+;// CONCATENATED MODULE: ../../node_modules/minimatch/dist/esm/unescape.js
+/**
+ * Un-escape a string that has been escaped with {@link escape}.
+ *
+ * If the {@link windowsPathsNoEscape} option is used, then square-brace
+ * escapes are removed, but not backslash escapes.  For example, it will turn
+ * the string `'[*]'` into `*`, but it will not turn `'\\*'` into `'*'`,
+ * becuase `\` is a path separator in `windowsPathsNoEscape` mode.
+ *
+ * When `windowsPathsNoEscape` is not set, then both brace escapes and
+ * backslash escapes are removed.
+ *
+ * Slashes (and backslashes in `windowsPathsNoEscape` mode) cannot be escaped
+ * or unescaped.
+ */
+const unescape_unescape = (s, { windowsPathsNoEscape = false, } = {}) => {
+    return windowsPathsNoEscape
+        ? s.replace(/\[([^\/\\])\]/g, '$1')
+        : s.replace(/((?!\\).|^)\[([^\/\\])\]/g, '$1$2').replace(/\\([^\/])/g, '$1');
+};
+//# sourceMappingURL=unescape.js.map
+;// CONCATENATED MODULE: ../../node_modules/minimatch/dist/esm/ast.js
+// parse a single path portion
+
+
+const types = new Set(['!', '?', '+', '*', '@']);
+const isExtglobType = (c) => types.has(c);
+// Patterns that get prepended to bind to the start of either the
+// entire string, or just a single path portion, to prevent dots
+// and/or traversal patterns, when needed.
+// Exts don't need the ^ or / bit, because the root binds that already.
+const startNoTraversal = '(?!(?:^|/)\\.\\.?(?:$|/))';
+const startNoDot = '(?!\\.)';
+// characters that indicate a start of pattern needs the "no dots" bit,
+// because a dot *might* be matched. ( is not in the list, because in
+// the case of a child extglob, it will handle the prevention itself.
+const addPatternStart = new Set(['[', '.']);
+// cases where traversal is A-OK, no dot prevention needed
+const justDots = new Set(['..', '.']);
+const reSpecials = new Set('().*{}+?[]^$\\!');
+const regExpEscape = (s) => s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+// any single thing other than /
+const qmark = '[^/]';
+// * => any number of characters
+const star = qmark + '*?';
+// use + when we need to ensure that *something* matches, because the * is
+// the only thing in the path portion.
+const starNoEmpty = qmark + '+?';
+// remove the \ chars that we added if we end up doing a nonmagic compare
+// const deslash = (s: string) => s.replace(/\\(.)/g, '$1')
+class AST {
+    type;
+    #root;
+    #hasMagic;
+    #uflag = false;
+    #parts = [];
+    #parent;
+    #parentIndex;
+    #negs;
+    #filledNegs = false;
+    #options;
+    #toString;
+    // set to true if it's an extglob with no children
+    // (which really means one child of '')
+    #emptyExt = false;
+    constructor(type, parent, options = {}) {
+        this.type = type;
+        // extglobs are inherently magical
+        if (type)
+            this.#hasMagic = true;
+        this.#parent = parent;
+        this.#root = this.#parent ? this.#parent.#root : this;
+        this.#options = this.#root === this ? options : this.#root.#options;
+        this.#negs = this.#root === this ? [] : this.#root.#negs;
+        if (type === '!' && !this.#root.#filledNegs)
+            this.#negs.push(this);
+        this.#parentIndex = this.#parent ? this.#parent.#parts.length : 0;
+    }
+    get hasMagic() {
+        /* c8 ignore start */
+        if (this.#hasMagic !== undefined)
+            return this.#hasMagic;
+        /* c8 ignore stop */
+        for (const p of this.#parts) {
+            if (typeof p === 'string')
+                continue;
+            if (p.type || p.hasMagic)
+                return (this.#hasMagic = true);
+        }
+        // note: will be undefined until we generate the regexp src and find out
+        return this.#hasMagic;
+    }
+    // reconstructs the pattern
+    toString() {
+        if (this.#toString !== undefined)
+            return this.#toString;
+        if (!this.type) {
+            return (this.#toString = this.#parts.map(p => String(p)).join(''));
+        }
+        else {
+            return (this.#toString =
+                this.type + '(' + this.#parts.map(p => String(p)).join('|') + ')');
+        }
+    }
+    #fillNegs() {
+        /* c8 ignore start */
+        if (this !== this.#root)
+            throw new Error('should only call on root');
+        if (this.#filledNegs)
+            return this;
+        /* c8 ignore stop */
+        // call toString() once to fill this out
+        this.toString();
+        this.#filledNegs = true;
+        let n;
+        while ((n = this.#negs.pop())) {
+            if (n.type !== '!')
+                continue;
+            // walk up the tree, appending everthing that comes AFTER parentIndex
+            let p = n;
+            let pp = p.#parent;
+            while (pp) {
+                for (let i = p.#parentIndex + 1; !pp.type && i < pp.#parts.length; i++) {
+                    for (const part of n.#parts) {
+                        /* c8 ignore start */
+                        if (typeof part === 'string') {
+                            throw new Error('string part in extglob AST??');
+                        }
+                        /* c8 ignore stop */
+                        part.copyIn(pp.#parts[i]);
+                    }
+                }
+                p = pp;
+                pp = p.#parent;
+            }
+        }
+        return this;
+    }
+    push(...parts) {
+        for (const p of parts) {
+            if (p === '')
+                continue;
+            /* c8 ignore start */
+            if (typeof p !== 'string' && !(p instanceof AST && p.#parent === this)) {
+                throw new Error('invalid part: ' + p);
+            }
+            /* c8 ignore stop */
+            this.#parts.push(p);
+        }
+    }
+    toJSON() {
+        const ret = this.type === null
+            ? this.#parts.slice().map(p => (typeof p === 'string' ? p : p.toJSON()))
+            : [this.type, ...this.#parts.map(p => p.toJSON())];
+        if (this.isStart() && !this.type)
+            ret.unshift([]);
+        if (this.isEnd() &&
+            (this === this.#root ||
+                (this.#root.#filledNegs && this.#parent?.type === '!'))) {
+            ret.push({});
+        }
+        return ret;
+    }
+    isStart() {
+        if (this.#root === this)
+            return true;
+        // if (this.type) return !!this.#parent?.isStart()
+        if (!this.#parent?.isStart())
+            return false;
+        if (this.#parentIndex === 0)
+            return true;
+        // if everything AHEAD of this is a negation, then it's still the "start"
+        const p = this.#parent;
+        for (let i = 0; i < this.#parentIndex; i++) {
+            const pp = p.#parts[i];
+            if (!(pp instanceof AST && pp.type === '!')) {
+                return false;
+            }
+        }
+        return true;
+    }
+    isEnd() {
+        if (this.#root === this)
+            return true;
+        if (this.#parent?.type === '!')
+            return true;
+        if (!this.#parent?.isEnd())
+            return false;
+        if (!this.type)
+            return this.#parent?.isEnd();
+        // if not root, it'll always have a parent
+        /* c8 ignore start */
+        const pl = this.#parent ? this.#parent.#parts.length : 0;
+        /* c8 ignore stop */
+        return this.#parentIndex === pl - 1;
+    }
+    copyIn(part) {
+        if (typeof part === 'string')
+            this.push(part);
+        else
+            this.push(part.clone(this));
+    }
+    clone(parent) {
+        const c = new AST(this.type, parent);
+        for (const p of this.#parts) {
+            c.copyIn(p);
+        }
+        return c;
+    }
+    static #parseAST(str, ast, pos, opt) {
+        let escaping = false;
+        let inBrace = false;
+        let braceStart = -1;
+        let braceNeg = false;
+        if (ast.type === null) {
+            // outside of a extglob, append until we find a start
+            let i = pos;
+            let acc = '';
+            while (i < str.length) {
+                const c = str.charAt(i++);
+                // still accumulate escapes at this point, but we do ignore
+                // starts that are escaped
+                if (escaping || c === '\\') {
+                    escaping = !escaping;
+                    acc += c;
+                    continue;
+                }
+                if (inBrace) {
+                    if (i === braceStart + 1) {
+                        if (c === '^' || c === '!') {
+                            braceNeg = true;
+                        }
+                    }
+                    else if (c === ']' && !(i === braceStart + 2 && braceNeg)) {
+                        inBrace = false;
+                    }
+                    acc += c;
+                    continue;
+                }
+                else if (c === '[') {
+                    inBrace = true;
+                    braceStart = i;
+                    braceNeg = false;
+                    acc += c;
+                    continue;
+                }
+                if (!opt.noext && isExtglobType(c) && str.charAt(i) === '(') {
+                    ast.push(acc);
+                    acc = '';
+                    const ext = new AST(c, ast);
+                    i = AST.#parseAST(str, ext, i, opt);
+                    ast.push(ext);
+                    continue;
+                }
+                acc += c;
+            }
+            ast.push(acc);
+            return i;
+        }
+        // some kind of extglob, pos is at the (
+        // find the next | or )
+        let i = pos + 1;
+        let part = new AST(null, ast);
+        const parts = [];
+        let acc = '';
+        while (i < str.length) {
+            const c = str.charAt(i++);
+            // still accumulate escapes at this point, but we do ignore
+            // starts that are escaped
+            if (escaping || c === '\\') {
+                escaping = !escaping;
+                acc += c;
+                continue;
+            }
+            if (inBrace) {
+                if (i === braceStart + 1) {
+                    if (c === '^' || c === '!') {
+                        braceNeg = true;
+                    }
+                }
+                else if (c === ']' && !(i === braceStart + 2 && braceNeg)) {
+                    inBrace = false;
+                }
+                acc += c;
+                continue;
+            }
+            else if (c === '[') {
+                inBrace = true;
+                braceStart = i;
+                braceNeg = false;
+                acc += c;
+                continue;
+            }
+            if (isExtglobType(c) && str.charAt(i) === '(') {
+                part.push(acc);
+                acc = '';
+                const ext = new AST(c, part);
+                part.push(ext);
+                i = AST.#parseAST(str, ext, i, opt);
+                continue;
+            }
+            if (c === '|') {
+                part.push(acc);
+                acc = '';
+                parts.push(part);
+                part = new AST(null, ast);
+                continue;
+            }
+            if (c === ')') {
+                if (acc === '' && ast.#parts.length === 0) {
+                    ast.#emptyExt = true;
+                }
+                part.push(acc);
+                acc = '';
+                ast.push(...parts, part);
+                return i;
+            }
+            acc += c;
+        }
+        // unfinished extglob
+        // if we got here, it was a malformed extglob! not an extglob, but
+        // maybe something else in there.
+        ast.type = null;
+        ast.#hasMagic = undefined;
+        ast.#parts = [str.substring(pos - 1)];
+        return i;
+    }
+    static fromGlob(pattern, options = {}) {
+        const ast = new AST(null, undefined, options);
+        AST.#parseAST(pattern, ast, 0, options);
+        return ast;
+    }
+    // returns the regular expression if there's magic, or the unescaped
+    // string if not.
+    toMMPattern() {
+        // should only be called on root
+        /* c8 ignore start */
+        if (this !== this.#root)
+            return this.#root.toMMPattern();
+        /* c8 ignore stop */
+        const glob = this.toString();
+        const [re, body, hasMagic, uflag] = this.toRegExpSource();
+        // if we're in nocase mode, and not nocaseMagicOnly, then we do
+        // still need a regular expression if we have to case-insensitively
+        // match capital/lowercase characters.
+        const anyMagic = hasMagic ||
+            this.#hasMagic ||
+            (this.#options.nocase &&
+                !this.#options.nocaseMagicOnly &&
+                glob.toUpperCase() !== glob.toLowerCase());
+        if (!anyMagic) {
+            return body;
+        }
+        const flags = (this.#options.nocase ? 'i' : '') + (uflag ? 'u' : '');
+        return Object.assign(new RegExp(`^${re}$`, flags), {
+            _src: re,
+            _glob: glob,
+        });
+    }
+    get options() {
+        return this.#options;
+    }
+    // returns the string match, the regexp source, whether there's magic
+    // in the regexp (so a regular expression is required) and whether or
+    // not the uflag is needed for the regular expression (for posix classes)
+    // TODO: instead of injecting the start/end at this point, just return
+    // the BODY of the regexp, along with the start/end portions suitable
+    // for binding the start/end in either a joined full-path makeRe context
+    // (where we bind to (^|/), or a standalone matchPart context (where
+    // we bind to ^, and not /).  Otherwise slashes get duped!
+    //
+    // In part-matching mode, the start is:
+    // - if not isStart: nothing
+    // - if traversal possible, but not allowed: ^(?!\.\.?$)
+    // - if dots allowed or not possible: ^
+    // - if dots possible and not allowed: ^(?!\.)
+    // end is:
+    // - if not isEnd(): nothing
+    // - else: $
+    //
+    // In full-path matching mode, we put the slash at the START of the
+    // pattern, so start is:
+    // - if first pattern: same as part-matching mode
+    // - if not isStart(): nothing
+    // - if traversal possible, but not allowed: /(?!\.\.?(?:$|/))
+    // - if dots allowed or not possible: /
+    // - if dots possible and not allowed: /(?!\.)
+    // end is:
+    // - if last pattern, same as part-matching mode
+    // - else nothing
+    //
+    // Always put the (?:$|/) on negated tails, though, because that has to be
+    // there to bind the end of the negated pattern portion, and it's easier to
+    // just stick it in now rather than try to inject it later in the middle of
+    // the pattern.
+    //
+    // We can just always return the same end, and leave it up to the caller
+    // to know whether it's going to be used joined or in parts.
+    // And, if the start is adjusted slightly, can do the same there:
+    // - if not isStart: nothing
+    // - if traversal possible, but not allowed: (?:/|^)(?!\.\.?$)
+    // - if dots allowed or not possible: (?:/|^)
+    // - if dots possible and not allowed: (?:/|^)(?!\.)
+    //
+    // But it's better to have a simpler binding without a conditional, for
+    // performance, so probably better to return both start options.
+    //
+    // Then the caller just ignores the end if it's not the first pattern,
+    // and the start always gets applied.
+    //
+    // But that's always going to be $ if it's the ending pattern, or nothing,
+    // so the caller can just attach $ at the end of the pattern when building.
+    //
+    // So the todo is:
+    // - better detect what kind of start is needed
+    // - return both flavors of starting pattern
+    // - attach $ at the end of the pattern when creating the actual RegExp
+    //
+    // Ah, but wait, no, that all only applies to the root when the first pattern
+    // is not an extglob. If the first pattern IS an extglob, then we need all
+    // that dot prevention biz to live in the extglob portions, because eg
+    // +(*|.x*) can match .xy but not .yx.
+    //
+    // So, return the two flavors if it's #root and the first child is not an
+    // AST, otherwise leave it to the child AST to handle it, and there,
+    // use the (?:^|/) style of start binding.
+    //
+    // Even simplified further:
+    // - Since the start for a join is eg /(?!\.) and the start for a part
+    // is ^(?!\.), we can just prepend (?!\.) to the pattern (either root
+    // or start or whatever) and prepend ^ or / at the Regexp construction.
+    toRegExpSource(allowDot) {
+        const dot = allowDot ?? !!this.#options.dot;
+        if (this.#root === this)
+            this.#fillNegs();
+        if (!this.type) {
+            const noEmpty = this.isStart() && this.isEnd();
+            const src = this.#parts
+                .map(p => {
+                const [re, _, hasMagic, uflag] = typeof p === 'string'
+                    ? AST.#parseGlob(p, this.#hasMagic, noEmpty)
+                    : p.toRegExpSource(allowDot);
+                this.#hasMagic = this.#hasMagic || hasMagic;
+                this.#uflag = this.#uflag || uflag;
+                return re;
+            })
+                .join('');
+            let start = '';
+            if (this.isStart()) {
+                if (typeof this.#parts[0] === 'string') {
+                    // this is the string that will match the start of the pattern,
+                    // so we need to protect against dots and such.
+                    // '.' and '..' cannot match unless the pattern is that exactly,
+                    // even if it starts with . or dot:true is set.
+                    const dotTravAllowed = this.#parts.length === 1 && justDots.has(this.#parts[0]);
+                    if (!dotTravAllowed) {
+                        const aps = addPatternStart;
+                        // check if we have a possibility of matching . or ..,
+                        // and prevent that.
+                        const needNoTrav = 
+                        // dots are allowed, and the pattern starts with [ or .
+                        (dot && aps.has(src.charAt(0))) ||
+                            // the pattern starts with \., and then [ or .
+                            (src.startsWith('\\.') && aps.has(src.charAt(2))) ||
+                            // the pattern starts with \.\., and then [ or .
+                            (src.startsWith('\\.\\.') && aps.has(src.charAt(4)));
+                        // no need to prevent dots if it can't match a dot, or if a
+                        // sub-pattern will be preventing it anyway.
+                        const needNoDot = !dot && !allowDot && aps.has(src.charAt(0));
+                        start = needNoTrav ? startNoTraversal : needNoDot ? startNoDot : '';
+                    }
+                }
+            }
+            // append the "end of path portion" pattern to negation tails
+            let end = '';
+            if (this.isEnd() &&
+                this.#root.#filledNegs &&
+                this.#parent?.type === '!') {
+                end = '(?:$|\\/)';
+            }
+            const final = start + src + end;
+            return [
+                final,
+                unescape_unescape(src),
+                (this.#hasMagic = !!this.#hasMagic),
+                this.#uflag,
+            ];
+        }
+        // We need to calculate the body *twice* if it's a repeat pattern
+        // at the start, once in nodot mode, then again in dot mode, so a
+        // pattern like *(?) can match 'x.y'
+        const repeated = this.type === '*' || this.type === '+';
+        // some kind of extglob
+        const start = this.type === '!' ? '(?:(?!(?:' : '(?:';
+        let body = this.#partsToRegExp(dot);
+        if (this.isStart() && this.isEnd() && !body && this.type !== '!') {
+            // invalid extglob, has to at least be *something* present, if it's
+            // the entire path portion.
+            const s = this.toString();
+            this.#parts = [s];
+            this.type = null;
+            this.#hasMagic = undefined;
+            return [s, unescape_unescape(this.toString()), false, false];
+        }
+        // XXX abstract out this map method
+        let bodyDotAllowed = !repeated || allowDot || dot || !startNoDot
+            ? ''
+            : this.#partsToRegExp(true);
+        if (bodyDotAllowed === body) {
+            bodyDotAllowed = '';
+        }
+        if (bodyDotAllowed) {
+            body = `(?:${body})(?:${bodyDotAllowed})*?`;
+        }
+        // an empty !() is exactly equivalent to a starNoEmpty
+        let final = '';
+        if (this.type === '!' && this.#emptyExt) {
+            final = (this.isStart() && !dot ? startNoDot : '') + starNoEmpty;
+        }
+        else {
+            const close = this.type === '!'
+                ? // !() must match something,but !(x) can match ''
+                    '))' +
+                        (this.isStart() && !dot && !allowDot ? startNoDot : '') +
+                        star +
+                        ')'
+                : this.type === '@'
+                    ? ')'
+                    : this.type === '?'
+                        ? ')?'
+                        : this.type === '+' && bodyDotAllowed
+                            ? ')'
+                            : this.type === '*' && bodyDotAllowed
+                                ? `)?`
+                                : `)${this.type}`;
+            final = start + body + close;
+        }
+        return [
+            final,
+            unescape_unescape(body),
+            (this.#hasMagic = !!this.#hasMagic),
+            this.#uflag,
+        ];
+    }
+    #partsToRegExp(dot) {
+        return this.#parts
+            .map(p => {
+            // extglob ASTs should only contain parent ASTs
+            /* c8 ignore start */
+            if (typeof p === 'string') {
+                throw new Error('string type in extglob ast??');
+            }
+            /* c8 ignore stop */
+            // can ignore hasMagic, because extglobs are already always magic
+            const [re, _, _hasMagic, uflag] = p.toRegExpSource(dot);
+            this.#uflag = this.#uflag || uflag;
+            return re;
+        })
+            .filter(p => !(this.isStart() && this.isEnd()) || !!p)
+            .join('|');
+    }
+    static #parseGlob(glob, hasMagic, noEmpty = false) {
+        let escaping = false;
+        let re = '';
+        let uflag = false;
+        for (let i = 0; i < glob.length; i++) {
+            const c = glob.charAt(i);
+            if (escaping) {
+                escaping = false;
+                re += (reSpecials.has(c) ? '\\' : '') + c;
+                continue;
+            }
+            if (c === '\\') {
+                if (i === glob.length - 1) {
+                    re += '\\\\';
+                }
+                else {
+                    escaping = true;
+                }
+                continue;
+            }
+            if (c === '[') {
+                const [src, needUflag, consumed, magic] = parseClass(glob, i);
+                if (consumed) {
+                    re += src;
+                    uflag = uflag || needUflag;
+                    i += consumed - 1;
+                    hasMagic = hasMagic || magic;
+                    continue;
+                }
+            }
+            if (c === '*') {
+                if (noEmpty && glob === '*')
+                    re += starNoEmpty;
+                else
+                    re += star;
+                hasMagic = true;
+                continue;
+            }
+            if (c === '?') {
+                re += qmark;
+                hasMagic = true;
+                continue;
+            }
+            re += regExpEscape(c);
+        }
+        return [re, unescape_unescape(glob), !!hasMagic, uflag];
+    }
+}
+//# sourceMappingURL=ast.js.map
+;// CONCATENATED MODULE: ../../node_modules/minimatch/dist/esm/escape.js
+/**
+ * Escape all magic characters in a glob pattern.
+ *
+ * If the {@link windowsPathsNoEscape | GlobOptions.windowsPathsNoEscape}
+ * option is used, then characters are escaped by wrapping in `[]`, because
+ * a magic character wrapped in a character class can only be satisfied by
+ * that exact character.  In this mode, `\` is _not_ escaped, because it is
+ * not interpreted as a magic character, but instead as a path separator.
+ */
+const escape_escape = (s, { windowsPathsNoEscape = false, } = {}) => {
+    // don't need to escape +@! because we escape the parens
+    // that make those magic, and escaping ! as [!] isn't valid,
+    // because [!]] is a valid glob class meaning not ']'.
+    return windowsPathsNoEscape
+        ? s.replace(/[?*()[\]]/g, '[$&]')
+        : s.replace(/[?*()[\]\\]/g, '\\$&');
+};
+//# sourceMappingURL=escape.js.map
+;// CONCATENATED MODULE: ../../node_modules/minimatch/dist/esm/index.js
+
+
+
+
+
+const minimatch = (p, pattern, options = {}) => {
+    assertValidPattern(pattern);
+    // shortcut: comments match nothing.
+    if (!options.nocomment && pattern.charAt(0) === '#') {
+        return false;
+    }
+    return new Minimatch(pattern, options).match(p);
+};
+// Optimized checking for the most common glob patterns.
+const starDotExtRE = /^\*+([^+@!?\*\[\(]*)$/;
+const starDotExtTest = (ext) => (f) => !f.startsWith('.') && f.endsWith(ext);
+const starDotExtTestDot = (ext) => (f) => f.endsWith(ext);
+const starDotExtTestNocase = (ext) => {
+    ext = ext.toLowerCase();
+    return (f) => !f.startsWith('.') && f.toLowerCase().endsWith(ext);
+};
+const starDotExtTestNocaseDot = (ext) => {
+    ext = ext.toLowerCase();
+    return (f) => f.toLowerCase().endsWith(ext);
+};
+const starDotStarRE = /^\*+\.\*+$/;
+const starDotStarTest = (f) => !f.startsWith('.') && f.includes('.');
+const starDotStarTestDot = (f) => f !== '.' && f !== '..' && f.includes('.');
+const dotStarRE = /^\.\*+$/;
+const dotStarTest = (f) => f !== '.' && f !== '..' && f.startsWith('.');
+const starRE = /^\*+$/;
+const starTest = (f) => f.length !== 0 && !f.startsWith('.');
+const starTestDot = (f) => f.length !== 0 && f !== '.' && f !== '..';
+const qmarksRE = /^\?+([^+@!?\*\[\(]*)?$/;
+const qmarksTestNocase = ([$0, ext = '']) => {
+    const noext = qmarksTestNoExt([$0]);
+    if (!ext)
+        return noext;
+    ext = ext.toLowerCase();
+    return (f) => noext(f) && f.toLowerCase().endsWith(ext);
+};
+const qmarksTestNocaseDot = ([$0, ext = '']) => {
+    const noext = qmarksTestNoExtDot([$0]);
+    if (!ext)
+        return noext;
+    ext = ext.toLowerCase();
+    return (f) => noext(f) && f.toLowerCase().endsWith(ext);
+};
+const qmarksTestDot = ([$0, ext = '']) => {
+    const noext = qmarksTestNoExtDot([$0]);
+    return !ext ? noext : (f) => noext(f) && f.endsWith(ext);
+};
+const qmarksTest = ([$0, ext = '']) => {
+    const noext = qmarksTestNoExt([$0]);
+    return !ext ? noext : (f) => noext(f) && f.endsWith(ext);
+};
+const qmarksTestNoExt = ([$0]) => {
+    const len = $0.length;
+    return (f) => f.length === len && !f.startsWith('.');
+};
+const qmarksTestNoExtDot = ([$0]) => {
+    const len = $0.length;
+    return (f) => f.length === len && f !== '.' && f !== '..';
+};
+/* c8 ignore start */
+const defaultPlatform = (typeof process === 'object' && process
+    ? (typeof process.env === 'object' &&
+        process.env &&
+        process.env.__MINIMATCH_TESTING_PLATFORM__) ||
+        process.platform
+    : 'posix');
+const path = {
+    win32: { sep: '\\' },
+    posix: { sep: '/' },
+};
+/* c8 ignore stop */
+const sep = defaultPlatform === 'win32' ? path.win32.sep : path.posix.sep;
+minimatch.sep = sep;
+const GLOBSTAR = Symbol('globstar **');
+minimatch.GLOBSTAR = GLOBSTAR;
+// any single thing other than /
+// don't need to escape / when using new RegExp()
+const esm_qmark = '[^/]';
+// * => any number of characters
+const esm_star = esm_qmark + '*?';
+// ** when dots are allowed.  Anything goes, except .. and .
+// not (^ or / followed by one or two dots followed by $ or /),
+// followed by anything, any number of times.
+const twoStarDot = '(?:(?!(?:\\/|^)(?:\\.{1,2})($|\\/)).)*?';
+// not a ^ or / followed by a dot,
+// followed by anything, any number of times.
+const twoStarNoDot = '(?:(?!(?:\\/|^)\\.).)*?';
+const filter = (pattern, options = {}) => (p) => minimatch(p, pattern, options);
+minimatch.filter = filter;
+const ext = (a, b = {}) => Object.assign({}, a, b);
+const defaults = (def) => {
+    if (!def || typeof def !== 'object' || !Object.keys(def).length) {
+        return minimatch;
+    }
+    const orig = minimatch;
+    const m = (p, pattern, options = {}) => orig(p, pattern, ext(def, options));
+    return Object.assign(m, {
+        Minimatch: class Minimatch extends orig.Minimatch {
+            constructor(pattern, options = {}) {
+                super(pattern, ext(def, options));
+            }
+            static defaults(options) {
+                return orig.defaults(ext(def, options)).Minimatch;
+            }
+        },
+        AST: class AST extends orig.AST {
+            /* c8 ignore start */
+            constructor(type, parent, options = {}) {
+                super(type, parent, ext(def, options));
+            }
+            /* c8 ignore stop */
+            static fromGlob(pattern, options = {}) {
+                return orig.AST.fromGlob(pattern, ext(def, options));
+            }
+        },
+        unescape: (s, options = {}) => orig.unescape(s, ext(def, options)),
+        escape: (s, options = {}) => orig.escape(s, ext(def, options)),
+        filter: (pattern, options = {}) => orig.filter(pattern, ext(def, options)),
+        defaults: (options) => orig.defaults(ext(def, options)),
+        makeRe: (pattern, options = {}) => orig.makeRe(pattern, ext(def, options)),
+        braceExpand: (pattern, options = {}) => orig.braceExpand(pattern, ext(def, options)),
+        match: (list, pattern, options = {}) => orig.match(list, pattern, ext(def, options)),
+        sep: orig.sep,
+        GLOBSTAR: GLOBSTAR,
+    });
+};
+minimatch.defaults = defaults;
+// Brace expansion:
+// a{b,c}d -> abd acd
+// a{b,}c -> abc ac
+// a{0..3}d -> a0d a1d a2d a3d
+// a{b,c{d,e}f}g -> abg acdfg acefg
+// a{b,c}d{e,f}g -> abdeg acdeg abdeg abdfg
+//
+// Invalid sets are not expanded.
+// a{2..}b -> a{2..}b
+// a{b}c -> a{b}c
+const braceExpand = (pattern, options = {}) => {
+    assertValidPattern(pattern);
+    // Thanks to Yeting Li <https://github.com/yetingli> for
+    // improving this regexp to avoid a ReDOS vulnerability.
+    if (options.nobrace || !/\{(?:(?!\{).)*\}/.test(pattern)) {
+        // shortcut. no need to expand.
+        return [pattern];
+    }
+    return expand(pattern);
+};
+minimatch.braceExpand = braceExpand;
+// parse a component of the expanded set.
+// At this point, no pattern may contain "/" in it
+// so we're going to return a 2d array, where each entry is the full
+// pattern, split on '/', and then turned into a regular expression.
+// A regexp is made at the end which joins each array with an
+// escaped /, and another full one which joins each regexp with |.
+//
+// Following the lead of Bash 4.1, note that "**" only has special meaning
+// when it is the *only* thing in a path portion.  Otherwise, any series
+// of * is equivalent to a single *.  Globstar behavior is enabled by
+// default, and can be disabled by setting options.noglobstar.
+const makeRe = (pattern, options = {}) => new Minimatch(pattern, options).makeRe();
+minimatch.makeRe = makeRe;
+const match = (list, pattern, options = {}) => {
+    const mm = new Minimatch(pattern, options);
+    list = list.filter(f => mm.match(f));
+    if (mm.options.nonull && !list.length) {
+        list.push(pattern);
+    }
+    return list;
+};
+minimatch.match = match;
+// replace stuff like \* with *
+const globMagic = /[?*]|[+@!]\(.*?\)|\[|\]/;
+const esm_regExpEscape = (s) => s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+class Minimatch {
+    options;
+    set;
+    pattern;
+    windowsPathsNoEscape;
+    nonegate;
+    negate;
+    comment;
+    empty;
+    preserveMultipleSlashes;
+    partial;
+    globSet;
+    globParts;
+    nocase;
+    isWindows;
+    platform;
+    windowsNoMagicRoot;
+    regexp;
+    constructor(pattern, options = {}) {
+        assertValidPattern(pattern);
+        options = options || {};
+        this.options = options;
+        this.pattern = pattern;
+        this.platform = options.platform || defaultPlatform;
+        this.isWindows = this.platform === 'win32';
+        this.windowsPathsNoEscape =
+            !!options.windowsPathsNoEscape || options.allowWindowsEscape === false;
+        if (this.windowsPathsNoEscape) {
+            this.pattern = this.pattern.replace(/\\/g, '/');
+        }
+        this.preserveMultipleSlashes = !!options.preserveMultipleSlashes;
+        this.regexp = null;
+        this.negate = false;
+        this.nonegate = !!options.nonegate;
+        this.comment = false;
+        this.empty = false;
+        this.partial = !!options.partial;
+        this.nocase = !!this.options.nocase;
+        this.windowsNoMagicRoot =
+            options.windowsNoMagicRoot !== undefined
+                ? options.windowsNoMagicRoot
+                : !!(this.isWindows && this.nocase);
+        this.globSet = [];
+        this.globParts = [];
+        this.set = [];
+        // make the set of regexps etc.
+        this.make();
+    }
+    hasMagic() {
+        if (this.options.magicalBraces && this.set.length > 1) {
+            return true;
+        }
+        for (const pattern of this.set) {
+            for (const part of pattern) {
+                if (typeof part !== 'string')
+                    return true;
+            }
+        }
+        return false;
+    }
+    debug(..._) { }
+    make() {
+        const pattern = this.pattern;
+        const options = this.options;
+        // empty patterns and comments match nothing.
+        if (!options.nocomment && pattern.charAt(0) === '#') {
+            this.comment = true;
+            return;
+        }
+        if (!pattern) {
+            this.empty = true;
+            return;
+        }
+        // step 1: figure out negation, etc.
+        this.parseNegate();
+        // step 2: expand braces
+        this.globSet = [...new Set(this.braceExpand())];
+        if (options.debug) {
+            this.debug = (...args) => console.error(...args);
+        }
+        this.debug(this.pattern, this.globSet);
+        // step 3: now we have a set, so turn each one into a series of
+        // path-portion matching patterns.
+        // These will be regexps, except in the case of "**", which is
+        // set to the GLOBSTAR object for globstar behavior,
+        // and will not contain any / characters
+        //
+        // First, we preprocess to make the glob pattern sets a bit simpler
+        // and deduped.  There are some perf-killing patterns that can cause
+        // problems with a glob walk, but we can simplify them down a bit.
+        const rawGlobParts = this.globSet.map(s => this.slashSplit(s));
+        this.globParts = this.preprocess(rawGlobParts);
+        this.debug(this.pattern, this.globParts);
+        // glob --> regexps
+        let set = this.globParts.map((s, _, __) => {
+            if (this.isWindows && this.windowsNoMagicRoot) {
+                // check if it's a drive or unc path.
+                const isUNC = s[0] === '' &&
+                    s[1] === '' &&
+                    (s[2] === '?' || !globMagic.test(s[2])) &&
+                    !globMagic.test(s[3]);
+                const isDrive = /^[a-z]:/i.test(s[0]);
+                if (isUNC) {
+                    return [...s.slice(0, 4), ...s.slice(4).map(ss => this.parse(ss))];
+                }
+                else if (isDrive) {
+                    return [s[0], ...s.slice(1).map(ss => this.parse(ss))];
+                }
+            }
+            return s.map(ss => this.parse(ss));
+        });
+        this.debug(this.pattern, set);
+        // filter out everything that didn't compile properly.
+        this.set = set.filter(s => s.indexOf(false) === -1);
+        // do not treat the ? in UNC paths as magic
+        if (this.isWindows) {
+            for (let i = 0; i < this.set.length; i++) {
+                const p = this.set[i];
+                if (p[0] === '' &&
+                    p[1] === '' &&
+                    this.globParts[i][2] === '?' &&
+                    typeof p[3] === 'string' &&
+                    /^[a-z]:$/i.test(p[3])) {
+                    p[2] = '?';
+                }
+            }
+        }
+        this.debug(this.pattern, this.set);
+    }
+    // various transforms to equivalent pattern sets that are
+    // faster to process in a filesystem walk.  The goal is to
+    // eliminate what we can, and push all ** patterns as far
+    // to the right as possible, even if it increases the number
+    // of patterns that we have to process.
+    preprocess(globParts) {
+        // if we're not in globstar mode, then turn all ** into *
+        if (this.options.noglobstar) {
+            for (let i = 0; i < globParts.length; i++) {
+                for (let j = 0; j < globParts[i].length; j++) {
+                    if (globParts[i][j] === '**') {
+                        globParts[i][j] = '*';
+                    }
+                }
+            }
+        }
+        const { optimizationLevel = 1 } = this.options;
+        if (optimizationLevel >= 2) {
+            // aggressive optimization for the purpose of fs walking
+            globParts = this.firstPhasePreProcess(globParts);
+            globParts = this.secondPhasePreProcess(globParts);
+        }
+        else if (optimizationLevel >= 1) {
+            // just basic optimizations to remove some .. parts
+            globParts = this.levelOneOptimize(globParts);
+        }
+        else {
+            // just collapse multiple ** portions into one
+            globParts = this.adjascentGlobstarOptimize(globParts);
+        }
+        return globParts;
+    }
+    // just get rid of adjascent ** portions
+    adjascentGlobstarOptimize(globParts) {
+        return globParts.map(parts => {
+            let gs = -1;
+            while (-1 !== (gs = parts.indexOf('**', gs + 1))) {
+                let i = gs;
+                while (parts[i + 1] === '**') {
+                    i++;
+                }
+                if (i !== gs) {
+                    parts.splice(gs, i - gs);
+                }
+            }
+            return parts;
+        });
+    }
+    // get rid of adjascent ** and resolve .. portions
+    levelOneOptimize(globParts) {
+        return globParts.map(parts => {
+            parts = parts.reduce((set, part) => {
+                const prev = set[set.length - 1];
+                if (part === '**' && prev === '**') {
+                    return set;
+                }
+                if (part === '..') {
+                    if (prev && prev !== '..' && prev !== '.' && prev !== '**') {
+                        set.pop();
+                        return set;
+                    }
+                }
+                set.push(part);
+                return set;
+            }, []);
+            return parts.length === 0 ? [''] : parts;
+        });
+    }
+    levelTwoFileOptimize(parts) {
+        if (!Array.isArray(parts)) {
+            parts = this.slashSplit(parts);
+        }
+        let didSomething = false;
+        do {
+            didSomething = false;
+            // <pre>/<e>/<rest> -> <pre>/<rest>
+            if (!this.preserveMultipleSlashes) {
+                for (let i = 1; i < parts.length - 1; i++) {
+                    const p = parts[i];
+                    // don't squeeze out UNC patterns
+                    if (i === 1 && p === '' && parts[0] === '')
+                        continue;
+                    if (p === '.' || p === '') {
+                        didSomething = true;
+                        parts.splice(i, 1);
+                        i--;
+                    }
+                }
+                if (parts[0] === '.' &&
+                    parts.length === 2 &&
+                    (parts[1] === '.' || parts[1] === '')) {
+                    didSomething = true;
+                    parts.pop();
+                }
+            }
+            // <pre>/<p>/../<rest> -> <pre>/<rest>
+            let dd = 0;
+            while (-1 !== (dd = parts.indexOf('..', dd + 1))) {
+                const p = parts[dd - 1];
+                if (p && p !== '.' && p !== '..' && p !== '**') {
+                    didSomething = true;
+                    parts.splice(dd - 1, 2);
+                    dd -= 2;
+                }
+            }
+        } while (didSomething);
+        return parts.length === 0 ? [''] : parts;
+    }
+    // First phase: single-pattern processing
+    // <pre> is 1 or more portions
+    // <rest> is 1 or more portions
+    // <p> is any portion other than ., .., '', or **
+    // <e> is . or ''
+    //
+    // **/.. is *brutal* for filesystem walking performance, because
+    // it effectively resets the recursive walk each time it occurs,
+    // and ** cannot be reduced out by a .. pattern part like a regexp
+    // or most strings (other than .., ., and '') can be.
+    //
+    // <pre>/**/../<p>/<p>/<rest> -> {<pre>/../<p>/<p>/<rest>,<pre>/**/<p>/<p>/<rest>}
+    // <pre>/<e>/<rest> -> <pre>/<rest>
+    // <pre>/<p>/../<rest> -> <pre>/<rest>
+    // **/**/<rest> -> **/<rest>
+    //
+    // **/*/<rest> -> */**/<rest> <== not valid because ** doesn't follow
+    // this WOULD be allowed if ** did follow symlinks, or * didn't
+    firstPhasePreProcess(globParts) {
+        let didSomething = false;
+        do {
+            didSomething = false;
+            // <pre>/**/../<p>/<p>/<rest> -> {<pre>/../<p>/<p>/<rest>,<pre>/**/<p>/<p>/<rest>}
+            for (let parts of globParts) {
+                let gs = -1;
+                while (-1 !== (gs = parts.indexOf('**', gs + 1))) {
+                    let gss = gs;
+                    while (parts[gss + 1] === '**') {
+                        // <pre>/**/**/<rest> -> <pre>/**/<rest>
+                        gss++;
+                    }
+                    // eg, if gs is 2 and gss is 4, that means we have 3 **
+                    // parts, and can remove 2 of them.
+                    if (gss > gs) {
+                        parts.splice(gs + 1, gss - gs);
+                    }
+                    let next = parts[gs + 1];
+                    const p = parts[gs + 2];
+                    const p2 = parts[gs + 3];
+                    if (next !== '..')
+                        continue;
+                    if (!p ||
+                        p === '.' ||
+                        p === '..' ||
+                        !p2 ||
+                        p2 === '.' ||
+                        p2 === '..') {
+                        continue;
+                    }
+                    didSomething = true;
+                    // edit parts in place, and push the new one
+                    parts.splice(gs, 1);
+                    const other = parts.slice(0);
+                    other[gs] = '**';
+                    globParts.push(other);
+                    gs--;
+                }
+                // <pre>/<e>/<rest> -> <pre>/<rest>
+                if (!this.preserveMultipleSlashes) {
+                    for (let i = 1; i < parts.length - 1; i++) {
+                        const p = parts[i];
+                        // don't squeeze out UNC patterns
+                        if (i === 1 && p === '' && parts[0] === '')
+                            continue;
+                        if (p === '.' || p === '') {
+                            didSomething = true;
+                            parts.splice(i, 1);
+                            i--;
+                        }
+                    }
+                    if (parts[0] === '.' &&
+                        parts.length === 2 &&
+                        (parts[1] === '.' || parts[1] === '')) {
+                        didSomething = true;
+                        parts.pop();
+                    }
+                }
+                // <pre>/<p>/../<rest> -> <pre>/<rest>
+                let dd = 0;
+                while (-1 !== (dd = parts.indexOf('..', dd + 1))) {
+                    const p = parts[dd - 1];
+                    if (p && p !== '.' && p !== '..' && p !== '**') {
+                        didSomething = true;
+                        const needDot = dd === 1 && parts[dd + 1] === '**';
+                        const splin = needDot ? ['.'] : [];
+                        parts.splice(dd - 1, 2, ...splin);
+                        if (parts.length === 0)
+                            parts.push('');
+                        dd -= 2;
+                    }
+                }
+            }
+        } while (didSomething);
+        return globParts;
+    }
+    // second phase: multi-pattern dedupes
+    // {<pre>/*/<rest>,<pre>/<p>/<rest>} -> <pre>/*/<rest>
+    // {<pre>/<rest>,<pre>/<rest>} -> <pre>/<rest>
+    // {<pre>/**/<rest>,<pre>/<rest>} -> <pre>/**/<rest>
+    //
+    // {<pre>/**/<rest>,<pre>/**/<p>/<rest>} -> <pre>/**/<rest>
+    // ^-- not valid because ** doens't follow symlinks
+    secondPhasePreProcess(globParts) {
+        for (let i = 0; i < globParts.length - 1; i++) {
+            for (let j = i + 1; j < globParts.length; j++) {
+                const matched = this.partsMatch(globParts[i], globParts[j], !this.preserveMultipleSlashes);
+                if (matched) {
+                    globParts[i] = [];
+                    globParts[j] = matched;
+                    break;
+                }
+            }
+        }
+        return globParts.filter(gs => gs.length);
+    }
+    partsMatch(a, b, emptyGSMatch = false) {
+        let ai = 0;
+        let bi = 0;
+        let result = [];
+        let which = '';
+        while (ai < a.length && bi < b.length) {
+            if (a[ai] === b[bi]) {
+                result.push(which === 'b' ? b[bi] : a[ai]);
+                ai++;
+                bi++;
+            }
+            else if (emptyGSMatch && a[ai] === '**' && b[bi] === a[ai + 1]) {
+                result.push(a[ai]);
+                ai++;
+            }
+            else if (emptyGSMatch && b[bi] === '**' && a[ai] === b[bi + 1]) {
+                result.push(b[bi]);
+                bi++;
+            }
+            else if (a[ai] === '*' &&
+                b[bi] &&
+                (this.options.dot || !b[bi].startsWith('.')) &&
+                b[bi] !== '**') {
+                if (which === 'b')
+                    return false;
+                which = 'a';
+                result.push(a[ai]);
+                ai++;
+                bi++;
+            }
+            else if (b[bi] === '*' &&
+                a[ai] &&
+                (this.options.dot || !a[ai].startsWith('.')) &&
+                a[ai] !== '**') {
+                if (which === 'a')
+                    return false;
+                which = 'b';
+                result.push(b[bi]);
+                ai++;
+                bi++;
+            }
+            else {
+                return false;
+            }
+        }
+        // if we fall out of the loop, it means they two are identical
+        // as long as their lengths match
+        return a.length === b.length && result;
+    }
+    parseNegate() {
+        if (this.nonegate)
+            return;
+        const pattern = this.pattern;
+        let negate = false;
+        let negateOffset = 0;
+        for (let i = 0; i < pattern.length && pattern.charAt(i) === '!'; i++) {
+            negate = !negate;
+            negateOffset++;
+        }
+        if (negateOffset)
+            this.pattern = pattern.slice(negateOffset);
+        this.negate = negate;
+    }
+    // set partial to true to test if, for example,
+    // "/a/b" matches the start of "/*/b/*/d"
+    // Partial means, if you run out of file before you run
+    // out of pattern, then that's fine, as long as all
+    // the parts match.
+    matchOne(file, pattern, partial = false) {
+        const options = this.options;
+        // UNC paths like //?/X:/... can match X:/... and vice versa
+        // Drive letters in absolute drive or unc paths are always compared
+        // case-insensitively.
+        if (this.isWindows) {
+            const fileDrive = typeof file[0] === 'string' && /^[a-z]:$/i.test(file[0]);
+            const fileUNC = !fileDrive &&
+                file[0] === '' &&
+                file[1] === '' &&
+                file[2] === '?' &&
+                /^[a-z]:$/i.test(file[3]);
+            const patternDrive = typeof pattern[0] === 'string' && /^[a-z]:$/i.test(pattern[0]);
+            const patternUNC = !patternDrive &&
+                pattern[0] === '' &&
+                pattern[1] === '' &&
+                pattern[2] === '?' &&
+                typeof pattern[3] === 'string' &&
+                /^[a-z]:$/i.test(pattern[3]);
+            const fdi = fileUNC ? 3 : fileDrive ? 0 : undefined;
+            const pdi = patternUNC ? 3 : patternDrive ? 0 : undefined;
+            if (typeof fdi === 'number' && typeof pdi === 'number') {
+                const [fd, pd] = [file[fdi], pattern[pdi]];
+                if (fd.toLowerCase() === pd.toLowerCase()) {
+                    pattern[pdi] = fd;
+                    if (pdi > fdi) {
+                        pattern = pattern.slice(pdi);
+                    }
+                    else if (fdi > pdi) {
+                        file = file.slice(fdi);
+                    }
+                }
+            }
+        }
+        // resolve and reduce . and .. portions in the file as well.
+        // dont' need to do the second phase, because it's only one string[]
+        const { optimizationLevel = 1 } = this.options;
+        if (optimizationLevel >= 2) {
+            file = this.levelTwoFileOptimize(file);
+        }
+        this.debug('matchOne', this, { file, pattern });
+        this.debug('matchOne', file.length, pattern.length);
+        for (var fi = 0, pi = 0, fl = file.length, pl = pattern.length; fi < fl && pi < pl; fi++, pi++) {
+            this.debug('matchOne loop');
+            var p = pattern[pi];
+            var f = file[fi];
+            this.debug(pattern, p, f);
+            // should be impossible.
+            // some invalid regexp stuff in the set.
+            /* c8 ignore start */
+            if (p === false) {
+                return false;
+            }
+            /* c8 ignore stop */
+            if (p === GLOBSTAR) {
+                this.debug('GLOBSTAR', [pattern, p, f]);
+                // "**"
+                // a/**/b/**/c would match the following:
+                // a/b/x/y/z/c
+                // a/x/y/z/b/c
+                // a/b/x/b/x/c
+                // a/b/c
+                // To do this, take the rest of the pattern after
+                // the **, and see if it would match the file remainder.
+                // If so, return success.
+                // If not, the ** "swallows" a segment, and try again.
+                // This is recursively awful.
+                //
+                // a/**/b/**/c matching a/b/x/y/z/c
+                // - a matches a
+                // - doublestar
+                //   - matchOne(b/x/y/z/c, b/**/c)
+                //     - b matches b
+                //     - doublestar
+                //       - matchOne(x/y/z/c, c) -> no
+                //       - matchOne(y/z/c, c) -> no
+                //       - matchOne(z/c, c) -> no
+                //       - matchOne(c, c) yes, hit
+                var fr = fi;
+                var pr = pi + 1;
+                if (pr === pl) {
+                    this.debug('** at the end');
+                    // a ** at the end will just swallow the rest.
+                    // We have found a match.
+                    // however, it will not swallow /.x, unless
+                    // options.dot is set.
+                    // . and .. are *never* matched by **, for explosively
+                    // exponential reasons.
+                    for (; fi < fl; fi++) {
+                        if (file[fi] === '.' ||
+                            file[fi] === '..' ||
+                            (!options.dot && file[fi].charAt(0) === '.'))
+                            return false;
+                    }
+                    return true;
+                }
+                // ok, let's see if we can swallow whatever we can.
+                while (fr < fl) {
+                    var swallowee = file[fr];
+                    this.debug('\nglobstar while', file, fr, pattern, pr, swallowee);
+                    // XXX remove this slice.  Just pass the start index.
+                    if (this.matchOne(file.slice(fr), pattern.slice(pr), partial)) {
+                        this.debug('globstar found match!', fr, fl, swallowee);
+                        // found a match.
+                        return true;
+                    }
+                    else {
+                        // can't swallow "." or ".." ever.
+                        // can only swallow ".foo" when explicitly asked.
+                        if (swallowee === '.' ||
+                            swallowee === '..' ||
+                            (!options.dot && swallowee.charAt(0) === '.')) {
+                            this.debug('dot detected!', file, fr, pattern, pr);
+                            break;
+                        }
+                        // ** swallows a segment, and continue.
+                        this.debug('globstar swallow a segment, and continue');
+                        fr++;
+                    }
+                }
+                // no match was found.
+                // However, in partial mode, we can't say this is necessarily over.
+                /* c8 ignore start */
+                if (partial) {
+                    // ran out of file
+                    this.debug('\n>>> no match, partial?', file, fr, pattern, pr);
+                    if (fr === fl) {
+                        return true;
+                    }
+                }
+                /* c8 ignore stop */
+                return false;
+            }
+            // something other than **
+            // non-magic patterns just have to match exactly
+            // patterns with magic have been turned into regexps.
+            let hit;
+            if (typeof p === 'string') {
+                hit = f === p;
+                this.debug('string match', p, f, hit);
+            }
+            else {
+                hit = p.test(f);
+                this.debug('pattern match', p, f, hit);
+            }
+            if (!hit)
+                return false;
+        }
+        // Note: ending in / means that we'll get a final ""
+        // at the end of the pattern.  This can only match a
+        // corresponding "" at the end of the file.
+        // If the file ends in /, then it can only match a
+        // a pattern that ends in /, unless the pattern just
+        // doesn't have any more for it. But, a/b/ should *not*
+        // match "a/b/*", even though "" matches against the
+        // [^/]*? pattern, except in partial mode, where it might
+        // simply not be reached yet.
+        // However, a/b/ should still satisfy a/*
+        // now either we fell off the end of the pattern, or we're done.
+        if (fi === fl && pi === pl) {
+            // ran out of pattern and filename at the same time.
+            // an exact hit!
+            return true;
+        }
+        else if (fi === fl) {
+            // ran out of file, but still had pattern left.
+            // this is ok if we're doing the match as part of
+            // a glob fs traversal.
+            return partial;
+        }
+        else if (pi === pl) {
+            // ran out of pattern, still have file left.
+            // this is only acceptable if we're on the very last
+            // empty segment of a file with a trailing slash.
+            // a/* should match a/b/
+            return fi === fl - 1 && file[fi] === '';
+            /* c8 ignore start */
+        }
+        else {
+            // should be unreachable.
+            throw new Error('wtf?');
+        }
+        /* c8 ignore stop */
+    }
+    braceExpand() {
+        return braceExpand(this.pattern, this.options);
+    }
+    parse(pattern) {
+        assertValidPattern(pattern);
+        const options = this.options;
+        // shortcuts
+        if (pattern === '**')
+            return GLOBSTAR;
+        if (pattern === '')
+            return '';
+        // far and away, the most common glob pattern parts are
+        // *, *.*, and *.<ext>  Add a fast check method for those.
+        let m;
+        let fastTest = null;
+        if ((m = pattern.match(starRE))) {
+            fastTest = options.dot ? starTestDot : starTest;
+        }
+        else if ((m = pattern.match(starDotExtRE))) {
+            fastTest = (options.nocase
+                ? options.dot
+                    ? starDotExtTestNocaseDot
+                    : starDotExtTestNocase
+                : options.dot
+                    ? starDotExtTestDot
+                    : starDotExtTest)(m[1]);
+        }
+        else if ((m = pattern.match(qmarksRE))) {
+            fastTest = (options.nocase
+                ? options.dot
+                    ? qmarksTestNocaseDot
+                    : qmarksTestNocase
+                : options.dot
+                    ? qmarksTestDot
+                    : qmarksTest)(m);
+        }
+        else if ((m = pattern.match(starDotStarRE))) {
+            fastTest = options.dot ? starDotStarTestDot : starDotStarTest;
+        }
+        else if ((m = pattern.match(dotStarRE))) {
+            fastTest = dotStarTest;
+        }
+        const re = AST.fromGlob(pattern, this.options).toMMPattern();
+        if (fastTest && typeof re === 'object') {
+            // Avoids overriding in frozen environments
+            Reflect.defineProperty(re, 'test', { value: fastTest });
+        }
+        return re;
+    }
+    makeRe() {
+        if (this.regexp || this.regexp === false)
+            return this.regexp;
+        // at this point, this.set is a 2d array of partial
+        // pattern strings, or "**".
+        //
+        // It's better to use .match().  This function shouldn't
+        // be used, really, but it's pretty convenient sometimes,
+        // when you just want to work with a regex.
+        const set = this.set;
+        if (!set.length) {
+            this.regexp = false;
+            return this.regexp;
+        }
+        const options = this.options;
+        const twoStar = options.noglobstar
+            ? esm_star
+            : options.dot
+                ? twoStarDot
+                : twoStarNoDot;
+        const flags = new Set(options.nocase ? ['i'] : []);
+        // regexpify non-globstar patterns
+        // if ** is only item, then we just do one twoStar
+        // if ** is first, and there are more, prepend (\/|twoStar\/)? to next
+        // if ** is last, append (\/twoStar|) to previous
+        // if ** is in the middle, append (\/|\/twoStar\/) to previous
+        // then filter out GLOBSTAR symbols
+        let re = set
+            .map(pattern => {
+            const pp = pattern.map(p => {
+                if (p instanceof RegExp) {
+                    for (const f of p.flags.split(''))
+                        flags.add(f);
+                }
+                return typeof p === 'string'
+                    ? esm_regExpEscape(p)
+                    : p === GLOBSTAR
+                        ? GLOBSTAR
+                        : p._src;
+            });
+            pp.forEach((p, i) => {
+                const next = pp[i + 1];
+                const prev = pp[i - 1];
+                if (p !== GLOBSTAR || prev === GLOBSTAR) {
+                    return;
+                }
+                if (prev === undefined) {
+                    if (next !== undefined && next !== GLOBSTAR) {
+                        pp[i + 1] = '(?:\\/|' + twoStar + '\\/)?' + next;
+                    }
+                    else {
+                        pp[i] = twoStar;
+                    }
+                }
+                else if (next === undefined) {
+                    pp[i - 1] = prev + '(?:\\/|' + twoStar + ')?';
+                }
+                else if (next !== GLOBSTAR) {
+                    pp[i - 1] = prev + '(?:\\/|\\/' + twoStar + '\\/)' + next;
+                    pp[i + 1] = GLOBSTAR;
+                }
+            });
+            return pp.filter(p => p !== GLOBSTAR).join('/');
+        })
+            .join('|');
+        // need to wrap in parens if we had more than one thing with |,
+        // otherwise only the first will be anchored to ^ and the last to $
+        const [open, close] = set.length > 1 ? ['(?:', ')'] : ['', ''];
+        // must match entire pattern
+        // ending in a * or ** will make it less strict.
+        re = '^' + open + re + close + '$';
+        // can match anything, as long as it's not this.
+        if (this.negate)
+            re = '^(?!' + re + ').+$';
+        try {
+            this.regexp = new RegExp(re, [...flags].join(''));
+            /* c8 ignore start */
+        }
+        catch (ex) {
+            // should be impossible
+            this.regexp = false;
+        }
+        /* c8 ignore stop */
+        return this.regexp;
+    }
+    slashSplit(p) {
+        // if p starts with // on windows, we preserve that
+        // so that UNC paths aren't broken.  Otherwise, any number of
+        // / characters are coalesced into one, unless
+        // preserveMultipleSlashes is set to true.
+        if (this.preserveMultipleSlashes) {
+            return p.split('/');
+        }
+        else if (this.isWindows && /^\/\/[^\/]+/.test(p)) {
+            // add an extra '' for the one we lose
+            return ['', ...p.split(/\/+/)];
+        }
+        else {
+            return p.split(/\/+/);
+        }
+    }
+    match(f, partial = this.partial) {
+        this.debug('match', f, this.pattern);
+        // short-circuit in the case of busted things.
+        // comments, etc.
+        if (this.comment) {
+            return false;
+        }
+        if (this.empty) {
+            return f === '';
+        }
+        if (f === '/' && partial) {
+            return true;
+        }
+        const options = this.options;
+        // windows: need to use /, not \
+        if (this.isWindows) {
+            f = f.split('\\').join('/');
+        }
+        // treat the test path as a set of pathparts.
+        const ff = this.slashSplit(f);
+        this.debug(this.pattern, 'split', ff);
+        // just ONE of the pattern sets in this.set needs to match
+        // in order for it to be valid.  If negating, then just one
+        // match means that we have failed.
+        // Either way, return on the first hit.
+        const set = this.set;
+        this.debug(this.pattern, 'set', set);
+        // Find the basename of the path by looking for the last non-empty segment
+        let filename = ff[ff.length - 1];
+        if (!filename) {
+            for (let i = ff.length - 2; !filename && i >= 0; i--) {
+                filename = ff[i];
+            }
+        }
+        for (let i = 0; i < set.length; i++) {
+            const pattern = set[i];
+            let file = ff;
+            if (options.matchBase && pattern.length === 1) {
+                file = [filename];
+            }
+            const hit = this.matchOne(file, pattern, partial);
+            if (hit) {
+                if (options.flipNegate) {
+                    return true;
+                }
+                return !this.negate;
+            }
+        }
+        // didn't get any hits.  this is success if it's a negative
+        // pattern, failure otherwise.
+        if (options.flipNegate) {
+            return false;
+        }
+        return this.negate;
+    }
+    static defaults(def) {
+        return minimatch.defaults(def).Minimatch;
+    }
+}
+/* c8 ignore start */
+
+
+
+/* c8 ignore stop */
+minimatch.AST = AST;
+minimatch.Minimatch = Minimatch;
+minimatch.escape = escape_escape;
+minimatch.unescape = unescape_unescape;
+//# sourceMappingURL=index.js.map
 ;// CONCATENATED MODULE: ../core/dist/infrastructure/branch-matcher.js
 // Infrastructure layer - Validation functions
+
+
 
 /**
  * Validates if a branch should be excluded from validation
@@ -42203,6 +56054,22 @@ function isBranchExcluded(branch, pattern) {
     if (!pattern)
         return false;
     return micromatch.isMatch(branch, pattern);
+}
+/**
+ * Check if text should be excluded based on mode and pattern
+ * @param text - The text to check
+ * @param checkMode - The check mode
+ * @param customExclude - Optional custom exclude pattern
+ * @returns true if text should be excluded
+ */
+function shouldExclude(text, checkMode, customExclude) {
+    // Use custom exclude pattern if provided, otherwise use mode-specific default
+    const pattern = customExclude ?? EXCLUDE_RULES[checkMode];
+    // No pattern means no exclusion
+    if (!pattern) {
+        return false;
+    }
+    return minimatch(text, pattern);
 }
 /**
  * Validates if an issue state is allowed
@@ -42218,6 +56085,8 @@ function isIssueStateAllowed(state, filter) {
     return normalizedState === filter;
 }
 //# sourceMappingURL=branch-matcher.js.map
+;// CONCATENATED MODULE: external "node:child_process"
+const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:child_process");
 ;// CONCATENATED MODULE: ../../node_modules/@t3-oss/env-core/dist/src-Bb3GbGAa.js
 //#region src/standard.ts
 function ensureSynchronous(value, message) {
@@ -42315,7 +56184,7 @@ const env = createEnv({
     server: {
         GITHUB_TOKEN: optional(string()),
         GH_TOKEN: optional(string()),
-        GITHUB_API_URL: optional(pipe(string(), url())),
+        GH_HOST: optional(string()),
         GITHUB_SERVER_URL: optional(pipe(string(), url())),
     },
     runtimeEnv: process.env,
@@ -42324,13 +56193,78 @@ const env = createEnv({
 ;// CONCATENATED MODULE: ../core/dist/infrastructure/env-accessor.js
 // Infrastructure layer - Environment variable accessor
 
+
 /**
- * Get GitHub token from environment variables
+ * Get GitHub token from Git Credential Manager
+ * @returns GitHub token or undefined
+ */
+function getTokenFromGitCredentialManager() {
+    try {
+        const result = (0,external_node_child_process_namespaceObject.execSync)("git credential fill", {
+            input: "url=https://github.com\n",
+            encoding: "utf8",
+            stdio: ["pipe", "pipe", "ignore"], // Ignore stderr
+        });
+        // Parse the output to extract the password (token)
+        const lines = result.split("\n");
+        for (const line of lines) {
+            if (line.startsWith("password=")) {
+                return line.substring(9); // Length of "password="
+            }
+        }
+    }
+    catch {
+        // Git command not available or no credentials stored
+        return undefined;
+    }
+    return undefined;
+}
+/**
+ * Get GitHub token from GitHub CLI
+ * @returns GitHub token or undefined
+ */
+function getTokenFromGitHubCLI() {
+    try {
+        const token = (0,external_node_child_process_namespaceObject.execSync)("gh auth token", {
+            encoding: "utf8",
+            stdio: ["pipe", "pipe", "ignore"], // Ignore stderr
+        }).trim();
+        // Verify it looks like a valid token
+        if (token && (token.startsWith("gho_") || token.startsWith("ghp_"))) {
+            return token;
+        }
+    }
+    catch {
+        // GitHub CLI not available or not authenticated
+        return undefined;
+    }
+    return undefined;
+}
+/**
+ * Get GitHub token from multiple sources
+ * Priority order:
+ * 1. Environment variables (GITHUB_TOKEN, GH_TOKEN)
+ * 2. Git Credential Manager
+ * 3. GitHub CLI
  * @returns GitHub token or undefined
  */
 function getGitHubToken() {
-    // Check GITHUB_TOKEN first, then fall back to GH_TOKEN
-    return env.GITHUB_TOKEN ?? env.GH_TOKEN;
+    // 1. Check environment variables first (existing behavior)
+    const envToken = env.GITHUB_TOKEN ?? env.GH_TOKEN;
+    if (envToken) {
+        return envToken;
+    }
+    // 2. Try Git Credential Manager
+    const gitCredToken = getTokenFromGitCredentialManager();
+    if (gitCredToken) {
+        return gitCredToken;
+    }
+    // 3. Try GitHub CLI as fallback
+    const ghCliToken = getTokenFromGitHubCLI();
+    if (ghCliToken) {
+        return ghCliToken;
+    }
+    return undefined;
 }
 /**
  * Get GitHub API URL from environment variables
@@ -42338,13 +56272,20 @@ function getGitHubToken() {
  */
 function getGitHubApiUrl() {
     // Priority order:
-    // 1. GITHUB_API_URL (direct API URL)
-    // 2. GITHUB_SERVER_URL (GitHub Enterprise Server URL - needs /api/v3 suffix)
+    // 1. GH_HOST (GitHub hostname - compatible with GitHub CLI)
+    // 2. GITHUB_SERVER_URL (GitHub Actions environment - needs /api/v3 suffix)
     // 3. Default to GitHub.com API
-    if (env.GITHUB_API_URL) {
-        // Remove trailing slashes
-        return env.GITHUB_API_URL.replace(/\/+$/, "");
+    // Check GH_HOST first (GitHub CLI compatible)
+    if (env.GH_HOST) {
+        const hostname = env.GH_HOST.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+        // GitHub.com uses a different API domain
+        if (hostname === "github.com") {
+            return "https://api.github.com";
+        }
+        // GitHub Enterprise Server uses /api/v3 path
+        return `https://${hostname}/api/v3`;
     }
+    // Check GITHUB_SERVER_URL (GitHub Actions environment)
     if (env.GITHUB_SERVER_URL) {
         // GitHub Enterprise Server API endpoint format
         const serverUrl = env.GITHUB_SERVER_URL.replace(/\/+$/, "");
@@ -47142,25 +61083,6 @@ var esm_default = (/* unused pure expression or super */ null && (gitInstanceFac
 // Create a simple-git instance
 const git = simpleGit();
 /**
- * Get the current branch name
- * @returns Current branch name
- * @throws Error if not in a git repository or other git errors
- */
-async function getCurrentGitBranch() {
-    try {
-        const branch = await git.revparse(["--abbrev-ref", "HEAD"]);
-        return branch.trim();
-    }
-    catch (error) {
-        // Improve error messages
-        const message = error instanceof Error ? error.message : String(error);
-        if (message.includes("not a git repository")) {
-            throw new GitError("Not in a git repository");
-        }
-        throw new GitError(`Failed to get current branch: ${message}`);
-    }
-}
-/**
  * Get the remote URL for origin
  * @returns Remote URL
  * @throws Error if no origin remote is found
@@ -47579,7 +61501,7 @@ throttling.VERSION = dist_bundle_VERSION;
 throttling.triggersNotification = triggersNotification;
 
 
-;// CONCATENATED MODULE: ../../node_modules/universal-user-agent/index.js
+;// CONCATENATED MODULE: ../../node_modules/octokit/node_modules/@octokit/core/node_modules/universal-user-agent/index.js
 function getUserAgent() {
   if (typeof navigator === "object" && "userAgent" in navigator) {
     return navigator.userAgent;
@@ -47594,7 +61516,7 @@ function getUserAgent() {
   return "<environment undetectable>";
 }
 
-;// CONCATENATED MODULE: ../../node_modules/before-after-hook/lib/register.js
+;// CONCATENATED MODULE: ../../node_modules/octokit/node_modules/@octokit/core/node_modules/before-after-hook/lib/register.js
 // @ts-check
 
 function register(state, name, method, options) {
@@ -47623,7 +61545,7 @@ function register(state, name, method, options) {
   });
 }
 
-;// CONCATENATED MODULE: ../../node_modules/before-after-hook/lib/add.js
+;// CONCATENATED MODULE: ../../node_modules/octokit/node_modules/@octokit/core/node_modules/before-after-hook/lib/add.js
 // @ts-check
 
 function addHook(state, kind, name, hook) {
@@ -47671,7 +61593,7 @@ function addHook(state, kind, name, hook) {
   });
 }
 
-;// CONCATENATED MODULE: ../../node_modules/before-after-hook/lib/remove.js
+;// CONCATENATED MODULE: ../../node_modules/octokit/node_modules/@octokit/core/node_modules/before-after-hook/lib/remove.js
 // @ts-check
 
 function removeHook(state, name, method) {
@@ -47692,7 +61614,7 @@ function removeHook(state, name, method) {
   state.registry[name].splice(index, 1);
 }
 
-;// CONCATENATED MODULE: ../../node_modules/before-after-hook/index.js
+;// CONCATENATED MODULE: ../../node_modules/octokit/node_modules/@octokit/core/node_modules/before-after-hook/index.js
 // @ts-check
 
 
@@ -47739,7 +61661,7 @@ function Collection() {
 
 /* harmony default export */ const before_after_hook = ({ Singular, Collection });
 
-;// CONCATENATED MODULE: ../../node_modules/@octokit/endpoint/dist-bundle/index.js
+;// CONCATENATED MODULE: ../../node_modules/octokit/node_modules/@octokit/core/node_modules/@octokit/request/node_modules/@octokit/endpoint/dist-bundle/index.js
 // pkg/dist-src/defaults.js
 
 
@@ -47957,10 +61879,10 @@ function getValues(context, operator, key, modifier) {
 }
 function parseUrl(template) {
   return {
-    expand: expand.bind(null, template)
+    expand: dist_bundle_expand.bind(null, template)
   };
 }
-function expand(template, context) {
+function dist_bundle_expand(template, context) {
   var operators = ["+", "#", ".", "/", ";", "?", "&"];
   template = template.replace(
     /\{([^\{\}]+)\}|([^\{\}]+)/g,
@@ -48087,7 +62009,7 @@ var endpoint = withDefaults(null, DEFAULTS);
 
 // EXTERNAL MODULE: ../../node_modules/fast-content-type-parse/index.js
 var fast_content_type_parse = __nccwpck_require__(2852);
-;// CONCATENATED MODULE: ../../node_modules/@octokit/request/dist-bundle/index.js
+;// CONCATENATED MODULE: ../../node_modules/octokit/node_modules/@octokit/core/node_modules/@octokit/request/dist-bundle/index.js
 // pkg/dist-src/index.js
 
 
@@ -48280,10 +62202,10 @@ function dist_bundle_withDefaults(oldEndpoint, newDefaults) {
 }
 
 // pkg/dist-src/index.js
-var dist_bundle_request = dist_bundle_withDefaults(endpoint, defaults_default);
+var request = dist_bundle_withDefaults(endpoint, defaults_default);
 
 
-;// CONCATENATED MODULE: ../../node_modules/@octokit/graphql/dist-bundle/index.js
+;// CONCATENATED MODULE: ../../node_modules/octokit/node_modules/@octokit/core/node_modules/@octokit/graphql/dist-bundle/index.js
 // pkg/dist-src/index.js
 
 
@@ -48395,7 +62317,7 @@ function graphql_dist_bundle_withDefaults(request2, newDefaults) {
 }
 
 // pkg/dist-src/index.js
-var graphql2 = graphql_dist_bundle_withDefaults(dist_bundle_request, {
+var graphql2 = graphql_dist_bundle_withDefaults(request, {
   headers: {
     "user-agent": `octokit-graphql.js/${graphql_dist_bundle_VERSION} ${getUserAgent()}`
   },
@@ -48410,11 +62332,11 @@ function withCustomRequest(customRequest) {
 }
 
 
-;// CONCATENATED MODULE: ../../node_modules/@octokit/auth-token/dist-bundle/index.js
+;// CONCATENATED MODULE: ../../node_modules/octokit/node_modules/@octokit/core/node_modules/@octokit/auth-token/dist-bundle/index.js
 // pkg/dist-src/is-jwt.js
 var b64url = "(?:[a-zA-Z0-9_-]+)";
-var sep = "\\.";
-var jwtRE = new RegExp(`^${b64url}${sep}${b64url}${sep}${b64url}$`);
+var dist_bundle_sep = "\\.";
+var jwtRE = new RegExp(`^${b64url}${dist_bundle_sep}${b64url}${dist_bundle_sep}${b64url}$`);
 var isJWT = jwtRE.test.bind(jwtRE);
 
 // pkg/dist-src/auth.js
@@ -48465,11 +62387,11 @@ var createTokenAuth = function createTokenAuth2(token) {
 };
 
 
-;// CONCATENATED MODULE: ../../node_modules/@octokit/core/dist-src/version.js
+;// CONCATENATED MODULE: ../../node_modules/octokit/node_modules/@octokit/core/dist-src/version.js
 const version_VERSION = "7.0.3";
 
 
-;// CONCATENATED MODULE: ../../node_modules/@octokit/core/dist-src/index.js
+;// CONCATENATED MODULE: ../../node_modules/octokit/node_modules/@octokit/core/dist-src/index.js
 
 
 
@@ -48496,7 +62418,7 @@ function dist_src_createLogger(logger = {}) {
   return logger;
 }
 const userAgentTrail = `octokit-core.js/${version_VERSION} ${getUserAgent()}`;
-class dist_src_Octokit {
+class Octokit {
   static VERSION = version_VERSION;
   static defaults(defaults) {
     const OctokitWithDefaults = class extends this {
@@ -48539,7 +62461,7 @@ class dist_src_Octokit {
   constructor(options = {}) {
     const hook = new before_after_hook.Collection();
     const requestDefaults = {
-      baseUrl: dist_bundle_request.endpoint.DEFAULTS.baseUrl,
+      baseUrl: request.endpoint.DEFAULTS.baseUrl,
       headers: {},
       request: Object.assign({}, options.request, {
         // @ts-ignore internal usage only, no need to type
@@ -48560,7 +62482,7 @@ class dist_src_Octokit {
     if (options.timeZone) {
       requestDefaults.headers["time-zone"] = options.timeZone;
     }
-    this.request = dist_bundle_request.defaults(requestDefaults);
+    this.request = request.defaults(requestDefaults);
     this.graphql = withCustomRequest(this.request).defaults(requestDefaults);
     this.log = dist_src_createLogger(options.log);
     this.hook = hook;
@@ -48610,7 +62532,7 @@ class dist_src_Octokit {
 }
 
 
-;// CONCATENATED MODULE: ../../node_modules/@octokit/plugin-paginate-rest/dist-bundle/index.js
+;// CONCATENATED MODULE: ../../node_modules/octokit/node_modules/@octokit/plugin-paginate-rest/dist-bundle/index.js
 // pkg/dist-src/version.js
 var plugin_paginate_rest_dist_bundle_VERSION = "0.0.0-development";
 
@@ -49190,12 +63112,12 @@ function paginateGraphQL(octokit) {
 }
 
 
-;// CONCATENATED MODULE: ../../node_modules/@octokit/plugin-rest-endpoint-methods/dist-src/version.js
+;// CONCATENATED MODULE: ../../node_modules/octokit/node_modules/@octokit/plugin-rest-endpoint-methods/dist-src/version.js
 const dist_src_version_VERSION = "16.0.0";
 
 //# sourceMappingURL=version.js.map
 
-;// CONCATENATED MODULE: ../../node_modules/@octokit/plugin-rest-endpoint-methods/dist-src/generated/endpoints.js
+;// CONCATENATED MODULE: ../../node_modules/octokit/node_modules/@octokit/plugin-rest-endpoint-methods/dist-src/generated/endpoints.js
 const Endpoints = {
   actions: {
     addCustomLabelsToSelfHostedRunnerForOrg: [
@@ -51302,7 +65224,7 @@ var endpoints_default = Endpoints;
 
 //# sourceMappingURL=endpoints.js.map
 
-;// CONCATENATED MODULE: ../../node_modules/@octokit/plugin-rest-endpoint-methods/dist-src/endpoints-to-methods.js
+;// CONCATENATED MODULE: ../../node_modules/octokit/node_modules/@octokit/plugin-rest-endpoint-methods/dist-src/endpoints-to-methods.js
 
 const endpointMethodsMap = /* @__PURE__ */ new Map();
 for (const [scope, endpoints] of Object.entries(endpoints_default)) {
@@ -51428,7 +65350,7 @@ function decorate(octokit, scope, methodName, defaults, decorations) {
 
 //# sourceMappingURL=endpoints-to-methods.js.map
 
-;// CONCATENATED MODULE: ../../node_modules/@octokit/plugin-rest-endpoint-methods/dist-src/index.js
+;// CONCATENATED MODULE: ../../node_modules/octokit/node_modules/@octokit/plugin-rest-endpoint-methods/dist-src/index.js
 
 
 function restEndpointMethods(octokit) {
@@ -51448,6 +65370,3263 @@ function legacyRestEndpointMethods(octokit) {
 legacyRestEndpointMethods.VERSION = dist_src_version_VERSION;
 
 //# sourceMappingURL=index.js.map
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/app/node_modules/@octokit/core/node_modules/universal-user-agent/index.js
+function universal_user_agent_getUserAgent() {
+  if (typeof navigator === "object" && "userAgent" in navigator) {
+    return navigator.userAgent;
+  }
+
+  if (typeof process === "object" && process.version !== undefined) {
+    return `Node.js/${process.version.substr(1)} (${process.platform}; ${
+      process.arch
+    })`;
+  }
+
+  return "<environment undetectable>";
+}
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/app/node_modules/@octokit/core/node_modules/before-after-hook/lib/register.js
+// @ts-check
+
+function register_register(state, name, method, options) {
+  if (typeof method !== "function") {
+    throw new Error("method for before hook must be a function");
+  }
+
+  if (!options) {
+    options = {};
+  }
+
+  if (Array.isArray(name)) {
+    return name.reverse().reduce((callback, name) => {
+      return register_register.bind(null, state, name, callback, options);
+    }, method)();
+  }
+
+  return Promise.resolve().then(() => {
+    if (!state.registry[name]) {
+      return method(options);
+    }
+
+    return state.registry[name].reduce((method, registered) => {
+      return registered.hook.bind(null, method, options);
+    }, method)();
+  });
+}
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/app/node_modules/@octokit/core/node_modules/before-after-hook/lib/add.js
+// @ts-check
+
+function add_addHook(state, kind, name, hook) {
+  const orig = hook;
+  if (!state.registry[name]) {
+    state.registry[name] = [];
+  }
+
+  if (kind === "before") {
+    hook = (method, options) => {
+      return Promise.resolve()
+        .then(orig.bind(null, options))
+        .then(method.bind(null, options));
+    };
+  }
+
+  if (kind === "after") {
+    hook = (method, options) => {
+      let result;
+      return Promise.resolve()
+        .then(method.bind(null, options))
+        .then((result_) => {
+          result = result_;
+          return orig(result, options);
+        })
+        .then(() => {
+          return result;
+        });
+    };
+  }
+
+  if (kind === "error") {
+    hook = (method, options) => {
+      return Promise.resolve()
+        .then(method.bind(null, options))
+        .catch((error) => {
+          return orig(error, options);
+        });
+    };
+  }
+
+  state.registry[name].push({
+    hook: hook,
+    orig: orig,
+  });
+}
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/app/node_modules/@octokit/core/node_modules/before-after-hook/lib/remove.js
+// @ts-check
+
+function remove_removeHook(state, name, method) {
+  if (!state.registry[name]) {
+    return;
+  }
+
+  const index = state.registry[name]
+    .map((registered) => {
+      return registered.orig;
+    })
+    .indexOf(method);
+
+  if (index === -1) {
+    return;
+  }
+
+  state.registry[name].splice(index, 1);
+}
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/app/node_modules/@octokit/core/node_modules/before-after-hook/index.js
+// @ts-check
+
+
+
+
+
+// bind with array of arguments: https://stackoverflow.com/a/21792913
+const before_after_hook_bind = Function.bind;
+const before_after_hook_bindable = before_after_hook_bind.bind(before_after_hook_bind);
+
+function before_after_hook_bindApi(hook, state, name) {
+  const removeHookRef = before_after_hook_bindable(remove_removeHook, null).apply(
+    null,
+    name ? [state, name] : [state]
+  );
+  hook.api = { remove: removeHookRef };
+  hook.remove = removeHookRef;
+  ["before", "error", "after", "wrap"].forEach((kind) => {
+    const args = name ? [state, kind, name] : [state, kind];
+    hook[kind] = hook.api[kind] = before_after_hook_bindable(add_addHook, null).apply(null, args);
+  });
+}
+
+function before_after_hook_Singular() {
+  const singularHookName = Symbol("Singular");
+  const singularHookState = {
+    registry: {},
+  };
+  const singularHook = register_register.bind(null, singularHookState, singularHookName);
+  before_after_hook_bindApi(singularHook, singularHookState, singularHookName);
+  return singularHook;
+}
+
+function before_after_hook_Collection() {
+  const state = {
+    registry: {},
+  };
+
+  const hook = register_register.bind(null, state);
+  before_after_hook_bindApi(hook, state);
+
+  return hook;
+}
+
+/* harmony default export */ const node_modules_before_after_hook = ({ Singular: before_after_hook_Singular, Collection: before_after_hook_Collection });
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/app/node_modules/@octokit/core/node_modules/@octokit/request/node_modules/@octokit/endpoint/dist-bundle/index.js
+// pkg/dist-src/defaults.js
+
+
+// pkg/dist-src/version.js
+var _octokit_endpoint_dist_bundle_VERSION = "0.0.0-development";
+
+// pkg/dist-src/defaults.js
+var dist_bundle_userAgent = `octokit-endpoint.js/${_octokit_endpoint_dist_bundle_VERSION} ${universal_user_agent_getUserAgent()}`;
+var dist_bundle_DEFAULTS = {
+  method: "GET",
+  baseUrl: "https://api.github.com",
+  headers: {
+    accept: "application/vnd.github.v3+json",
+    "user-agent": dist_bundle_userAgent
+  },
+  mediaType: {
+    format: ""
+  }
+};
+
+// pkg/dist-src/util/lowercase-keys.js
+function dist_bundle_lowercaseKeys(object) {
+  if (!object) {
+    return {};
+  }
+  return Object.keys(object).reduce((newObj, key) => {
+    newObj[key.toLowerCase()] = object[key];
+    return newObj;
+  }, {});
+}
+
+// pkg/dist-src/util/is-plain-object.js
+function endpoint_dist_bundle_isPlainObject(value) {
+  if (typeof value !== "object" || value === null) return false;
+  if (Object.prototype.toString.call(value) !== "[object Object]") return false;
+  const proto = Object.getPrototypeOf(value);
+  if (proto === null) return true;
+  const Ctor = Object.prototype.hasOwnProperty.call(proto, "constructor") && proto.constructor;
+  return typeof Ctor === "function" && Ctor instanceof Ctor && Function.prototype.call(Ctor) === Function.prototype.call(value);
+}
+
+// pkg/dist-src/util/merge-deep.js
+function dist_bundle_mergeDeep(defaults, options) {
+  const result = Object.assign({}, defaults);
+  Object.keys(options).forEach((key) => {
+    if (endpoint_dist_bundle_isPlainObject(options[key])) {
+      if (!(key in defaults)) Object.assign(result, { [key]: options[key] });
+      else result[key] = dist_bundle_mergeDeep(defaults[key], options[key]);
+    } else {
+      Object.assign(result, { [key]: options[key] });
+    }
+  });
+  return result;
+}
+
+// pkg/dist-src/util/remove-undefined-properties.js
+function dist_bundle_removeUndefinedProperties(obj) {
+  for (const key in obj) {
+    if (obj[key] === void 0) {
+      delete obj[key];
+    }
+  }
+  return obj;
+}
+
+// pkg/dist-src/merge.js
+function dist_bundle_merge(defaults, route, options) {
+  if (typeof route === "string") {
+    let [method, url] = route.split(" ");
+    options = Object.assign(url ? { method, url } : { url: method }, options);
+  } else {
+    options = Object.assign({}, route);
+  }
+  options.headers = dist_bundle_lowercaseKeys(options.headers);
+  dist_bundle_removeUndefinedProperties(options);
+  dist_bundle_removeUndefinedProperties(options.headers);
+  const mergedOptions = dist_bundle_mergeDeep(defaults || {}, options);
+  if (options.url === "/graphql") {
+    if (defaults && defaults.mediaType.previews?.length) {
+      mergedOptions.mediaType.previews = defaults.mediaType.previews.filter(
+        (preview) => !mergedOptions.mediaType.previews.includes(preview)
+      ).concat(mergedOptions.mediaType.previews);
+    }
+    mergedOptions.mediaType.previews = (mergedOptions.mediaType.previews || []).map((preview) => preview.replace(/-preview/, ""));
+  }
+  return mergedOptions;
+}
+
+// pkg/dist-src/util/add-query-parameters.js
+function dist_bundle_addQueryParameters(url, parameters) {
+  const separator = /\?/.test(url) ? "&" : "?";
+  const names = Object.keys(parameters);
+  if (names.length === 0) {
+    return url;
+  }
+  return url + separator + names.map((name) => {
+    if (name === "q") {
+      return "q=" + parameters.q.split("+").map(encodeURIComponent).join("+");
+    }
+    return `${name}=${encodeURIComponent(parameters[name])}`;
+  }).join("&");
+}
+
+// pkg/dist-src/util/extract-url-variable-names.js
+var dist_bundle_urlVariableRegex = /\{[^{}}]+\}/g;
+function dist_bundle_removeNonChars(variableName) {
+  return variableName.replace(/(?:^\W+)|(?:(?<!\W)\W+$)/g, "").split(/,/);
+}
+function dist_bundle_extractUrlVariableNames(url) {
+  const matches = url.match(dist_bundle_urlVariableRegex);
+  if (!matches) {
+    return [];
+  }
+  return matches.map(dist_bundle_removeNonChars).reduce((a, b) => a.concat(b), []);
+}
+
+// pkg/dist-src/util/omit.js
+function endpoint_dist_bundle_omit(object, keysToOmit) {
+  const result = { __proto__: null };
+  for (const key of Object.keys(object)) {
+    if (keysToOmit.indexOf(key) === -1) {
+      result[key] = object[key];
+    }
+  }
+  return result;
+}
+
+// pkg/dist-src/util/url-template.js
+function dist_bundle_encodeReserved(str) {
+  return str.split(/(%[0-9A-Fa-f]{2})/g).map(function(part) {
+    if (!/%[0-9A-Fa-f]/.test(part)) {
+      part = encodeURI(part).replace(/%5B/g, "[").replace(/%5D/g, "]");
+    }
+    return part;
+  }).join("");
+}
+function dist_bundle_encodeUnreserved(str) {
+  return encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
+    return "%" + c.charCodeAt(0).toString(16).toUpperCase();
+  });
+}
+function dist_bundle_encodeValue(operator, value, key) {
+  value = operator === "+" || operator === "#" ? dist_bundle_encodeReserved(value) : dist_bundle_encodeUnreserved(value);
+  if (key) {
+    return dist_bundle_encodeUnreserved(key) + "=" + value;
+  } else {
+    return value;
+  }
+}
+function dist_bundle_isDefined(value) {
+  return value !== void 0 && value !== null;
+}
+function dist_bundle_isKeyOperator(operator) {
+  return operator === ";" || operator === "&" || operator === "?";
+}
+function dist_bundle_getValues(context, operator, key, modifier) {
+  var value = context[key], result = [];
+  if (dist_bundle_isDefined(value) && value !== "") {
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+      value = value.toString();
+      if (modifier && modifier !== "*") {
+        value = value.substring(0, parseInt(modifier, 10));
+      }
+      result.push(
+        dist_bundle_encodeValue(operator, value, dist_bundle_isKeyOperator(operator) ? key : "")
+      );
+    } else {
+      if (modifier === "*") {
+        if (Array.isArray(value)) {
+          value.filter(dist_bundle_isDefined).forEach(function(value2) {
+            result.push(
+              dist_bundle_encodeValue(operator, value2, dist_bundle_isKeyOperator(operator) ? key : "")
+            );
+          });
+        } else {
+          Object.keys(value).forEach(function(k) {
+            if (dist_bundle_isDefined(value[k])) {
+              result.push(dist_bundle_encodeValue(operator, value[k], k));
+            }
+          });
+        }
+      } else {
+        const tmp = [];
+        if (Array.isArray(value)) {
+          value.filter(dist_bundle_isDefined).forEach(function(value2) {
+            tmp.push(dist_bundle_encodeValue(operator, value2));
+          });
+        } else {
+          Object.keys(value).forEach(function(k) {
+            if (dist_bundle_isDefined(value[k])) {
+              tmp.push(dist_bundle_encodeUnreserved(k));
+              tmp.push(dist_bundle_encodeValue(operator, value[k].toString()));
+            }
+          });
+        }
+        if (dist_bundle_isKeyOperator(operator)) {
+          result.push(dist_bundle_encodeUnreserved(key) + "=" + tmp.join(","));
+        } else if (tmp.length !== 0) {
+          result.push(tmp.join(","));
+        }
+      }
+    }
+  } else {
+    if (operator === ";") {
+      if (dist_bundle_isDefined(value)) {
+        result.push(dist_bundle_encodeUnreserved(key));
+      }
+    } else if (value === "" && (operator === "&" || operator === "?")) {
+      result.push(dist_bundle_encodeUnreserved(key) + "=");
+    } else if (value === "") {
+      result.push("");
+    }
+  }
+  return result;
+}
+function dist_bundle_parseUrl(template) {
+  return {
+    expand: endpoint_dist_bundle_expand.bind(null, template)
+  };
+}
+function endpoint_dist_bundle_expand(template, context) {
+  var operators = ["+", "#", ".", "/", ";", "?", "&"];
+  template = template.replace(
+    /\{([^\{\}]+)\}|([^\{\}]+)/g,
+    function(_, expression, literal) {
+      if (expression) {
+        let operator = "";
+        const values = [];
+        if (operators.indexOf(expression.charAt(0)) !== -1) {
+          operator = expression.charAt(0);
+          expression = expression.substr(1);
+        }
+        expression.split(/,/g).forEach(function(variable) {
+          var tmp = /([^:\*]*)(?::(\d+)|(\*))?/.exec(variable);
+          values.push(dist_bundle_getValues(context, operator, tmp[1], tmp[2] || tmp[3]));
+        });
+        if (operator && operator !== "+") {
+          var separator = ",";
+          if (operator === "?") {
+            separator = "&";
+          } else if (operator !== "#") {
+            separator = operator;
+          }
+          return (values.length !== 0 ? operator : "") + values.join(separator);
+        } else {
+          return values.join(",");
+        }
+      } else {
+        return dist_bundle_encodeReserved(literal);
+      }
+    }
+  );
+  if (template === "/") {
+    return template;
+  } else {
+    return template.replace(/\/$/, "");
+  }
+}
+
+// pkg/dist-src/parse.js
+function endpoint_dist_bundle_parse(options) {
+  let method = options.method.toUpperCase();
+  let url = (options.url || "/").replace(/:([a-z]\w+)/g, "{$1}");
+  let headers = Object.assign({}, options.headers);
+  let body;
+  let parameters = endpoint_dist_bundle_omit(options, [
+    "method",
+    "baseUrl",
+    "url",
+    "headers",
+    "request",
+    "mediaType"
+  ]);
+  const urlVariableNames = dist_bundle_extractUrlVariableNames(url);
+  url = dist_bundle_parseUrl(url).expand(parameters);
+  if (!/^http/.test(url)) {
+    url = options.baseUrl + url;
+  }
+  const omittedParameters = Object.keys(options).filter((option) => urlVariableNames.includes(option)).concat("baseUrl");
+  const remainingParameters = endpoint_dist_bundle_omit(parameters, omittedParameters);
+  const isBinaryRequest = /application\/octet-stream/i.test(headers.accept);
+  if (!isBinaryRequest) {
+    if (options.mediaType.format) {
+      headers.accept = headers.accept.split(/,/).map(
+        (format) => format.replace(
+          /application\/vnd(\.\w+)(\.v3)?(\.\w+)?(\+json)?$/,
+          `application/vnd$1$2.${options.mediaType.format}`
+        )
+      ).join(",");
+    }
+    if (url.endsWith("/graphql")) {
+      if (options.mediaType.previews?.length) {
+        const previewsFromAcceptHeader = headers.accept.match(/(?<![\w-])[\w-]+(?=-preview)/g) || [];
+        headers.accept = previewsFromAcceptHeader.concat(options.mediaType.previews).map((preview) => {
+          const format = options.mediaType.format ? `.${options.mediaType.format}` : "+json";
+          return `application/vnd.github.${preview}-preview${format}`;
+        }).join(",");
+      }
+    }
+  }
+  if (["GET", "HEAD"].includes(method)) {
+    url = dist_bundle_addQueryParameters(url, remainingParameters);
+  } else {
+    if ("data" in remainingParameters) {
+      body = remainingParameters.data;
+    } else {
+      if (Object.keys(remainingParameters).length) {
+        body = remainingParameters;
+      }
+    }
+  }
+  if (!headers["content-type"] && typeof body !== "undefined") {
+    headers["content-type"] = "application/json; charset=utf-8";
+  }
+  if (["PATCH", "PUT"].includes(method) && typeof body === "undefined") {
+    body = "";
+  }
+  return Object.assign(
+    { method, url, headers },
+    typeof body !== "undefined" ? { body } : null,
+    options.request ? { request: options.request } : null
+  );
+}
+
+// pkg/dist-src/endpoint-with-defaults.js
+function dist_bundle_endpointWithDefaults(defaults, route, options) {
+  return endpoint_dist_bundle_parse(dist_bundle_merge(defaults, route, options));
+}
+
+// pkg/dist-src/with-defaults.js
+function endpoint_dist_bundle_withDefaults(oldDefaults, newDefaults) {
+  const DEFAULTS2 = dist_bundle_merge(oldDefaults, newDefaults);
+  const endpoint2 = dist_bundle_endpointWithDefaults.bind(null, DEFAULTS2);
+  return Object.assign(endpoint2, {
+    DEFAULTS: DEFAULTS2,
+    defaults: endpoint_dist_bundle_withDefaults.bind(null, DEFAULTS2),
+    merge: dist_bundle_merge.bind(null, DEFAULTS2),
+    parse: endpoint_dist_bundle_parse
+  });
+}
+
+// pkg/dist-src/index.js
+var dist_bundle_endpoint = endpoint_dist_bundle_withDefaults(null, dist_bundle_DEFAULTS);
+
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/app/node_modules/@octokit/core/node_modules/@octokit/request/dist-bundle/index.js
+// pkg/dist-src/index.js
+
+
+// pkg/dist-src/defaults.js
+
+
+// pkg/dist-src/version.js
+var _octokit_request_dist_bundle_VERSION = "10.0.3";
+
+// pkg/dist-src/defaults.js
+var dist_bundle_defaults_default = {
+  headers: {
+    "user-agent": `octokit-request.js/${_octokit_request_dist_bundle_VERSION} ${universal_user_agent_getUserAgent()}`
+  }
+};
+
+// pkg/dist-src/fetch-wrapper.js
+
+
+// pkg/dist-src/is-plain-object.js
+function request_dist_bundle_isPlainObject(value) {
+  if (typeof value !== "object" || value === null) return false;
+  if (Object.prototype.toString.call(value) !== "[object Object]") return false;
+  const proto = Object.getPrototypeOf(value);
+  if (proto === null) return true;
+  const Ctor = Object.prototype.hasOwnProperty.call(proto, "constructor") && proto.constructor;
+  return typeof Ctor === "function" && Ctor instanceof Ctor && Function.prototype.call(Ctor) === Function.prototype.call(value);
+}
+
+// pkg/dist-src/fetch-wrapper.js
+
+async function dist_bundle_fetchWrapper(requestOptions) {
+  const fetch = requestOptions.request?.fetch || globalThis.fetch;
+  if (!fetch) {
+    throw new Error(
+      "fetch is not set. Please pass a fetch implementation as new Octokit({ request: { fetch }}). Learn more at https://github.com/octokit/octokit.js/#fetch-missing"
+    );
+  }
+  const log = requestOptions.request?.log || console;
+  const parseSuccessResponseBody = requestOptions.request?.parseSuccessResponseBody !== false;
+  const body = request_dist_bundle_isPlainObject(requestOptions.body) || Array.isArray(requestOptions.body) ? JSON.stringify(requestOptions.body) : requestOptions.body;
+  const requestHeaders = Object.fromEntries(
+    Object.entries(requestOptions.headers).map(([name, value]) => [
+      name,
+      String(value)
+    ])
+  );
+  let fetchResponse;
+  try {
+    fetchResponse = await fetch(requestOptions.url, {
+      method: requestOptions.method,
+      body,
+      redirect: requestOptions.request?.redirect,
+      headers: requestHeaders,
+      signal: requestOptions.request?.signal,
+      // duplex must be set if request.body is ReadableStream or Async Iterables.
+      // See https://fetch.spec.whatwg.org/#dom-requestinit-duplex.
+      ...requestOptions.body && { duplex: "half" }
+    });
+  } catch (error) {
+    let message = "Unknown Error";
+    if (error instanceof Error) {
+      if (error.name === "AbortError") {
+        error.status = 500;
+        throw error;
+      }
+      message = error.message;
+      if (error.name === "TypeError" && "cause" in error) {
+        if (error.cause instanceof Error) {
+          message = error.cause.message;
+        } else if (typeof error.cause === "string") {
+          message = error.cause;
+        }
+      }
+    }
+    const requestError = new RequestError(message, 500, {
+      request: requestOptions
+    });
+    requestError.cause = error;
+    throw requestError;
+  }
+  const status = fetchResponse.status;
+  const url = fetchResponse.url;
+  const responseHeaders = {};
+  for (const [key, value] of fetchResponse.headers) {
+    responseHeaders[key] = value;
+  }
+  const octokitResponse = {
+    url,
+    status,
+    headers: responseHeaders,
+    data: ""
+  };
+  if ("deprecation" in responseHeaders) {
+    const matches = responseHeaders.link && responseHeaders.link.match(/<([^<>]+)>; rel="deprecation"/);
+    const deprecationLink = matches && matches.pop();
+    log.warn(
+      `[@octokit/request] "${requestOptions.method} ${requestOptions.url}" is deprecated. It is scheduled to be removed on ${responseHeaders.sunset}${deprecationLink ? `. See ${deprecationLink}` : ""}`
+    );
+  }
+  if (status === 204 || status === 205) {
+    return octokitResponse;
+  }
+  if (requestOptions.method === "HEAD") {
+    if (status < 400) {
+      return octokitResponse;
+    }
+    throw new RequestError(fetchResponse.statusText, status, {
+      response: octokitResponse,
+      request: requestOptions
+    });
+  }
+  if (status === 304) {
+    octokitResponse.data = await dist_bundle_getResponseData(fetchResponse);
+    throw new RequestError("Not modified", status, {
+      response: octokitResponse,
+      request: requestOptions
+    });
+  }
+  if (status >= 400) {
+    octokitResponse.data = await dist_bundle_getResponseData(fetchResponse);
+    throw new RequestError(dist_bundle_toErrorMessage(octokitResponse.data), status, {
+      response: octokitResponse,
+      request: requestOptions
+    });
+  }
+  octokitResponse.data = parseSuccessResponseBody ? await dist_bundle_getResponseData(fetchResponse) : fetchResponse.body;
+  return octokitResponse;
+}
+async function dist_bundle_getResponseData(response) {
+  const contentType = response.headers.get("content-type");
+  if (!contentType) {
+    return response.text().catch(() => "");
+  }
+  const mimetype = (0,fast_content_type_parse/* safeParse */.xL)(contentType);
+  if (dist_bundle_isJSONResponse(mimetype)) {
+    let text = "";
+    try {
+      text = await response.text();
+      return JSON.parse(text);
+    } catch (err) {
+      return text;
+    }
+  } else if (mimetype.type.startsWith("text/") || mimetype.parameters.charset?.toLowerCase() === "utf-8") {
+    return response.text().catch(() => "");
+  } else {
+    return response.arrayBuffer().catch(() => new ArrayBuffer(0));
+  }
+}
+function dist_bundle_isJSONResponse(mimetype) {
+  return mimetype.type === "application/json" || mimetype.type === "application/scim+json";
+}
+function dist_bundle_toErrorMessage(data) {
+  if (typeof data === "string") {
+    return data;
+  }
+  if (data instanceof ArrayBuffer) {
+    return "Unknown error";
+  }
+  if ("message" in data) {
+    const suffix = "documentation_url" in data ? ` - ${data.documentation_url}` : "";
+    return Array.isArray(data.errors) ? `${data.message}: ${data.errors.map((v) => JSON.stringify(v)).join(", ")}${suffix}` : `${data.message}${suffix}`;
+  }
+  return `Unknown error: ${JSON.stringify(data)}`;
+}
+
+// pkg/dist-src/with-defaults.js
+function request_dist_bundle_withDefaults(oldEndpoint, newDefaults) {
+  const endpoint2 = oldEndpoint.defaults(newDefaults);
+  const newApi = function(route, parameters) {
+    const endpointOptions = endpoint2.merge(route, parameters);
+    if (!endpointOptions.request || !endpointOptions.request.hook) {
+      return dist_bundle_fetchWrapper(endpoint2.parse(endpointOptions));
+    }
+    const request2 = (route2, parameters2) => {
+      return dist_bundle_fetchWrapper(
+        endpoint2.parse(endpoint2.merge(route2, parameters2))
+      );
+    };
+    Object.assign(request2, {
+      endpoint: endpoint2,
+      defaults: request_dist_bundle_withDefaults.bind(null, endpoint2)
+    });
+    return endpointOptions.request.hook(request2, endpointOptions);
+  };
+  return Object.assign(newApi, {
+    endpoint: endpoint2,
+    defaults: request_dist_bundle_withDefaults.bind(null, endpoint2)
+  });
+}
+
+// pkg/dist-src/index.js
+var dist_bundle_request = request_dist_bundle_withDefaults(dist_bundle_endpoint, dist_bundle_defaults_default);
+
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/app/node_modules/@octokit/core/node_modules/@octokit/graphql/dist-bundle/index.js
+// pkg/dist-src/index.js
+
+
+
+// pkg/dist-src/version.js
+var _octokit_graphql_dist_bundle_VERSION = "0.0.0-development";
+
+// pkg/dist-src/with-defaults.js
+
+
+// pkg/dist-src/graphql.js
+
+
+// pkg/dist-src/error.js
+function dist_bundle_buildMessageForResponseErrors(data) {
+  return `Request failed due to following response errors:
+` + data.errors.map((e) => ` - ${e.message}`).join("\n");
+}
+var dist_bundle_GraphqlResponseError = class extends Error {
+  constructor(request2, headers, response) {
+    super(dist_bundle_buildMessageForResponseErrors(response));
+    this.request = request2;
+    this.headers = headers;
+    this.response = response;
+    this.errors = response.errors;
+    this.data = response.data;
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, this.constructor);
+    }
+  }
+  name = "GraphqlResponseError";
+  errors;
+  data;
+};
+
+// pkg/dist-src/graphql.js
+var dist_bundle_NON_VARIABLE_OPTIONS = [
+  "method",
+  "baseUrl",
+  "url",
+  "headers",
+  "request",
+  "query",
+  "mediaType",
+  "operationName"
+];
+var dist_bundle_FORBIDDEN_VARIABLE_OPTIONS = ["query", "method", "url"];
+var dist_bundle_GHES_V3_SUFFIX_REGEX = /\/api\/v3\/?$/;
+function dist_bundle_graphql(request2, query, options) {
+  if (options) {
+    if (typeof query === "string" && "query" in options) {
+      return Promise.reject(
+        new Error(`[@octokit/graphql] "query" cannot be used as variable name`)
+      );
+    }
+    for (const key in options) {
+      if (!dist_bundle_FORBIDDEN_VARIABLE_OPTIONS.includes(key)) continue;
+      return Promise.reject(
+        new Error(
+          `[@octokit/graphql] "${key}" cannot be used as variable name`
+        )
+      );
+    }
+  }
+  const parsedOptions = typeof query === "string" ? Object.assign({ query }, options) : query;
+  const requestOptions = Object.keys(
+    parsedOptions
+  ).reduce((result, key) => {
+    if (dist_bundle_NON_VARIABLE_OPTIONS.includes(key)) {
+      result[key] = parsedOptions[key];
+      return result;
+    }
+    if (!result.variables) {
+      result.variables = {};
+    }
+    result.variables[key] = parsedOptions[key];
+    return result;
+  }, {});
+  const baseUrl = parsedOptions.baseUrl || request2.endpoint.DEFAULTS.baseUrl;
+  if (dist_bundle_GHES_V3_SUFFIX_REGEX.test(baseUrl)) {
+    requestOptions.url = baseUrl.replace(dist_bundle_GHES_V3_SUFFIX_REGEX, "/api/graphql");
+  }
+  return request2(requestOptions).then((response) => {
+    if (response.data.errors) {
+      const headers = {};
+      for (const key of Object.keys(response.headers)) {
+        headers[key] = response.headers[key];
+      }
+      throw new dist_bundle_GraphqlResponseError(
+        requestOptions,
+        headers,
+        response.data
+      );
+    }
+    return response.data.data;
+  });
+}
+
+// pkg/dist-src/with-defaults.js
+function _octokit_graphql_dist_bundle_withDefaults(request2, newDefaults) {
+  const newRequest = request2.defaults(newDefaults);
+  const newApi = (query, options) => {
+    return dist_bundle_graphql(newRequest, query, options);
+  };
+  return Object.assign(newApi, {
+    defaults: _octokit_graphql_dist_bundle_withDefaults.bind(null, newRequest),
+    endpoint: newRequest.endpoint
+  });
+}
+
+// pkg/dist-src/index.js
+var dist_bundle_graphql2 = _octokit_graphql_dist_bundle_withDefaults(dist_bundle_request, {
+  headers: {
+    "user-agent": `octokit-graphql.js/${_octokit_graphql_dist_bundle_VERSION} ${universal_user_agent_getUserAgent()}`
+  },
+  method: "POST",
+  url: "/graphql"
+});
+function dist_bundle_withCustomRequest(customRequest) {
+  return _octokit_graphql_dist_bundle_withDefaults(customRequest, {
+    method: "POST",
+    url: "/graphql"
+  });
+}
+
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/app/node_modules/@octokit/core/node_modules/@octokit/auth-token/dist-bundle/index.js
+// pkg/dist-src/is-jwt.js
+var dist_bundle_b64url = "(?:[a-zA-Z0-9_-]+)";
+var auth_token_dist_bundle_sep = "\\.";
+var dist_bundle_jwtRE = new RegExp(`^${dist_bundle_b64url}${auth_token_dist_bundle_sep}${dist_bundle_b64url}${auth_token_dist_bundle_sep}${dist_bundle_b64url}$`);
+var dist_bundle_isJWT = dist_bundle_jwtRE.test.bind(dist_bundle_jwtRE);
+
+// pkg/dist-src/auth.js
+async function dist_bundle_auth(token) {
+  const isApp = dist_bundle_isJWT(token);
+  const isInstallation = token.startsWith("v1.") || token.startsWith("ghs_");
+  const isUserToServer = token.startsWith("ghu_");
+  const tokenType = isApp ? "app" : isInstallation ? "installation" : isUserToServer ? "user-to-server" : "oauth";
+  return {
+    type: "token",
+    token,
+    tokenType
+  };
+}
+
+// pkg/dist-src/with-authorization-prefix.js
+function dist_bundle_withAuthorizationPrefix(token) {
+  if (token.split(/\./).length === 3) {
+    return `bearer ${token}`;
+  }
+  return `token ${token}`;
+}
+
+// pkg/dist-src/hook.js
+async function dist_bundle_hook(token, request, route, parameters) {
+  const endpoint = request.endpoint.merge(
+    route,
+    parameters
+  );
+  endpoint.headers.authorization = dist_bundle_withAuthorizationPrefix(token);
+  return request(endpoint);
+}
+
+// pkg/dist-src/index.js
+var dist_bundle_createTokenAuth = function createTokenAuth2(token) {
+  if (!token) {
+    throw new Error("[@octokit/auth-token] No token passed to createTokenAuth");
+  }
+  if (typeof token !== "string") {
+    throw new Error(
+      "[@octokit/auth-token] Token passed to createTokenAuth is not a string"
+    );
+  }
+  token = token.replace(/^(token|bearer) +/i, "");
+  return Object.assign(dist_bundle_auth.bind(null, token), {
+    hook: dist_bundle_hook.bind(null, token)
+  });
+};
+
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/app/node_modules/@octokit/core/dist-src/version.js
+const core_dist_src_version_VERSION = "7.0.3";
+
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/app/node_modules/@octokit/core/dist-src/index.js
+
+
+
+
+
+
+const core_dist_src_noop = () => {
+};
+const dist_src_consoleWarn = console.warn.bind(console);
+const dist_src_consoleError = console.error.bind(console);
+function core_dist_src_createLogger(logger = {}) {
+  if (typeof logger.debug !== "function") {
+    logger.debug = core_dist_src_noop;
+  }
+  if (typeof logger.info !== "function") {
+    logger.info = core_dist_src_noop;
+  }
+  if (typeof logger.warn !== "function") {
+    logger.warn = dist_src_consoleWarn;
+  }
+  if (typeof logger.error !== "function") {
+    logger.error = dist_src_consoleError;
+  }
+  return logger;
+}
+const dist_src_userAgentTrail = `octokit-core.js/${core_dist_src_version_VERSION} ${universal_user_agent_getUserAgent()}`;
+class dist_src_Octokit {
+  static VERSION = core_dist_src_version_VERSION;
+  static defaults(defaults) {
+    const OctokitWithDefaults = class extends this {
+      constructor(...args) {
+        const options = args[0] || {};
+        if (typeof defaults === "function") {
+          super(defaults(options));
+          return;
+        }
+        super(
+          Object.assign(
+            {},
+            defaults,
+            options,
+            options.userAgent && defaults.userAgent ? {
+              userAgent: `${options.userAgent} ${defaults.userAgent}`
+            } : null
+          )
+        );
+      }
+    };
+    return OctokitWithDefaults;
+  }
+  static plugins = [];
+  /**
+   * Attach a plugin (or many) to your Octokit instance.
+   *
+   * @example
+   * const API = Octokit.plugin(plugin1, plugin2, plugin3, ...)
+   */
+  static plugin(...newPlugins) {
+    const currentPlugins = this.plugins;
+    const NewOctokit = class extends this {
+      static plugins = currentPlugins.concat(
+        newPlugins.filter((plugin) => !currentPlugins.includes(plugin))
+      );
+    };
+    return NewOctokit;
+  }
+  constructor(options = {}) {
+    const hook = new node_modules_before_after_hook.Collection();
+    const requestDefaults = {
+      baseUrl: dist_bundle_request.endpoint.DEFAULTS.baseUrl,
+      headers: {},
+      request: Object.assign({}, options.request, {
+        // @ts-ignore internal usage only, no need to type
+        hook: hook.bind(null, "request")
+      }),
+      mediaType: {
+        previews: [],
+        format: ""
+      }
+    };
+    requestDefaults.headers["user-agent"] = options.userAgent ? `${options.userAgent} ${dist_src_userAgentTrail}` : dist_src_userAgentTrail;
+    if (options.baseUrl) {
+      requestDefaults.baseUrl = options.baseUrl;
+    }
+    if (options.previews) {
+      requestDefaults.mediaType.previews = options.previews;
+    }
+    if (options.timeZone) {
+      requestDefaults.headers["time-zone"] = options.timeZone;
+    }
+    this.request = dist_bundle_request.defaults(requestDefaults);
+    this.graphql = dist_bundle_withCustomRequest(this.request).defaults(requestDefaults);
+    this.log = core_dist_src_createLogger(options.log);
+    this.hook = hook;
+    if (!options.authStrategy) {
+      if (!options.auth) {
+        this.auth = async () => ({
+          type: "unauthenticated"
+        });
+      } else {
+        const auth = dist_bundle_createTokenAuth(options.auth);
+        hook.wrap("request", auth.hook);
+        this.auth = auth;
+      }
+    } else {
+      const { authStrategy, ...otherOptions } = options;
+      const auth = authStrategy(
+        Object.assign(
+          {
+            request: this.request,
+            log: this.log,
+            // we pass the current octokit instance as well as its constructor options
+            // to allow for authentication strategies that return a new octokit instance
+            // that shares the same internal state as the current one. The original
+            // requirement for this was the "event-octokit" authentication strategy
+            // of https://github.com/probot/octokit-auth-probot.
+            octokit: this,
+            octokitOptions: otherOptions
+          },
+          options.auth
+        )
+      );
+      hook.wrap("request", auth.hook);
+      this.auth = auth;
+    }
+    const classConstructor = this.constructor;
+    for (let i = 0; i < classConstructor.plugins.length; ++i) {
+      Object.assign(this, classConstructor.plugins[i](this, options));
+    }
+  }
+  // assigned during constructor
+  request;
+  graphql;
+  log;
+  hook;
+  // TODO: type `octokit.auth` based on passed options.authStrategy
+  auth;
+}
+
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/auth-app/node_modules/universal-user-agent/index.js
+function node_modules_universal_user_agent_getUserAgent() {
+  if (typeof navigator === "object" && "userAgent" in navigator) {
+    return navigator.userAgent;
+  }
+
+  if (typeof process === "object" && process.version !== undefined) {
+    return `Node.js/${process.version.substr(1)} (${process.platform}; ${
+      process.arch
+    })`;
+  }
+
+  return "<environment undetectable>";
+}
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/auth-app/node_modules/@octokit/request/node_modules/@octokit/endpoint/dist-bundle/index.js
+// pkg/dist-src/defaults.js
+
+
+// pkg/dist-src/version.js
+var node_modules_octokit_endpoint_dist_bundle_VERSION = "0.0.0-development";
+
+// pkg/dist-src/defaults.js
+var endpoint_dist_bundle_userAgent = `octokit-endpoint.js/${node_modules_octokit_endpoint_dist_bundle_VERSION} ${node_modules_universal_user_agent_getUserAgent()}`;
+var endpoint_dist_bundle_DEFAULTS = {
+  method: "GET",
+  baseUrl: "https://api.github.com",
+  headers: {
+    accept: "application/vnd.github.v3+json",
+    "user-agent": endpoint_dist_bundle_userAgent
+  },
+  mediaType: {
+    format: ""
+  }
+};
+
+// pkg/dist-src/util/lowercase-keys.js
+function endpoint_dist_bundle_lowercaseKeys(object) {
+  if (!object) {
+    return {};
+  }
+  return Object.keys(object).reduce((newObj, key) => {
+    newObj[key.toLowerCase()] = object[key];
+    return newObj;
+  }, {});
+}
+
+// pkg/dist-src/util/is-plain-object.js
+function _octokit_endpoint_dist_bundle_isPlainObject(value) {
+  if (typeof value !== "object" || value === null) return false;
+  if (Object.prototype.toString.call(value) !== "[object Object]") return false;
+  const proto = Object.getPrototypeOf(value);
+  if (proto === null) return true;
+  const Ctor = Object.prototype.hasOwnProperty.call(proto, "constructor") && proto.constructor;
+  return typeof Ctor === "function" && Ctor instanceof Ctor && Function.prototype.call(Ctor) === Function.prototype.call(value);
+}
+
+// pkg/dist-src/util/merge-deep.js
+function endpoint_dist_bundle_mergeDeep(defaults, options) {
+  const result = Object.assign({}, defaults);
+  Object.keys(options).forEach((key) => {
+    if (_octokit_endpoint_dist_bundle_isPlainObject(options[key])) {
+      if (!(key in defaults)) Object.assign(result, { [key]: options[key] });
+      else result[key] = endpoint_dist_bundle_mergeDeep(defaults[key], options[key]);
+    } else {
+      Object.assign(result, { [key]: options[key] });
+    }
+  });
+  return result;
+}
+
+// pkg/dist-src/util/remove-undefined-properties.js
+function endpoint_dist_bundle_removeUndefinedProperties(obj) {
+  for (const key in obj) {
+    if (obj[key] === void 0) {
+      delete obj[key];
+    }
+  }
+  return obj;
+}
+
+// pkg/dist-src/merge.js
+function endpoint_dist_bundle_merge(defaults, route, options) {
+  if (typeof route === "string") {
+    let [method, url] = route.split(" ");
+    options = Object.assign(url ? { method, url } : { url: method }, options);
+  } else {
+    options = Object.assign({}, route);
+  }
+  options.headers = endpoint_dist_bundle_lowercaseKeys(options.headers);
+  endpoint_dist_bundle_removeUndefinedProperties(options);
+  endpoint_dist_bundle_removeUndefinedProperties(options.headers);
+  const mergedOptions = endpoint_dist_bundle_mergeDeep(defaults || {}, options);
+  if (options.url === "/graphql") {
+    if (defaults && defaults.mediaType.previews?.length) {
+      mergedOptions.mediaType.previews = defaults.mediaType.previews.filter(
+        (preview) => !mergedOptions.mediaType.previews.includes(preview)
+      ).concat(mergedOptions.mediaType.previews);
+    }
+    mergedOptions.mediaType.previews = (mergedOptions.mediaType.previews || []).map((preview) => preview.replace(/-preview/, ""));
+  }
+  return mergedOptions;
+}
+
+// pkg/dist-src/util/add-query-parameters.js
+function endpoint_dist_bundle_addQueryParameters(url, parameters) {
+  const separator = /\?/.test(url) ? "&" : "?";
+  const names = Object.keys(parameters);
+  if (names.length === 0) {
+    return url;
+  }
+  return url + separator + names.map((name) => {
+    if (name === "q") {
+      return "q=" + parameters.q.split("+").map(encodeURIComponent).join("+");
+    }
+    return `${name}=${encodeURIComponent(parameters[name])}`;
+  }).join("&");
+}
+
+// pkg/dist-src/util/extract-url-variable-names.js
+var endpoint_dist_bundle_urlVariableRegex = /\{[^{}}]+\}/g;
+function endpoint_dist_bundle_removeNonChars(variableName) {
+  return variableName.replace(/(?:^\W+)|(?:(?<!\W)\W+$)/g, "").split(/,/);
+}
+function endpoint_dist_bundle_extractUrlVariableNames(url) {
+  const matches = url.match(endpoint_dist_bundle_urlVariableRegex);
+  if (!matches) {
+    return [];
+  }
+  return matches.map(endpoint_dist_bundle_removeNonChars).reduce((a, b) => a.concat(b), []);
+}
+
+// pkg/dist-src/util/omit.js
+function _octokit_endpoint_dist_bundle_omit(object, keysToOmit) {
+  const result = { __proto__: null };
+  for (const key of Object.keys(object)) {
+    if (keysToOmit.indexOf(key) === -1) {
+      result[key] = object[key];
+    }
+  }
+  return result;
+}
+
+// pkg/dist-src/util/url-template.js
+function endpoint_dist_bundle_encodeReserved(str) {
+  return str.split(/(%[0-9A-Fa-f]{2})/g).map(function(part) {
+    if (!/%[0-9A-Fa-f]/.test(part)) {
+      part = encodeURI(part).replace(/%5B/g, "[").replace(/%5D/g, "]");
+    }
+    return part;
+  }).join("");
+}
+function endpoint_dist_bundle_encodeUnreserved(str) {
+  return encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
+    return "%" + c.charCodeAt(0).toString(16).toUpperCase();
+  });
+}
+function endpoint_dist_bundle_encodeValue(operator, value, key) {
+  value = operator === "+" || operator === "#" ? endpoint_dist_bundle_encodeReserved(value) : endpoint_dist_bundle_encodeUnreserved(value);
+  if (key) {
+    return endpoint_dist_bundle_encodeUnreserved(key) + "=" + value;
+  } else {
+    return value;
+  }
+}
+function endpoint_dist_bundle_isDefined(value) {
+  return value !== void 0 && value !== null;
+}
+function endpoint_dist_bundle_isKeyOperator(operator) {
+  return operator === ";" || operator === "&" || operator === "?";
+}
+function endpoint_dist_bundle_getValues(context, operator, key, modifier) {
+  var value = context[key], result = [];
+  if (endpoint_dist_bundle_isDefined(value) && value !== "") {
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+      value = value.toString();
+      if (modifier && modifier !== "*") {
+        value = value.substring(0, parseInt(modifier, 10));
+      }
+      result.push(
+        endpoint_dist_bundle_encodeValue(operator, value, endpoint_dist_bundle_isKeyOperator(operator) ? key : "")
+      );
+    } else {
+      if (modifier === "*") {
+        if (Array.isArray(value)) {
+          value.filter(endpoint_dist_bundle_isDefined).forEach(function(value2) {
+            result.push(
+              endpoint_dist_bundle_encodeValue(operator, value2, endpoint_dist_bundle_isKeyOperator(operator) ? key : "")
+            );
+          });
+        } else {
+          Object.keys(value).forEach(function(k) {
+            if (endpoint_dist_bundle_isDefined(value[k])) {
+              result.push(endpoint_dist_bundle_encodeValue(operator, value[k], k));
+            }
+          });
+        }
+      } else {
+        const tmp = [];
+        if (Array.isArray(value)) {
+          value.filter(endpoint_dist_bundle_isDefined).forEach(function(value2) {
+            tmp.push(endpoint_dist_bundle_encodeValue(operator, value2));
+          });
+        } else {
+          Object.keys(value).forEach(function(k) {
+            if (endpoint_dist_bundle_isDefined(value[k])) {
+              tmp.push(endpoint_dist_bundle_encodeUnreserved(k));
+              tmp.push(endpoint_dist_bundle_encodeValue(operator, value[k].toString()));
+            }
+          });
+        }
+        if (endpoint_dist_bundle_isKeyOperator(operator)) {
+          result.push(endpoint_dist_bundle_encodeUnreserved(key) + "=" + tmp.join(","));
+        } else if (tmp.length !== 0) {
+          result.push(tmp.join(","));
+        }
+      }
+    }
+  } else {
+    if (operator === ";") {
+      if (endpoint_dist_bundle_isDefined(value)) {
+        result.push(endpoint_dist_bundle_encodeUnreserved(key));
+      }
+    } else if (value === "" && (operator === "&" || operator === "?")) {
+      result.push(endpoint_dist_bundle_encodeUnreserved(key) + "=");
+    } else if (value === "") {
+      result.push("");
+    }
+  }
+  return result;
+}
+function endpoint_dist_bundle_parseUrl(template) {
+  return {
+    expand: _octokit_endpoint_dist_bundle_expand.bind(null, template)
+  };
+}
+function _octokit_endpoint_dist_bundle_expand(template, context) {
+  var operators = ["+", "#", ".", "/", ";", "?", "&"];
+  template = template.replace(
+    /\{([^\{\}]+)\}|([^\{\}]+)/g,
+    function(_, expression, literal) {
+      if (expression) {
+        let operator = "";
+        const values = [];
+        if (operators.indexOf(expression.charAt(0)) !== -1) {
+          operator = expression.charAt(0);
+          expression = expression.substr(1);
+        }
+        expression.split(/,/g).forEach(function(variable) {
+          var tmp = /([^:\*]*)(?::(\d+)|(\*))?/.exec(variable);
+          values.push(endpoint_dist_bundle_getValues(context, operator, tmp[1], tmp[2] || tmp[3]));
+        });
+        if (operator && operator !== "+") {
+          var separator = ",";
+          if (operator === "?") {
+            separator = "&";
+          } else if (operator !== "#") {
+            separator = operator;
+          }
+          return (values.length !== 0 ? operator : "") + values.join(separator);
+        } else {
+          return values.join(",");
+        }
+      } else {
+        return endpoint_dist_bundle_encodeReserved(literal);
+      }
+    }
+  );
+  if (template === "/") {
+    return template;
+  } else {
+    return template.replace(/\/$/, "");
+  }
+}
+
+// pkg/dist-src/parse.js
+function _octokit_endpoint_dist_bundle_parse(options) {
+  let method = options.method.toUpperCase();
+  let url = (options.url || "/").replace(/:([a-z]\w+)/g, "{$1}");
+  let headers = Object.assign({}, options.headers);
+  let body;
+  let parameters = _octokit_endpoint_dist_bundle_omit(options, [
+    "method",
+    "baseUrl",
+    "url",
+    "headers",
+    "request",
+    "mediaType"
+  ]);
+  const urlVariableNames = endpoint_dist_bundle_extractUrlVariableNames(url);
+  url = endpoint_dist_bundle_parseUrl(url).expand(parameters);
+  if (!/^http/.test(url)) {
+    url = options.baseUrl + url;
+  }
+  const omittedParameters = Object.keys(options).filter((option) => urlVariableNames.includes(option)).concat("baseUrl");
+  const remainingParameters = _octokit_endpoint_dist_bundle_omit(parameters, omittedParameters);
+  const isBinaryRequest = /application\/octet-stream/i.test(headers.accept);
+  if (!isBinaryRequest) {
+    if (options.mediaType.format) {
+      headers.accept = headers.accept.split(/,/).map(
+        (format) => format.replace(
+          /application\/vnd(\.\w+)(\.v3)?(\.\w+)?(\+json)?$/,
+          `application/vnd$1$2.${options.mediaType.format}`
+        )
+      ).join(",");
+    }
+    if (url.endsWith("/graphql")) {
+      if (options.mediaType.previews?.length) {
+        const previewsFromAcceptHeader = headers.accept.match(/(?<![\w-])[\w-]+(?=-preview)/g) || [];
+        headers.accept = previewsFromAcceptHeader.concat(options.mediaType.previews).map((preview) => {
+          const format = options.mediaType.format ? `.${options.mediaType.format}` : "+json";
+          return `application/vnd.github.${preview}-preview${format}`;
+        }).join(",");
+      }
+    }
+  }
+  if (["GET", "HEAD"].includes(method)) {
+    url = endpoint_dist_bundle_addQueryParameters(url, remainingParameters);
+  } else {
+    if ("data" in remainingParameters) {
+      body = remainingParameters.data;
+    } else {
+      if (Object.keys(remainingParameters).length) {
+        body = remainingParameters;
+      }
+    }
+  }
+  if (!headers["content-type"] && typeof body !== "undefined") {
+    headers["content-type"] = "application/json; charset=utf-8";
+  }
+  if (["PATCH", "PUT"].includes(method) && typeof body === "undefined") {
+    body = "";
+  }
+  return Object.assign(
+    { method, url, headers },
+    typeof body !== "undefined" ? { body } : null,
+    options.request ? { request: options.request } : null
+  );
+}
+
+// pkg/dist-src/endpoint-with-defaults.js
+function endpoint_dist_bundle_endpointWithDefaults(defaults, route, options) {
+  return _octokit_endpoint_dist_bundle_parse(endpoint_dist_bundle_merge(defaults, route, options));
+}
+
+// pkg/dist-src/with-defaults.js
+function _octokit_endpoint_dist_bundle_withDefaults(oldDefaults, newDefaults) {
+  const DEFAULTS2 = endpoint_dist_bundle_merge(oldDefaults, newDefaults);
+  const endpoint2 = endpoint_dist_bundle_endpointWithDefaults.bind(null, DEFAULTS2);
+  return Object.assign(endpoint2, {
+    DEFAULTS: DEFAULTS2,
+    defaults: _octokit_endpoint_dist_bundle_withDefaults.bind(null, DEFAULTS2),
+    merge: endpoint_dist_bundle_merge.bind(null, DEFAULTS2),
+    parse: _octokit_endpoint_dist_bundle_parse
+  });
+}
+
+// pkg/dist-src/index.js
+var endpoint_dist_bundle_endpoint = _octokit_endpoint_dist_bundle_withDefaults(null, endpoint_dist_bundle_DEFAULTS);
+
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/auth-app/node_modules/@octokit/request/dist-bundle/index.js
+// pkg/dist-src/index.js
+
+
+// pkg/dist-src/defaults.js
+
+
+// pkg/dist-src/version.js
+var node_modules_octokit_request_dist_bundle_VERSION = "10.0.3";
+
+// pkg/dist-src/defaults.js
+var request_dist_bundle_defaults_default = {
+  headers: {
+    "user-agent": `octokit-request.js/${node_modules_octokit_request_dist_bundle_VERSION} ${node_modules_universal_user_agent_getUserAgent()}`
+  }
+};
+
+// pkg/dist-src/fetch-wrapper.js
+
+
+// pkg/dist-src/is-plain-object.js
+function _octokit_request_dist_bundle_isPlainObject(value) {
+  if (typeof value !== "object" || value === null) return false;
+  if (Object.prototype.toString.call(value) !== "[object Object]") return false;
+  const proto = Object.getPrototypeOf(value);
+  if (proto === null) return true;
+  const Ctor = Object.prototype.hasOwnProperty.call(proto, "constructor") && proto.constructor;
+  return typeof Ctor === "function" && Ctor instanceof Ctor && Function.prototype.call(Ctor) === Function.prototype.call(value);
+}
+
+// pkg/dist-src/fetch-wrapper.js
+
+async function request_dist_bundle_fetchWrapper(requestOptions) {
+  const fetch = requestOptions.request?.fetch || globalThis.fetch;
+  if (!fetch) {
+    throw new Error(
+      "fetch is not set. Please pass a fetch implementation as new Octokit({ request: { fetch }}). Learn more at https://github.com/octokit/octokit.js/#fetch-missing"
+    );
+  }
+  const log = requestOptions.request?.log || console;
+  const parseSuccessResponseBody = requestOptions.request?.parseSuccessResponseBody !== false;
+  const body = _octokit_request_dist_bundle_isPlainObject(requestOptions.body) || Array.isArray(requestOptions.body) ? JSON.stringify(requestOptions.body) : requestOptions.body;
+  const requestHeaders = Object.fromEntries(
+    Object.entries(requestOptions.headers).map(([name, value]) => [
+      name,
+      String(value)
+    ])
+  );
+  let fetchResponse;
+  try {
+    fetchResponse = await fetch(requestOptions.url, {
+      method: requestOptions.method,
+      body,
+      redirect: requestOptions.request?.redirect,
+      headers: requestHeaders,
+      signal: requestOptions.request?.signal,
+      // duplex must be set if request.body is ReadableStream or Async Iterables.
+      // See https://fetch.spec.whatwg.org/#dom-requestinit-duplex.
+      ...requestOptions.body && { duplex: "half" }
+    });
+  } catch (error) {
+    let message = "Unknown Error";
+    if (error instanceof Error) {
+      if (error.name === "AbortError") {
+        error.status = 500;
+        throw error;
+      }
+      message = error.message;
+      if (error.name === "TypeError" && "cause" in error) {
+        if (error.cause instanceof Error) {
+          message = error.cause.message;
+        } else if (typeof error.cause === "string") {
+          message = error.cause;
+        }
+      }
+    }
+    const requestError = new RequestError(message, 500, {
+      request: requestOptions
+    });
+    requestError.cause = error;
+    throw requestError;
+  }
+  const status = fetchResponse.status;
+  const url = fetchResponse.url;
+  const responseHeaders = {};
+  for (const [key, value] of fetchResponse.headers) {
+    responseHeaders[key] = value;
+  }
+  const octokitResponse = {
+    url,
+    status,
+    headers: responseHeaders,
+    data: ""
+  };
+  if ("deprecation" in responseHeaders) {
+    const matches = responseHeaders.link && responseHeaders.link.match(/<([^<>]+)>; rel="deprecation"/);
+    const deprecationLink = matches && matches.pop();
+    log.warn(
+      `[@octokit/request] "${requestOptions.method} ${requestOptions.url}" is deprecated. It is scheduled to be removed on ${responseHeaders.sunset}${deprecationLink ? `. See ${deprecationLink}` : ""}`
+    );
+  }
+  if (status === 204 || status === 205) {
+    return octokitResponse;
+  }
+  if (requestOptions.method === "HEAD") {
+    if (status < 400) {
+      return octokitResponse;
+    }
+    throw new RequestError(fetchResponse.statusText, status, {
+      response: octokitResponse,
+      request: requestOptions
+    });
+  }
+  if (status === 304) {
+    octokitResponse.data = await request_dist_bundle_getResponseData(fetchResponse);
+    throw new RequestError("Not modified", status, {
+      response: octokitResponse,
+      request: requestOptions
+    });
+  }
+  if (status >= 400) {
+    octokitResponse.data = await request_dist_bundle_getResponseData(fetchResponse);
+    throw new RequestError(request_dist_bundle_toErrorMessage(octokitResponse.data), status, {
+      response: octokitResponse,
+      request: requestOptions
+    });
+  }
+  octokitResponse.data = parseSuccessResponseBody ? await request_dist_bundle_getResponseData(fetchResponse) : fetchResponse.body;
+  return octokitResponse;
+}
+async function request_dist_bundle_getResponseData(response) {
+  const contentType = response.headers.get("content-type");
+  if (!contentType) {
+    return response.text().catch(() => "");
+  }
+  const mimetype = (0,fast_content_type_parse/* safeParse */.xL)(contentType);
+  if (request_dist_bundle_isJSONResponse(mimetype)) {
+    let text = "";
+    try {
+      text = await response.text();
+      return JSON.parse(text);
+    } catch (err) {
+      return text;
+    }
+  } else if (mimetype.type.startsWith("text/") || mimetype.parameters.charset?.toLowerCase() === "utf-8") {
+    return response.text().catch(() => "");
+  } else {
+    return response.arrayBuffer().catch(() => new ArrayBuffer(0));
+  }
+}
+function request_dist_bundle_isJSONResponse(mimetype) {
+  return mimetype.type === "application/json" || mimetype.type === "application/scim+json";
+}
+function request_dist_bundle_toErrorMessage(data) {
+  if (typeof data === "string") {
+    return data;
+  }
+  if (data instanceof ArrayBuffer) {
+    return "Unknown error";
+  }
+  if ("message" in data) {
+    const suffix = "documentation_url" in data ? ` - ${data.documentation_url}` : "";
+    return Array.isArray(data.errors) ? `${data.message}: ${data.errors.map((v) => JSON.stringify(v)).join(", ")}${suffix}` : `${data.message}${suffix}`;
+  }
+  return `Unknown error: ${JSON.stringify(data)}`;
+}
+
+// pkg/dist-src/with-defaults.js
+function _octokit_request_dist_bundle_withDefaults(oldEndpoint, newDefaults) {
+  const endpoint2 = oldEndpoint.defaults(newDefaults);
+  const newApi = function(route, parameters) {
+    const endpointOptions = endpoint2.merge(route, parameters);
+    if (!endpointOptions.request || !endpointOptions.request.hook) {
+      return request_dist_bundle_fetchWrapper(endpoint2.parse(endpointOptions));
+    }
+    const request2 = (route2, parameters2) => {
+      return request_dist_bundle_fetchWrapper(
+        endpoint2.parse(endpoint2.merge(route2, parameters2))
+      );
+    };
+    Object.assign(request2, {
+      endpoint: endpoint2,
+      defaults: _octokit_request_dist_bundle_withDefaults.bind(null, endpoint2)
+    });
+    return endpointOptions.request.hook(request2, endpointOptions);
+  };
+  return Object.assign(newApi, {
+    endpoint: endpoint2,
+    defaults: _octokit_request_dist_bundle_withDefaults.bind(null, endpoint2)
+  });
+}
+
+// pkg/dist-src/index.js
+var request_dist_bundle_request = _octokit_request_dist_bundle_withDefaults(endpoint_dist_bundle_endpoint, request_dist_bundle_defaults_default);
+
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/auth-oauth-app/node_modules/universal-user-agent/index.js
+function auth_oauth_app_node_modules_universal_user_agent_getUserAgent() {
+  if (typeof navigator === "object" && "userAgent" in navigator) {
+    return navigator.userAgent;
+  }
+
+  if (typeof process === "object" && process.version !== undefined) {
+    return `Node.js/${process.version.substr(1)} (${process.platform}; ${
+      process.arch
+    })`;
+  }
+
+  return "<environment undetectable>";
+}
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/auth-oauth-app/node_modules/@octokit/request/node_modules/@octokit/endpoint/dist-bundle/index.js
+// pkg/dist-src/defaults.js
+
+
+// pkg/dist-src/version.js
+var request_node_modules_octokit_endpoint_dist_bundle_VERSION = "0.0.0-development";
+
+// pkg/dist-src/defaults.js
+var _octokit_endpoint_dist_bundle_userAgent = `octokit-endpoint.js/${request_node_modules_octokit_endpoint_dist_bundle_VERSION} ${auth_oauth_app_node_modules_universal_user_agent_getUserAgent()}`;
+var _octokit_endpoint_dist_bundle_DEFAULTS = {
+  method: "GET",
+  baseUrl: "https://api.github.com",
+  headers: {
+    accept: "application/vnd.github.v3+json",
+    "user-agent": _octokit_endpoint_dist_bundle_userAgent
+  },
+  mediaType: {
+    format: ""
+  }
+};
+
+// pkg/dist-src/util/lowercase-keys.js
+function _octokit_endpoint_dist_bundle_lowercaseKeys(object) {
+  if (!object) {
+    return {};
+  }
+  return Object.keys(object).reduce((newObj, key) => {
+    newObj[key.toLowerCase()] = object[key];
+    return newObj;
+  }, {});
+}
+
+// pkg/dist-src/util/is-plain-object.js
+function node_modules_octokit_endpoint_dist_bundle_isPlainObject(value) {
+  if (typeof value !== "object" || value === null) return false;
+  if (Object.prototype.toString.call(value) !== "[object Object]") return false;
+  const proto = Object.getPrototypeOf(value);
+  if (proto === null) return true;
+  const Ctor = Object.prototype.hasOwnProperty.call(proto, "constructor") && proto.constructor;
+  return typeof Ctor === "function" && Ctor instanceof Ctor && Function.prototype.call(Ctor) === Function.prototype.call(value);
+}
+
+// pkg/dist-src/util/merge-deep.js
+function _octokit_endpoint_dist_bundle_mergeDeep(defaults, options) {
+  const result = Object.assign({}, defaults);
+  Object.keys(options).forEach((key) => {
+    if (node_modules_octokit_endpoint_dist_bundle_isPlainObject(options[key])) {
+      if (!(key in defaults)) Object.assign(result, { [key]: options[key] });
+      else result[key] = _octokit_endpoint_dist_bundle_mergeDeep(defaults[key], options[key]);
+    } else {
+      Object.assign(result, { [key]: options[key] });
+    }
+  });
+  return result;
+}
+
+// pkg/dist-src/util/remove-undefined-properties.js
+function _octokit_endpoint_dist_bundle_removeUndefinedProperties(obj) {
+  for (const key in obj) {
+    if (obj[key] === void 0) {
+      delete obj[key];
+    }
+  }
+  return obj;
+}
+
+// pkg/dist-src/merge.js
+function _octokit_endpoint_dist_bundle_merge(defaults, route, options) {
+  if (typeof route === "string") {
+    let [method, url] = route.split(" ");
+    options = Object.assign(url ? { method, url } : { url: method }, options);
+  } else {
+    options = Object.assign({}, route);
+  }
+  options.headers = _octokit_endpoint_dist_bundle_lowercaseKeys(options.headers);
+  _octokit_endpoint_dist_bundle_removeUndefinedProperties(options);
+  _octokit_endpoint_dist_bundle_removeUndefinedProperties(options.headers);
+  const mergedOptions = _octokit_endpoint_dist_bundle_mergeDeep(defaults || {}, options);
+  if (options.url === "/graphql") {
+    if (defaults && defaults.mediaType.previews?.length) {
+      mergedOptions.mediaType.previews = defaults.mediaType.previews.filter(
+        (preview) => !mergedOptions.mediaType.previews.includes(preview)
+      ).concat(mergedOptions.mediaType.previews);
+    }
+    mergedOptions.mediaType.previews = (mergedOptions.mediaType.previews || []).map((preview) => preview.replace(/-preview/, ""));
+  }
+  return mergedOptions;
+}
+
+// pkg/dist-src/util/add-query-parameters.js
+function _octokit_endpoint_dist_bundle_addQueryParameters(url, parameters) {
+  const separator = /\?/.test(url) ? "&" : "?";
+  const names = Object.keys(parameters);
+  if (names.length === 0) {
+    return url;
+  }
+  return url + separator + names.map((name) => {
+    if (name === "q") {
+      return "q=" + parameters.q.split("+").map(encodeURIComponent).join("+");
+    }
+    return `${name}=${encodeURIComponent(parameters[name])}`;
+  }).join("&");
+}
+
+// pkg/dist-src/util/extract-url-variable-names.js
+var _octokit_endpoint_dist_bundle_urlVariableRegex = /\{[^{}}]+\}/g;
+function _octokit_endpoint_dist_bundle_removeNonChars(variableName) {
+  return variableName.replace(/(?:^\W+)|(?:(?<!\W)\W+$)/g, "").split(/,/);
+}
+function _octokit_endpoint_dist_bundle_extractUrlVariableNames(url) {
+  const matches = url.match(_octokit_endpoint_dist_bundle_urlVariableRegex);
+  if (!matches) {
+    return [];
+  }
+  return matches.map(_octokit_endpoint_dist_bundle_removeNonChars).reduce((a, b) => a.concat(b), []);
+}
+
+// pkg/dist-src/util/omit.js
+function node_modules_octokit_endpoint_dist_bundle_omit(object, keysToOmit) {
+  const result = { __proto__: null };
+  for (const key of Object.keys(object)) {
+    if (keysToOmit.indexOf(key) === -1) {
+      result[key] = object[key];
+    }
+  }
+  return result;
+}
+
+// pkg/dist-src/util/url-template.js
+function _octokit_endpoint_dist_bundle_encodeReserved(str) {
+  return str.split(/(%[0-9A-Fa-f]{2})/g).map(function(part) {
+    if (!/%[0-9A-Fa-f]/.test(part)) {
+      part = encodeURI(part).replace(/%5B/g, "[").replace(/%5D/g, "]");
+    }
+    return part;
+  }).join("");
+}
+function _octokit_endpoint_dist_bundle_encodeUnreserved(str) {
+  return encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
+    return "%" + c.charCodeAt(0).toString(16).toUpperCase();
+  });
+}
+function _octokit_endpoint_dist_bundle_encodeValue(operator, value, key) {
+  value = operator === "+" || operator === "#" ? _octokit_endpoint_dist_bundle_encodeReserved(value) : _octokit_endpoint_dist_bundle_encodeUnreserved(value);
+  if (key) {
+    return _octokit_endpoint_dist_bundle_encodeUnreserved(key) + "=" + value;
+  } else {
+    return value;
+  }
+}
+function _octokit_endpoint_dist_bundle_isDefined(value) {
+  return value !== void 0 && value !== null;
+}
+function _octokit_endpoint_dist_bundle_isKeyOperator(operator) {
+  return operator === ";" || operator === "&" || operator === "?";
+}
+function _octokit_endpoint_dist_bundle_getValues(context, operator, key, modifier) {
+  var value = context[key], result = [];
+  if (_octokit_endpoint_dist_bundle_isDefined(value) && value !== "") {
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+      value = value.toString();
+      if (modifier && modifier !== "*") {
+        value = value.substring(0, parseInt(modifier, 10));
+      }
+      result.push(
+        _octokit_endpoint_dist_bundle_encodeValue(operator, value, _octokit_endpoint_dist_bundle_isKeyOperator(operator) ? key : "")
+      );
+    } else {
+      if (modifier === "*") {
+        if (Array.isArray(value)) {
+          value.filter(_octokit_endpoint_dist_bundle_isDefined).forEach(function(value2) {
+            result.push(
+              _octokit_endpoint_dist_bundle_encodeValue(operator, value2, _octokit_endpoint_dist_bundle_isKeyOperator(operator) ? key : "")
+            );
+          });
+        } else {
+          Object.keys(value).forEach(function(k) {
+            if (_octokit_endpoint_dist_bundle_isDefined(value[k])) {
+              result.push(_octokit_endpoint_dist_bundle_encodeValue(operator, value[k], k));
+            }
+          });
+        }
+      } else {
+        const tmp = [];
+        if (Array.isArray(value)) {
+          value.filter(_octokit_endpoint_dist_bundle_isDefined).forEach(function(value2) {
+            tmp.push(_octokit_endpoint_dist_bundle_encodeValue(operator, value2));
+          });
+        } else {
+          Object.keys(value).forEach(function(k) {
+            if (_octokit_endpoint_dist_bundle_isDefined(value[k])) {
+              tmp.push(_octokit_endpoint_dist_bundle_encodeUnreserved(k));
+              tmp.push(_octokit_endpoint_dist_bundle_encodeValue(operator, value[k].toString()));
+            }
+          });
+        }
+        if (_octokit_endpoint_dist_bundle_isKeyOperator(operator)) {
+          result.push(_octokit_endpoint_dist_bundle_encodeUnreserved(key) + "=" + tmp.join(","));
+        } else if (tmp.length !== 0) {
+          result.push(tmp.join(","));
+        }
+      }
+    }
+  } else {
+    if (operator === ";") {
+      if (_octokit_endpoint_dist_bundle_isDefined(value)) {
+        result.push(_octokit_endpoint_dist_bundle_encodeUnreserved(key));
+      }
+    } else if (value === "" && (operator === "&" || operator === "?")) {
+      result.push(_octokit_endpoint_dist_bundle_encodeUnreserved(key) + "=");
+    } else if (value === "") {
+      result.push("");
+    }
+  }
+  return result;
+}
+function _octokit_endpoint_dist_bundle_parseUrl(template) {
+  return {
+    expand: node_modules_octokit_endpoint_dist_bundle_expand.bind(null, template)
+  };
+}
+function node_modules_octokit_endpoint_dist_bundle_expand(template, context) {
+  var operators = ["+", "#", ".", "/", ";", "?", "&"];
+  template = template.replace(
+    /\{([^\{\}]+)\}|([^\{\}]+)/g,
+    function(_, expression, literal) {
+      if (expression) {
+        let operator = "";
+        const values = [];
+        if (operators.indexOf(expression.charAt(0)) !== -1) {
+          operator = expression.charAt(0);
+          expression = expression.substr(1);
+        }
+        expression.split(/,/g).forEach(function(variable) {
+          var tmp = /([^:\*]*)(?::(\d+)|(\*))?/.exec(variable);
+          values.push(_octokit_endpoint_dist_bundle_getValues(context, operator, tmp[1], tmp[2] || tmp[3]));
+        });
+        if (operator && operator !== "+") {
+          var separator = ",";
+          if (operator === "?") {
+            separator = "&";
+          } else if (operator !== "#") {
+            separator = operator;
+          }
+          return (values.length !== 0 ? operator : "") + values.join(separator);
+        } else {
+          return values.join(",");
+        }
+      } else {
+        return _octokit_endpoint_dist_bundle_encodeReserved(literal);
+      }
+    }
+  );
+  if (template === "/") {
+    return template;
+  } else {
+    return template.replace(/\/$/, "");
+  }
+}
+
+// pkg/dist-src/parse.js
+function node_modules_octokit_endpoint_dist_bundle_parse(options) {
+  let method = options.method.toUpperCase();
+  let url = (options.url || "/").replace(/:([a-z]\w+)/g, "{$1}");
+  let headers = Object.assign({}, options.headers);
+  let body;
+  let parameters = node_modules_octokit_endpoint_dist_bundle_omit(options, [
+    "method",
+    "baseUrl",
+    "url",
+    "headers",
+    "request",
+    "mediaType"
+  ]);
+  const urlVariableNames = _octokit_endpoint_dist_bundle_extractUrlVariableNames(url);
+  url = _octokit_endpoint_dist_bundle_parseUrl(url).expand(parameters);
+  if (!/^http/.test(url)) {
+    url = options.baseUrl + url;
+  }
+  const omittedParameters = Object.keys(options).filter((option) => urlVariableNames.includes(option)).concat("baseUrl");
+  const remainingParameters = node_modules_octokit_endpoint_dist_bundle_omit(parameters, omittedParameters);
+  const isBinaryRequest = /application\/octet-stream/i.test(headers.accept);
+  if (!isBinaryRequest) {
+    if (options.mediaType.format) {
+      headers.accept = headers.accept.split(/,/).map(
+        (format) => format.replace(
+          /application\/vnd(\.\w+)(\.v3)?(\.\w+)?(\+json)?$/,
+          `application/vnd$1$2.${options.mediaType.format}`
+        )
+      ).join(",");
+    }
+    if (url.endsWith("/graphql")) {
+      if (options.mediaType.previews?.length) {
+        const previewsFromAcceptHeader = headers.accept.match(/(?<![\w-])[\w-]+(?=-preview)/g) || [];
+        headers.accept = previewsFromAcceptHeader.concat(options.mediaType.previews).map((preview) => {
+          const format = options.mediaType.format ? `.${options.mediaType.format}` : "+json";
+          return `application/vnd.github.${preview}-preview${format}`;
+        }).join(",");
+      }
+    }
+  }
+  if (["GET", "HEAD"].includes(method)) {
+    url = _octokit_endpoint_dist_bundle_addQueryParameters(url, remainingParameters);
+  } else {
+    if ("data" in remainingParameters) {
+      body = remainingParameters.data;
+    } else {
+      if (Object.keys(remainingParameters).length) {
+        body = remainingParameters;
+      }
+    }
+  }
+  if (!headers["content-type"] && typeof body !== "undefined") {
+    headers["content-type"] = "application/json; charset=utf-8";
+  }
+  if (["PATCH", "PUT"].includes(method) && typeof body === "undefined") {
+    body = "";
+  }
+  return Object.assign(
+    { method, url, headers },
+    typeof body !== "undefined" ? { body } : null,
+    options.request ? { request: options.request } : null
+  );
+}
+
+// pkg/dist-src/endpoint-with-defaults.js
+function _octokit_endpoint_dist_bundle_endpointWithDefaults(defaults, route, options) {
+  return node_modules_octokit_endpoint_dist_bundle_parse(_octokit_endpoint_dist_bundle_merge(defaults, route, options));
+}
+
+// pkg/dist-src/with-defaults.js
+function node_modules_octokit_endpoint_dist_bundle_withDefaults(oldDefaults, newDefaults) {
+  const DEFAULTS2 = _octokit_endpoint_dist_bundle_merge(oldDefaults, newDefaults);
+  const endpoint2 = _octokit_endpoint_dist_bundle_endpointWithDefaults.bind(null, DEFAULTS2);
+  return Object.assign(endpoint2, {
+    DEFAULTS: DEFAULTS2,
+    defaults: node_modules_octokit_endpoint_dist_bundle_withDefaults.bind(null, DEFAULTS2),
+    merge: _octokit_endpoint_dist_bundle_merge.bind(null, DEFAULTS2),
+    parse: node_modules_octokit_endpoint_dist_bundle_parse
+  });
+}
+
+// pkg/dist-src/index.js
+var _octokit_endpoint_dist_bundle_endpoint = node_modules_octokit_endpoint_dist_bundle_withDefaults(null, _octokit_endpoint_dist_bundle_DEFAULTS);
+
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/auth-oauth-app/node_modules/@octokit/request/dist-bundle/index.js
+// pkg/dist-src/index.js
+
+
+// pkg/dist-src/defaults.js
+
+
+// pkg/dist-src/version.js
+var auth_oauth_app_node_modules_octokit_request_dist_bundle_VERSION = "10.0.3";
+
+// pkg/dist-src/defaults.js
+var _octokit_request_dist_bundle_defaults_default = {
+  headers: {
+    "user-agent": `octokit-request.js/${auth_oauth_app_node_modules_octokit_request_dist_bundle_VERSION} ${auth_oauth_app_node_modules_universal_user_agent_getUserAgent()}`
+  }
+};
+
+// pkg/dist-src/fetch-wrapper.js
+
+
+// pkg/dist-src/is-plain-object.js
+function node_modules_octokit_request_dist_bundle_isPlainObject(value) {
+  if (typeof value !== "object" || value === null) return false;
+  if (Object.prototype.toString.call(value) !== "[object Object]") return false;
+  const proto = Object.getPrototypeOf(value);
+  if (proto === null) return true;
+  const Ctor = Object.prototype.hasOwnProperty.call(proto, "constructor") && proto.constructor;
+  return typeof Ctor === "function" && Ctor instanceof Ctor && Function.prototype.call(Ctor) === Function.prototype.call(value);
+}
+
+// pkg/dist-src/fetch-wrapper.js
+
+async function _octokit_request_dist_bundle_fetchWrapper(requestOptions) {
+  const fetch = requestOptions.request?.fetch || globalThis.fetch;
+  if (!fetch) {
+    throw new Error(
+      "fetch is not set. Please pass a fetch implementation as new Octokit({ request: { fetch }}). Learn more at https://github.com/octokit/octokit.js/#fetch-missing"
+    );
+  }
+  const log = requestOptions.request?.log || console;
+  const parseSuccessResponseBody = requestOptions.request?.parseSuccessResponseBody !== false;
+  const body = node_modules_octokit_request_dist_bundle_isPlainObject(requestOptions.body) || Array.isArray(requestOptions.body) ? JSON.stringify(requestOptions.body) : requestOptions.body;
+  const requestHeaders = Object.fromEntries(
+    Object.entries(requestOptions.headers).map(([name, value]) => [
+      name,
+      String(value)
+    ])
+  );
+  let fetchResponse;
+  try {
+    fetchResponse = await fetch(requestOptions.url, {
+      method: requestOptions.method,
+      body,
+      redirect: requestOptions.request?.redirect,
+      headers: requestHeaders,
+      signal: requestOptions.request?.signal,
+      // duplex must be set if request.body is ReadableStream or Async Iterables.
+      // See https://fetch.spec.whatwg.org/#dom-requestinit-duplex.
+      ...requestOptions.body && { duplex: "half" }
+    });
+  } catch (error) {
+    let message = "Unknown Error";
+    if (error instanceof Error) {
+      if (error.name === "AbortError") {
+        error.status = 500;
+        throw error;
+      }
+      message = error.message;
+      if (error.name === "TypeError" && "cause" in error) {
+        if (error.cause instanceof Error) {
+          message = error.cause.message;
+        } else if (typeof error.cause === "string") {
+          message = error.cause;
+        }
+      }
+    }
+    const requestError = new RequestError(message, 500, {
+      request: requestOptions
+    });
+    requestError.cause = error;
+    throw requestError;
+  }
+  const status = fetchResponse.status;
+  const url = fetchResponse.url;
+  const responseHeaders = {};
+  for (const [key, value] of fetchResponse.headers) {
+    responseHeaders[key] = value;
+  }
+  const octokitResponse = {
+    url,
+    status,
+    headers: responseHeaders,
+    data: ""
+  };
+  if ("deprecation" in responseHeaders) {
+    const matches = responseHeaders.link && responseHeaders.link.match(/<([^<>]+)>; rel="deprecation"/);
+    const deprecationLink = matches && matches.pop();
+    log.warn(
+      `[@octokit/request] "${requestOptions.method} ${requestOptions.url}" is deprecated. It is scheduled to be removed on ${responseHeaders.sunset}${deprecationLink ? `. See ${deprecationLink}` : ""}`
+    );
+  }
+  if (status === 204 || status === 205) {
+    return octokitResponse;
+  }
+  if (requestOptions.method === "HEAD") {
+    if (status < 400) {
+      return octokitResponse;
+    }
+    throw new RequestError(fetchResponse.statusText, status, {
+      response: octokitResponse,
+      request: requestOptions
+    });
+  }
+  if (status === 304) {
+    octokitResponse.data = await _octokit_request_dist_bundle_getResponseData(fetchResponse);
+    throw new RequestError("Not modified", status, {
+      response: octokitResponse,
+      request: requestOptions
+    });
+  }
+  if (status >= 400) {
+    octokitResponse.data = await _octokit_request_dist_bundle_getResponseData(fetchResponse);
+    throw new RequestError(_octokit_request_dist_bundle_toErrorMessage(octokitResponse.data), status, {
+      response: octokitResponse,
+      request: requestOptions
+    });
+  }
+  octokitResponse.data = parseSuccessResponseBody ? await _octokit_request_dist_bundle_getResponseData(fetchResponse) : fetchResponse.body;
+  return octokitResponse;
+}
+async function _octokit_request_dist_bundle_getResponseData(response) {
+  const contentType = response.headers.get("content-type");
+  if (!contentType) {
+    return response.text().catch(() => "");
+  }
+  const mimetype = (0,fast_content_type_parse/* safeParse */.xL)(contentType);
+  if (_octokit_request_dist_bundle_isJSONResponse(mimetype)) {
+    let text = "";
+    try {
+      text = await response.text();
+      return JSON.parse(text);
+    } catch (err) {
+      return text;
+    }
+  } else if (mimetype.type.startsWith("text/") || mimetype.parameters.charset?.toLowerCase() === "utf-8") {
+    return response.text().catch(() => "");
+  } else {
+    return response.arrayBuffer().catch(() => new ArrayBuffer(0));
+  }
+}
+function _octokit_request_dist_bundle_isJSONResponse(mimetype) {
+  return mimetype.type === "application/json" || mimetype.type === "application/scim+json";
+}
+function _octokit_request_dist_bundle_toErrorMessage(data) {
+  if (typeof data === "string") {
+    return data;
+  }
+  if (data instanceof ArrayBuffer) {
+    return "Unknown error";
+  }
+  if ("message" in data) {
+    const suffix = "documentation_url" in data ? ` - ${data.documentation_url}` : "";
+    return Array.isArray(data.errors) ? `${data.message}: ${data.errors.map((v) => JSON.stringify(v)).join(", ")}${suffix}` : `${data.message}${suffix}`;
+  }
+  return `Unknown error: ${JSON.stringify(data)}`;
+}
+
+// pkg/dist-src/with-defaults.js
+function node_modules_octokit_request_dist_bundle_withDefaults(oldEndpoint, newDefaults) {
+  const endpoint2 = oldEndpoint.defaults(newDefaults);
+  const newApi = function(route, parameters) {
+    const endpointOptions = endpoint2.merge(route, parameters);
+    if (!endpointOptions.request || !endpointOptions.request.hook) {
+      return _octokit_request_dist_bundle_fetchWrapper(endpoint2.parse(endpointOptions));
+    }
+    const request2 = (route2, parameters2) => {
+      return _octokit_request_dist_bundle_fetchWrapper(
+        endpoint2.parse(endpoint2.merge(route2, parameters2))
+      );
+    };
+    Object.assign(request2, {
+      endpoint: endpoint2,
+      defaults: node_modules_octokit_request_dist_bundle_withDefaults.bind(null, endpoint2)
+    });
+    return endpointOptions.request.hook(request2, endpointOptions);
+  };
+  return Object.assign(newApi, {
+    endpoint: endpoint2,
+    defaults: node_modules_octokit_request_dist_bundle_withDefaults.bind(null, endpoint2)
+  });
+}
+
+// pkg/dist-src/index.js
+var _octokit_request_dist_bundle_request = node_modules_octokit_request_dist_bundle_withDefaults(_octokit_endpoint_dist_bundle_endpoint, _octokit_request_dist_bundle_defaults_default);
+
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/auth-oauth-user/node_modules/universal-user-agent/index.js
+function auth_oauth_user_node_modules_universal_user_agent_getUserAgent() {
+  if (typeof navigator === "object" && "userAgent" in navigator) {
+    return navigator.userAgent;
+  }
+
+  if (typeof process === "object" && process.version !== undefined) {
+    return `Node.js/${process.version.substr(1)} (${process.platform}; ${
+      process.arch
+    })`;
+  }
+
+  return "<environment undetectable>";
+}
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/auth-oauth-user/node_modules/@octokit/request/node_modules/@octokit/endpoint/dist-bundle/index.js
+// pkg/dist-src/defaults.js
+
+
+// pkg/dist-src/version.js
+var _octokit_request_node_modules_octokit_endpoint_dist_bundle_VERSION = "0.0.0-development";
+
+// pkg/dist-src/defaults.js
+var node_modules_octokit_endpoint_dist_bundle_userAgent = `octokit-endpoint.js/${_octokit_request_node_modules_octokit_endpoint_dist_bundle_VERSION} ${auth_oauth_user_node_modules_universal_user_agent_getUserAgent()}`;
+var node_modules_octokit_endpoint_dist_bundle_DEFAULTS = {
+  method: "GET",
+  baseUrl: "https://api.github.com",
+  headers: {
+    accept: "application/vnd.github.v3+json",
+    "user-agent": node_modules_octokit_endpoint_dist_bundle_userAgent
+  },
+  mediaType: {
+    format: ""
+  }
+};
+
+// pkg/dist-src/util/lowercase-keys.js
+function node_modules_octokit_endpoint_dist_bundle_lowercaseKeys(object) {
+  if (!object) {
+    return {};
+  }
+  return Object.keys(object).reduce((newObj, key) => {
+    newObj[key.toLowerCase()] = object[key];
+    return newObj;
+  }, {});
+}
+
+// pkg/dist-src/util/is-plain-object.js
+function request_node_modules_octokit_endpoint_dist_bundle_isPlainObject(value) {
+  if (typeof value !== "object" || value === null) return false;
+  if (Object.prototype.toString.call(value) !== "[object Object]") return false;
+  const proto = Object.getPrototypeOf(value);
+  if (proto === null) return true;
+  const Ctor = Object.prototype.hasOwnProperty.call(proto, "constructor") && proto.constructor;
+  return typeof Ctor === "function" && Ctor instanceof Ctor && Function.prototype.call(Ctor) === Function.prototype.call(value);
+}
+
+// pkg/dist-src/util/merge-deep.js
+function node_modules_octokit_endpoint_dist_bundle_mergeDeep(defaults, options) {
+  const result = Object.assign({}, defaults);
+  Object.keys(options).forEach((key) => {
+    if (request_node_modules_octokit_endpoint_dist_bundle_isPlainObject(options[key])) {
+      if (!(key in defaults)) Object.assign(result, { [key]: options[key] });
+      else result[key] = node_modules_octokit_endpoint_dist_bundle_mergeDeep(defaults[key], options[key]);
+    } else {
+      Object.assign(result, { [key]: options[key] });
+    }
+  });
+  return result;
+}
+
+// pkg/dist-src/util/remove-undefined-properties.js
+function node_modules_octokit_endpoint_dist_bundle_removeUndefinedProperties(obj) {
+  for (const key in obj) {
+    if (obj[key] === void 0) {
+      delete obj[key];
+    }
+  }
+  return obj;
+}
+
+// pkg/dist-src/merge.js
+function node_modules_octokit_endpoint_dist_bundle_merge(defaults, route, options) {
+  if (typeof route === "string") {
+    let [method, url] = route.split(" ");
+    options = Object.assign(url ? { method, url } : { url: method }, options);
+  } else {
+    options = Object.assign({}, route);
+  }
+  options.headers = node_modules_octokit_endpoint_dist_bundle_lowercaseKeys(options.headers);
+  node_modules_octokit_endpoint_dist_bundle_removeUndefinedProperties(options);
+  node_modules_octokit_endpoint_dist_bundle_removeUndefinedProperties(options.headers);
+  const mergedOptions = node_modules_octokit_endpoint_dist_bundle_mergeDeep(defaults || {}, options);
+  if (options.url === "/graphql") {
+    if (defaults && defaults.mediaType.previews?.length) {
+      mergedOptions.mediaType.previews = defaults.mediaType.previews.filter(
+        (preview) => !mergedOptions.mediaType.previews.includes(preview)
+      ).concat(mergedOptions.mediaType.previews);
+    }
+    mergedOptions.mediaType.previews = (mergedOptions.mediaType.previews || []).map((preview) => preview.replace(/-preview/, ""));
+  }
+  return mergedOptions;
+}
+
+// pkg/dist-src/util/add-query-parameters.js
+function node_modules_octokit_endpoint_dist_bundle_addQueryParameters(url, parameters) {
+  const separator = /\?/.test(url) ? "&" : "?";
+  const names = Object.keys(parameters);
+  if (names.length === 0) {
+    return url;
+  }
+  return url + separator + names.map((name) => {
+    if (name === "q") {
+      return "q=" + parameters.q.split("+").map(encodeURIComponent).join("+");
+    }
+    return `${name}=${encodeURIComponent(parameters[name])}`;
+  }).join("&");
+}
+
+// pkg/dist-src/util/extract-url-variable-names.js
+var node_modules_octokit_endpoint_dist_bundle_urlVariableRegex = /\{[^{}}]+\}/g;
+function node_modules_octokit_endpoint_dist_bundle_removeNonChars(variableName) {
+  return variableName.replace(/(?:^\W+)|(?:(?<!\W)\W+$)/g, "").split(/,/);
+}
+function node_modules_octokit_endpoint_dist_bundle_extractUrlVariableNames(url) {
+  const matches = url.match(node_modules_octokit_endpoint_dist_bundle_urlVariableRegex);
+  if (!matches) {
+    return [];
+  }
+  return matches.map(node_modules_octokit_endpoint_dist_bundle_removeNonChars).reduce((a, b) => a.concat(b), []);
+}
+
+// pkg/dist-src/util/omit.js
+function request_node_modules_octokit_endpoint_dist_bundle_omit(object, keysToOmit) {
+  const result = { __proto__: null };
+  for (const key of Object.keys(object)) {
+    if (keysToOmit.indexOf(key) === -1) {
+      result[key] = object[key];
+    }
+  }
+  return result;
+}
+
+// pkg/dist-src/util/url-template.js
+function node_modules_octokit_endpoint_dist_bundle_encodeReserved(str) {
+  return str.split(/(%[0-9A-Fa-f]{2})/g).map(function(part) {
+    if (!/%[0-9A-Fa-f]/.test(part)) {
+      part = encodeURI(part).replace(/%5B/g, "[").replace(/%5D/g, "]");
+    }
+    return part;
+  }).join("");
+}
+function node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(str) {
+  return encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
+    return "%" + c.charCodeAt(0).toString(16).toUpperCase();
+  });
+}
+function node_modules_octokit_endpoint_dist_bundle_encodeValue(operator, value, key) {
+  value = operator === "+" || operator === "#" ? node_modules_octokit_endpoint_dist_bundle_encodeReserved(value) : node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(value);
+  if (key) {
+    return node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(key) + "=" + value;
+  } else {
+    return value;
+  }
+}
+function node_modules_octokit_endpoint_dist_bundle_isDefined(value) {
+  return value !== void 0 && value !== null;
+}
+function node_modules_octokit_endpoint_dist_bundle_isKeyOperator(operator) {
+  return operator === ";" || operator === "&" || operator === "?";
+}
+function node_modules_octokit_endpoint_dist_bundle_getValues(context, operator, key, modifier) {
+  var value = context[key], result = [];
+  if (node_modules_octokit_endpoint_dist_bundle_isDefined(value) && value !== "") {
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+      value = value.toString();
+      if (modifier && modifier !== "*") {
+        value = value.substring(0, parseInt(modifier, 10));
+      }
+      result.push(
+        node_modules_octokit_endpoint_dist_bundle_encodeValue(operator, value, node_modules_octokit_endpoint_dist_bundle_isKeyOperator(operator) ? key : "")
+      );
+    } else {
+      if (modifier === "*") {
+        if (Array.isArray(value)) {
+          value.filter(node_modules_octokit_endpoint_dist_bundle_isDefined).forEach(function(value2) {
+            result.push(
+              node_modules_octokit_endpoint_dist_bundle_encodeValue(operator, value2, node_modules_octokit_endpoint_dist_bundle_isKeyOperator(operator) ? key : "")
+            );
+          });
+        } else {
+          Object.keys(value).forEach(function(k) {
+            if (node_modules_octokit_endpoint_dist_bundle_isDefined(value[k])) {
+              result.push(node_modules_octokit_endpoint_dist_bundle_encodeValue(operator, value[k], k));
+            }
+          });
+        }
+      } else {
+        const tmp = [];
+        if (Array.isArray(value)) {
+          value.filter(node_modules_octokit_endpoint_dist_bundle_isDefined).forEach(function(value2) {
+            tmp.push(node_modules_octokit_endpoint_dist_bundle_encodeValue(operator, value2));
+          });
+        } else {
+          Object.keys(value).forEach(function(k) {
+            if (node_modules_octokit_endpoint_dist_bundle_isDefined(value[k])) {
+              tmp.push(node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(k));
+              tmp.push(node_modules_octokit_endpoint_dist_bundle_encodeValue(operator, value[k].toString()));
+            }
+          });
+        }
+        if (node_modules_octokit_endpoint_dist_bundle_isKeyOperator(operator)) {
+          result.push(node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(key) + "=" + tmp.join(","));
+        } else if (tmp.length !== 0) {
+          result.push(tmp.join(","));
+        }
+      }
+    }
+  } else {
+    if (operator === ";") {
+      if (node_modules_octokit_endpoint_dist_bundle_isDefined(value)) {
+        result.push(node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(key));
+      }
+    } else if (value === "" && (operator === "&" || operator === "?")) {
+      result.push(node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(key) + "=");
+    } else if (value === "") {
+      result.push("");
+    }
+  }
+  return result;
+}
+function node_modules_octokit_endpoint_dist_bundle_parseUrl(template) {
+  return {
+    expand: request_node_modules_octokit_endpoint_dist_bundle_expand.bind(null, template)
+  };
+}
+function request_node_modules_octokit_endpoint_dist_bundle_expand(template, context) {
+  var operators = ["+", "#", ".", "/", ";", "?", "&"];
+  template = template.replace(
+    /\{([^\{\}]+)\}|([^\{\}]+)/g,
+    function(_, expression, literal) {
+      if (expression) {
+        let operator = "";
+        const values = [];
+        if (operators.indexOf(expression.charAt(0)) !== -1) {
+          operator = expression.charAt(0);
+          expression = expression.substr(1);
+        }
+        expression.split(/,/g).forEach(function(variable) {
+          var tmp = /([^:\*]*)(?::(\d+)|(\*))?/.exec(variable);
+          values.push(node_modules_octokit_endpoint_dist_bundle_getValues(context, operator, tmp[1], tmp[2] || tmp[3]));
+        });
+        if (operator && operator !== "+") {
+          var separator = ",";
+          if (operator === "?") {
+            separator = "&";
+          } else if (operator !== "#") {
+            separator = operator;
+          }
+          return (values.length !== 0 ? operator : "") + values.join(separator);
+        } else {
+          return values.join(",");
+        }
+      } else {
+        return node_modules_octokit_endpoint_dist_bundle_encodeReserved(literal);
+      }
+    }
+  );
+  if (template === "/") {
+    return template;
+  } else {
+    return template.replace(/\/$/, "");
+  }
+}
+
+// pkg/dist-src/parse.js
+function request_node_modules_octokit_endpoint_dist_bundle_parse(options) {
+  let method = options.method.toUpperCase();
+  let url = (options.url || "/").replace(/:([a-z]\w+)/g, "{$1}");
+  let headers = Object.assign({}, options.headers);
+  let body;
+  let parameters = request_node_modules_octokit_endpoint_dist_bundle_omit(options, [
+    "method",
+    "baseUrl",
+    "url",
+    "headers",
+    "request",
+    "mediaType"
+  ]);
+  const urlVariableNames = node_modules_octokit_endpoint_dist_bundle_extractUrlVariableNames(url);
+  url = node_modules_octokit_endpoint_dist_bundle_parseUrl(url).expand(parameters);
+  if (!/^http/.test(url)) {
+    url = options.baseUrl + url;
+  }
+  const omittedParameters = Object.keys(options).filter((option) => urlVariableNames.includes(option)).concat("baseUrl");
+  const remainingParameters = request_node_modules_octokit_endpoint_dist_bundle_omit(parameters, omittedParameters);
+  const isBinaryRequest = /application\/octet-stream/i.test(headers.accept);
+  if (!isBinaryRequest) {
+    if (options.mediaType.format) {
+      headers.accept = headers.accept.split(/,/).map(
+        (format) => format.replace(
+          /application\/vnd(\.\w+)(\.v3)?(\.\w+)?(\+json)?$/,
+          `application/vnd$1$2.${options.mediaType.format}`
+        )
+      ).join(",");
+    }
+    if (url.endsWith("/graphql")) {
+      if (options.mediaType.previews?.length) {
+        const previewsFromAcceptHeader = headers.accept.match(/(?<![\w-])[\w-]+(?=-preview)/g) || [];
+        headers.accept = previewsFromAcceptHeader.concat(options.mediaType.previews).map((preview) => {
+          const format = options.mediaType.format ? `.${options.mediaType.format}` : "+json";
+          return `application/vnd.github.${preview}-preview${format}`;
+        }).join(",");
+      }
+    }
+  }
+  if (["GET", "HEAD"].includes(method)) {
+    url = node_modules_octokit_endpoint_dist_bundle_addQueryParameters(url, remainingParameters);
+  } else {
+    if ("data" in remainingParameters) {
+      body = remainingParameters.data;
+    } else {
+      if (Object.keys(remainingParameters).length) {
+        body = remainingParameters;
+      }
+    }
+  }
+  if (!headers["content-type"] && typeof body !== "undefined") {
+    headers["content-type"] = "application/json; charset=utf-8";
+  }
+  if (["PATCH", "PUT"].includes(method) && typeof body === "undefined") {
+    body = "";
+  }
+  return Object.assign(
+    { method, url, headers },
+    typeof body !== "undefined" ? { body } : null,
+    options.request ? { request: options.request } : null
+  );
+}
+
+// pkg/dist-src/endpoint-with-defaults.js
+function node_modules_octokit_endpoint_dist_bundle_endpointWithDefaults(defaults, route, options) {
+  return request_node_modules_octokit_endpoint_dist_bundle_parse(node_modules_octokit_endpoint_dist_bundle_merge(defaults, route, options));
+}
+
+// pkg/dist-src/with-defaults.js
+function request_node_modules_octokit_endpoint_dist_bundle_withDefaults(oldDefaults, newDefaults) {
+  const DEFAULTS2 = node_modules_octokit_endpoint_dist_bundle_merge(oldDefaults, newDefaults);
+  const endpoint2 = node_modules_octokit_endpoint_dist_bundle_endpointWithDefaults.bind(null, DEFAULTS2);
+  return Object.assign(endpoint2, {
+    DEFAULTS: DEFAULTS2,
+    defaults: request_node_modules_octokit_endpoint_dist_bundle_withDefaults.bind(null, DEFAULTS2),
+    merge: node_modules_octokit_endpoint_dist_bundle_merge.bind(null, DEFAULTS2),
+    parse: request_node_modules_octokit_endpoint_dist_bundle_parse
+  });
+}
+
+// pkg/dist-src/index.js
+var node_modules_octokit_endpoint_dist_bundle_endpoint = request_node_modules_octokit_endpoint_dist_bundle_withDefaults(null, node_modules_octokit_endpoint_dist_bundle_DEFAULTS);
+
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/auth-oauth-user/node_modules/@octokit/request/dist-bundle/index.js
+// pkg/dist-src/index.js
+
+
+// pkg/dist-src/defaults.js
+
+
+// pkg/dist-src/version.js
+var auth_oauth_user_node_modules_octokit_request_dist_bundle_VERSION = "10.0.3";
+
+// pkg/dist-src/defaults.js
+var node_modules_octokit_request_dist_bundle_defaults_default = {
+  headers: {
+    "user-agent": `octokit-request.js/${auth_oauth_user_node_modules_octokit_request_dist_bundle_VERSION} ${auth_oauth_user_node_modules_universal_user_agent_getUserAgent()}`
+  }
+};
+
+// pkg/dist-src/fetch-wrapper.js
+
+
+// pkg/dist-src/is-plain-object.js
+function auth_oauth_user_node_modules_octokit_request_dist_bundle_isPlainObject(value) {
+  if (typeof value !== "object" || value === null) return false;
+  if (Object.prototype.toString.call(value) !== "[object Object]") return false;
+  const proto = Object.getPrototypeOf(value);
+  if (proto === null) return true;
+  const Ctor = Object.prototype.hasOwnProperty.call(proto, "constructor") && proto.constructor;
+  return typeof Ctor === "function" && Ctor instanceof Ctor && Function.prototype.call(Ctor) === Function.prototype.call(value);
+}
+
+// pkg/dist-src/fetch-wrapper.js
+
+async function node_modules_octokit_request_dist_bundle_fetchWrapper(requestOptions) {
+  const fetch = requestOptions.request?.fetch || globalThis.fetch;
+  if (!fetch) {
+    throw new Error(
+      "fetch is not set. Please pass a fetch implementation as new Octokit({ request: { fetch }}). Learn more at https://github.com/octokit/octokit.js/#fetch-missing"
+    );
+  }
+  const log = requestOptions.request?.log || console;
+  const parseSuccessResponseBody = requestOptions.request?.parseSuccessResponseBody !== false;
+  const body = auth_oauth_user_node_modules_octokit_request_dist_bundle_isPlainObject(requestOptions.body) || Array.isArray(requestOptions.body) ? JSON.stringify(requestOptions.body) : requestOptions.body;
+  const requestHeaders = Object.fromEntries(
+    Object.entries(requestOptions.headers).map(([name, value]) => [
+      name,
+      String(value)
+    ])
+  );
+  let fetchResponse;
+  try {
+    fetchResponse = await fetch(requestOptions.url, {
+      method: requestOptions.method,
+      body,
+      redirect: requestOptions.request?.redirect,
+      headers: requestHeaders,
+      signal: requestOptions.request?.signal,
+      // duplex must be set if request.body is ReadableStream or Async Iterables.
+      // See https://fetch.spec.whatwg.org/#dom-requestinit-duplex.
+      ...requestOptions.body && { duplex: "half" }
+    });
+  } catch (error) {
+    let message = "Unknown Error";
+    if (error instanceof Error) {
+      if (error.name === "AbortError") {
+        error.status = 500;
+        throw error;
+      }
+      message = error.message;
+      if (error.name === "TypeError" && "cause" in error) {
+        if (error.cause instanceof Error) {
+          message = error.cause.message;
+        } else if (typeof error.cause === "string") {
+          message = error.cause;
+        }
+      }
+    }
+    const requestError = new RequestError(message, 500, {
+      request: requestOptions
+    });
+    requestError.cause = error;
+    throw requestError;
+  }
+  const status = fetchResponse.status;
+  const url = fetchResponse.url;
+  const responseHeaders = {};
+  for (const [key, value] of fetchResponse.headers) {
+    responseHeaders[key] = value;
+  }
+  const octokitResponse = {
+    url,
+    status,
+    headers: responseHeaders,
+    data: ""
+  };
+  if ("deprecation" in responseHeaders) {
+    const matches = responseHeaders.link && responseHeaders.link.match(/<([^<>]+)>; rel="deprecation"/);
+    const deprecationLink = matches && matches.pop();
+    log.warn(
+      `[@octokit/request] "${requestOptions.method} ${requestOptions.url}" is deprecated. It is scheduled to be removed on ${responseHeaders.sunset}${deprecationLink ? `. See ${deprecationLink}` : ""}`
+    );
+  }
+  if (status === 204 || status === 205) {
+    return octokitResponse;
+  }
+  if (requestOptions.method === "HEAD") {
+    if (status < 400) {
+      return octokitResponse;
+    }
+    throw new RequestError(fetchResponse.statusText, status, {
+      response: octokitResponse,
+      request: requestOptions
+    });
+  }
+  if (status === 304) {
+    octokitResponse.data = await node_modules_octokit_request_dist_bundle_getResponseData(fetchResponse);
+    throw new RequestError("Not modified", status, {
+      response: octokitResponse,
+      request: requestOptions
+    });
+  }
+  if (status >= 400) {
+    octokitResponse.data = await node_modules_octokit_request_dist_bundle_getResponseData(fetchResponse);
+    throw new RequestError(node_modules_octokit_request_dist_bundle_toErrorMessage(octokitResponse.data), status, {
+      response: octokitResponse,
+      request: requestOptions
+    });
+  }
+  octokitResponse.data = parseSuccessResponseBody ? await node_modules_octokit_request_dist_bundle_getResponseData(fetchResponse) : fetchResponse.body;
+  return octokitResponse;
+}
+async function node_modules_octokit_request_dist_bundle_getResponseData(response) {
+  const contentType = response.headers.get("content-type");
+  if (!contentType) {
+    return response.text().catch(() => "");
+  }
+  const mimetype = (0,fast_content_type_parse/* safeParse */.xL)(contentType);
+  if (node_modules_octokit_request_dist_bundle_isJSONResponse(mimetype)) {
+    let text = "";
+    try {
+      text = await response.text();
+      return JSON.parse(text);
+    } catch (err) {
+      return text;
+    }
+  } else if (mimetype.type.startsWith("text/") || mimetype.parameters.charset?.toLowerCase() === "utf-8") {
+    return response.text().catch(() => "");
+  } else {
+    return response.arrayBuffer().catch(() => new ArrayBuffer(0));
+  }
+}
+function node_modules_octokit_request_dist_bundle_isJSONResponse(mimetype) {
+  return mimetype.type === "application/json" || mimetype.type === "application/scim+json";
+}
+function node_modules_octokit_request_dist_bundle_toErrorMessage(data) {
+  if (typeof data === "string") {
+    return data;
+  }
+  if (data instanceof ArrayBuffer) {
+    return "Unknown error";
+  }
+  if ("message" in data) {
+    const suffix = "documentation_url" in data ? ` - ${data.documentation_url}` : "";
+    return Array.isArray(data.errors) ? `${data.message}: ${data.errors.map((v) => JSON.stringify(v)).join(", ")}${suffix}` : `${data.message}${suffix}`;
+  }
+  return `Unknown error: ${JSON.stringify(data)}`;
+}
+
+// pkg/dist-src/with-defaults.js
+function auth_oauth_user_node_modules_octokit_request_dist_bundle_withDefaults(oldEndpoint, newDefaults) {
+  const endpoint2 = oldEndpoint.defaults(newDefaults);
+  const newApi = function(route, parameters) {
+    const endpointOptions = endpoint2.merge(route, parameters);
+    if (!endpointOptions.request || !endpointOptions.request.hook) {
+      return node_modules_octokit_request_dist_bundle_fetchWrapper(endpoint2.parse(endpointOptions));
+    }
+    const request2 = (route2, parameters2) => {
+      return node_modules_octokit_request_dist_bundle_fetchWrapper(
+        endpoint2.parse(endpoint2.merge(route2, parameters2))
+      );
+    };
+    Object.assign(request2, {
+      endpoint: endpoint2,
+      defaults: auth_oauth_user_node_modules_octokit_request_dist_bundle_withDefaults.bind(null, endpoint2)
+    });
+    return endpointOptions.request.hook(request2, endpointOptions);
+  };
+  return Object.assign(newApi, {
+    endpoint: endpoint2,
+    defaults: auth_oauth_user_node_modules_octokit_request_dist_bundle_withDefaults.bind(null, endpoint2)
+  });
+}
+
+// pkg/dist-src/index.js
+var node_modules_octokit_request_dist_bundle_request = auth_oauth_user_node_modules_octokit_request_dist_bundle_withDefaults(node_modules_octokit_endpoint_dist_bundle_endpoint, node_modules_octokit_request_dist_bundle_defaults_default);
+
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/auth-oauth-device/node_modules/universal-user-agent/index.js
+function auth_oauth_device_node_modules_universal_user_agent_getUserAgent() {
+  if (typeof navigator === "object" && "userAgent" in navigator) {
+    return navigator.userAgent;
+  }
+
+  if (typeof process === "object" && process.version !== undefined) {
+    return `Node.js/${process.version.substr(1)} (${process.platform}; ${
+      process.arch
+    })`;
+  }
+
+  return "<environment undetectable>";
+}
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/auth-oauth-device/node_modules/@octokit/request/node_modules/@octokit/endpoint/dist-bundle/index.js
+// pkg/dist-src/defaults.js
+
+
+// pkg/dist-src/version.js
+var node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_VERSION = "0.0.0-development";
+
+// pkg/dist-src/defaults.js
+var request_node_modules_octokit_endpoint_dist_bundle_userAgent = `octokit-endpoint.js/${node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_VERSION} ${auth_oauth_device_node_modules_universal_user_agent_getUserAgent()}`;
+var request_node_modules_octokit_endpoint_dist_bundle_DEFAULTS = {
+  method: "GET",
+  baseUrl: "https://api.github.com",
+  headers: {
+    accept: "application/vnd.github.v3+json",
+    "user-agent": request_node_modules_octokit_endpoint_dist_bundle_userAgent
+  },
+  mediaType: {
+    format: ""
+  }
+};
+
+// pkg/dist-src/util/lowercase-keys.js
+function request_node_modules_octokit_endpoint_dist_bundle_lowercaseKeys(object) {
+  if (!object) {
+    return {};
+  }
+  return Object.keys(object).reduce((newObj, key) => {
+    newObj[key.toLowerCase()] = object[key];
+    return newObj;
+  }, {});
+}
+
+// pkg/dist-src/util/is-plain-object.js
+function _octokit_request_node_modules_octokit_endpoint_dist_bundle_isPlainObject(value) {
+  if (typeof value !== "object" || value === null) return false;
+  if (Object.prototype.toString.call(value) !== "[object Object]") return false;
+  const proto = Object.getPrototypeOf(value);
+  if (proto === null) return true;
+  const Ctor = Object.prototype.hasOwnProperty.call(proto, "constructor") && proto.constructor;
+  return typeof Ctor === "function" && Ctor instanceof Ctor && Function.prototype.call(Ctor) === Function.prototype.call(value);
+}
+
+// pkg/dist-src/util/merge-deep.js
+function request_node_modules_octokit_endpoint_dist_bundle_mergeDeep(defaults, options) {
+  const result = Object.assign({}, defaults);
+  Object.keys(options).forEach((key) => {
+    if (_octokit_request_node_modules_octokit_endpoint_dist_bundle_isPlainObject(options[key])) {
+      if (!(key in defaults)) Object.assign(result, { [key]: options[key] });
+      else result[key] = request_node_modules_octokit_endpoint_dist_bundle_mergeDeep(defaults[key], options[key]);
+    } else {
+      Object.assign(result, { [key]: options[key] });
+    }
+  });
+  return result;
+}
+
+// pkg/dist-src/util/remove-undefined-properties.js
+function request_node_modules_octokit_endpoint_dist_bundle_removeUndefinedProperties(obj) {
+  for (const key in obj) {
+    if (obj[key] === void 0) {
+      delete obj[key];
+    }
+  }
+  return obj;
+}
+
+// pkg/dist-src/merge.js
+function request_node_modules_octokit_endpoint_dist_bundle_merge(defaults, route, options) {
+  if (typeof route === "string") {
+    let [method, url] = route.split(" ");
+    options = Object.assign(url ? { method, url } : { url: method }, options);
+  } else {
+    options = Object.assign({}, route);
+  }
+  options.headers = request_node_modules_octokit_endpoint_dist_bundle_lowercaseKeys(options.headers);
+  request_node_modules_octokit_endpoint_dist_bundle_removeUndefinedProperties(options);
+  request_node_modules_octokit_endpoint_dist_bundle_removeUndefinedProperties(options.headers);
+  const mergedOptions = request_node_modules_octokit_endpoint_dist_bundle_mergeDeep(defaults || {}, options);
+  if (options.url === "/graphql") {
+    if (defaults && defaults.mediaType.previews?.length) {
+      mergedOptions.mediaType.previews = defaults.mediaType.previews.filter(
+        (preview) => !mergedOptions.mediaType.previews.includes(preview)
+      ).concat(mergedOptions.mediaType.previews);
+    }
+    mergedOptions.mediaType.previews = (mergedOptions.mediaType.previews || []).map((preview) => preview.replace(/-preview/, ""));
+  }
+  return mergedOptions;
+}
+
+// pkg/dist-src/util/add-query-parameters.js
+function request_node_modules_octokit_endpoint_dist_bundle_addQueryParameters(url, parameters) {
+  const separator = /\?/.test(url) ? "&" : "?";
+  const names = Object.keys(parameters);
+  if (names.length === 0) {
+    return url;
+  }
+  return url + separator + names.map((name) => {
+    if (name === "q") {
+      return "q=" + parameters.q.split("+").map(encodeURIComponent).join("+");
+    }
+    return `${name}=${encodeURIComponent(parameters[name])}`;
+  }).join("&");
+}
+
+// pkg/dist-src/util/extract-url-variable-names.js
+var request_node_modules_octokit_endpoint_dist_bundle_urlVariableRegex = /\{[^{}}]+\}/g;
+function request_node_modules_octokit_endpoint_dist_bundle_removeNonChars(variableName) {
+  return variableName.replace(/(?:^\W+)|(?:(?<!\W)\W+$)/g, "").split(/,/);
+}
+function request_node_modules_octokit_endpoint_dist_bundle_extractUrlVariableNames(url) {
+  const matches = url.match(request_node_modules_octokit_endpoint_dist_bundle_urlVariableRegex);
+  if (!matches) {
+    return [];
+  }
+  return matches.map(request_node_modules_octokit_endpoint_dist_bundle_removeNonChars).reduce((a, b) => a.concat(b), []);
+}
+
+// pkg/dist-src/util/omit.js
+function _octokit_request_node_modules_octokit_endpoint_dist_bundle_omit(object, keysToOmit) {
+  const result = { __proto__: null };
+  for (const key of Object.keys(object)) {
+    if (keysToOmit.indexOf(key) === -1) {
+      result[key] = object[key];
+    }
+  }
+  return result;
+}
+
+// pkg/dist-src/util/url-template.js
+function request_node_modules_octokit_endpoint_dist_bundle_encodeReserved(str) {
+  return str.split(/(%[0-9A-Fa-f]{2})/g).map(function(part) {
+    if (!/%[0-9A-Fa-f]/.test(part)) {
+      part = encodeURI(part).replace(/%5B/g, "[").replace(/%5D/g, "]");
+    }
+    return part;
+  }).join("");
+}
+function request_node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(str) {
+  return encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
+    return "%" + c.charCodeAt(0).toString(16).toUpperCase();
+  });
+}
+function request_node_modules_octokit_endpoint_dist_bundle_encodeValue(operator, value, key) {
+  value = operator === "+" || operator === "#" ? request_node_modules_octokit_endpoint_dist_bundle_encodeReserved(value) : request_node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(value);
+  if (key) {
+    return request_node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(key) + "=" + value;
+  } else {
+    return value;
+  }
+}
+function request_node_modules_octokit_endpoint_dist_bundle_isDefined(value) {
+  return value !== void 0 && value !== null;
+}
+function request_node_modules_octokit_endpoint_dist_bundle_isKeyOperator(operator) {
+  return operator === ";" || operator === "&" || operator === "?";
+}
+function request_node_modules_octokit_endpoint_dist_bundle_getValues(context, operator, key, modifier) {
+  var value = context[key], result = [];
+  if (request_node_modules_octokit_endpoint_dist_bundle_isDefined(value) && value !== "") {
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+      value = value.toString();
+      if (modifier && modifier !== "*") {
+        value = value.substring(0, parseInt(modifier, 10));
+      }
+      result.push(
+        request_node_modules_octokit_endpoint_dist_bundle_encodeValue(operator, value, request_node_modules_octokit_endpoint_dist_bundle_isKeyOperator(operator) ? key : "")
+      );
+    } else {
+      if (modifier === "*") {
+        if (Array.isArray(value)) {
+          value.filter(request_node_modules_octokit_endpoint_dist_bundle_isDefined).forEach(function(value2) {
+            result.push(
+              request_node_modules_octokit_endpoint_dist_bundle_encodeValue(operator, value2, request_node_modules_octokit_endpoint_dist_bundle_isKeyOperator(operator) ? key : "")
+            );
+          });
+        } else {
+          Object.keys(value).forEach(function(k) {
+            if (request_node_modules_octokit_endpoint_dist_bundle_isDefined(value[k])) {
+              result.push(request_node_modules_octokit_endpoint_dist_bundle_encodeValue(operator, value[k], k));
+            }
+          });
+        }
+      } else {
+        const tmp = [];
+        if (Array.isArray(value)) {
+          value.filter(request_node_modules_octokit_endpoint_dist_bundle_isDefined).forEach(function(value2) {
+            tmp.push(request_node_modules_octokit_endpoint_dist_bundle_encodeValue(operator, value2));
+          });
+        } else {
+          Object.keys(value).forEach(function(k) {
+            if (request_node_modules_octokit_endpoint_dist_bundle_isDefined(value[k])) {
+              tmp.push(request_node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(k));
+              tmp.push(request_node_modules_octokit_endpoint_dist_bundle_encodeValue(operator, value[k].toString()));
+            }
+          });
+        }
+        if (request_node_modules_octokit_endpoint_dist_bundle_isKeyOperator(operator)) {
+          result.push(request_node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(key) + "=" + tmp.join(","));
+        } else if (tmp.length !== 0) {
+          result.push(tmp.join(","));
+        }
+      }
+    }
+  } else {
+    if (operator === ";") {
+      if (request_node_modules_octokit_endpoint_dist_bundle_isDefined(value)) {
+        result.push(request_node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(key));
+      }
+    } else if (value === "" && (operator === "&" || operator === "?")) {
+      result.push(request_node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(key) + "=");
+    } else if (value === "") {
+      result.push("");
+    }
+  }
+  return result;
+}
+function request_node_modules_octokit_endpoint_dist_bundle_parseUrl(template) {
+  return {
+    expand: _octokit_request_node_modules_octokit_endpoint_dist_bundle_expand.bind(null, template)
+  };
+}
+function _octokit_request_node_modules_octokit_endpoint_dist_bundle_expand(template, context) {
+  var operators = ["+", "#", ".", "/", ";", "?", "&"];
+  template = template.replace(
+    /\{([^\{\}]+)\}|([^\{\}]+)/g,
+    function(_, expression, literal) {
+      if (expression) {
+        let operator = "";
+        const values = [];
+        if (operators.indexOf(expression.charAt(0)) !== -1) {
+          operator = expression.charAt(0);
+          expression = expression.substr(1);
+        }
+        expression.split(/,/g).forEach(function(variable) {
+          var tmp = /([^:\*]*)(?::(\d+)|(\*))?/.exec(variable);
+          values.push(request_node_modules_octokit_endpoint_dist_bundle_getValues(context, operator, tmp[1], tmp[2] || tmp[3]));
+        });
+        if (operator && operator !== "+") {
+          var separator = ",";
+          if (operator === "?") {
+            separator = "&";
+          } else if (operator !== "#") {
+            separator = operator;
+          }
+          return (values.length !== 0 ? operator : "") + values.join(separator);
+        } else {
+          return values.join(",");
+        }
+      } else {
+        return request_node_modules_octokit_endpoint_dist_bundle_encodeReserved(literal);
+      }
+    }
+  );
+  if (template === "/") {
+    return template;
+  } else {
+    return template.replace(/\/$/, "");
+  }
+}
+
+// pkg/dist-src/parse.js
+function _octokit_request_node_modules_octokit_endpoint_dist_bundle_parse(options) {
+  let method = options.method.toUpperCase();
+  let url = (options.url || "/").replace(/:([a-z]\w+)/g, "{$1}");
+  let headers = Object.assign({}, options.headers);
+  let body;
+  let parameters = _octokit_request_node_modules_octokit_endpoint_dist_bundle_omit(options, [
+    "method",
+    "baseUrl",
+    "url",
+    "headers",
+    "request",
+    "mediaType"
+  ]);
+  const urlVariableNames = request_node_modules_octokit_endpoint_dist_bundle_extractUrlVariableNames(url);
+  url = request_node_modules_octokit_endpoint_dist_bundle_parseUrl(url).expand(parameters);
+  if (!/^http/.test(url)) {
+    url = options.baseUrl + url;
+  }
+  const omittedParameters = Object.keys(options).filter((option) => urlVariableNames.includes(option)).concat("baseUrl");
+  const remainingParameters = _octokit_request_node_modules_octokit_endpoint_dist_bundle_omit(parameters, omittedParameters);
+  const isBinaryRequest = /application\/octet-stream/i.test(headers.accept);
+  if (!isBinaryRequest) {
+    if (options.mediaType.format) {
+      headers.accept = headers.accept.split(/,/).map(
+        (format) => format.replace(
+          /application\/vnd(\.\w+)(\.v3)?(\.\w+)?(\+json)?$/,
+          `application/vnd$1$2.${options.mediaType.format}`
+        )
+      ).join(",");
+    }
+    if (url.endsWith("/graphql")) {
+      if (options.mediaType.previews?.length) {
+        const previewsFromAcceptHeader = headers.accept.match(/(?<![\w-])[\w-]+(?=-preview)/g) || [];
+        headers.accept = previewsFromAcceptHeader.concat(options.mediaType.previews).map((preview) => {
+          const format = options.mediaType.format ? `.${options.mediaType.format}` : "+json";
+          return `application/vnd.github.${preview}-preview${format}`;
+        }).join(",");
+      }
+    }
+  }
+  if (["GET", "HEAD"].includes(method)) {
+    url = request_node_modules_octokit_endpoint_dist_bundle_addQueryParameters(url, remainingParameters);
+  } else {
+    if ("data" in remainingParameters) {
+      body = remainingParameters.data;
+    } else {
+      if (Object.keys(remainingParameters).length) {
+        body = remainingParameters;
+      }
+    }
+  }
+  if (!headers["content-type"] && typeof body !== "undefined") {
+    headers["content-type"] = "application/json; charset=utf-8";
+  }
+  if (["PATCH", "PUT"].includes(method) && typeof body === "undefined") {
+    body = "";
+  }
+  return Object.assign(
+    { method, url, headers },
+    typeof body !== "undefined" ? { body } : null,
+    options.request ? { request: options.request } : null
+  );
+}
+
+// pkg/dist-src/endpoint-with-defaults.js
+function request_node_modules_octokit_endpoint_dist_bundle_endpointWithDefaults(defaults, route, options) {
+  return _octokit_request_node_modules_octokit_endpoint_dist_bundle_parse(request_node_modules_octokit_endpoint_dist_bundle_merge(defaults, route, options));
+}
+
+// pkg/dist-src/with-defaults.js
+function _octokit_request_node_modules_octokit_endpoint_dist_bundle_withDefaults(oldDefaults, newDefaults) {
+  const DEFAULTS2 = request_node_modules_octokit_endpoint_dist_bundle_merge(oldDefaults, newDefaults);
+  const endpoint2 = request_node_modules_octokit_endpoint_dist_bundle_endpointWithDefaults.bind(null, DEFAULTS2);
+  return Object.assign(endpoint2, {
+    DEFAULTS: DEFAULTS2,
+    defaults: _octokit_request_node_modules_octokit_endpoint_dist_bundle_withDefaults.bind(null, DEFAULTS2),
+    merge: request_node_modules_octokit_endpoint_dist_bundle_merge.bind(null, DEFAULTS2),
+    parse: _octokit_request_node_modules_octokit_endpoint_dist_bundle_parse
+  });
+}
+
+// pkg/dist-src/index.js
+var request_node_modules_octokit_endpoint_dist_bundle_endpoint = _octokit_request_node_modules_octokit_endpoint_dist_bundle_withDefaults(null, request_node_modules_octokit_endpoint_dist_bundle_DEFAULTS);
+
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/auth-oauth-device/node_modules/@octokit/request/dist-bundle/index.js
+// pkg/dist-src/index.js
+
+
+// pkg/dist-src/defaults.js
+
+
+// pkg/dist-src/version.js
+var auth_oauth_device_node_modules_octokit_request_dist_bundle_VERSION = "10.0.3";
+
+// pkg/dist-src/defaults.js
+var auth_oauth_device_node_modules_octokit_request_dist_bundle_defaults_default = {
+  headers: {
+    "user-agent": `octokit-request.js/${auth_oauth_device_node_modules_octokit_request_dist_bundle_VERSION} ${auth_oauth_device_node_modules_universal_user_agent_getUserAgent()}`
+  }
+};
+
+// pkg/dist-src/fetch-wrapper.js
+
+
+// pkg/dist-src/is-plain-object.js
+function auth_oauth_device_node_modules_octokit_request_dist_bundle_isPlainObject(value) {
+  if (typeof value !== "object" || value === null) return false;
+  if (Object.prototype.toString.call(value) !== "[object Object]") return false;
+  const proto = Object.getPrototypeOf(value);
+  if (proto === null) return true;
+  const Ctor = Object.prototype.hasOwnProperty.call(proto, "constructor") && proto.constructor;
+  return typeof Ctor === "function" && Ctor instanceof Ctor && Function.prototype.call(Ctor) === Function.prototype.call(value);
+}
+
+// pkg/dist-src/fetch-wrapper.js
+
+async function auth_oauth_device_node_modules_octokit_request_dist_bundle_fetchWrapper(requestOptions) {
+  const fetch = requestOptions.request?.fetch || globalThis.fetch;
+  if (!fetch) {
+    throw new Error(
+      "fetch is not set. Please pass a fetch implementation as new Octokit({ request: { fetch }}). Learn more at https://github.com/octokit/octokit.js/#fetch-missing"
+    );
+  }
+  const log = requestOptions.request?.log || console;
+  const parseSuccessResponseBody = requestOptions.request?.parseSuccessResponseBody !== false;
+  const body = auth_oauth_device_node_modules_octokit_request_dist_bundle_isPlainObject(requestOptions.body) || Array.isArray(requestOptions.body) ? JSON.stringify(requestOptions.body) : requestOptions.body;
+  const requestHeaders = Object.fromEntries(
+    Object.entries(requestOptions.headers).map(([name, value]) => [
+      name,
+      String(value)
+    ])
+  );
+  let fetchResponse;
+  try {
+    fetchResponse = await fetch(requestOptions.url, {
+      method: requestOptions.method,
+      body,
+      redirect: requestOptions.request?.redirect,
+      headers: requestHeaders,
+      signal: requestOptions.request?.signal,
+      // duplex must be set if request.body is ReadableStream or Async Iterables.
+      // See https://fetch.spec.whatwg.org/#dom-requestinit-duplex.
+      ...requestOptions.body && { duplex: "half" }
+    });
+  } catch (error) {
+    let message = "Unknown Error";
+    if (error instanceof Error) {
+      if (error.name === "AbortError") {
+        error.status = 500;
+        throw error;
+      }
+      message = error.message;
+      if (error.name === "TypeError" && "cause" in error) {
+        if (error.cause instanceof Error) {
+          message = error.cause.message;
+        } else if (typeof error.cause === "string") {
+          message = error.cause;
+        }
+      }
+    }
+    const requestError = new RequestError(message, 500, {
+      request: requestOptions
+    });
+    requestError.cause = error;
+    throw requestError;
+  }
+  const status = fetchResponse.status;
+  const url = fetchResponse.url;
+  const responseHeaders = {};
+  for (const [key, value] of fetchResponse.headers) {
+    responseHeaders[key] = value;
+  }
+  const octokitResponse = {
+    url,
+    status,
+    headers: responseHeaders,
+    data: ""
+  };
+  if ("deprecation" in responseHeaders) {
+    const matches = responseHeaders.link && responseHeaders.link.match(/<([^<>]+)>; rel="deprecation"/);
+    const deprecationLink = matches && matches.pop();
+    log.warn(
+      `[@octokit/request] "${requestOptions.method} ${requestOptions.url}" is deprecated. It is scheduled to be removed on ${responseHeaders.sunset}${deprecationLink ? `. See ${deprecationLink}` : ""}`
+    );
+  }
+  if (status === 204 || status === 205) {
+    return octokitResponse;
+  }
+  if (requestOptions.method === "HEAD") {
+    if (status < 400) {
+      return octokitResponse;
+    }
+    throw new RequestError(fetchResponse.statusText, status, {
+      response: octokitResponse,
+      request: requestOptions
+    });
+  }
+  if (status === 304) {
+    octokitResponse.data = await auth_oauth_device_node_modules_octokit_request_dist_bundle_getResponseData(fetchResponse);
+    throw new RequestError("Not modified", status, {
+      response: octokitResponse,
+      request: requestOptions
+    });
+  }
+  if (status >= 400) {
+    octokitResponse.data = await auth_oauth_device_node_modules_octokit_request_dist_bundle_getResponseData(fetchResponse);
+    throw new RequestError(auth_oauth_device_node_modules_octokit_request_dist_bundle_toErrorMessage(octokitResponse.data), status, {
+      response: octokitResponse,
+      request: requestOptions
+    });
+  }
+  octokitResponse.data = parseSuccessResponseBody ? await auth_oauth_device_node_modules_octokit_request_dist_bundle_getResponseData(fetchResponse) : fetchResponse.body;
+  return octokitResponse;
+}
+async function auth_oauth_device_node_modules_octokit_request_dist_bundle_getResponseData(response) {
+  const contentType = response.headers.get("content-type");
+  if (!contentType) {
+    return response.text().catch(() => "");
+  }
+  const mimetype = (0,fast_content_type_parse/* safeParse */.xL)(contentType);
+  if (auth_oauth_device_node_modules_octokit_request_dist_bundle_isJSONResponse(mimetype)) {
+    let text = "";
+    try {
+      text = await response.text();
+      return JSON.parse(text);
+    } catch (err) {
+      return text;
+    }
+  } else if (mimetype.type.startsWith("text/") || mimetype.parameters.charset?.toLowerCase() === "utf-8") {
+    return response.text().catch(() => "");
+  } else {
+    return response.arrayBuffer().catch(() => new ArrayBuffer(0));
+  }
+}
+function auth_oauth_device_node_modules_octokit_request_dist_bundle_isJSONResponse(mimetype) {
+  return mimetype.type === "application/json" || mimetype.type === "application/scim+json";
+}
+function auth_oauth_device_node_modules_octokit_request_dist_bundle_toErrorMessage(data) {
+  if (typeof data === "string") {
+    return data;
+  }
+  if (data instanceof ArrayBuffer) {
+    return "Unknown error";
+  }
+  if ("message" in data) {
+    const suffix = "documentation_url" in data ? ` - ${data.documentation_url}` : "";
+    return Array.isArray(data.errors) ? `${data.message}: ${data.errors.map((v) => JSON.stringify(v)).join(", ")}${suffix}` : `${data.message}${suffix}`;
+  }
+  return `Unknown error: ${JSON.stringify(data)}`;
+}
+
+// pkg/dist-src/with-defaults.js
+function auth_oauth_device_node_modules_octokit_request_dist_bundle_withDefaults(oldEndpoint, newDefaults) {
+  const endpoint2 = oldEndpoint.defaults(newDefaults);
+  const newApi = function(route, parameters) {
+    const endpointOptions = endpoint2.merge(route, parameters);
+    if (!endpointOptions.request || !endpointOptions.request.hook) {
+      return auth_oauth_device_node_modules_octokit_request_dist_bundle_fetchWrapper(endpoint2.parse(endpointOptions));
+    }
+    const request2 = (route2, parameters2) => {
+      return auth_oauth_device_node_modules_octokit_request_dist_bundle_fetchWrapper(
+        endpoint2.parse(endpoint2.merge(route2, parameters2))
+      );
+    };
+    Object.assign(request2, {
+      endpoint: endpoint2,
+      defaults: auth_oauth_device_node_modules_octokit_request_dist_bundle_withDefaults.bind(null, endpoint2)
+    });
+    return endpointOptions.request.hook(request2, endpointOptions);
+  };
+  return Object.assign(newApi, {
+    endpoint: endpoint2,
+    defaults: auth_oauth_device_node_modules_octokit_request_dist_bundle_withDefaults.bind(null, endpoint2)
+  });
+}
+
+// pkg/dist-src/index.js
+var auth_oauth_device_node_modules_octokit_request_dist_bundle_request = auth_oauth_device_node_modules_octokit_request_dist_bundle_withDefaults(request_node_modules_octokit_endpoint_dist_bundle_endpoint, auth_oauth_device_node_modules_octokit_request_dist_bundle_defaults_default);
+
 
 ;// CONCATENATED MODULE: ../../node_modules/@octokit/oauth-authorization-url/dist-src/index.js
 function oauthAuthorizationUrl(options) {
@@ -51489,6 +68668,563 @@ function urlBuilderAuthorize(base, options) {
   });
   return url;
 }
+
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/oauth-methods/node_modules/@octokit/request/node_modules/universal-user-agent/index.js
+function request_node_modules_universal_user_agent_getUserAgent() {
+  if (typeof navigator === "object" && "userAgent" in navigator) {
+    return navigator.userAgent;
+  }
+
+  if (typeof process === "object" && process.version !== undefined) {
+    return `Node.js/${process.version.substr(1)} (${process.platform}; ${
+      process.arch
+    })`;
+  }
+
+  return "<environment undetectable>";
+}
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/oauth-methods/node_modules/@octokit/request/node_modules/@octokit/endpoint/dist-bundle/index.js
+// pkg/dist-src/defaults.js
+
+
+// pkg/dist-src/version.js
+var oauth_methods_node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_VERSION = "0.0.0-development";
+
+// pkg/dist-src/defaults.js
+var _octokit_request_node_modules_octokit_endpoint_dist_bundle_userAgent = `octokit-endpoint.js/${oauth_methods_node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_VERSION} ${request_node_modules_universal_user_agent_getUserAgent()}`;
+var _octokit_request_node_modules_octokit_endpoint_dist_bundle_DEFAULTS = {
+  method: "GET",
+  baseUrl: "https://api.github.com",
+  headers: {
+    accept: "application/vnd.github.v3+json",
+    "user-agent": _octokit_request_node_modules_octokit_endpoint_dist_bundle_userAgent
+  },
+  mediaType: {
+    format: ""
+  }
+};
+
+// pkg/dist-src/util/lowercase-keys.js
+function _octokit_request_node_modules_octokit_endpoint_dist_bundle_lowercaseKeys(object) {
+  if (!object) {
+    return {};
+  }
+  return Object.keys(object).reduce((newObj, key) => {
+    newObj[key.toLowerCase()] = object[key];
+    return newObj;
+  }, {});
+}
+
+// pkg/dist-src/util/is-plain-object.js
+function node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_isPlainObject(value) {
+  if (typeof value !== "object" || value === null) return false;
+  if (Object.prototype.toString.call(value) !== "[object Object]") return false;
+  const proto = Object.getPrototypeOf(value);
+  if (proto === null) return true;
+  const Ctor = Object.prototype.hasOwnProperty.call(proto, "constructor") && proto.constructor;
+  return typeof Ctor === "function" && Ctor instanceof Ctor && Function.prototype.call(Ctor) === Function.prototype.call(value);
+}
+
+// pkg/dist-src/util/merge-deep.js
+function _octokit_request_node_modules_octokit_endpoint_dist_bundle_mergeDeep(defaults, options) {
+  const result = Object.assign({}, defaults);
+  Object.keys(options).forEach((key) => {
+    if (node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_isPlainObject(options[key])) {
+      if (!(key in defaults)) Object.assign(result, { [key]: options[key] });
+      else result[key] = _octokit_request_node_modules_octokit_endpoint_dist_bundle_mergeDeep(defaults[key], options[key]);
+    } else {
+      Object.assign(result, { [key]: options[key] });
+    }
+  });
+  return result;
+}
+
+// pkg/dist-src/util/remove-undefined-properties.js
+function _octokit_request_node_modules_octokit_endpoint_dist_bundle_removeUndefinedProperties(obj) {
+  for (const key in obj) {
+    if (obj[key] === void 0) {
+      delete obj[key];
+    }
+  }
+  return obj;
+}
+
+// pkg/dist-src/merge.js
+function _octokit_request_node_modules_octokit_endpoint_dist_bundle_merge(defaults, route, options) {
+  if (typeof route === "string") {
+    let [method, url] = route.split(" ");
+    options = Object.assign(url ? { method, url } : { url: method }, options);
+  } else {
+    options = Object.assign({}, route);
+  }
+  options.headers = _octokit_request_node_modules_octokit_endpoint_dist_bundle_lowercaseKeys(options.headers);
+  _octokit_request_node_modules_octokit_endpoint_dist_bundle_removeUndefinedProperties(options);
+  _octokit_request_node_modules_octokit_endpoint_dist_bundle_removeUndefinedProperties(options.headers);
+  const mergedOptions = _octokit_request_node_modules_octokit_endpoint_dist_bundle_mergeDeep(defaults || {}, options);
+  if (options.url === "/graphql") {
+    if (defaults && defaults.mediaType.previews?.length) {
+      mergedOptions.mediaType.previews = defaults.mediaType.previews.filter(
+        (preview) => !mergedOptions.mediaType.previews.includes(preview)
+      ).concat(mergedOptions.mediaType.previews);
+    }
+    mergedOptions.mediaType.previews = (mergedOptions.mediaType.previews || []).map((preview) => preview.replace(/-preview/, ""));
+  }
+  return mergedOptions;
+}
+
+// pkg/dist-src/util/add-query-parameters.js
+function _octokit_request_node_modules_octokit_endpoint_dist_bundle_addQueryParameters(url, parameters) {
+  const separator = /\?/.test(url) ? "&" : "?";
+  const names = Object.keys(parameters);
+  if (names.length === 0) {
+    return url;
+  }
+  return url + separator + names.map((name) => {
+    if (name === "q") {
+      return "q=" + parameters.q.split("+").map(encodeURIComponent).join("+");
+    }
+    return `${name}=${encodeURIComponent(parameters[name])}`;
+  }).join("&");
+}
+
+// pkg/dist-src/util/extract-url-variable-names.js
+var _octokit_request_node_modules_octokit_endpoint_dist_bundle_urlVariableRegex = /\{[^{}}]+\}/g;
+function _octokit_request_node_modules_octokit_endpoint_dist_bundle_removeNonChars(variableName) {
+  return variableName.replace(/(?:^\W+)|(?:(?<!\W)\W+$)/g, "").split(/,/);
+}
+function _octokit_request_node_modules_octokit_endpoint_dist_bundle_extractUrlVariableNames(url) {
+  const matches = url.match(_octokit_request_node_modules_octokit_endpoint_dist_bundle_urlVariableRegex);
+  if (!matches) {
+    return [];
+  }
+  return matches.map(_octokit_request_node_modules_octokit_endpoint_dist_bundle_removeNonChars).reduce((a, b) => a.concat(b), []);
+}
+
+// pkg/dist-src/util/omit.js
+function node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_omit(object, keysToOmit) {
+  const result = { __proto__: null };
+  for (const key of Object.keys(object)) {
+    if (keysToOmit.indexOf(key) === -1) {
+      result[key] = object[key];
+    }
+  }
+  return result;
+}
+
+// pkg/dist-src/util/url-template.js
+function _octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeReserved(str) {
+  return str.split(/(%[0-9A-Fa-f]{2})/g).map(function(part) {
+    if (!/%[0-9A-Fa-f]/.test(part)) {
+      part = encodeURI(part).replace(/%5B/g, "[").replace(/%5D/g, "]");
+    }
+    return part;
+  }).join("");
+}
+function _octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(str) {
+  return encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
+    return "%" + c.charCodeAt(0).toString(16).toUpperCase();
+  });
+}
+function _octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeValue(operator, value, key) {
+  value = operator === "+" || operator === "#" ? _octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeReserved(value) : _octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(value);
+  if (key) {
+    return _octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(key) + "=" + value;
+  } else {
+    return value;
+  }
+}
+function _octokit_request_node_modules_octokit_endpoint_dist_bundle_isDefined(value) {
+  return value !== void 0 && value !== null;
+}
+function _octokit_request_node_modules_octokit_endpoint_dist_bundle_isKeyOperator(operator) {
+  return operator === ";" || operator === "&" || operator === "?";
+}
+function _octokit_request_node_modules_octokit_endpoint_dist_bundle_getValues(context, operator, key, modifier) {
+  var value = context[key], result = [];
+  if (_octokit_request_node_modules_octokit_endpoint_dist_bundle_isDefined(value) && value !== "") {
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+      value = value.toString();
+      if (modifier && modifier !== "*") {
+        value = value.substring(0, parseInt(modifier, 10));
+      }
+      result.push(
+        _octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeValue(operator, value, _octokit_request_node_modules_octokit_endpoint_dist_bundle_isKeyOperator(operator) ? key : "")
+      );
+    } else {
+      if (modifier === "*") {
+        if (Array.isArray(value)) {
+          value.filter(_octokit_request_node_modules_octokit_endpoint_dist_bundle_isDefined).forEach(function(value2) {
+            result.push(
+              _octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeValue(operator, value2, _octokit_request_node_modules_octokit_endpoint_dist_bundle_isKeyOperator(operator) ? key : "")
+            );
+          });
+        } else {
+          Object.keys(value).forEach(function(k) {
+            if (_octokit_request_node_modules_octokit_endpoint_dist_bundle_isDefined(value[k])) {
+              result.push(_octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeValue(operator, value[k], k));
+            }
+          });
+        }
+      } else {
+        const tmp = [];
+        if (Array.isArray(value)) {
+          value.filter(_octokit_request_node_modules_octokit_endpoint_dist_bundle_isDefined).forEach(function(value2) {
+            tmp.push(_octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeValue(operator, value2));
+          });
+        } else {
+          Object.keys(value).forEach(function(k) {
+            if (_octokit_request_node_modules_octokit_endpoint_dist_bundle_isDefined(value[k])) {
+              tmp.push(_octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(k));
+              tmp.push(_octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeValue(operator, value[k].toString()));
+            }
+          });
+        }
+        if (_octokit_request_node_modules_octokit_endpoint_dist_bundle_isKeyOperator(operator)) {
+          result.push(_octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(key) + "=" + tmp.join(","));
+        } else if (tmp.length !== 0) {
+          result.push(tmp.join(","));
+        }
+      }
+    }
+  } else {
+    if (operator === ";") {
+      if (_octokit_request_node_modules_octokit_endpoint_dist_bundle_isDefined(value)) {
+        result.push(_octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(key));
+      }
+    } else if (value === "" && (operator === "&" || operator === "?")) {
+      result.push(_octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(key) + "=");
+    } else if (value === "") {
+      result.push("");
+    }
+  }
+  return result;
+}
+function _octokit_request_node_modules_octokit_endpoint_dist_bundle_parseUrl(template) {
+  return {
+    expand: node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_expand.bind(null, template)
+  };
+}
+function node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_expand(template, context) {
+  var operators = ["+", "#", ".", "/", ";", "?", "&"];
+  template = template.replace(
+    /\{([^\{\}]+)\}|([^\{\}]+)/g,
+    function(_, expression, literal) {
+      if (expression) {
+        let operator = "";
+        const values = [];
+        if (operators.indexOf(expression.charAt(0)) !== -1) {
+          operator = expression.charAt(0);
+          expression = expression.substr(1);
+        }
+        expression.split(/,/g).forEach(function(variable) {
+          var tmp = /([^:\*]*)(?::(\d+)|(\*))?/.exec(variable);
+          values.push(_octokit_request_node_modules_octokit_endpoint_dist_bundle_getValues(context, operator, tmp[1], tmp[2] || tmp[3]));
+        });
+        if (operator && operator !== "+") {
+          var separator = ",";
+          if (operator === "?") {
+            separator = "&";
+          } else if (operator !== "#") {
+            separator = operator;
+          }
+          return (values.length !== 0 ? operator : "") + values.join(separator);
+        } else {
+          return values.join(",");
+        }
+      } else {
+        return _octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeReserved(literal);
+      }
+    }
+  );
+  if (template === "/") {
+    return template;
+  } else {
+    return template.replace(/\/$/, "");
+  }
+}
+
+// pkg/dist-src/parse.js
+function node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_parse(options) {
+  let method = options.method.toUpperCase();
+  let url = (options.url || "/").replace(/:([a-z]\w+)/g, "{$1}");
+  let headers = Object.assign({}, options.headers);
+  let body;
+  let parameters = node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_omit(options, [
+    "method",
+    "baseUrl",
+    "url",
+    "headers",
+    "request",
+    "mediaType"
+  ]);
+  const urlVariableNames = _octokit_request_node_modules_octokit_endpoint_dist_bundle_extractUrlVariableNames(url);
+  url = _octokit_request_node_modules_octokit_endpoint_dist_bundle_parseUrl(url).expand(parameters);
+  if (!/^http/.test(url)) {
+    url = options.baseUrl + url;
+  }
+  const omittedParameters = Object.keys(options).filter((option) => urlVariableNames.includes(option)).concat("baseUrl");
+  const remainingParameters = node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_omit(parameters, omittedParameters);
+  const isBinaryRequest = /application\/octet-stream/i.test(headers.accept);
+  if (!isBinaryRequest) {
+    if (options.mediaType.format) {
+      headers.accept = headers.accept.split(/,/).map(
+        (format) => format.replace(
+          /application\/vnd(\.\w+)(\.v3)?(\.\w+)?(\+json)?$/,
+          `application/vnd$1$2.${options.mediaType.format}`
+        )
+      ).join(",");
+    }
+    if (url.endsWith("/graphql")) {
+      if (options.mediaType.previews?.length) {
+        const previewsFromAcceptHeader = headers.accept.match(/(?<![\w-])[\w-]+(?=-preview)/g) || [];
+        headers.accept = previewsFromAcceptHeader.concat(options.mediaType.previews).map((preview) => {
+          const format = options.mediaType.format ? `.${options.mediaType.format}` : "+json";
+          return `application/vnd.github.${preview}-preview${format}`;
+        }).join(",");
+      }
+    }
+  }
+  if (["GET", "HEAD"].includes(method)) {
+    url = _octokit_request_node_modules_octokit_endpoint_dist_bundle_addQueryParameters(url, remainingParameters);
+  } else {
+    if ("data" in remainingParameters) {
+      body = remainingParameters.data;
+    } else {
+      if (Object.keys(remainingParameters).length) {
+        body = remainingParameters;
+      }
+    }
+  }
+  if (!headers["content-type"] && typeof body !== "undefined") {
+    headers["content-type"] = "application/json; charset=utf-8";
+  }
+  if (["PATCH", "PUT"].includes(method) && typeof body === "undefined") {
+    body = "";
+  }
+  return Object.assign(
+    { method, url, headers },
+    typeof body !== "undefined" ? { body } : null,
+    options.request ? { request: options.request } : null
+  );
+}
+
+// pkg/dist-src/endpoint-with-defaults.js
+function _octokit_request_node_modules_octokit_endpoint_dist_bundle_endpointWithDefaults(defaults, route, options) {
+  return node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_parse(_octokit_request_node_modules_octokit_endpoint_dist_bundle_merge(defaults, route, options));
+}
+
+// pkg/dist-src/with-defaults.js
+function node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_withDefaults(oldDefaults, newDefaults) {
+  const DEFAULTS2 = _octokit_request_node_modules_octokit_endpoint_dist_bundle_merge(oldDefaults, newDefaults);
+  const endpoint2 = _octokit_request_node_modules_octokit_endpoint_dist_bundle_endpointWithDefaults.bind(null, DEFAULTS2);
+  return Object.assign(endpoint2, {
+    DEFAULTS: DEFAULTS2,
+    defaults: node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_withDefaults.bind(null, DEFAULTS2),
+    merge: _octokit_request_node_modules_octokit_endpoint_dist_bundle_merge.bind(null, DEFAULTS2),
+    parse: node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_parse
+  });
+}
+
+// pkg/dist-src/index.js
+var _octokit_request_node_modules_octokit_endpoint_dist_bundle_endpoint = node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_withDefaults(null, _octokit_request_node_modules_octokit_endpoint_dist_bundle_DEFAULTS);
+
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/oauth-methods/node_modules/@octokit/request/dist-bundle/index.js
+// pkg/dist-src/index.js
+
+
+// pkg/dist-src/defaults.js
+
+
+// pkg/dist-src/version.js
+var oauth_methods_node_modules_octokit_request_dist_bundle_VERSION = "10.0.3";
+
+// pkg/dist-src/defaults.js
+var oauth_methods_node_modules_octokit_request_dist_bundle_defaults_default = {
+  headers: {
+    "user-agent": `octokit-request.js/${oauth_methods_node_modules_octokit_request_dist_bundle_VERSION} ${request_node_modules_universal_user_agent_getUserAgent()}`
+  }
+};
+
+// pkg/dist-src/fetch-wrapper.js
+
+
+// pkg/dist-src/is-plain-object.js
+function oauth_methods_node_modules_octokit_request_dist_bundle_isPlainObject(value) {
+  if (typeof value !== "object" || value === null) return false;
+  if (Object.prototype.toString.call(value) !== "[object Object]") return false;
+  const proto = Object.getPrototypeOf(value);
+  if (proto === null) return true;
+  const Ctor = Object.prototype.hasOwnProperty.call(proto, "constructor") && proto.constructor;
+  return typeof Ctor === "function" && Ctor instanceof Ctor && Function.prototype.call(Ctor) === Function.prototype.call(value);
+}
+
+// pkg/dist-src/fetch-wrapper.js
+
+async function oauth_methods_node_modules_octokit_request_dist_bundle_fetchWrapper(requestOptions) {
+  const fetch = requestOptions.request?.fetch || globalThis.fetch;
+  if (!fetch) {
+    throw new Error(
+      "fetch is not set. Please pass a fetch implementation as new Octokit({ request: { fetch }}). Learn more at https://github.com/octokit/octokit.js/#fetch-missing"
+    );
+  }
+  const log = requestOptions.request?.log || console;
+  const parseSuccessResponseBody = requestOptions.request?.parseSuccessResponseBody !== false;
+  const body = oauth_methods_node_modules_octokit_request_dist_bundle_isPlainObject(requestOptions.body) || Array.isArray(requestOptions.body) ? JSON.stringify(requestOptions.body) : requestOptions.body;
+  const requestHeaders = Object.fromEntries(
+    Object.entries(requestOptions.headers).map(([name, value]) => [
+      name,
+      String(value)
+    ])
+  );
+  let fetchResponse;
+  try {
+    fetchResponse = await fetch(requestOptions.url, {
+      method: requestOptions.method,
+      body,
+      redirect: requestOptions.request?.redirect,
+      headers: requestHeaders,
+      signal: requestOptions.request?.signal,
+      // duplex must be set if request.body is ReadableStream or Async Iterables.
+      // See https://fetch.spec.whatwg.org/#dom-requestinit-duplex.
+      ...requestOptions.body && { duplex: "half" }
+    });
+  } catch (error) {
+    let message = "Unknown Error";
+    if (error instanceof Error) {
+      if (error.name === "AbortError") {
+        error.status = 500;
+        throw error;
+      }
+      message = error.message;
+      if (error.name === "TypeError" && "cause" in error) {
+        if (error.cause instanceof Error) {
+          message = error.cause.message;
+        } else if (typeof error.cause === "string") {
+          message = error.cause;
+        }
+      }
+    }
+    const requestError = new RequestError(message, 500, {
+      request: requestOptions
+    });
+    requestError.cause = error;
+    throw requestError;
+  }
+  const status = fetchResponse.status;
+  const url = fetchResponse.url;
+  const responseHeaders = {};
+  for (const [key, value] of fetchResponse.headers) {
+    responseHeaders[key] = value;
+  }
+  const octokitResponse = {
+    url,
+    status,
+    headers: responseHeaders,
+    data: ""
+  };
+  if ("deprecation" in responseHeaders) {
+    const matches = responseHeaders.link && responseHeaders.link.match(/<([^<>]+)>; rel="deprecation"/);
+    const deprecationLink = matches && matches.pop();
+    log.warn(
+      `[@octokit/request] "${requestOptions.method} ${requestOptions.url}" is deprecated. It is scheduled to be removed on ${responseHeaders.sunset}${deprecationLink ? `. See ${deprecationLink}` : ""}`
+    );
+  }
+  if (status === 204 || status === 205) {
+    return octokitResponse;
+  }
+  if (requestOptions.method === "HEAD") {
+    if (status < 400) {
+      return octokitResponse;
+    }
+    throw new RequestError(fetchResponse.statusText, status, {
+      response: octokitResponse,
+      request: requestOptions
+    });
+  }
+  if (status === 304) {
+    octokitResponse.data = await oauth_methods_node_modules_octokit_request_dist_bundle_getResponseData(fetchResponse);
+    throw new RequestError("Not modified", status, {
+      response: octokitResponse,
+      request: requestOptions
+    });
+  }
+  if (status >= 400) {
+    octokitResponse.data = await oauth_methods_node_modules_octokit_request_dist_bundle_getResponseData(fetchResponse);
+    throw new RequestError(oauth_methods_node_modules_octokit_request_dist_bundle_toErrorMessage(octokitResponse.data), status, {
+      response: octokitResponse,
+      request: requestOptions
+    });
+  }
+  octokitResponse.data = parseSuccessResponseBody ? await oauth_methods_node_modules_octokit_request_dist_bundle_getResponseData(fetchResponse) : fetchResponse.body;
+  return octokitResponse;
+}
+async function oauth_methods_node_modules_octokit_request_dist_bundle_getResponseData(response) {
+  const contentType = response.headers.get("content-type");
+  if (!contentType) {
+    return response.text().catch(() => "");
+  }
+  const mimetype = (0,fast_content_type_parse/* safeParse */.xL)(contentType);
+  if (oauth_methods_node_modules_octokit_request_dist_bundle_isJSONResponse(mimetype)) {
+    let text = "";
+    try {
+      text = await response.text();
+      return JSON.parse(text);
+    } catch (err) {
+      return text;
+    }
+  } else if (mimetype.type.startsWith("text/") || mimetype.parameters.charset?.toLowerCase() === "utf-8") {
+    return response.text().catch(() => "");
+  } else {
+    return response.arrayBuffer().catch(() => new ArrayBuffer(0));
+  }
+}
+function oauth_methods_node_modules_octokit_request_dist_bundle_isJSONResponse(mimetype) {
+  return mimetype.type === "application/json" || mimetype.type === "application/scim+json";
+}
+function oauth_methods_node_modules_octokit_request_dist_bundle_toErrorMessage(data) {
+  if (typeof data === "string") {
+    return data;
+  }
+  if (data instanceof ArrayBuffer) {
+    return "Unknown error";
+  }
+  if ("message" in data) {
+    const suffix = "documentation_url" in data ? ` - ${data.documentation_url}` : "";
+    return Array.isArray(data.errors) ? `${data.message}: ${data.errors.map((v) => JSON.stringify(v)).join(", ")}${suffix}` : `${data.message}${suffix}`;
+  }
+  return `Unknown error: ${JSON.stringify(data)}`;
+}
+
+// pkg/dist-src/with-defaults.js
+function oauth_methods_node_modules_octokit_request_dist_bundle_withDefaults(oldEndpoint, newDefaults) {
+  const endpoint2 = oldEndpoint.defaults(newDefaults);
+  const newApi = function(route, parameters) {
+    const endpointOptions = endpoint2.merge(route, parameters);
+    if (!endpointOptions.request || !endpointOptions.request.hook) {
+      return oauth_methods_node_modules_octokit_request_dist_bundle_fetchWrapper(endpoint2.parse(endpointOptions));
+    }
+    const request2 = (route2, parameters2) => {
+      return oauth_methods_node_modules_octokit_request_dist_bundle_fetchWrapper(
+        endpoint2.parse(endpoint2.merge(route2, parameters2))
+      );
+    };
+    Object.assign(request2, {
+      endpoint: endpoint2,
+      defaults: oauth_methods_node_modules_octokit_request_dist_bundle_withDefaults.bind(null, endpoint2)
+    });
+    return endpointOptions.request.hook(request2, endpointOptions);
+  };
+  return Object.assign(newApi, {
+    endpoint: endpoint2,
+    defaults: oauth_methods_node_modules_octokit_request_dist_bundle_withDefaults.bind(null, endpoint2)
+  });
+}
+
+// pkg/dist-src/index.js
+var oauth_methods_node_modules_octokit_request_dist_bundle_request = oauth_methods_node_modules_octokit_request_dist_bundle_withDefaults(_octokit_request_node_modules_octokit_endpoint_dist_bundle_endpoint, oauth_methods_node_modules_octokit_request_dist_bundle_defaults_default);
 
 
 ;// CONCATENATED MODULE: ../../node_modules/@octokit/oauth-methods/dist-bundle/index.js
@@ -51533,7 +69269,7 @@ async function oauthRequest(request, route, parameters) {
 
 // pkg/dist-src/get-web-flow-authorization-url.js
 function getWebFlowAuthorizationUrl({
-  request = dist_bundle_request,
+  request = oauth_methods_node_modules_octokit_request_dist_bundle_request,
   ...options
 }) {
   const baseUrl = requestToOAuthBaseUrl(request);
@@ -51546,7 +69282,7 @@ function getWebFlowAuthorizationUrl({
 // pkg/dist-src/exchange-web-flow-code.js
 
 async function exchangeWebFlowCode(options) {
-  const request = options.request || dist_bundle_request;
+  const request = options.request || oauth_methods_node_modules_octokit_request_dist_bundle_request;
   const response = await oauthRequest(
     request,
     "POST /login/oauth/access_token",
@@ -51586,7 +69322,7 @@ function toTimestamp(apiTimeInMs, expirationInSeconds) {
 // pkg/dist-src/create-device-code.js
 
 async function createDeviceCode(options) {
-  const request = options.request || dist_bundle_request;
+  const request = options.request || oauth_methods_node_modules_octokit_request_dist_bundle_request;
   const parameters = {
     client_id: options.clientId
   };
@@ -51599,7 +69335,7 @@ async function createDeviceCode(options) {
 // pkg/dist-src/exchange-device-code.js
 
 async function exchangeDeviceCode(options) {
-  const request = options.request || dist_bundle_request;
+  const request = options.request || oauth_methods_node_modules_octokit_request_dist_bundle_request;
   const response = await oauthRequest(
     request,
     "POST /login/oauth/access_token",
@@ -51640,7 +69376,7 @@ function toTimestamp2(apiTimeInMs, expirationInSeconds) {
 // pkg/dist-src/check-token.js
 
 async function checkToken(options) {
-  const request = options.request || dist_bundle_request;
+  const request = options.request || oauth_methods_node_modules_octokit_request_dist_bundle_request;
   const response = await request("POST /applications/{client_id}/token", {
     headers: {
       authorization: `basic ${btoa(
@@ -51668,7 +69404,7 @@ async function checkToken(options) {
 // pkg/dist-src/refresh-token.js
 
 async function refreshToken(options) {
-  const request = options.request || dist_bundle_request;
+  const request = options.request || oauth_methods_node_modules_octokit_request_dist_bundle_request;
   const response = await oauthRequest(
     request,
     "POST /login/oauth/access_token",
@@ -51709,7 +69445,7 @@ async function scopeToken(options) {
     token,
     ...requestOptions
   } = options;
-  const request = options.request || dist_bundle_request;
+  const request = options.request || oauth_methods_node_modules_octokit_request_dist_bundle_request;
   const response = await request(
     "POST /applications/{client_id}/token/scoped",
     {
@@ -51736,7 +69472,7 @@ async function scopeToken(options) {
 // pkg/dist-src/reset-token.js
 
 async function resetToken(options) {
-  const request = options.request || dist_bundle_request;
+  const request = options.request || oauth_methods_node_modules_octokit_request_dist_bundle_request;
   const auth = btoa(`${options.clientId}:${options.clientSecret}`);
   const response = await request(
     "PATCH /applications/{client_id}/token",
@@ -51766,7 +69502,7 @@ async function resetToken(options) {
 // pkg/dist-src/delete-token.js
 
 async function deleteToken(options) {
-  const request = options.request || dist_bundle_request;
+  const request = options.request || oauth_methods_node_modules_octokit_request_dist_bundle_request;
   const auth = btoa(`${options.clientId}:${options.clientSecret}`);
   return request(
     "DELETE /applications/{client_id}/token",
@@ -51783,7 +69519,7 @@ async function deleteToken(options) {
 // pkg/dist-src/delete-authorization.js
 
 async function deleteAuthorization(options) {
-  const request = options.request || dist_bundle_request;
+  const request = options.request || oauth_methods_node_modules_octokit_request_dist_bundle_request;
   const auth = btoa(`${options.clientId}:${options.clientSecret}`);
   return request(
     "DELETE /applications/{client_id}/grant",
@@ -51876,14 +69612,14 @@ async function waitForAccessToken(request, clientId, clientType, verification) {
 }
 
 // pkg/dist-src/auth.js
-async function dist_bundle_auth(state, authOptions) {
+async function auth_oauth_device_dist_bundle_auth(state, authOptions) {
   return getOAuthAccessToken(state, {
     auth: authOptions
   });
 }
 
 // pkg/dist-src/hook.js
-async function dist_bundle_hook(state, request, route, parameters) {
+async function auth_oauth_device_dist_bundle_hook(state, request, route, parameters) {
   let endpoint = request.endpoint.merge(
     route,
     parameters
@@ -51904,9 +69640,9 @@ var auth_oauth_device_dist_bundle_VERSION = "0.0.0-development";
 
 // pkg/dist-src/index.js
 function createOAuthDeviceAuth(options) {
-  const requestWithDefaults = options.request || dist_bundle_request.defaults({
+  const requestWithDefaults = options.request || auth_oauth_device_node_modules_octokit_request_dist_bundle_request.defaults({
     headers: {
-      "user-agent": `octokit-auth-oauth-device.js/${auth_oauth_device_dist_bundle_VERSION} ${getUserAgent()}`
+      "user-agent": `octokit-auth-oauth-device.js/${auth_oauth_device_dist_bundle_VERSION} ${auth_oauth_device_node_modules_universal_user_agent_getUserAgent()}`
     }
   });
   const { request = requestWithDefaults, ...otherOptions } = options;
@@ -51930,8 +69666,8 @@ function createOAuthDeviceAuth(options) {
       '[@octokit/auth-oauth-device] "onVerification" option must be a function (https://github.com/octokit/auth-oauth-device.js#usage)'
     );
   }
-  return Object.assign(dist_bundle_auth.bind(null, state), {
-    hook: dist_bundle_hook.bind(null, state)
+  return Object.assign(auth_oauth_device_dist_bundle_auth.bind(null, state), {
+    hook: auth_oauth_device_dist_bundle_hook.bind(null, state)
   });
 }
 
@@ -52113,9 +69849,9 @@ function createOAuthUserAuth({
   clientId,
   clientSecret,
   clientType = "oauth-app",
-  request = dist_bundle_request.defaults({
+  request = node_modules_octokit_request_dist_bundle_request.defaults({
     headers: {
-      "user-agent": `octokit-auth-oauth-app.js/${auth_oauth_user_dist_bundle_VERSION} ${getUserAgent()}`
+      "user-agent": `octokit-auth-oauth-app.js/${auth_oauth_user_dist_bundle_VERSION} ${auth_oauth_user_node_modules_universal_user_agent_getUserAgent()}`
     }
   }),
   onTokenCreated,
@@ -52215,9 +69951,9 @@ var auth_oauth_app_dist_bundle_VERSION = "0.0.0-development";
 function createOAuthAppAuth(options) {
   const state = Object.assign(
     {
-      request: dist_bundle_request.defaults({
+      request: _octokit_request_dist_bundle_request.defaults({
         headers: {
-          "user-agent": `octokit-auth-oauth-app.js/${auth_oauth_app_dist_bundle_VERSION} ${getUserAgent()}`
+          "user-agent": `octokit-auth-oauth-app.js/${auth_oauth_app_dist_bundle_VERSION} ${auth_oauth_app_node_modules_universal_user_agent_getUserAgent()}`
         }
       }),
       clientType: "oauth-app"
@@ -53738,9 +71474,9 @@ function createAppAuth(options) {
   if (typeof log.warn !== "function") {
     log.warn = console.warn.bind(console);
   }
-  const request = options.request || dist_bundle_request.defaults({
+  const request = options.request || request_dist_bundle_request.defaults({
     headers: {
-      "user-agent": `octokit-auth-app.js/${dist_node_VERSION} ${getUserAgent()}`
+      "user-agent": `octokit-auth-app.js/${dist_node_VERSION} ${node_modules_universal_user_agent_getUserAgent()}`
     }
   });
   const state = Object.assign(
@@ -53763,6 +71499,1035 @@ function createAppAuth(options) {
   return Object.assign(dist_node_auth.bind(null, state), {
     hook: dist_node_hook.bind(null, state)
   });
+}
+
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/oauth-app/node_modules/universal-user-agent/index.js
+function oauth_app_node_modules_universal_user_agent_getUserAgent() {
+  if (typeof navigator === "object" && "userAgent" in navigator) {
+    return navigator.userAgent;
+  }
+
+  if (typeof process === "object" && process.version !== undefined) {
+    return `Node.js/${process.version.substr(1)} (${process.platform}; ${
+      process.arch
+    })`;
+  }
+
+  return "<environment undetectable>";
+}
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/oauth-app/node_modules/@octokit/core/node_modules/before-after-hook/lib/register.js
+// @ts-check
+
+function lib_register_register(state, name, method, options) {
+  if (typeof method !== "function") {
+    throw new Error("method for before hook must be a function");
+  }
+
+  if (!options) {
+    options = {};
+  }
+
+  if (Array.isArray(name)) {
+    return name.reverse().reduce((callback, name) => {
+      return lib_register_register.bind(null, state, name, callback, options);
+    }, method)();
+  }
+
+  return Promise.resolve().then(() => {
+    if (!state.registry[name]) {
+      return method(options);
+    }
+
+    return state.registry[name].reduce((method, registered) => {
+      return registered.hook.bind(null, method, options);
+    }, method)();
+  });
+}
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/oauth-app/node_modules/@octokit/core/node_modules/before-after-hook/lib/add.js
+// @ts-check
+
+function lib_add_addHook(state, kind, name, hook) {
+  const orig = hook;
+  if (!state.registry[name]) {
+    state.registry[name] = [];
+  }
+
+  if (kind === "before") {
+    hook = (method, options) => {
+      return Promise.resolve()
+        .then(orig.bind(null, options))
+        .then(method.bind(null, options));
+    };
+  }
+
+  if (kind === "after") {
+    hook = (method, options) => {
+      let result;
+      return Promise.resolve()
+        .then(method.bind(null, options))
+        .then((result_) => {
+          result = result_;
+          return orig(result, options);
+        })
+        .then(() => {
+          return result;
+        });
+    };
+  }
+
+  if (kind === "error") {
+    hook = (method, options) => {
+      return Promise.resolve()
+        .then(method.bind(null, options))
+        .catch((error) => {
+          return orig(error, options);
+        });
+    };
+  }
+
+  state.registry[name].push({
+    hook: hook,
+    orig: orig,
+  });
+}
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/oauth-app/node_modules/@octokit/core/node_modules/before-after-hook/lib/remove.js
+// @ts-check
+
+function lib_remove_removeHook(state, name, method) {
+  if (!state.registry[name]) {
+    return;
+  }
+
+  const index = state.registry[name]
+    .map((registered) => {
+      return registered.orig;
+    })
+    .indexOf(method);
+
+  if (index === -1) {
+    return;
+  }
+
+  state.registry[name].splice(index, 1);
+}
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/oauth-app/node_modules/@octokit/core/node_modules/before-after-hook/index.js
+// @ts-check
+
+
+
+
+
+// bind with array of arguments: https://stackoverflow.com/a/21792913
+const node_modules_before_after_hook_bind = Function.bind;
+const node_modules_before_after_hook_bindable = node_modules_before_after_hook_bind.bind(node_modules_before_after_hook_bind);
+
+function node_modules_before_after_hook_bindApi(hook, state, name) {
+  const removeHookRef = node_modules_before_after_hook_bindable(lib_remove_removeHook, null).apply(
+    null,
+    name ? [state, name] : [state]
+  );
+  hook.api = { remove: removeHookRef };
+  hook.remove = removeHookRef;
+  ["before", "error", "after", "wrap"].forEach((kind) => {
+    const args = name ? [state, kind, name] : [state, kind];
+    hook[kind] = hook.api[kind] = node_modules_before_after_hook_bindable(lib_add_addHook, null).apply(null, args);
+  });
+}
+
+function node_modules_before_after_hook_Singular() {
+  const singularHookName = Symbol("Singular");
+  const singularHookState = {
+    registry: {},
+  };
+  const singularHook = lib_register_register.bind(null, singularHookState, singularHookName);
+  node_modules_before_after_hook_bindApi(singularHook, singularHookState, singularHookName);
+  return singularHook;
+}
+
+function node_modules_before_after_hook_Collection() {
+  const state = {
+    registry: {},
+  };
+
+  const hook = lib_register_register.bind(null, state);
+  node_modules_before_after_hook_bindApi(hook, state);
+
+  return hook;
+}
+
+/* harmony default export */ const core_node_modules_before_after_hook = ({ Singular: node_modules_before_after_hook_Singular, Collection: node_modules_before_after_hook_Collection });
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/oauth-app/node_modules/@octokit/core/node_modules/@octokit/request/node_modules/@octokit/endpoint/dist-bundle/index.js
+// pkg/dist-src/defaults.js
+
+
+// pkg/dist-src/version.js
+var core_node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_VERSION = "0.0.0-development";
+
+// pkg/dist-src/defaults.js
+var node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_userAgent = `octokit-endpoint.js/${core_node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_VERSION} ${oauth_app_node_modules_universal_user_agent_getUserAgent()}`;
+var node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_DEFAULTS = {
+  method: "GET",
+  baseUrl: "https://api.github.com",
+  headers: {
+    accept: "application/vnd.github.v3+json",
+    "user-agent": node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_userAgent
+  },
+  mediaType: {
+    format: ""
+  }
+};
+
+// pkg/dist-src/util/lowercase-keys.js
+function node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_lowercaseKeys(object) {
+  if (!object) {
+    return {};
+  }
+  return Object.keys(object).reduce((newObj, key) => {
+    newObj[key.toLowerCase()] = object[key];
+    return newObj;
+  }, {});
+}
+
+// pkg/dist-src/util/is-plain-object.js
+function core_node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_isPlainObject(value) {
+  if (typeof value !== "object" || value === null) return false;
+  if (Object.prototype.toString.call(value) !== "[object Object]") return false;
+  const proto = Object.getPrototypeOf(value);
+  if (proto === null) return true;
+  const Ctor = Object.prototype.hasOwnProperty.call(proto, "constructor") && proto.constructor;
+  return typeof Ctor === "function" && Ctor instanceof Ctor && Function.prototype.call(Ctor) === Function.prototype.call(value);
+}
+
+// pkg/dist-src/util/merge-deep.js
+function node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_mergeDeep(defaults, options) {
+  const result = Object.assign({}, defaults);
+  Object.keys(options).forEach((key) => {
+    if (core_node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_isPlainObject(options[key])) {
+      if (!(key in defaults)) Object.assign(result, { [key]: options[key] });
+      else result[key] = node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_mergeDeep(defaults[key], options[key]);
+    } else {
+      Object.assign(result, { [key]: options[key] });
+    }
+  });
+  return result;
+}
+
+// pkg/dist-src/util/remove-undefined-properties.js
+function node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_removeUndefinedProperties(obj) {
+  for (const key in obj) {
+    if (obj[key] === void 0) {
+      delete obj[key];
+    }
+  }
+  return obj;
+}
+
+// pkg/dist-src/merge.js
+function node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_merge(defaults, route, options) {
+  if (typeof route === "string") {
+    let [method, url] = route.split(" ");
+    options = Object.assign(url ? { method, url } : { url: method }, options);
+  } else {
+    options = Object.assign({}, route);
+  }
+  options.headers = node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_lowercaseKeys(options.headers);
+  node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_removeUndefinedProperties(options);
+  node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_removeUndefinedProperties(options.headers);
+  const mergedOptions = node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_mergeDeep(defaults || {}, options);
+  if (options.url === "/graphql") {
+    if (defaults && defaults.mediaType.previews?.length) {
+      mergedOptions.mediaType.previews = defaults.mediaType.previews.filter(
+        (preview) => !mergedOptions.mediaType.previews.includes(preview)
+      ).concat(mergedOptions.mediaType.previews);
+    }
+    mergedOptions.mediaType.previews = (mergedOptions.mediaType.previews || []).map((preview) => preview.replace(/-preview/, ""));
+  }
+  return mergedOptions;
+}
+
+// pkg/dist-src/util/add-query-parameters.js
+function node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_addQueryParameters(url, parameters) {
+  const separator = /\?/.test(url) ? "&" : "?";
+  const names = Object.keys(parameters);
+  if (names.length === 0) {
+    return url;
+  }
+  return url + separator + names.map((name) => {
+    if (name === "q") {
+      return "q=" + parameters.q.split("+").map(encodeURIComponent).join("+");
+    }
+    return `${name}=${encodeURIComponent(parameters[name])}`;
+  }).join("&");
+}
+
+// pkg/dist-src/util/extract-url-variable-names.js
+var node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_urlVariableRegex = /\{[^{}}]+\}/g;
+function node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_removeNonChars(variableName) {
+  return variableName.replace(/(?:^\W+)|(?:(?<!\W)\W+$)/g, "").split(/,/);
+}
+function node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_extractUrlVariableNames(url) {
+  const matches = url.match(node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_urlVariableRegex);
+  if (!matches) {
+    return [];
+  }
+  return matches.map(node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_removeNonChars).reduce((a, b) => a.concat(b), []);
+}
+
+// pkg/dist-src/util/omit.js
+function core_node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_omit(object, keysToOmit) {
+  const result = { __proto__: null };
+  for (const key of Object.keys(object)) {
+    if (keysToOmit.indexOf(key) === -1) {
+      result[key] = object[key];
+    }
+  }
+  return result;
+}
+
+// pkg/dist-src/util/url-template.js
+function node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeReserved(str) {
+  return str.split(/(%[0-9A-Fa-f]{2})/g).map(function(part) {
+    if (!/%[0-9A-Fa-f]/.test(part)) {
+      part = encodeURI(part).replace(/%5B/g, "[").replace(/%5D/g, "]");
+    }
+    return part;
+  }).join("");
+}
+function node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(str) {
+  return encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
+    return "%" + c.charCodeAt(0).toString(16).toUpperCase();
+  });
+}
+function node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeValue(operator, value, key) {
+  value = operator === "+" || operator === "#" ? node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeReserved(value) : node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(value);
+  if (key) {
+    return node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(key) + "=" + value;
+  } else {
+    return value;
+  }
+}
+function node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_isDefined(value) {
+  return value !== void 0 && value !== null;
+}
+function node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_isKeyOperator(operator) {
+  return operator === ";" || operator === "&" || operator === "?";
+}
+function node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_getValues(context, operator, key, modifier) {
+  var value = context[key], result = [];
+  if (node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_isDefined(value) && value !== "") {
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+      value = value.toString();
+      if (modifier && modifier !== "*") {
+        value = value.substring(0, parseInt(modifier, 10));
+      }
+      result.push(
+        node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeValue(operator, value, node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_isKeyOperator(operator) ? key : "")
+      );
+    } else {
+      if (modifier === "*") {
+        if (Array.isArray(value)) {
+          value.filter(node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_isDefined).forEach(function(value2) {
+            result.push(
+              node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeValue(operator, value2, node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_isKeyOperator(operator) ? key : "")
+            );
+          });
+        } else {
+          Object.keys(value).forEach(function(k) {
+            if (node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_isDefined(value[k])) {
+              result.push(node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeValue(operator, value[k], k));
+            }
+          });
+        }
+      } else {
+        const tmp = [];
+        if (Array.isArray(value)) {
+          value.filter(node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_isDefined).forEach(function(value2) {
+            tmp.push(node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeValue(operator, value2));
+          });
+        } else {
+          Object.keys(value).forEach(function(k) {
+            if (node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_isDefined(value[k])) {
+              tmp.push(node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(k));
+              tmp.push(node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeValue(operator, value[k].toString()));
+            }
+          });
+        }
+        if (node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_isKeyOperator(operator)) {
+          result.push(node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(key) + "=" + tmp.join(","));
+        } else if (tmp.length !== 0) {
+          result.push(tmp.join(","));
+        }
+      }
+    }
+  } else {
+    if (operator === ";") {
+      if (node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_isDefined(value)) {
+        result.push(node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(key));
+      }
+    } else if (value === "" && (operator === "&" || operator === "?")) {
+      result.push(node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeUnreserved(key) + "=");
+    } else if (value === "") {
+      result.push("");
+    }
+  }
+  return result;
+}
+function node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_parseUrl(template) {
+  return {
+    expand: core_node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_expand.bind(null, template)
+  };
+}
+function core_node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_expand(template, context) {
+  var operators = ["+", "#", ".", "/", ";", "?", "&"];
+  template = template.replace(
+    /\{([^\{\}]+)\}|([^\{\}]+)/g,
+    function(_, expression, literal) {
+      if (expression) {
+        let operator = "";
+        const values = [];
+        if (operators.indexOf(expression.charAt(0)) !== -1) {
+          operator = expression.charAt(0);
+          expression = expression.substr(1);
+        }
+        expression.split(/,/g).forEach(function(variable) {
+          var tmp = /([^:\*]*)(?::(\d+)|(\*))?/.exec(variable);
+          values.push(node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_getValues(context, operator, tmp[1], tmp[2] || tmp[3]));
+        });
+        if (operator && operator !== "+") {
+          var separator = ",";
+          if (operator === "?") {
+            separator = "&";
+          } else if (operator !== "#") {
+            separator = operator;
+          }
+          return (values.length !== 0 ? operator : "") + values.join(separator);
+        } else {
+          return values.join(",");
+        }
+      } else {
+        return node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_encodeReserved(literal);
+      }
+    }
+  );
+  if (template === "/") {
+    return template;
+  } else {
+    return template.replace(/\/$/, "");
+  }
+}
+
+// pkg/dist-src/parse.js
+function core_node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_parse(options) {
+  let method = options.method.toUpperCase();
+  let url = (options.url || "/").replace(/:([a-z]\w+)/g, "{$1}");
+  let headers = Object.assign({}, options.headers);
+  let body;
+  let parameters = core_node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_omit(options, [
+    "method",
+    "baseUrl",
+    "url",
+    "headers",
+    "request",
+    "mediaType"
+  ]);
+  const urlVariableNames = node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_extractUrlVariableNames(url);
+  url = node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_parseUrl(url).expand(parameters);
+  if (!/^http/.test(url)) {
+    url = options.baseUrl + url;
+  }
+  const omittedParameters = Object.keys(options).filter((option) => urlVariableNames.includes(option)).concat("baseUrl");
+  const remainingParameters = core_node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_omit(parameters, omittedParameters);
+  const isBinaryRequest = /application\/octet-stream/i.test(headers.accept);
+  if (!isBinaryRequest) {
+    if (options.mediaType.format) {
+      headers.accept = headers.accept.split(/,/).map(
+        (format) => format.replace(
+          /application\/vnd(\.\w+)(\.v3)?(\.\w+)?(\+json)?$/,
+          `application/vnd$1$2.${options.mediaType.format}`
+        )
+      ).join(",");
+    }
+    if (url.endsWith("/graphql")) {
+      if (options.mediaType.previews?.length) {
+        const previewsFromAcceptHeader = headers.accept.match(/(?<![\w-])[\w-]+(?=-preview)/g) || [];
+        headers.accept = previewsFromAcceptHeader.concat(options.mediaType.previews).map((preview) => {
+          const format = options.mediaType.format ? `.${options.mediaType.format}` : "+json";
+          return `application/vnd.github.${preview}-preview${format}`;
+        }).join(",");
+      }
+    }
+  }
+  if (["GET", "HEAD"].includes(method)) {
+    url = node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_addQueryParameters(url, remainingParameters);
+  } else {
+    if ("data" in remainingParameters) {
+      body = remainingParameters.data;
+    } else {
+      if (Object.keys(remainingParameters).length) {
+        body = remainingParameters;
+      }
+    }
+  }
+  if (!headers["content-type"] && typeof body !== "undefined") {
+    headers["content-type"] = "application/json; charset=utf-8";
+  }
+  if (["PATCH", "PUT"].includes(method) && typeof body === "undefined") {
+    body = "";
+  }
+  return Object.assign(
+    { method, url, headers },
+    typeof body !== "undefined" ? { body } : null,
+    options.request ? { request: options.request } : null
+  );
+}
+
+// pkg/dist-src/endpoint-with-defaults.js
+function node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_endpointWithDefaults(defaults, route, options) {
+  return core_node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_parse(node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_merge(defaults, route, options));
+}
+
+// pkg/dist-src/with-defaults.js
+function core_node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_withDefaults(oldDefaults, newDefaults) {
+  const DEFAULTS2 = node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_merge(oldDefaults, newDefaults);
+  const endpoint2 = node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_endpointWithDefaults.bind(null, DEFAULTS2);
+  return Object.assign(endpoint2, {
+    DEFAULTS: DEFAULTS2,
+    defaults: core_node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_withDefaults.bind(null, DEFAULTS2),
+    merge: node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_merge.bind(null, DEFAULTS2),
+    parse: core_node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_parse
+  });
+}
+
+// pkg/dist-src/index.js
+var node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_endpoint = core_node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_withDefaults(null, node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_DEFAULTS);
+
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/oauth-app/node_modules/@octokit/core/node_modules/@octokit/request/dist-bundle/index.js
+// pkg/dist-src/index.js
+
+
+// pkg/dist-src/defaults.js
+
+
+// pkg/dist-src/version.js
+var core_node_modules_octokit_request_dist_bundle_VERSION = "10.0.3";
+
+// pkg/dist-src/defaults.js
+var core_node_modules_octokit_request_dist_bundle_defaults_default = {
+  headers: {
+    "user-agent": `octokit-request.js/${core_node_modules_octokit_request_dist_bundle_VERSION} ${oauth_app_node_modules_universal_user_agent_getUserAgent()}`
+  }
+};
+
+// pkg/dist-src/fetch-wrapper.js
+
+
+// pkg/dist-src/is-plain-object.js
+function core_node_modules_octokit_request_dist_bundle_isPlainObject(value) {
+  if (typeof value !== "object" || value === null) return false;
+  if (Object.prototype.toString.call(value) !== "[object Object]") return false;
+  const proto = Object.getPrototypeOf(value);
+  if (proto === null) return true;
+  const Ctor = Object.prototype.hasOwnProperty.call(proto, "constructor") && proto.constructor;
+  return typeof Ctor === "function" && Ctor instanceof Ctor && Function.prototype.call(Ctor) === Function.prototype.call(value);
+}
+
+// pkg/dist-src/fetch-wrapper.js
+
+async function core_node_modules_octokit_request_dist_bundle_fetchWrapper(requestOptions) {
+  const fetch = requestOptions.request?.fetch || globalThis.fetch;
+  if (!fetch) {
+    throw new Error(
+      "fetch is not set. Please pass a fetch implementation as new Octokit({ request: { fetch }}). Learn more at https://github.com/octokit/octokit.js/#fetch-missing"
+    );
+  }
+  const log = requestOptions.request?.log || console;
+  const parseSuccessResponseBody = requestOptions.request?.parseSuccessResponseBody !== false;
+  const body = core_node_modules_octokit_request_dist_bundle_isPlainObject(requestOptions.body) || Array.isArray(requestOptions.body) ? JSON.stringify(requestOptions.body) : requestOptions.body;
+  const requestHeaders = Object.fromEntries(
+    Object.entries(requestOptions.headers).map(([name, value]) => [
+      name,
+      String(value)
+    ])
+  );
+  let fetchResponse;
+  try {
+    fetchResponse = await fetch(requestOptions.url, {
+      method: requestOptions.method,
+      body,
+      redirect: requestOptions.request?.redirect,
+      headers: requestHeaders,
+      signal: requestOptions.request?.signal,
+      // duplex must be set if request.body is ReadableStream or Async Iterables.
+      // See https://fetch.spec.whatwg.org/#dom-requestinit-duplex.
+      ...requestOptions.body && { duplex: "half" }
+    });
+  } catch (error) {
+    let message = "Unknown Error";
+    if (error instanceof Error) {
+      if (error.name === "AbortError") {
+        error.status = 500;
+        throw error;
+      }
+      message = error.message;
+      if (error.name === "TypeError" && "cause" in error) {
+        if (error.cause instanceof Error) {
+          message = error.cause.message;
+        } else if (typeof error.cause === "string") {
+          message = error.cause;
+        }
+      }
+    }
+    const requestError = new RequestError(message, 500, {
+      request: requestOptions
+    });
+    requestError.cause = error;
+    throw requestError;
+  }
+  const status = fetchResponse.status;
+  const url = fetchResponse.url;
+  const responseHeaders = {};
+  for (const [key, value] of fetchResponse.headers) {
+    responseHeaders[key] = value;
+  }
+  const octokitResponse = {
+    url,
+    status,
+    headers: responseHeaders,
+    data: ""
+  };
+  if ("deprecation" in responseHeaders) {
+    const matches = responseHeaders.link && responseHeaders.link.match(/<([^<>]+)>; rel="deprecation"/);
+    const deprecationLink = matches && matches.pop();
+    log.warn(
+      `[@octokit/request] "${requestOptions.method} ${requestOptions.url}" is deprecated. It is scheduled to be removed on ${responseHeaders.sunset}${deprecationLink ? `. See ${deprecationLink}` : ""}`
+    );
+  }
+  if (status === 204 || status === 205) {
+    return octokitResponse;
+  }
+  if (requestOptions.method === "HEAD") {
+    if (status < 400) {
+      return octokitResponse;
+    }
+    throw new RequestError(fetchResponse.statusText, status, {
+      response: octokitResponse,
+      request: requestOptions
+    });
+  }
+  if (status === 304) {
+    octokitResponse.data = await core_node_modules_octokit_request_dist_bundle_getResponseData(fetchResponse);
+    throw new RequestError("Not modified", status, {
+      response: octokitResponse,
+      request: requestOptions
+    });
+  }
+  if (status >= 400) {
+    octokitResponse.data = await core_node_modules_octokit_request_dist_bundle_getResponseData(fetchResponse);
+    throw new RequestError(core_node_modules_octokit_request_dist_bundle_toErrorMessage(octokitResponse.data), status, {
+      response: octokitResponse,
+      request: requestOptions
+    });
+  }
+  octokitResponse.data = parseSuccessResponseBody ? await core_node_modules_octokit_request_dist_bundle_getResponseData(fetchResponse) : fetchResponse.body;
+  return octokitResponse;
+}
+async function core_node_modules_octokit_request_dist_bundle_getResponseData(response) {
+  const contentType = response.headers.get("content-type");
+  if (!contentType) {
+    return response.text().catch(() => "");
+  }
+  const mimetype = (0,fast_content_type_parse/* safeParse */.xL)(contentType);
+  if (core_node_modules_octokit_request_dist_bundle_isJSONResponse(mimetype)) {
+    let text = "";
+    try {
+      text = await response.text();
+      return JSON.parse(text);
+    } catch (err) {
+      return text;
+    }
+  } else if (mimetype.type.startsWith("text/") || mimetype.parameters.charset?.toLowerCase() === "utf-8") {
+    return response.text().catch(() => "");
+  } else {
+    return response.arrayBuffer().catch(() => new ArrayBuffer(0));
+  }
+}
+function core_node_modules_octokit_request_dist_bundle_isJSONResponse(mimetype) {
+  return mimetype.type === "application/json" || mimetype.type === "application/scim+json";
+}
+function core_node_modules_octokit_request_dist_bundle_toErrorMessage(data) {
+  if (typeof data === "string") {
+    return data;
+  }
+  if (data instanceof ArrayBuffer) {
+    return "Unknown error";
+  }
+  if ("message" in data) {
+    const suffix = "documentation_url" in data ? ` - ${data.documentation_url}` : "";
+    return Array.isArray(data.errors) ? `${data.message}: ${data.errors.map((v) => JSON.stringify(v)).join(", ")}${suffix}` : `${data.message}${suffix}`;
+  }
+  return `Unknown error: ${JSON.stringify(data)}`;
+}
+
+// pkg/dist-src/with-defaults.js
+function core_node_modules_octokit_request_dist_bundle_withDefaults(oldEndpoint, newDefaults) {
+  const endpoint2 = oldEndpoint.defaults(newDefaults);
+  const newApi = function(route, parameters) {
+    const endpointOptions = endpoint2.merge(route, parameters);
+    if (!endpointOptions.request || !endpointOptions.request.hook) {
+      return core_node_modules_octokit_request_dist_bundle_fetchWrapper(endpoint2.parse(endpointOptions));
+    }
+    const request2 = (route2, parameters2) => {
+      return core_node_modules_octokit_request_dist_bundle_fetchWrapper(
+        endpoint2.parse(endpoint2.merge(route2, parameters2))
+      );
+    };
+    Object.assign(request2, {
+      endpoint: endpoint2,
+      defaults: core_node_modules_octokit_request_dist_bundle_withDefaults.bind(null, endpoint2)
+    });
+    return endpointOptions.request.hook(request2, endpointOptions);
+  };
+  return Object.assign(newApi, {
+    endpoint: endpoint2,
+    defaults: core_node_modules_octokit_request_dist_bundle_withDefaults.bind(null, endpoint2)
+  });
+}
+
+// pkg/dist-src/index.js
+var core_node_modules_octokit_request_dist_bundle_request = core_node_modules_octokit_request_dist_bundle_withDefaults(node_modules_octokit_request_node_modules_octokit_endpoint_dist_bundle_endpoint, core_node_modules_octokit_request_dist_bundle_defaults_default);
+
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/oauth-app/node_modules/@octokit/core/node_modules/@octokit/graphql/dist-bundle/index.js
+// pkg/dist-src/index.js
+
+
+
+// pkg/dist-src/version.js
+var node_modules_octokit_graphql_dist_bundle_VERSION = "0.0.0-development";
+
+// pkg/dist-src/with-defaults.js
+
+
+// pkg/dist-src/graphql.js
+
+
+// pkg/dist-src/error.js
+function graphql_dist_bundle_buildMessageForResponseErrors(data) {
+  return `Request failed due to following response errors:
+` + data.errors.map((e) => ` - ${e.message}`).join("\n");
+}
+var graphql_dist_bundle_GraphqlResponseError = class extends Error {
+  constructor(request2, headers, response) {
+    super(graphql_dist_bundle_buildMessageForResponseErrors(response));
+    this.request = request2;
+    this.headers = headers;
+    this.response = response;
+    this.errors = response.errors;
+    this.data = response.data;
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, this.constructor);
+    }
+  }
+  name = "GraphqlResponseError";
+  errors;
+  data;
+};
+
+// pkg/dist-src/graphql.js
+var graphql_dist_bundle_NON_VARIABLE_OPTIONS = [
+  "method",
+  "baseUrl",
+  "url",
+  "headers",
+  "request",
+  "query",
+  "mediaType",
+  "operationName"
+];
+var graphql_dist_bundle_FORBIDDEN_VARIABLE_OPTIONS = ["query", "method", "url"];
+var graphql_dist_bundle_GHES_V3_SUFFIX_REGEX = /\/api\/v3\/?$/;
+function graphql_dist_bundle_graphql(request2, query, options) {
+  if (options) {
+    if (typeof query === "string" && "query" in options) {
+      return Promise.reject(
+        new Error(`[@octokit/graphql] "query" cannot be used as variable name`)
+      );
+    }
+    for (const key in options) {
+      if (!graphql_dist_bundle_FORBIDDEN_VARIABLE_OPTIONS.includes(key)) continue;
+      return Promise.reject(
+        new Error(
+          `[@octokit/graphql] "${key}" cannot be used as variable name`
+        )
+      );
+    }
+  }
+  const parsedOptions = typeof query === "string" ? Object.assign({ query }, options) : query;
+  const requestOptions = Object.keys(
+    parsedOptions
+  ).reduce((result, key) => {
+    if (graphql_dist_bundle_NON_VARIABLE_OPTIONS.includes(key)) {
+      result[key] = parsedOptions[key];
+      return result;
+    }
+    if (!result.variables) {
+      result.variables = {};
+    }
+    result.variables[key] = parsedOptions[key];
+    return result;
+  }, {});
+  const baseUrl = parsedOptions.baseUrl || request2.endpoint.DEFAULTS.baseUrl;
+  if (graphql_dist_bundle_GHES_V3_SUFFIX_REGEX.test(baseUrl)) {
+    requestOptions.url = baseUrl.replace(graphql_dist_bundle_GHES_V3_SUFFIX_REGEX, "/api/graphql");
+  }
+  return request2(requestOptions).then((response) => {
+    if (response.data.errors) {
+      const headers = {};
+      for (const key of Object.keys(response.headers)) {
+        headers[key] = response.headers[key];
+      }
+      throw new graphql_dist_bundle_GraphqlResponseError(
+        requestOptions,
+        headers,
+        response.data
+      );
+    }
+    return response.data.data;
+  });
+}
+
+// pkg/dist-src/with-defaults.js
+function node_modules_octokit_graphql_dist_bundle_withDefaults(request2, newDefaults) {
+  const newRequest = request2.defaults(newDefaults);
+  const newApi = (query, options) => {
+    return graphql_dist_bundle_graphql(newRequest, query, options);
+  };
+  return Object.assign(newApi, {
+    defaults: node_modules_octokit_graphql_dist_bundle_withDefaults.bind(null, newRequest),
+    endpoint: newRequest.endpoint
+  });
+}
+
+// pkg/dist-src/index.js
+var graphql_dist_bundle_graphql2 = node_modules_octokit_graphql_dist_bundle_withDefaults(core_node_modules_octokit_request_dist_bundle_request, {
+  headers: {
+    "user-agent": `octokit-graphql.js/${node_modules_octokit_graphql_dist_bundle_VERSION} ${oauth_app_node_modules_universal_user_agent_getUserAgent()}`
+  },
+  method: "POST",
+  url: "/graphql"
+});
+function graphql_dist_bundle_withCustomRequest(customRequest) {
+  return node_modules_octokit_graphql_dist_bundle_withDefaults(customRequest, {
+    method: "POST",
+    url: "/graphql"
+  });
+}
+
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/oauth-app/node_modules/@octokit/core/node_modules/@octokit/auth-token/dist-bundle/index.js
+// pkg/dist-src/is-jwt.js
+var auth_token_dist_bundle_b64url = "(?:[a-zA-Z0-9_-]+)";
+var _octokit_auth_token_dist_bundle_sep = "\\.";
+var auth_token_dist_bundle_jwtRE = new RegExp(`^${auth_token_dist_bundle_b64url}${_octokit_auth_token_dist_bundle_sep}${auth_token_dist_bundle_b64url}${_octokit_auth_token_dist_bundle_sep}${auth_token_dist_bundle_b64url}$`);
+var auth_token_dist_bundle_isJWT = auth_token_dist_bundle_jwtRE.test.bind(auth_token_dist_bundle_jwtRE);
+
+// pkg/dist-src/auth.js
+async function auth_token_dist_bundle_auth(token) {
+  const isApp = auth_token_dist_bundle_isJWT(token);
+  const isInstallation = token.startsWith("v1.") || token.startsWith("ghs_");
+  const isUserToServer = token.startsWith("ghu_");
+  const tokenType = isApp ? "app" : isInstallation ? "installation" : isUserToServer ? "user-to-server" : "oauth";
+  return {
+    type: "token",
+    token,
+    tokenType
+  };
+}
+
+// pkg/dist-src/with-authorization-prefix.js
+function auth_token_dist_bundle_withAuthorizationPrefix(token) {
+  if (token.split(/\./).length === 3) {
+    return `bearer ${token}`;
+  }
+  return `token ${token}`;
+}
+
+// pkg/dist-src/hook.js
+async function auth_token_dist_bundle_hook(token, request, route, parameters) {
+  const endpoint = request.endpoint.merge(
+    route,
+    parameters
+  );
+  endpoint.headers.authorization = auth_token_dist_bundle_withAuthorizationPrefix(token);
+  return request(endpoint);
+}
+
+// pkg/dist-src/index.js
+var auth_token_dist_bundle_createTokenAuth = function createTokenAuth2(token) {
+  if (!token) {
+    throw new Error("[@octokit/auth-token] No token passed to createTokenAuth");
+  }
+  if (typeof token !== "string") {
+    throw new Error(
+      "[@octokit/auth-token] Token passed to createTokenAuth is not a string"
+    );
+  }
+  token = token.replace(/^(token|bearer) +/i, "");
+  return Object.assign(auth_token_dist_bundle_auth.bind(null, token), {
+    hook: auth_token_dist_bundle_hook.bind(null, token)
+  });
+};
+
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/oauth-app/node_modules/@octokit/core/dist-src/version.js
+const _octokit_core_dist_src_version_VERSION = "7.0.3";
+
+
+;// CONCATENATED MODULE: ../../node_modules/@octokit/oauth-app/node_modules/@octokit/core/dist-src/index.js
+
+
+
+
+
+
+const _octokit_core_dist_src_noop = () => {
+};
+const core_dist_src_consoleWarn = console.warn.bind(console);
+const core_dist_src_consoleError = console.error.bind(console);
+function _octokit_core_dist_src_createLogger(logger = {}) {
+  if (typeof logger.debug !== "function") {
+    logger.debug = _octokit_core_dist_src_noop;
+  }
+  if (typeof logger.info !== "function") {
+    logger.info = _octokit_core_dist_src_noop;
+  }
+  if (typeof logger.warn !== "function") {
+    logger.warn = core_dist_src_consoleWarn;
+  }
+  if (typeof logger.error !== "function") {
+    logger.error = core_dist_src_consoleError;
+  }
+  return logger;
+}
+const core_dist_src_userAgentTrail = `octokit-core.js/${_octokit_core_dist_src_version_VERSION} ${oauth_app_node_modules_universal_user_agent_getUserAgent()}`;
+class core_dist_src_Octokit {
+  static VERSION = _octokit_core_dist_src_version_VERSION;
+  static defaults(defaults) {
+    const OctokitWithDefaults = class extends this {
+      constructor(...args) {
+        const options = args[0] || {};
+        if (typeof defaults === "function") {
+          super(defaults(options));
+          return;
+        }
+        super(
+          Object.assign(
+            {},
+            defaults,
+            options,
+            options.userAgent && defaults.userAgent ? {
+              userAgent: `${options.userAgent} ${defaults.userAgent}`
+            } : null
+          )
+        );
+      }
+    };
+    return OctokitWithDefaults;
+  }
+  static plugins = [];
+  /**
+   * Attach a plugin (or many) to your Octokit instance.
+   *
+   * @example
+   * const API = Octokit.plugin(plugin1, plugin2, plugin3, ...)
+   */
+  static plugin(...newPlugins) {
+    const currentPlugins = this.plugins;
+    const NewOctokit = class extends this {
+      static plugins = currentPlugins.concat(
+        newPlugins.filter((plugin) => !currentPlugins.includes(plugin))
+      );
+    };
+    return NewOctokit;
+  }
+  constructor(options = {}) {
+    const hook = new core_node_modules_before_after_hook.Collection();
+    const requestDefaults = {
+      baseUrl: core_node_modules_octokit_request_dist_bundle_request.endpoint.DEFAULTS.baseUrl,
+      headers: {},
+      request: Object.assign({}, options.request, {
+        // @ts-ignore internal usage only, no need to type
+        hook: hook.bind(null, "request")
+      }),
+      mediaType: {
+        previews: [],
+        format: ""
+      }
+    };
+    requestDefaults.headers["user-agent"] = options.userAgent ? `${options.userAgent} ${core_dist_src_userAgentTrail}` : core_dist_src_userAgentTrail;
+    if (options.baseUrl) {
+      requestDefaults.baseUrl = options.baseUrl;
+    }
+    if (options.previews) {
+      requestDefaults.mediaType.previews = options.previews;
+    }
+    if (options.timeZone) {
+      requestDefaults.headers["time-zone"] = options.timeZone;
+    }
+    this.request = core_node_modules_octokit_request_dist_bundle_request.defaults(requestDefaults);
+    this.graphql = graphql_dist_bundle_withCustomRequest(this.request).defaults(requestDefaults);
+    this.log = _octokit_core_dist_src_createLogger(options.log);
+    this.hook = hook;
+    if (!options.authStrategy) {
+      if (!options.auth) {
+        this.auth = async () => ({
+          type: "unauthenticated"
+        });
+      } else {
+        const auth = auth_token_dist_bundle_createTokenAuth(options.auth);
+        hook.wrap("request", auth.hook);
+        this.auth = auth;
+      }
+    } else {
+      const { authStrategy, ...otherOptions } = options;
+      const auth = authStrategy(
+        Object.assign(
+          {
+            request: this.request,
+            log: this.log,
+            // we pass the current octokit instance as well as its constructor options
+            // to allow for authentication strategies that return a new octokit instance
+            // that shares the same internal state as the current one. The original
+            // requirement for this was the "event-octokit" authentication strategy
+            // of https://github.com/probot/octokit-auth-probot.
+            octokit: this,
+            octokitOptions: otherOptions
+          },
+          options.auth
+        )
+      );
+      hook.wrap("request", auth.hook);
+      this.auth = auth;
+    }
+    const classConstructor = this.constructor;
+    for (let i = 0; i < classConstructor.plugins.length; ++i) {
+      Object.assign(this, classConstructor.plugins[i](this, options));
+    }
+  }
+  // assigned during constructor
+  request;
+  graphql;
+  log;
+  hook;
+  // TODO: type `octokit.auth` based on passed options.authStrategy
+  auth;
 }
 
 
@@ -53865,8 +72630,8 @@ function addEventHandler(state, eventName, eventHandler) {
 // pkg/dist-src/oauth-app-octokit.js
 
 
-var OAuthAppOctokit = dist_src_Octokit.defaults({
-  userAgent: `octokit-oauth-app.js/${oauth_app_dist_node_VERSION} ${getUserAgent()}`
+var OAuthAppOctokit = core_dist_src_Octokit.defaults({
+  userAgent: `octokit-oauth-app.js/${oauth_app_dist_node_VERSION} ${oauth_app_node_modules_universal_user_agent_getUserAgent()}`
 });
 
 // pkg/dist-src/methods/get-user-octokit.js
@@ -55544,6 +74309,406 @@ var Webhooks = class {
 };
 
 
+;// CONCATENATED MODULE: ../../node_modules/@octokit/app/node_modules/@octokit/plugin-paginate-rest/dist-bundle/index.js
+// pkg/dist-src/version.js
+var _octokit_plugin_paginate_rest_dist_bundle_VERSION = "0.0.0-development";
+
+// pkg/dist-src/normalize-paginated-list-response.js
+function dist_bundle_normalizePaginatedListResponse(response) {
+  if (!response.data) {
+    return {
+      ...response,
+      data: []
+    };
+  }
+  const responseNeedsNormalization = ("total_count" in response.data || "total_commits" in response.data) && !("url" in response.data);
+  if (!responseNeedsNormalization) return response;
+  const incompleteResults = response.data.incomplete_results;
+  const repositorySelection = response.data.repository_selection;
+  const totalCount = response.data.total_count;
+  const totalCommits = response.data.total_commits;
+  delete response.data.incomplete_results;
+  delete response.data.repository_selection;
+  delete response.data.total_count;
+  delete response.data.total_commits;
+  const namespaceKey = Object.keys(response.data)[0];
+  const data = response.data[namespaceKey];
+  response.data = data;
+  if (typeof incompleteResults !== "undefined") {
+    response.data.incomplete_results = incompleteResults;
+  }
+  if (typeof repositorySelection !== "undefined") {
+    response.data.repository_selection = repositorySelection;
+  }
+  response.data.total_count = totalCount;
+  response.data.total_commits = totalCommits;
+  return response;
+}
+
+// pkg/dist-src/iterator.js
+function dist_bundle_iterator(octokit, route, parameters) {
+  const options = typeof route === "function" ? route.endpoint(parameters) : octokit.request.endpoint(route, parameters);
+  const requestMethod = typeof route === "function" ? route : octokit.request;
+  const method = options.method;
+  const headers = options.headers;
+  let url = options.url;
+  return {
+    [Symbol.asyncIterator]: () => ({
+      async next() {
+        if (!url) return { done: true };
+        try {
+          const response = await requestMethod({ method, url, headers });
+          const normalizedResponse = dist_bundle_normalizePaginatedListResponse(response);
+          url = ((normalizedResponse.headers.link || "").match(
+            /<([^<>]+)>;\s*rel="next"/
+          ) || [])[1];
+          if (!url && "total_commits" in normalizedResponse.data) {
+            const parsedUrl = new URL(normalizedResponse.url);
+            const params = parsedUrl.searchParams;
+            const page = parseInt(params.get("page") || "1", 10);
+            const per_page = parseInt(params.get("per_page") || "250", 10);
+            if (page * per_page < normalizedResponse.data.total_commits) {
+              params.set("page", String(page + 1));
+              url = parsedUrl.toString();
+            }
+          }
+          return { value: normalizedResponse };
+        } catch (error) {
+          if (error.status !== 409) throw error;
+          url = "";
+          return {
+            value: {
+              status: 200,
+              headers: {},
+              data: []
+            }
+          };
+        }
+      }
+    })
+  };
+}
+
+// pkg/dist-src/paginate.js
+function dist_bundle_paginate(octokit, route, parameters, mapFn) {
+  if (typeof parameters === "function") {
+    mapFn = parameters;
+    parameters = void 0;
+  }
+  return dist_bundle_gather(
+    octokit,
+    [],
+    dist_bundle_iterator(octokit, route, parameters)[Symbol.asyncIterator](),
+    mapFn
+  );
+}
+function dist_bundle_gather(octokit, results, iterator2, mapFn) {
+  return iterator2.next().then((result) => {
+    if (result.done) {
+      return results;
+    }
+    let earlyExit = false;
+    function done() {
+      earlyExit = true;
+    }
+    results = results.concat(
+      mapFn ? mapFn(result.value, done) : result.value.data
+    );
+    if (earlyExit) {
+      return results;
+    }
+    return dist_bundle_gather(octokit, results, iterator2, mapFn);
+  });
+}
+
+// pkg/dist-src/compose-paginate.js
+var dist_bundle_composePaginateRest = Object.assign(dist_bundle_paginate, {
+  iterator: dist_bundle_iterator
+});
+
+// pkg/dist-src/generated/paginating-endpoints.js
+var dist_bundle_paginatingEndpoints = (/* unused pure expression or super */ null && ([
+  "GET /advisories",
+  "GET /app/hook/deliveries",
+  "GET /app/installation-requests",
+  "GET /app/installations",
+  "GET /assignments/{assignment_id}/accepted_assignments",
+  "GET /classrooms",
+  "GET /classrooms/{classroom_id}/assignments",
+  "GET /enterprises/{enterprise}/code-security/configurations",
+  "GET /enterprises/{enterprise}/code-security/configurations/{configuration_id}/repositories",
+  "GET /enterprises/{enterprise}/dependabot/alerts",
+  "GET /enterprises/{enterprise}/secret-scanning/alerts",
+  "GET /events",
+  "GET /gists",
+  "GET /gists/public",
+  "GET /gists/starred",
+  "GET /gists/{gist_id}/comments",
+  "GET /gists/{gist_id}/commits",
+  "GET /gists/{gist_id}/forks",
+  "GET /installation/repositories",
+  "GET /issues",
+  "GET /licenses",
+  "GET /marketplace_listing/plans",
+  "GET /marketplace_listing/plans/{plan_id}/accounts",
+  "GET /marketplace_listing/stubbed/plans",
+  "GET /marketplace_listing/stubbed/plans/{plan_id}/accounts",
+  "GET /networks/{owner}/{repo}/events",
+  "GET /notifications",
+  "GET /organizations",
+  "GET /orgs/{org}/actions/cache/usage-by-repository",
+  "GET /orgs/{org}/actions/hosted-runners",
+  "GET /orgs/{org}/actions/permissions/repositories",
+  "GET /orgs/{org}/actions/runner-groups",
+  "GET /orgs/{org}/actions/runner-groups/{runner_group_id}/hosted-runners",
+  "GET /orgs/{org}/actions/runner-groups/{runner_group_id}/repositories",
+  "GET /orgs/{org}/actions/runner-groups/{runner_group_id}/runners",
+  "GET /orgs/{org}/actions/runners",
+  "GET /orgs/{org}/actions/secrets",
+  "GET /orgs/{org}/actions/secrets/{secret_name}/repositories",
+  "GET /orgs/{org}/actions/variables",
+  "GET /orgs/{org}/actions/variables/{name}/repositories",
+  "GET /orgs/{org}/attestations/{subject_digest}",
+  "GET /orgs/{org}/blocks",
+  "GET /orgs/{org}/campaigns",
+  "GET /orgs/{org}/code-scanning/alerts",
+  "GET /orgs/{org}/code-security/configurations",
+  "GET /orgs/{org}/code-security/configurations/{configuration_id}/repositories",
+  "GET /orgs/{org}/codespaces",
+  "GET /orgs/{org}/codespaces/secrets",
+  "GET /orgs/{org}/codespaces/secrets/{secret_name}/repositories",
+  "GET /orgs/{org}/copilot/billing/seats",
+  "GET /orgs/{org}/copilot/metrics",
+  "GET /orgs/{org}/dependabot/alerts",
+  "GET /orgs/{org}/dependabot/secrets",
+  "GET /orgs/{org}/dependabot/secrets/{secret_name}/repositories",
+  "GET /orgs/{org}/events",
+  "GET /orgs/{org}/failed_invitations",
+  "GET /orgs/{org}/hooks",
+  "GET /orgs/{org}/hooks/{hook_id}/deliveries",
+  "GET /orgs/{org}/insights/api/route-stats/{actor_type}/{actor_id}",
+  "GET /orgs/{org}/insights/api/subject-stats",
+  "GET /orgs/{org}/insights/api/user-stats/{user_id}",
+  "GET /orgs/{org}/installations",
+  "GET /orgs/{org}/invitations",
+  "GET /orgs/{org}/invitations/{invitation_id}/teams",
+  "GET /orgs/{org}/issues",
+  "GET /orgs/{org}/members",
+  "GET /orgs/{org}/members/{username}/codespaces",
+  "GET /orgs/{org}/migrations",
+  "GET /orgs/{org}/migrations/{migration_id}/repositories",
+  "GET /orgs/{org}/organization-roles/{role_id}/teams",
+  "GET /orgs/{org}/organization-roles/{role_id}/users",
+  "GET /orgs/{org}/outside_collaborators",
+  "GET /orgs/{org}/packages",
+  "GET /orgs/{org}/packages/{package_type}/{package_name}/versions",
+  "GET /orgs/{org}/personal-access-token-requests",
+  "GET /orgs/{org}/personal-access-token-requests/{pat_request_id}/repositories",
+  "GET /orgs/{org}/personal-access-tokens",
+  "GET /orgs/{org}/personal-access-tokens/{pat_id}/repositories",
+  "GET /orgs/{org}/private-registries",
+  "GET /orgs/{org}/projects",
+  "GET /orgs/{org}/properties/values",
+  "GET /orgs/{org}/public_members",
+  "GET /orgs/{org}/repos",
+  "GET /orgs/{org}/rulesets",
+  "GET /orgs/{org}/rulesets/rule-suites",
+  "GET /orgs/{org}/rulesets/{ruleset_id}/history",
+  "GET /orgs/{org}/secret-scanning/alerts",
+  "GET /orgs/{org}/security-advisories",
+  "GET /orgs/{org}/settings/network-configurations",
+  "GET /orgs/{org}/team/{team_slug}/copilot/metrics",
+  "GET /orgs/{org}/teams",
+  "GET /orgs/{org}/teams/{team_slug}/discussions",
+  "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments",
+  "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions",
+  "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions",
+  "GET /orgs/{org}/teams/{team_slug}/invitations",
+  "GET /orgs/{org}/teams/{team_slug}/members",
+  "GET /orgs/{org}/teams/{team_slug}/projects",
+  "GET /orgs/{org}/teams/{team_slug}/repos",
+  "GET /orgs/{org}/teams/{team_slug}/teams",
+  "GET /projects/columns/{column_id}/cards",
+  "GET /projects/{project_id}/collaborators",
+  "GET /projects/{project_id}/columns",
+  "GET /repos/{owner}/{repo}/actions/artifacts",
+  "GET /repos/{owner}/{repo}/actions/caches",
+  "GET /repos/{owner}/{repo}/actions/organization-secrets",
+  "GET /repos/{owner}/{repo}/actions/organization-variables",
+  "GET /repos/{owner}/{repo}/actions/runners",
+  "GET /repos/{owner}/{repo}/actions/runs",
+  "GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts",
+  "GET /repos/{owner}/{repo}/actions/runs/{run_id}/attempts/{attempt_number}/jobs",
+  "GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs",
+  "GET /repos/{owner}/{repo}/actions/secrets",
+  "GET /repos/{owner}/{repo}/actions/variables",
+  "GET /repos/{owner}/{repo}/actions/workflows",
+  "GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs",
+  "GET /repos/{owner}/{repo}/activity",
+  "GET /repos/{owner}/{repo}/assignees",
+  "GET /repos/{owner}/{repo}/attestations/{subject_digest}",
+  "GET /repos/{owner}/{repo}/branches",
+  "GET /repos/{owner}/{repo}/check-runs/{check_run_id}/annotations",
+  "GET /repos/{owner}/{repo}/check-suites/{check_suite_id}/check-runs",
+  "GET /repos/{owner}/{repo}/code-scanning/alerts",
+  "GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}/instances",
+  "GET /repos/{owner}/{repo}/code-scanning/analyses",
+  "GET /repos/{owner}/{repo}/codespaces",
+  "GET /repos/{owner}/{repo}/codespaces/devcontainers",
+  "GET /repos/{owner}/{repo}/codespaces/secrets",
+  "GET /repos/{owner}/{repo}/collaborators",
+  "GET /repos/{owner}/{repo}/comments",
+  "GET /repos/{owner}/{repo}/comments/{comment_id}/reactions",
+  "GET /repos/{owner}/{repo}/commits",
+  "GET /repos/{owner}/{repo}/commits/{commit_sha}/comments",
+  "GET /repos/{owner}/{repo}/commits/{commit_sha}/pulls",
+  "GET /repos/{owner}/{repo}/commits/{ref}/check-runs",
+  "GET /repos/{owner}/{repo}/commits/{ref}/check-suites",
+  "GET /repos/{owner}/{repo}/commits/{ref}/status",
+  "GET /repos/{owner}/{repo}/commits/{ref}/statuses",
+  "GET /repos/{owner}/{repo}/compare/{basehead}",
+  "GET /repos/{owner}/{repo}/compare/{base}...{head}",
+  "GET /repos/{owner}/{repo}/contributors",
+  "GET /repos/{owner}/{repo}/dependabot/alerts",
+  "GET /repos/{owner}/{repo}/dependabot/secrets",
+  "GET /repos/{owner}/{repo}/deployments",
+  "GET /repos/{owner}/{repo}/deployments/{deployment_id}/statuses",
+  "GET /repos/{owner}/{repo}/environments",
+  "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment-branch-policies",
+  "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment_protection_rules/apps",
+  "GET /repos/{owner}/{repo}/environments/{environment_name}/secrets",
+  "GET /repos/{owner}/{repo}/environments/{environment_name}/variables",
+  "GET /repos/{owner}/{repo}/events",
+  "GET /repos/{owner}/{repo}/forks",
+  "GET /repos/{owner}/{repo}/hooks",
+  "GET /repos/{owner}/{repo}/hooks/{hook_id}/deliveries",
+  "GET /repos/{owner}/{repo}/invitations",
+  "GET /repos/{owner}/{repo}/issues",
+  "GET /repos/{owner}/{repo}/issues/comments",
+  "GET /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions",
+  "GET /repos/{owner}/{repo}/issues/events",
+  "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
+  "GET /repos/{owner}/{repo}/issues/{issue_number}/events",
+  "GET /repos/{owner}/{repo}/issues/{issue_number}/labels",
+  "GET /repos/{owner}/{repo}/issues/{issue_number}/reactions",
+  "GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues",
+  "GET /repos/{owner}/{repo}/issues/{issue_number}/timeline",
+  "GET /repos/{owner}/{repo}/keys",
+  "GET /repos/{owner}/{repo}/labels",
+  "GET /repos/{owner}/{repo}/milestones",
+  "GET /repos/{owner}/{repo}/milestones/{milestone_number}/labels",
+  "GET /repos/{owner}/{repo}/notifications",
+  "GET /repos/{owner}/{repo}/pages/builds",
+  "GET /repos/{owner}/{repo}/projects",
+  "GET /repos/{owner}/{repo}/pulls",
+  "GET /repos/{owner}/{repo}/pulls/comments",
+  "GET /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions",
+  "GET /repos/{owner}/{repo}/pulls/{pull_number}/comments",
+  "GET /repos/{owner}/{repo}/pulls/{pull_number}/commits",
+  "GET /repos/{owner}/{repo}/pulls/{pull_number}/files",
+  "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews",
+  "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/comments",
+  "GET /repos/{owner}/{repo}/releases",
+  "GET /repos/{owner}/{repo}/releases/{release_id}/assets",
+  "GET /repos/{owner}/{repo}/releases/{release_id}/reactions",
+  "GET /repos/{owner}/{repo}/rules/branches/{branch}",
+  "GET /repos/{owner}/{repo}/rulesets",
+  "GET /repos/{owner}/{repo}/rulesets/rule-suites",
+  "GET /repos/{owner}/{repo}/rulesets/{ruleset_id}/history",
+  "GET /repos/{owner}/{repo}/secret-scanning/alerts",
+  "GET /repos/{owner}/{repo}/secret-scanning/alerts/{alert_number}/locations",
+  "GET /repos/{owner}/{repo}/security-advisories",
+  "GET /repos/{owner}/{repo}/stargazers",
+  "GET /repos/{owner}/{repo}/subscribers",
+  "GET /repos/{owner}/{repo}/tags",
+  "GET /repos/{owner}/{repo}/teams",
+  "GET /repos/{owner}/{repo}/topics",
+  "GET /repositories",
+  "GET /search/code",
+  "GET /search/commits",
+  "GET /search/issues",
+  "GET /search/labels",
+  "GET /search/repositories",
+  "GET /search/topics",
+  "GET /search/users",
+  "GET /teams/{team_id}/discussions",
+  "GET /teams/{team_id}/discussions/{discussion_number}/comments",
+  "GET /teams/{team_id}/discussions/{discussion_number}/comments/{comment_number}/reactions",
+  "GET /teams/{team_id}/discussions/{discussion_number}/reactions",
+  "GET /teams/{team_id}/invitations",
+  "GET /teams/{team_id}/members",
+  "GET /teams/{team_id}/projects",
+  "GET /teams/{team_id}/repos",
+  "GET /teams/{team_id}/teams",
+  "GET /user/blocks",
+  "GET /user/codespaces",
+  "GET /user/codespaces/secrets",
+  "GET /user/emails",
+  "GET /user/followers",
+  "GET /user/following",
+  "GET /user/gpg_keys",
+  "GET /user/installations",
+  "GET /user/installations/{installation_id}/repositories",
+  "GET /user/issues",
+  "GET /user/keys",
+  "GET /user/marketplace_purchases",
+  "GET /user/marketplace_purchases/stubbed",
+  "GET /user/memberships/orgs",
+  "GET /user/migrations",
+  "GET /user/migrations/{migration_id}/repositories",
+  "GET /user/orgs",
+  "GET /user/packages",
+  "GET /user/packages/{package_type}/{package_name}/versions",
+  "GET /user/public_emails",
+  "GET /user/repos",
+  "GET /user/repository_invitations",
+  "GET /user/social_accounts",
+  "GET /user/ssh_signing_keys",
+  "GET /user/starred",
+  "GET /user/subscriptions",
+  "GET /user/teams",
+  "GET /users",
+  "GET /users/{username}/attestations/{subject_digest}",
+  "GET /users/{username}/events",
+  "GET /users/{username}/events/orgs/{org}",
+  "GET /users/{username}/events/public",
+  "GET /users/{username}/followers",
+  "GET /users/{username}/following",
+  "GET /users/{username}/gists",
+  "GET /users/{username}/gpg_keys",
+  "GET /users/{username}/keys",
+  "GET /users/{username}/orgs",
+  "GET /users/{username}/packages",
+  "GET /users/{username}/projects",
+  "GET /users/{username}/received_events",
+  "GET /users/{username}/received_events/public",
+  "GET /users/{username}/repos",
+  "GET /users/{username}/social_accounts",
+  "GET /users/{username}/ssh_signing_keys",
+  "GET /users/{username}/starred",
+  "GET /users/{username}/subscriptions"
+]));
+
+// pkg/dist-src/paginating-endpoints.js
+function dist_bundle_isPaginatingEndpoint(arg) {
+  if (typeof arg === "string") {
+    return dist_bundle_paginatingEndpoints.includes(arg);
+  } else {
+    return false;
+  }
+}
+
+// pkg/dist-src/index.js
+function dist_bundle_paginateRest(octokit) {
+  return {
+    paginate: Object.assign(dist_bundle_paginate.bind(null, octokit), {
+      iterator: dist_bundle_iterator.bind(null, octokit)
+    })
+  };
+}
+dist_bundle_paginateRest.VERSION = _octokit_plugin_paginate_rest_dist_bundle_VERSION;
+
+
 ;// CONCATENATED MODULE: ../../node_modules/@octokit/app/dist-node/index.js
 // pkg/dist-src/index.js
 
@@ -55638,7 +74803,7 @@ async function eachInstallation(app, callback) {
 function eachInstallationIterator(app) {
   return {
     async *[Symbol.asyncIterator]() {
-      const iterator = composePaginateRest.iterator(
+      const iterator = dist_bundle_composePaginateRest.iterator(
         app.octokit,
         "GET /app/installations"
       );
@@ -55691,7 +74856,7 @@ function eachRepositoryIterator(app, query) {
     async *[Symbol.asyncIterator]() {
       const iterator = query ? singleInstallationIterator(app, query.installationId) : app.eachInstallation.iterator();
       for await (const { octokit } of iterator) {
-        const repositoriesIterator = composePaginateRest.iterator(
+        const repositoriesIterator = dist_bundle_composePaginateRest.iterator(
           octokit,
           "GET /installation/repositories"
         );
@@ -55894,7 +75059,7 @@ var octokit_dist_bundle_VERSION = "0.0.0-development";
 
 // pkg/dist-src/octokit.js
 
-var Octokit = dist_src_Octokit.plugin(
+var dist_bundle_Octokit = Octokit.plugin(
   restEndpointMethods,
   paginateRest,
   paginateGraphQL,
@@ -55930,8 +75095,8 @@ function onSecondaryRateLimit(retryAfter, options, octokit) {
 
 
 
-var dist_bundle_App = App.defaults({ Octokit });
-var dist_bundle_OAuthApp = OAuthApp.defaults({ Octokit });
+var dist_bundle_App = App.defaults({ Octokit: dist_bundle_Octokit });
+var dist_bundle_OAuthApp = OAuthApp.defaults({ Octokit: dist_bundle_Octokit });
 
 
 ;// CONCATENATED MODULE: ../core/dist/infrastructure/github-client.js
@@ -55943,18 +75108,33 @@ var dist_bundle_OAuthApp = OAuthApp.defaults({ Octokit });
 
 
 // Create custom Octokit with retry and throttling plugins
-const MyOctokit = Octokit.plugin(retry, throttling);
+const MyOctokit = dist_bundle_Octokit.plugin(retry, throttling);
 /**
  * Create an Octokit instance with proper configuration
  * @param token - Optional GitHub token
+ * @param hostname - Optional GitHub hostname for Enterprise
  * @returns Configured Octokit instance
  */
-function createOctokit(token) {
+function createOctokit(token, hostname) {
     const auth = token ?? getGitHubToken();
+    // Build API URL from hostname if provided
+    let baseUrl;
+    if (hostname) {
+        const cleanHostname = hostname
+            .replace(/^https?:\/\//, "")
+            .replace(/\/+$/, "");
+        baseUrl =
+            cleanHostname === "github.com"
+                ? "https://api.github.com"
+                : `https://${cleanHostname}/api/v3`;
+    }
+    else {
+        baseUrl = getGitHubApiUrl();
+    }
     return new MyOctokit({
         auth,
         userAgent: "issue-linker",
-        baseUrl: getGitHubApiUrl(),
+        baseUrl,
         request: {
             // Aggressive timeout for fast feedback during development
             // Adjust this value if you need more reliability vs speed
@@ -55984,12 +75164,11 @@ function createOctokit(token) {
  * @param repo - Repository name
  * @param issueNumber - Issue number
  * @param token - Optional GitHub token
- * @returns Issue object
- * @throws IssueNotFoundError if issue doesn't exist (404)
- * @throws GitHubError for other API errors
+ * @param hostname - Optional GitHub hostname for Enterprise
+ * @returns Result object containing issue or error information
  */
-async function getGitHubIssue(owner, repo, issueNumber, token) {
-    const octokit = createOctokit(token);
+async function getGitHubIssue(owner, repo, issueNumber, token, hostname) {
+    const octokit = createOctokit(token, hostname);
     try {
         const { data } = await octokit.rest.issues.get({
             owner,
@@ -56009,59 +75188,135 @@ async function getGitHubIssue(owner, repo, issueNumber, token) {
         if (data.body) {
             issue.body = data.body;
         }
-        return issue;
+        return {
+            found: true,
+            issue,
+        };
     }
     catch (error) {
         // Handle different error cases appropriately
         if (error instanceof RequestError) {
             if (error.status === 404) {
                 // Issue doesn't exist - this is a normal case
-                throw new IssueNotFoundError(issueNumber);
+                return {
+                    found: false,
+                    error: {
+                        type: "not-found",
+                        message: `Issue #${issueNumber} not found`,
+                    },
+                };
             }
-            // For other API errors (401, 403, etc.)
-            throw new GitHubError(error.message, error.status);
+            if (error.status === 401) {
+                return {
+                    found: false,
+                    error: {
+                        type: "unauthorized",
+                        message: "Unauthorized access to GitHub API",
+                    },
+                };
+            }
+            // For other API errors
+            return {
+                found: false,
+                error: {
+                    type: "api-error",
+                    message: error.message,
+                },
+            };
         }
-        // Re-throw unexpected errors (network issues, etc.)
+        // Network or unexpected errors
+        return {
+            found: false,
+            error: {
+                type: "network-error",
+                message: error instanceof Error ? error.message : String(error),
+            },
+        };
+    }
+}
+/**
+ * Fetch commits from a pull request
+ * @param owner - Repository owner
+ * @param repo - Repository name
+ * @param prNumber - Pull request number
+ * @param token - Optional GitHub token
+ * @param hostname - Optional GitHub hostname for Enterprise
+ * @returns Array of pull request commits
+ * @throws GitHubError for API errors
+ */
+async function fetchPullRequestCommits(owner, repo, prNumber, token, hostname) {
+    const octokit = createOctokit(token, hostname);
+    try {
+        const { data } = await octokit.rest.pulls.listCommits({
+            owner,
+            repo,
+            pull_number: prNumber,
+            headers: {
+                Accept: "application/vnd.github+json",
+            },
+        });
+        // Transform Octokit response to domain type
+        return data.map((commit) => ({
+            sha: commit.sha,
+            message: commit.commit.message,
+            author: {
+                name: commit.commit.author?.name ?? "Unknown",
+                email: commit.commit.author?.email ?? "unknown@example.com",
+            },
+        }));
+    }
+    catch (error) {
+        // Handle API errors
+        if (error instanceof RequestError) {
+            throw new GitHubError(`Failed to fetch commits for PR #${prNumber}: ${error.message}`, error.status);
+        }
+        // Re-throw unexpected errors
         throw error;
     }
 }
 //# sourceMappingURL=github-client.js.map
-;// CONCATENATED MODULE: ../core/dist/infrastructure/issue-extractor.js
-// Infrastructure layer - Issue number extraction
+;// CONCATENATED MODULE: ../core/dist/infrastructure/issue-finder.js
+// Infrastructure layer - Issue number finding
 /**
- * Extracts the first issue number from a branch name
- *
- * Priority order for extraction:
- * 1. Number at the beginning: 123-feature
- * 2. Number after slash: feat/123-description
- * 3. Number with hash: feat/#123-description
- * 4. Number after hyphen or underscore: feature-123-description
- *
- * @param branch - The branch name to extract from
- * @returns The first issue number found, or null if none found
+ * Find issue numbers from text based on check mode
+ * @param text - The text to search in
+ * @param checkMode - The check mode ("default", "branch", or "commit")
+ * @returns Array of unique issue numbers found
  */
-function extractIssueNumberFromBranch(branch) {
-    // Priority patterns to try in order
-    const patterns = [
-        /^(\d{1,7})(?:-|_|$)/, // Start with number: 123-feature, 123_feature, or just 123
-        /\/(\d{1,7})(?:-|_|$)/, // After slash: feat/123-desc, feat/123_desc
-        /#(\d{1,7})(?:\b|$)/, // With hash: #123, feat/#123-desc
-        /(?:^|-)(\d{1,7})(?:-|_|$)/, // After hyphen: feature-123-, issue-123_
-        /(?:^|_)(\d{1,7})(?:-|_|$)/, // After underscore: feature_123_, issue_123-
-    ];
-    for (const pattern of patterns) {
-        const match = branch.match(pattern);
-        if (match?.[1]) {
-            const num = Number(match[1]);
-            // Validate that it's a reasonable issue number (1-9999999)
-            if (num > 0 && num <= 9999999) {
-                return num;
+function findIssueNumbers(text, checkMode) {
+    const numbers = new Set();
+    if (checkMode === "default" || checkMode === "commit") {
+        // Find #123 format only
+        const matches = text.matchAll(/#(\d+)/g);
+        for (const match of matches) {
+            const num = match[1];
+            if (num) {
+                const issueNumber = Number.parseInt(num, 10);
+                if (issueNumber > 0 && issueNumber <= 9999999) {
+                    numbers.add(issueNumber);
+                }
             }
         }
     }
-    return null;
+    else if (checkMode === "branch") {
+        // Extract all issue numbers from branch name
+        // Common patterns: 123-456-feature, feat/123-124, issue-123-456-fix
+        // Use negative lookbehind/lookahead to avoid matching numbers in version strings like "v2.0"
+        const pattern = /(?<![.\d])(\d{1,7})(?![.\d])/g;
+        const matches = text.matchAll(pattern);
+        for (const match of matches) {
+            const num = match[1];
+            if (num) {
+                const issueNumber = Number.parseInt(num, 10);
+                if (issueNumber > 0 && issueNumber <= 9999999) {
+                    numbers.add(issueNumber);
+                }
+            }
+        }
+    }
+    return Array.from(numbers);
 }
-//# sourceMappingURL=issue-extractor.js.map
+//# sourceMappingURL=issue-finder.js.map
 ;// CONCATENATED MODULE: ../core/dist/infrastructure/repository-parser.js
 // Infrastructure layer - Repository string parsing
 /**
@@ -56081,9 +75336,8 @@ function parseRepositoryString(repository) {
     };
 }
 //# sourceMappingURL=repository-parser.js.map
-;// CONCATENATED MODULE: ../core/dist/application/check-branch-use-case.js
-// Application layer - Use case for checking branch
-
+;// CONCATENATED MODULE: ../core/dist/application/check-message-use-case.js
+// Application layer - Use case for checking text messages
 
 
 
@@ -56095,257 +75349,124 @@ function parseRepositoryString(repository) {
 
 
 /**
- * Main use case for checking if a branch name contains a valid issue number
+ * Main use case for checking if text contains valid issue numbers
  * @param options - Options for the check
  * @returns Result of the check
  */
-async function checkBranch(options = {}) {
+async function checkMessage(options) {
     // Step 1: Validate options
-    const validationResult = safeParse(CheckOptionsSchema, options);
+    const validationResult = safeParse(CheckMessageOptionsSchema, options);
     if (!validationResult.success) {
-        return {
-            success: false,
-            reason: "error",
-            branch: options.branch ?? "unknown",
-            message: validationResult.issues[0]?.message ?? "Invalid options provided",
+        const input = {
+            text: options.text ?? "",
+            checkMode: "default",
+            issueStatus: "all",
+            repo: "",
+            ...(options.actionMode && { actionMode: options.actionMode }),
         };
+        const error = new Error(validationResult.issues[0]?.message ?? "Invalid options provided");
+        return createErrorResult(error, input);
     }
     const opts = validationResult.output;
+    const checkMode = opts.checkMode ?? "default";
+    const issueStatus = opts.issueStatus ?? "all";
     try {
-        // Step 2: Get branch name
-        const branch = opts.branch ?? (await getCurrentGitBranch());
-        // Step 3: Check exclusion patterns
-        const excludePattern = opts.excludePattern ?? DEFAULT_CHECK_OPTIONS.excludePattern;
-        if (isBranchExcluded(branch, excludePattern)) {
-            return {
-                success: true,
-                reason: "excluded",
-                branch,
-                message: `Branch '${branch}' is excluded from validation`,
-            };
-        }
-        // Step 4: Extract issue number
-        const issueNumber = extractIssueNumberFromBranch(branch);
-        if (!issueNumber) {
-            return {
-                success: false,
-                reason: "no-issue-number",
-                branch,
-                message: `No issue number found in branch '${branch}'`,
-            };
-        }
-        // Step 5: Get repository information
+        // Get repository information early for input config
         const repository = opts.repo
             ? parseRepositoryString(opts.repo)
             : parseRepositoryFromGitUrl(await getGitRemoteUrl());
-        // Step 6: Check GitHub issue
-        const githubToken = opts.githubToken ?? getGitHubToken();
-        const issue = await getGitHubIssue(repository.owner, repository.repo, issueNumber, githubToken);
-        // Step 7: Verify issue status
-        const allowedStatus = opts.issueStatus ?? DEFAULT_CHECK_OPTIONS.issueStatus;
-        if (!isIssueStateAllowed(issue.state, allowedStatus)) {
-            return {
-                success: false,
-                reason: "issue-not-found",
-                branch,
-                message: `Issue #${issueNumber} exists but state '${issue.state}' is not allowed`,
-                metadata: {
-                    owner: repository.owner,
-                    repo: repository.repo,
-                    checkedIssues: [issueNumber],
-                },
-            };
-        }
-        // Step 8: Return success result
-        return {
-            success: true,
-            reason: "issue-found",
-            branch,
-            issueNumber,
-            message: `Issue #${issueNumber} found in ${repository.owner}/${repository.repo} (state: ${issue.state})`,
-            metadata: {
-                owner: repository.owner,
-                repo: repository.repo,
-                checkedIssues: [issueNumber],
-            },
+        const repo = `${repository.owner}/${repository.repo}`;
+        // Build input config
+        const input = {
+            text: opts.text,
+            checkMode,
+            ...(opts.exclude && { exclude: opts.exclude }),
+            issueStatus,
+            repo: repo,
+            ...(opts.actionMode && { actionMode: opts.actionMode }),
         };
-    }
-    catch (error) {
-        // Error handling
-        if (error instanceof IssueNotFoundError) {
-            const issueNumber = error.issueNumber;
-            // Re-fetch repository information (for error case)
-            const repository = opts.repo
-                ? parseRepositoryString(opts.repo)
-                : parseRepositoryFromGitUrl(await getGitRemoteUrl());
-            return {
-                success: false,
-                reason: "issue-not-found",
-                branch: opts.branch ?? "unknown",
-                message: `Issue #${issueNumber} not found in ${repository.owner}/${repository.repo}`,
-                metadata: {
-                    owner: repository.owner,
-                    repo: repository.repo,
-                    checkedIssues: [issueNumber],
-                },
-            };
+        // Step 2: Check exclusion
+        if (shouldExclude(opts.text, checkMode, opts.exclude)) {
+            return createExcludedResult(input);
         }
-        // Other errors
-        return {
-            success: false,
-            reason: "error",
-            branch: opts.branch ?? "unknown",
-            message: error instanceof Error ? error.message : String(error),
-        };
-    }
-}
-//# sourceMappingURL=check-branch-use-case.js.map
-;// CONCATENATED MODULE: ../core/dist/application/check-commit-use-case.js
-// Application layer - Use case for checking commit messages
-
-
-
-
-
-
-
-
-
-
-/**
- * Extract issue numbers from commit message
- * @param message - Commit message to check
- * @returns Array of issue numbers found
- */
-function extractIssueNumbersFromCommit(message) {
-    // Match patterns like #123, GH-123, closes #123, fixes #123, etc.
-    const patterns = [
-        /#(\d+)/g, // #123
-        /(?:closes?|fix(?:es)?|resolves?|refs?)\s+#(\d+)/gi, // closes #123, fixes #123
-        /GH-(\d+)/gi, // GH-123
-    ];
-    const issueNumbers = new Set();
-    for (const pattern of patterns) {
-        const matches = message.matchAll(pattern);
-        for (const match of matches) {
-            const num = match[1];
-            if (num) {
-                issueNumbers.add(Number.parseInt(num, 10));
-            }
-        }
-    }
-    return Array.from(issueNumbers);
-}
-/**
- * Main use case for checking if a commit message contains valid issue numbers
- * @param message - Commit message to check
- * @param options - Options for the check
- * @returns Result of the check
- */
-async function checkCommit(message, options = {}) {
-    // Step 1: Validate options
-    const validationResult = safeParse(CheckOptionsSchema, {
-        ...options,
-        branch: "dummy", // Not used for commit checks
-    });
-    if (!validationResult.success) {
-        return {
-            success: false,
-            reason: "error",
-            branch: "commit",
-            message: validationResult.issues[0]?.message ?? "Invalid options provided",
-        };
-    }
-    const opts = validationResult.output;
-    try {
-        // Step 2: Extract issue numbers from commit message
-        const issueNumbers = extractIssueNumbersFromCommit(message);
+        // Step 3: Find issue numbers
+        const issueNumbers = findIssueNumbers(opts.text, checkMode);
         if (issueNumbers.length === 0) {
-            return {
-                success: false,
-                reason: "no-issue-number",
-                branch: "commit",
-                message: "No issue number found in commit message",
-            };
+            return createNoIssuesResult(input);
         }
-        // Step 3: Get repository information
-        const repository = opts.repo
-            ? parseRepositoryString(opts.repo)
-            : parseRepositoryFromGitUrl(await getGitRemoteUrl());
-        // Step 4: Check each issue number
+        // Step 4: Validate each issue number
         const githubToken = opts.githubToken ?? getGitHubToken();
         const validIssues = [];
-        const invalidIssues = [];
-        const allowedStatus = opts.issueStatus ?? DEFAULT_CHECK_OPTIONS.issueStatus;
+        const notFoundIssues = [];
+        const wrongStateIssues = [];
         for (const issueNumber of issueNumbers) {
-            try {
-                const issue = await getGitHubIssue(repository.owner, repository.repo, issueNumber, githubToken);
-                if (isIssueStateAllowed(issue.state, allowedStatus)) {
-                    validIssues.push(issueNumber);
-                }
-                else {
-                    invalidIssues.push(issueNumber);
-                }
+            const result = await getGitHubIssue(repository.owner, repository.repo, issueNumber, githubToken, opts.hostname);
+            if (!result.found) {
+                notFoundIssues.push(issueNumber);
             }
-            catch (error) {
-                if (error instanceof IssueNotFoundError) {
-                    invalidIssues.push(issueNumber);
-                }
-                else {
-                    throw error;
-                }
+            else if (result.issue &&
+                !isIssueStateAllowed(result.issue.state, issueStatus)) {
+                wrongStateIssues.push(issueNumber);
+            }
+            else if (result.issue) {
+                validIssues.push(issueNumber);
             }
         }
-        // Step 5: Return result based on valid/invalid issues
-        if (validIssues.length > 0 && invalidIssues.length === 0) {
-            return {
-                success: true,
-                reason: "issue-found",
-                branch: "commit",
-                ...(validIssues[0] !== undefined && { issueNumber: validIssues[0] }),
-                message: `Valid issue(s) found: #${validIssues.join(", #")} in ${repository.owner}/${repository.repo}`,
-                metadata: {
-                    owner: repository.owner,
-                    repo: repository.repo,
-                    checkedIssues: issueNumbers,
-                },
-            };
-        }
-        if (invalidIssues.length > 0) {
-            return {
-                success: false,
-                reason: "issue-not-found",
-                branch: "commit",
-                message: `Invalid or not found issue(s): #${invalidIssues.join(", #")} in ${repository.owner}/${repository.repo}`,
-                metadata: {
-                    owner: repository.owner,
-                    repo: repository.repo,
-                    checkedIssues: issueNumbers,
-                },
-            };
-        }
-        // Should not reach here
-        return {
-            success: false,
-            reason: "error",
-            branch: "commit",
-            message: "Unknown error occurred",
+        // Step 5: Create result based on findings
+        const issues = {
+            found: issueNumbers,
+            valid: validIssues,
+            notFound: notFoundIssues,
+            wrongState: wrongStateIssues,
         };
+        if (validIssues.length > 0 &&
+            notFoundIssues.length === 0 &&
+            wrongStateIssues.length === 0) {
+            return createValidResult(issues, input);
+        }
+        else {
+            return createInvalidResult(issues, input);
+        }
     }
     catch (error) {
-        // Error handling
-        return {
-            success: false,
-            reason: "error",
-            branch: "commit",
-            message: error instanceof Error ? error.message : String(error),
+        // Error handling - create minimal input config if we don't have repo info yet
+        const input = {
+            text: opts.text,
+            checkMode,
+            ...(opts.exclude && { exclude: opts.exclude }),
+            issueStatus,
+            repo: opts.repo ?? "",
+            ...(opts.actionMode && { actionMode: opts.actionMode }),
         };
+        return createErrorResult(error, input);
     }
 }
-//# sourceMappingURL=check-commit-use-case.js.map
+//# sourceMappingURL=check-message-use-case.js.map
+;// CONCATENATED MODULE: ../core/dist/application/get-pull-request-commits-use-case.js
+// Application layer - Get pull request commits use case
+
+
+
+
+/**
+ * Get commits from a pull request
+ * @param opts Options for getting pull request commits
+ * @returns Array of pull request commits
+ */
+async function getPullRequestCommits(opts) {
+    // Validate options
+    const options = parse(GetPullRequestCommitsOptionsSchema, opts);
+    // Get GitHub token
+    const githubToken = options.githubToken ?? getGitHubToken();
+    // Fetch commits from GitHub API (already transformed to PullRequestCommit[])
+    return await fetchPullRequestCommits(options.owner, options.repo, options.prNumber, githubToken);
+}
+//# sourceMappingURL=get-pull-request-commits-use-case.js.map
 ;// CONCATENATED MODULE: ../core/dist/index.js
 // Core package - Main exports
 // Domain layer exports
+/** @public */
+
 /** @public */
 
 /** @public */
@@ -56435,58 +75556,216 @@ var exports = __webpack_exports__;
 Object.defineProperty(exports, "B", ({ value: true }));
 const tslib_1 = __nccwpck_require__(4176);
 const core = tslib_1.__importStar(__nccwpck_require__(7184));
-const core_1 = __nccwpck_require__(1767);
-async function run() {
+const github = tslib_1.__importStar(__nccwpck_require__(5683));
+const core_1 = __nccwpck_require__(7213);
+const v = tslib_1.__importStar(__nccwpck_require__(9487));
+/**
+ * Helper function to create CheckMessageOptions with validation
+ */
+function createCheckMessageOptions(text, checkMode, issueStatus, repo, actionMode, githubToken, hostname) {
+    const options = {
+        text,
+        checkMode,
+        issueStatus,
+        repo,
+        actionMode,
+        ...(githubToken && { githubToken }),
+        ...(hostname && { hostname }),
+    };
+    // Validate using schema from core
     try {
-        // Get inputs
-        const branch = core.getInput("branch") || undefined;
-        const repo = core.getInput("repo") || undefined;
-        const excludePattern = core.getInput("exclude-pattern") || core_1.DEFAULT_CHECK_OPTIONS.excludePattern;
-        const issueStatusInput = core.getInput("issue-status") || core_1.DEFAULT_CHECK_OPTIONS.issueStatus;
-        // Check branch with provided options (validation is done in Core layer)
-        const result = await (0, core_1.checkBranch)({
-            ...(branch && { branch }),
-            ...(repo && { repo }),
-            excludePattern,
-            issueStatus: issueStatusInput,
-        });
+        return v.parse(core_1.CheckMessageOptionsSchema, options);
+    }
+    catch (error) {
+        if (error instanceof v.ValiError) {
+            throw new Error(`Invalid options: ${error.message}`);
+        }
+        throw error;
+    }
+}
+async function run() {
+    const results = [];
+    try {
+        const context = github.context;
+        // Get common options
+        const issueStatus = core.getInput("issue-status") || core_1.DEFAULT_OPTIONS.issueStatus;
+        const repo = core.getInput("repo") || `${context.repo.owner}/${context.repo.repo}`;
+        const githubToken = core.getInput("github-token") || undefined;
+        const hostname = core.getInput("hostname") || undefined;
+        // Simple mode inputs
+        const validateBranch = core.getInput("validate-branch") === "true";
+        const validatePrTitle = core.getInput("validate-pr-title") === "true";
+        const validatePrBody = core.getInput("validate-pr-body") === "true";
+        const validateCommits = core.getInput("validate-commits") === "true";
+        // Advanced mode inputs
+        const text = core.getInput("text");
+        const checkMode = core.getInput("check-mode") || core_1.DEFAULT_OPTIONS.mode;
+        const exclude = core.getInput("exclude") || undefined;
+        // Simple mode validations
+        if (validateBranch) {
+            // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
+            const branchName = context.payload.pull_request?.["head"]?.ref;
+            if (branchName) {
+                core.info(`Validating branch: ${branchName}`);
+                const messageOptions = createCheckMessageOptions(branchName, "branch", issueStatus, repo, "validate-branch", githubToken, hostname);
+                core.debug(`Calling checkMessage with options: ${JSON.stringify(messageOptions)}`);
+                const result = await (0, core_1.checkMessage)(messageOptions);
+                core.debug(`checkMessage result: ${JSON.stringify(result)}`);
+                results.push(result);
+            }
+            else {
+                core.warning("Branch name not found in context");
+            }
+        }
+        if (validatePrTitle) {
+            // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
+            const prTitle = context.payload.pull_request?.["title"];
+            if (prTitle) {
+                core.info(`Validating PR title: ${prTitle}`);
+                const messageOptions = createCheckMessageOptions(prTitle, "default", issueStatus, repo, "validate-pr-title", githubToken, hostname);
+                const result = await (0, core_1.checkMessage)(messageOptions);
+                results.push(result);
+            }
+            else {
+                core.warning("PR title not found in context");
+            }
+        }
+        if (validatePrBody) {
+            // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
+            const prBody = context.payload.pull_request?.["body"];
+            if (prBody) {
+                core.info(`Validating PR body`);
+                const messageOptions = createCheckMessageOptions(prBody, "default", issueStatus, repo, "validate-pr-body", githubToken, hostname);
+                const result = await (0, core_1.checkMessage)(messageOptions);
+                results.push(result);
+            }
+            else {
+                core.warning("PR body not found in context");
+            }
+        }
+        if (validateCommits) {
+            // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
+            const prNumber = context.payload.pull_request?.["number"];
+            if (!prNumber) {
+                core.warning("Cannot validate commits: PR context not found");
+            }
+            else {
+                try {
+                    // Get commits using core function
+                    const commitsOptions = {
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        prNumber,
+                        ...(githubToken && { githubToken }),
+                        ...(hostname && { hostname }),
+                    };
+                    const commits = await (0, core_1.getPullRequestCommits)(commitsOptions);
+                    core.info(`Found ${commits.length} commits in PR`);
+                    // Check each commit message
+                    for (const commit of commits) {
+                        const shortSha = commit.sha.substring(0, 7);
+                        core.debug(`Checking commit ${shortSha}: ${commit.message.split("\n")[0]}`);
+                        const messageOptions = createCheckMessageOptions(commit.message, "commit", issueStatus, repo, "validate-commits", githubToken, hostname);
+                        const result = await (0, core_1.checkMessage)(messageOptions);
+                        results.push(result);
+                    }
+                }
+                catch (error) {
+                    // Log error but continue processing
+                    core.error(`Failed to fetch commits: ${error instanceof Error ? error.message : String(error)}`);
+                }
+            }
+        }
+        // Advanced mode validation
+        if (text) {
+            core.info(`Validating custom text: ${text}`);
+            const messageOptions = {
+                text,
+                checkMode,
+                actionMode: "custom",
+                issueStatus,
+                repo,
+                ...(githubToken && { githubToken }),
+                ...(hostname && { hostname }),
+                ...(exclude && { exclude }),
+            };
+            // Validate the options
+            let validatedOptions;
+            try {
+                validatedOptions = v.parse(core_1.CheckMessageOptionsSchema, messageOptions);
+            }
+            catch (error) {
+                if (error instanceof v.ValiError) {
+                    throw new Error(`Invalid advanced mode options: ${error.message}`);
+                }
+                throw error;
+            }
+            const result = await (0, core_1.checkMessage)(validatedOptions);
+            results.push(result);
+        }
         // Set outputs
-        core.setOutput("success", result.success.toString());
-        core.setOutput("reason", result.reason);
-        core.setOutput("branch", result.branch);
-        if (result.issueNumber) {
-            core.setOutput("issue_number", result.issueNumber.toString());
-        }
-        if (result.metadata) {
-            core.setOutput("owner", result.metadata.owner || "");
-            core.setOutput("repo", result.metadata.repo || "");
-            core.setOutput("metadata", JSON.stringify(result.metadata));
-        }
-        // Log result
-        if (result.success) {
-            core.info(`✅ ${result.message}`);
-            if (result.metadata) {
-                core.info(`Repository: ${result.metadata.owner}/${result.metadata.repo}`);
-                if (result.issueNumber) {
-                    core.info(`Issue: #${result.issueNumber}`);
+        const allSuccess = results.every((r) => r.success);
+        const allFoundIssues = [
+            ...new Set(results.flatMap((r) => r.issues?.found || [])),
+        ];
+        // Create summary
+        const summary = {
+            totalValidations: results.length,
+            failed: results.filter((r) => !r.success).length,
+            allIssues: allFoundIssues,
+        };
+        core.setOutput("success", allSuccess.toString());
+        core.setOutput("results", JSON.stringify(results));
+        core.setOutput("summary", JSON.stringify(summary));
+        // Log results
+        for (const result of results) {
+            const actionMode = result.input.actionMode || "custom";
+            const prefix = results.length > 1 ? `[${actionMode}] ` : "";
+            if (result.success) {
+                // Success cases
+                if (result.reason === "excluded") {
+                    core.info(`✅ ${prefix}Text was excluded from validation`);
+                }
+                else if (result.issues?.valid && result.issues.valid.length > 0) {
+                    core.info(`✅ ${prefix}Valid issues: #${result.issues.valid.join(", #")}`);
+                }
+                else {
+                    core.info(`✅ ${prefix}${result.message}`);
+                }
+            }
+            else {
+                // Failure cases
+                core.error(`❌ ${prefix}${result.message}`);
+                // Show details for failed validations
+                if (result.issues) {
+                    const details = [];
+                    if (result.issues.valid.length > 0) {
+                        details.push(`Valid: #${result.issues.valid.join(", #")}`);
+                    }
+                    if (result.issues.notFound.length > 0) {
+                        details.push(`Not found: #${result.issues.notFound.join(", #")}`);
+                    }
+                    if (result.issues.wrongState.length > 0) {
+                        const stateInfo = result.input.issueStatus === "all"
+                            ? "Wrong state"
+                            : `Wrong state (expected: ${result.input.issueStatus})`;
+                        details.push(`${stateInfo}: #${result.issues.wrongState.join(", #")}`);
+                    }
+                    if (details.length > 0) {
+                        core.info(`   Details: ${details.join(", ")}`);
+                    }
                 }
             }
         }
-        else {
-            core.setFailed(`❌ ${result.message}`);
-            if (result.metadata) {
-                core.error(`Repository: ${result.metadata.owner}/${result.metadata.repo}`);
-                if (result.metadata.checkedIssues?.length) {
-                    core.error(`Checked issues: ${result.metadata.checkedIssues.join(", ")}`);
-                }
-            }
+        // Fail if any validation failed
+        if (!allSuccess) {
+            const failureCount = results.filter((r) => !r.success).length;
+            const totalCount = results.length;
+            core.setFailed(`${failureCount} of ${totalCount} validation${totalCount > 1 ? "s" : ""} failed`);
         }
     }
     catch (error) {
-        core.setFailed(`Unexpected error: ${error instanceof Error ? error.message : String(error)}`);
-        if (error instanceof Error && error.stack) {
-            core.debug(`Stack trace: ${error.stack}`);
-        }
+        core.setFailed(error instanceof Error ? error.message : String(error));
     }
 }
 run();

@@ -4,8 +4,13 @@ import { retry } from "@octokit/plugin-retry";
 import { throttling } from "@octokit/plugin-throttling";
 import { RequestError } from "@octokit/request-error";
 import { Octokit } from "octokit";
-import { GitHubError, IssueNotFoundError } from "../domain/errors.js";
-import type { Issue, IssueStatus } from "../domain/types.js";
+import { GitHubError } from "../domain/errors.js";
+import type {
+  GitHubIssueResult,
+  Issue,
+  IssueStatus,
+  PullRequestCommit,
+} from "../domain/validation-schemas.js";
 import { getGitHubApiUrl, getGitHubToken } from "./env-accessor.js";
 
 // Create custom Octokit with retry and throttling plugins
@@ -14,15 +19,30 @@ const MyOctokit = Octokit.plugin(retry, throttling);
 /**
  * Create an Octokit instance with proper configuration
  * @param token - Optional GitHub token
+ * @param hostname - Optional GitHub hostname for Enterprise
  * @returns Configured Octokit instance
  */
-function createOctokit(token?: string): Octokit {
+function createOctokit(token?: string, hostname?: string): Octokit {
   const auth = token ?? getGitHubToken();
+
+  // Build API URL from hostname if provided
+  let baseUrl: string;
+  if (hostname) {
+    const cleanHostname = hostname
+      .replace(/^https?:\/\//, "")
+      .replace(/\/+$/, "");
+    baseUrl =
+      cleanHostname === "github.com"
+        ? "https://api.github.com"
+        : `https://${cleanHostname}/api/v3`;
+  } else {
+    baseUrl = getGitHubApiUrl();
+  }
 
   return new MyOctokit({
     auth,
     userAgent: "issue-linker",
-    baseUrl: getGitHubApiUrl(),
+    baseUrl,
     request: {
       // Aggressive timeout for fast feedback during development
       // Adjust this value if you need more reliability vs speed
@@ -53,17 +73,17 @@ function createOctokit(token?: string): Octokit {
  * @param repo - Repository name
  * @param issueNumber - Issue number
  * @param token - Optional GitHub token
- * @returns Issue object
- * @throws IssueNotFoundError if issue doesn't exist (404)
- * @throws GitHubError for other API errors
+ * @param hostname - Optional GitHub hostname for Enterprise
+ * @returns Result object containing issue or error information
  */
 export async function getGitHubIssue(
   owner: string,
   repo: string,
   issueNumber: number,
   token?: string,
-): Promise<Issue> {
-  const octokit = createOctokit(token);
+  hostname?: string,
+): Promise<GitHubIssueResult> {
+  const octokit = createOctokit(token, hostname);
 
   try {
     const { data } = await octokit.rest.issues.get({
@@ -87,19 +107,101 @@ export async function getGitHubIssue(
       issue.body = data.body;
     }
 
-    return issue;
+    return {
+      found: true,
+      issue,
+    };
   } catch (error: unknown) {
     // Handle different error cases appropriately
     if (error instanceof RequestError) {
       if (error.status === 404) {
         // Issue doesn't exist - this is a normal case
-        throw new IssueNotFoundError(issueNumber);
+        return {
+          found: false,
+          error: {
+            type: "not-found",
+            message: `Issue #${issueNumber} not found`,
+          },
+        };
       }
-      // For other API errors (401, 403, etc.)
-      throw new GitHubError(error.message, error.status);
+      if (error.status === 401) {
+        return {
+          found: false,
+          error: {
+            type: "unauthorized",
+            message: "Unauthorized access to GitHub API",
+          },
+        };
+      }
+      // For other API errors
+      return {
+        found: false,
+        error: {
+          type: "api-error",
+          message: error.message,
+        },
+      };
     }
 
-    // Re-throw unexpected errors (network issues, etc.)
+    // Network or unexpected errors
+    return {
+      found: false,
+      error: {
+        type: "network-error",
+        message: error instanceof Error ? error.message : String(error),
+      },
+    };
+  }
+}
+
+/**
+ * Fetch commits from a pull request
+ * @param owner - Repository owner
+ * @param repo - Repository name
+ * @param prNumber - Pull request number
+ * @param token - Optional GitHub token
+ * @param hostname - Optional GitHub hostname for Enterprise
+ * @returns Array of pull request commits
+ * @throws GitHubError for API errors
+ */
+export async function fetchPullRequestCommits(
+  owner: string,
+  repo: string,
+  prNumber: number,
+  token?: string,
+  hostname?: string,
+): Promise<PullRequestCommit[]> {
+  const octokit = createOctokit(token, hostname);
+
+  try {
+    const { data } = await octokit.rest.pulls.listCommits({
+      owner,
+      repo,
+      pull_number: prNumber,
+      headers: {
+        Accept: "application/vnd.github+json",
+      },
+    });
+
+    // Transform Octokit response to domain type
+    return data.map((commit) => ({
+      sha: commit.sha,
+      message: commit.commit.message,
+      author: {
+        name: commit.commit.author?.name ?? "Unknown",
+        email: commit.commit.author?.email ?? "unknown@example.com",
+      },
+    }));
+  } catch (error: unknown) {
+    // Handle API errors
+    if (error instanceof RequestError) {
+      throw new GitHubError(
+        `Failed to fetch commits for PR #${prNumber}: ${error.message}`,
+        error.status,
+      );
+    }
+
+    // Re-throw unexpected errors
     throw error;
   }
 }

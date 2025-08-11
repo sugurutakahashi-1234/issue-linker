@@ -1,5 +1,9 @@
 import { describe, expect, it } from "bun:test";
-import { isBranchExcluded, isIssueStateAllowed } from "./branch-matcher.js";
+import {
+  isBranchExcluded,
+  isIssueStateAllowed,
+  shouldExclude,
+} from "./branch-matcher.js";
 
 describe("branch-matcher", () => {
   describe("isBranchExcluded", () => {
@@ -25,6 +29,65 @@ describe("branch-matcher", () => {
 
     it("should handle empty pattern", () => {
       expect(isBranchExcluded("any-branch", "")).toBe(false);
+    });
+  });
+
+  describe("shouldExclude", () => {
+    describe("custom exclude pattern", () => {
+      it("should use custom pattern when provided", () => {
+        expect(shouldExclude("test-branch", "default", "test-*")).toBe(true);
+        expect(shouldExclude("prod-branch", "default", "test-*")).toBe(false);
+        expect(shouldExclude("wip/feature", "branch", "{wip/*,tmp/*}")).toBe(
+          true,
+        );
+      });
+
+      it("should override default patterns", () => {
+        // Even though "main" would be excluded by default in branch mode,
+        // custom pattern takes precedence
+        expect(shouldExclude("main", "branch", "develop")).toBe(false);
+        expect(shouldExclude("develop", "branch", "develop")).toBe(true);
+      });
+    });
+
+    describe("branch mode defaults", () => {
+      it("should exclude default protected branches", () => {
+        expect(shouldExclude("main", "branch")).toBe(true);
+        expect(shouldExclude("master", "branch")).toBe(true);
+        expect(shouldExclude("develop", "branch")).toBe(true);
+        expect(shouldExclude("release/1.0", "branch")).toBe(true);
+        expect(shouldExclude("hotfix/urgent", "branch")).toBe(true);
+      });
+
+      it("should not exclude feature branches", () => {
+        expect(shouldExclude("feature/123", "branch")).toBe(false);
+        expect(shouldExclude("123-feature", "branch")).toBe(false);
+        expect(shouldExclude("fix/456", "branch")).toBe(false);
+      });
+    });
+
+    describe("commit mode defaults", () => {
+      it("should exclude commits with specific prefixes", () => {
+        expect(shouldExclude("Rebase branch", "commit")).toBe(true);
+        expect(shouldExclude("Merge pull request", "commit")).toBe(true);
+        expect(shouldExclude("Revert commit", "commit")).toBe(true);
+        expect(shouldExclude("fixup! previous commit", "commit")).toBe(true);
+        expect(shouldExclude("squash! old commit", "commit")).toBe(true);
+      });
+
+      it("should not exclude regular commits", () => {
+        expect(shouldExclude("feat: add feature", "commit")).toBe(false);
+        expect(shouldExclude("fix: resolve bug", "commit")).toBe(false);
+        expect(shouldExclude("Add new feature", "commit")).toBe(false);
+      });
+    });
+
+    describe("default mode", () => {
+      it("should not exclude anything by default", () => {
+        expect(shouldExclude("anything", "default")).toBe(false);
+        expect(shouldExclude("main", "default")).toBe(false);
+        expect(shouldExclude("Merge commit", "default")).toBe(false);
+      });
     });
   });
 

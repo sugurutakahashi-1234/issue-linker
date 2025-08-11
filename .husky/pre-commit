@@ -16,6 +16,25 @@ if git diff --cached --name-only | grep -q "^renovate.json5$"; then
   bun run validate:renovate
 fi
 
+# Test GitHub Action if action.yml or test workflow changed
+if git diff --cached --name-only | grep -qE "^action\.yml$|^\.github/workflows/local-test-action-marketplace\.yml$|^packages/action/.*\.ts$"; then
+  echo "🧪 Testing GitHub Action with Act CLI..."
+  
+  # Check if act is installed
+  if ! command -v act &> /dev/null; then
+    echo "⚠️ Warning: 'act' CLI is not installed. Skipping action tests."
+    echo "Install act to test GitHub Actions locally: https://github.com/nektos/act"
+  else
+    # Run the test with act
+    if ! bun run test:action-marketplace; then
+      echo "❌ GitHub Action tests failed!"
+      echo "Please fix the issues and try again."
+      exit 1
+    fi
+    echo "✅ GitHub Action tests passed!"
+  fi
+fi
+
 # Auto-update dependency graph
 if git diff --cached --name-only | grep -qE "^(packages|src)/.*\.ts$"; then
   bun run docs:update

@@ -1,7 +1,30 @@
 {
   "name": "@issue-linker/core",
   "version": "0.0.0",
+  "description": "Core library for issue-linker functionality",
+  "keywords": [
+    "github",
+    "issues",
+    "validation",
+    "library",
+    "core"
+  ],
+  "author": "Suguru Takahashi",
+  "license": "MIT",
+  "homepage": "https://github.com/sugurutakahashi-1234/issue-linker#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sugurutakahashi-1234/issue-linker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sugurutakahashi-1234/issue-linker/issues"
+  },
   "type": "module",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -17,7 +40,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "🧪": "========== Test ==========",
     "test": "bun test",
-    "test:quiet": "bun test > /dev/null 2>&1 && echo '✅ Tests passed' || echo '❌ Tests failed'",
+    "test:quiet": "bun test > /dev/null 2>&1 && echo '✅ Tests passed' || (echo '❌ Tests failed' && exit 1)",
     "🎨": "========== Code Quality ==========",
     "fix": "biome check --write --unsafe .",
     "check": "biome check .",
@@ -35,6 +58,7 @@
     "@octokit/request-error": "^7.0.0",
     "@t3-oss/env-core": "^0.13.8",
     "micromatch": "^4.0.8",
+    "minimatch": "^10.0.3",
     "octokit": "^5.0.3",
     "simple-git": "^3.28.0",
     "valibot": "^1.1.0"
