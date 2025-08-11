@@ -1,7 +1,30 @@
 {
   "name": "@issue-linker/core",
   "version": "0.0.0",
+  "description": "Core library for issue-linker functionality",
+  "keywords": [
+    "github",
+    "issues",
+    "validation",
+    "library",
+    "core"
+  ],
+  "author": "Suguru Takahashi",
+  "license": "MIT",
+  "homepage": "https://github.com/sugurutakahashi-1234/issue-linker#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sugurutakahashi-1234/issue-linker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sugurutakahashi-1234/issue-linker/issues"
+  },
   "type": "module",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "publishConfig": {
     "access": "public"
   },

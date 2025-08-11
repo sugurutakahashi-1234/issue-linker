@@ -90,6 +90,7 @@ export const CheckMessageOptionsSchema = v.object({
   issueStatus: v.optional(IssueStatusFilterSchema, DEFAULT_OPTIONS.issueStatus),
   repo: v.optional(v.string()),
   githubToken: v.optional(v.string()),
+  hostname: v.optional(v.string()),
   actionMode: v.optional(ActionModeSchema),
 });
 

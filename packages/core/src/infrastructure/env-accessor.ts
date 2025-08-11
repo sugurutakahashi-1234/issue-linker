@@ -87,14 +87,25 @@ export function getGitHubToken(): string | undefined {
  */
 export function getGitHubApiUrl(): string {
   // Priority order:
-  // 1. GITHUB_API_URL (direct API URL)
-  // 2. GITHUB_SERVER_URL (GitHub Enterprise Server URL - needs /api/v3 suffix)
+  // 1. GH_HOST (GitHub hostname - compatible with GitHub CLI)
+  // 2. GITHUB_SERVER_URL (GitHub Actions environment - needs /api/v3 suffix)
   // 3. Default to GitHub.com API
-  if (env.GITHUB_API_URL) {
-    // Remove trailing slashes
-    return env.GITHUB_API_URL.replace(/\/+$/, "");
+
+  // Check GH_HOST first (GitHub CLI compatible)
+  if (env.GH_HOST) {
+    const hostname = env.GH_HOST.replace(/^https?:\/\//, "").replace(
+      /\/+$/,
+      "",
+    );
+    // GitHub.com uses a different API domain
+    if (hostname === "github.com") {
+      return "https://api.github.com";
+    }
+    // GitHub Enterprise Server uses /api/v3 path
+    return `https://${hostname}/api/v3`;
   }
 
+  // Check GITHUB_SERVER_URL (GitHub Actions environment)
   if (env.GITHUB_SERVER_URL) {
     // GitHub Enterprise Server API endpoint format
     const serverUrl = env.GITHUB_SERVER_URL.replace(/\/+$/, "");

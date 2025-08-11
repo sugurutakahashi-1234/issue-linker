@@ -53918,6 +53918,7 @@ const CheckMessageOptionsSchema = object({
     issueStatus: optional(IssueStatusFilterSchema, DEFAULT_OPTIONS.issueStatus),
     repo: optional(string()),
     githubToken: optional(string()),
+    hostname: optional(string()),
     actionMode: optional(ActionModeSchema),
 });
 //# sourceMappingURL=validation-schemas.js.map
@@ -56183,7 +56184,7 @@ const env = createEnv({
     server: {
         GITHUB_TOKEN: optional(string()),
         GH_TOKEN: optional(string()),
-        GITHUB_API_URL: optional(pipe(string(), url())),
+        GH_HOST: optional(string()),
         GITHUB_SERVER_URL: optional(pipe(string(), url())),
     },
     runtimeEnv: process.env,
@@ -56271,13 +56272,20 @@ function getGitHubToken() {
  */
 function getGitHubApiUrl() {
     // Priority order:
-    // 1. GITHUB_API_URL (direct API URL)
-    // 2. GITHUB_SERVER_URL (GitHub Enterprise Server URL - needs /api/v3 suffix)
+    // 1. GH_HOST (GitHub hostname - compatible with GitHub CLI)
+    // 2. GITHUB_SERVER_URL (GitHub Actions environment - needs /api/v3 suffix)
     // 3. Default to GitHub.com API
-    if (env.GITHUB_API_URL) {
-        // Remove trailing slashes
-        return env.GITHUB_API_URL.replace(/\/+$/, "");
+    // Check GH_HOST first (GitHub CLI compatible)
+    if (env.GH_HOST) {
+        const hostname = env.GH_HOST.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+        // GitHub.com uses a different API domain
+        if (hostname === "github.com") {
+            return "https://api.github.com";
+        }
+        // GitHub Enterprise Server uses /api/v3 path
+        return `https://${hostname}/api/v3`;
     }
+    // Check GITHUB_SERVER_URL (GitHub Actions environment)
     if (env.GITHUB_SERVER_URL) {
         // GitHub Enterprise Server API endpoint format
         const serverUrl = env.GITHUB_SERVER_URL.replace(/\/+$/, "");
@@ -75104,14 +75112,29 @@ const MyOctokit = dist_bundle_Octokit.plugin(retry, throttling);
 /**
  * Create an Octokit instance with proper configuration
  * @param token - Optional GitHub token
+ * @param hostname - Optional GitHub hostname for Enterprise
  * @returns Configured Octokit instance
  */
-function createOctokit(token) {
+function createOctokit(token, hostname) {
     const auth = token ?? getGitHubToken();
+    // Build API URL from hostname if provided
+    let baseUrl;
+    if (hostname) {
+        const cleanHostname = hostname
+            .replace(/^https?:\/\//, "")
+            .replace(/\/+$/, "");
+        baseUrl =
+            cleanHostname === "github.com"
+                ? "https://api.github.com"
+                : `https://${cleanHostname}/api/v3`;
+    }
+    else {
+        baseUrl = getGitHubApiUrl();
+    }
     return new MyOctokit({
         auth,
         userAgent: "issue-linker",
-        baseUrl: getGitHubApiUrl(),
+        baseUrl,
         request: {
             // Aggressive timeout for fast feedback during development
             // Adjust this value if you need more reliability vs speed
@@ -75141,10 +75164,11 @@ function createOctokit(token) {
  * @param repo - Repository name
  * @param issueNumber - Issue number
  * @param token - Optional GitHub token
+ * @param hostname - Optional GitHub hostname for Enterprise
  * @returns Result object containing issue or error information
  */
-async function getGitHubIssue(owner, repo, issueNumber, token) {
-    const octokit = createOctokit(token);
+async function getGitHubIssue(owner, repo, issueNumber, token, hostname) {
+    const octokit = createOctokit(token, hostname);
     try {
         const { data } = await octokit.rest.issues.get({
             owner,
@@ -75216,11 +75240,12 @@ async function getGitHubIssue(owner, repo, issueNumber, token) {
  * @param repo - Repository name
  * @param prNumber - Pull request number
  * @param token - Optional GitHub token
+ * @param hostname - Optional GitHub hostname for Enterprise
  * @returns Array of pull request commits
  * @throws GitHubError for API errors
  */
-async function fetchPullRequestCommits(owner, repo, prNumber, token) {
-    const octokit = createOctokit(token);
+async function fetchPullRequestCommits(owner, repo, prNumber, token, hostname) {
+    const octokit = createOctokit(token, hostname);
     try {
         const { data } = await octokit.rest.pulls.listCommits({
             owner,
@@ -75378,7 +75403,7 @@ async function checkMessage(options) {
         const notFoundIssues = [];
         const wrongStateIssues = [];
         for (const issueNumber of issueNumbers) {
-            const result = await getGitHubIssue(repository.owner, repository.repo, issueNumber, githubToken);
+            const result = await getGitHubIssue(repository.owner, repository.repo, issueNumber, githubToken, opts.hostname);
             if (!result.found) {
                 notFoundIssues.push(issueNumber);
             }
@@ -75540,7 +75565,7 @@ const v = tslib_1.__importStar(__nccwpck_require__(9487));
 /**
  * Helper function to create CheckMessageOptions with validation
  */
-function createCheckMessageOptions(text, checkMode, issueStatus, repo, actionMode, githubToken) {
+function createCheckMessageOptions(text, checkMode, issueStatus, repo, actionMode, githubToken, hostname) {
     const options = {
         text,
         checkMode,
@@ -75548,6 +75573,7 @@ function createCheckMessageOptions(text, checkMode, issueStatus, repo, actionMod
         repo,
         actionMode,
         ...(githubToken && { githubToken }),
+        ...(hostname && { hostname }),
     };
     // Validate using schema from core
     try {
@@ -75568,6 +75594,7 @@ async function run() {
         const issueStatus = core.getInput("issue-status") || core_1.DEFAULT_OPTIONS.issueStatus;
         const repo = core.getInput("repo") || `${context.repo.owner}/${context.repo.repo}`;
         const githubToken = core.getInput("github-token") || undefined;
+        const hostname = core.getInput("hostname") || undefined;
         // Simple mode inputs
         const validateBranch = core.getInput("validate-branch") === "true";
         const validatePrTitle = core.getInput("validate-pr-title") === "true";
@@ -75583,7 +75610,7 @@ async function run() {
             const branchName = context.payload.pull_request?.["head"]?.ref;
             if (branchName) {
                 core.info(`Validating branch: ${branchName}`);
-                const messageOptions = createCheckMessageOptions(branchName, "branch", issueStatus, repo, "validate-branch", githubToken);
+                const messageOptions = createCheckMessageOptions(branchName, "branch", issueStatus, repo, "validate-branch", githubToken, hostname);
                 core.debug(`Calling checkMessage with options: ${JSON.stringify(messageOptions)}`);
                 const result = await (0, core_1.checkMessage)(messageOptions);
                 core.debug(`checkMessage result: ${JSON.stringify(result)}`);
@@ -75598,7 +75625,7 @@ async function run() {
             const prTitle = context.payload.pull_request?.["title"];
             if (prTitle) {
                 core.info(`Validating PR title: ${prTitle}`);
-                const messageOptions = createCheckMessageOptions(prTitle, "default", issueStatus, repo, "validate-pr-title", githubToken);
+                const messageOptions = createCheckMessageOptions(prTitle, "default", issueStatus, repo, "validate-pr-title", githubToken, hostname);
                 const result = await (0, core_1.checkMessage)(messageOptions);
                 results.push(result);
             }
@@ -75611,7 +75638,7 @@ async function run() {
             const prBody = context.payload.pull_request?.["body"];
             if (prBody) {
                 core.info(`Validating PR body`);
-                const messageOptions = createCheckMessageOptions(prBody, "default", issueStatus, repo, "validate-pr-body", githubToken);
+                const messageOptions = createCheckMessageOptions(prBody, "default", issueStatus, repo, "validate-pr-body", githubToken, hostname);
                 const result = await (0, core_1.checkMessage)(messageOptions);
                 results.push(result);
             }
@@ -75633,6 +75660,7 @@ async function run() {
                         repo: context.repo.repo,
                         prNumber,
                         ...(githubToken && { githubToken }),
+                        ...(hostname && { hostname }),
                     };
                     const commits = await (0, core_1.getPullRequestCommits)(commitsOptions);
                     core.info(`Found ${commits.length} commits in PR`);
@@ -75640,7 +75668,7 @@ async function run() {
                     for (const commit of commits) {
                         const shortSha = commit.sha.substring(0, 7);
                         core.debug(`Checking commit ${shortSha}: ${commit.message.split("\n")[0]}`);
-                        const messageOptions = createCheckMessageOptions(commit.message, "commit", issueStatus, repo, "validate-commits", githubToken);
+                        const messageOptions = createCheckMessageOptions(commit.message, "commit", issueStatus, repo, "validate-commits", githubToken, hostname);
                         const result = await (0, core_1.checkMessage)(messageOptions);
                         results.push(result);
                     }
@@ -75661,6 +75689,7 @@ async function run() {
                 issueStatus,
                 repo,
                 ...(githubToken && { githubToken }),
+                ...(hostname && { hostname }),
                 ...(exclude && { exclude }),
             };
             // Validate the options

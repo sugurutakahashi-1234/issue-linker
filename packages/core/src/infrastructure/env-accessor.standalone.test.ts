@@ -16,7 +16,7 @@ mock.module("node:child_process", () => ({
 const mockEnv = {
   GITHUB_TOKEN: undefined as string | undefined,
   GH_TOKEN: undefined as string | undefined,
-  GITHUB_API_URL: undefined as string | undefined,
+  GH_HOST: undefined as string | undefined,
   GITHUB_SERVER_URL: undefined as string | undefined,
 };
 
@@ -157,16 +157,32 @@ describe("getGitHubToken", () => {
 describe("getGitHubApiUrl", () => {
   beforeEach(() => {
     // Reset all environment variables
-    mockEnv.GITHUB_API_URL = undefined;
+    mockEnv.GH_HOST = undefined;
     mockEnv.GITHUB_SERVER_URL = undefined;
   });
 
-  test("returns GITHUB_API_URL when set", () => {
-    mockEnv.GITHUB_API_URL = "https://custom.api.github.com/";
+  test("returns GitHub.com API when GH_HOST is github.com", () => {
+    mockEnv.GH_HOST = "github.com";
 
     const url = getGitHubApiUrl();
 
-    expect(url).toBe("https://custom.api.github.com");
+    expect(url).toBe("https://api.github.com");
+  });
+
+  test("returns Enterprise API URL when GH_HOST is set to enterprise host", () => {
+    mockEnv.GH_HOST = "github.enterprise.com";
+
+    const url = getGitHubApiUrl();
+
+    expect(url).toBe("https://github.enterprise.com/api/v3");
+  });
+
+  test("strips protocol from GH_HOST if provided", () => {
+    mockEnv.GH_HOST = "https://github.enterprise.com";
+
+    const url = getGitHubApiUrl();
+
+    expect(url).toBe("https://github.enterprise.com/api/v3");
   });
 
   test("returns GITHUB_SERVER_URL with /api/v3 suffix when set", () => {
@@ -177,13 +193,13 @@ describe("getGitHubApiUrl", () => {
     expect(url).toBe("https://github.enterprise.com/api/v3");
   });
 
-  test("prefers GITHUB_API_URL over GITHUB_SERVER_URL", () => {
-    mockEnv.GITHUB_API_URL = "https://custom.api.github.com";
+  test("prefers GH_HOST over GITHUB_SERVER_URL", () => {
+    mockEnv.GH_HOST = "ghe.company.com";
     mockEnv.GITHUB_SERVER_URL = "https://github.enterprise.com";
 
     const url = getGitHubApiUrl();
 
-    expect(url).toBe("https://custom.api.github.com");
+    expect(url).toBe("https://ghe.company.com/api/v3");
   });
 
   test("returns default GitHub API URL when no env vars set", () => {
@@ -192,12 +208,12 @@ describe("getGitHubApiUrl", () => {
     expect(url).toBe("https://api.github.com");
   });
 
-  test("removes trailing slashes from GITHUB_API_URL", () => {
-    mockEnv.GITHUB_API_URL = "https://custom.api.github.com///";
+  test("removes trailing slashes from GH_HOST", () => {
+    mockEnv.GH_HOST = "github.enterprise.com///";
 
     const url = getGitHubApiUrl();
 
-    expect(url).toBe("https://custom.api.github.com");
+    expect(url).toBe("https://github.enterprise.com/api/v3");
   });
 
   test("removes trailing slashes from GITHUB_SERVER_URL", () => {

@@ -19,15 +19,30 @@ const MyOctokit = Octokit.plugin(retry, throttling);
 /**
  * Create an Octokit instance with proper configuration
  * @param token - Optional GitHub token
+ * @param hostname - Optional GitHub hostname for Enterprise
  * @returns Configured Octokit instance
  */
-function createOctokit(token?: string): Octokit {
+function createOctokit(token?: string, hostname?: string): Octokit {
   const auth = token ?? getGitHubToken();
+
+  // Build API URL from hostname if provided
+  let baseUrl: string;
+  if (hostname) {
+    const cleanHostname = hostname
+      .replace(/^https?:\/\//, "")
+      .replace(/\/+$/, "");
+    baseUrl =
+      cleanHostname === "github.com"
+        ? "https://api.github.com"
+        : `https://${cleanHostname}/api/v3`;
+  } else {
+    baseUrl = getGitHubApiUrl();
+  }
 
   return new MyOctokit({
     auth,
     userAgent: "issue-linker",
-    baseUrl: getGitHubApiUrl(),
+    baseUrl,
     request: {
       // Aggressive timeout for fast feedback during development
       // Adjust this value if you need more reliability vs speed
@@ -58,6 +73,7 @@ function createOctokit(token?: string): Octokit {
  * @param repo - Repository name
  * @param issueNumber - Issue number
  * @param token - Optional GitHub token
+ * @param hostname - Optional GitHub hostname for Enterprise
  * @returns Result object containing issue or error information
  */
 export async function getGitHubIssue(
@@ -65,8 +81,9 @@ export async function getGitHubIssue(
   repo: string,
   issueNumber: number,
   token?: string,
+  hostname?: string,
 ): Promise<GitHubIssueResult> {
-  const octokit = createOctokit(token);
+  const octokit = createOctokit(token, hostname);
 
   try {
     const { data } = await octokit.rest.issues.get({
@@ -143,6 +160,7 @@ export async function getGitHubIssue(
  * @param repo - Repository name
  * @param prNumber - Pull request number
  * @param token - Optional GitHub token
+ * @param hostname - Optional GitHub hostname for Enterprise
  * @returns Array of pull request commits
  * @throws GitHubError for API errors
  */
@@ -151,8 +169,9 @@ export async function fetchPullRequestCommits(
   repo: string,
   prNumber: number,
   token?: string,
+  hostname?: string,
 ): Promise<PullRequestCommit[]> {
-  const octokit = createOctokit(token);
+  const octokit = createOctokit(token, hostname);
 
   try {
     const { data } = await octokit.rest.pulls.listCommits({

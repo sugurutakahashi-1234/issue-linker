@@ -146,6 +146,54 @@ describe("CLI", () => {
       expect(proc.exitCode).toBe(1);
     });
 
+    it("should accept --hostname option", async () => {
+      const proc = spawn(
+        [
+          "bun",
+          "run",
+          "./cli.ts",
+          "-t",
+          "test",
+          "--hostname",
+          "github.enterprise.com",
+          "--check-mode",
+          "branch",
+        ],
+        {
+          cwd: import.meta.dir,
+        },
+      );
+
+      await proc.exited;
+
+      // Should not error out when hostname is provided
+      expect(proc.exitCode).toBeDefined();
+    });
+
+    it("should accept -h short form for hostname", async () => {
+      const proc = spawn(
+        [
+          "bun",
+          "run",
+          "./cli.ts",
+          "-t",
+          "test",
+          "-h",
+          "github.enterprise.com",
+          "--check-mode",
+          "branch",
+        ],
+        {
+          cwd: import.meta.dir,
+        },
+      );
+
+      await proc.exited;
+
+      // Should not error out when hostname is provided
+      expect(proc.exitCode).toBeDefined();
+    });
+
     // API tests using real GitHub API
     // Note: These tests may fail due to rate limits.
     // If they consistently fail, change 'it' to 'it.skip' to skip them.

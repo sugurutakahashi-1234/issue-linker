@@ -20,6 +20,7 @@ function createCheckMessageOptions(
   repo: string,
   actionMode: string,
   githubToken?: string,
+  hostname?: string,
 ): CheckMessageOptions {
   const options = {
     text,
@@ -28,6 +29,7 @@ function createCheckMessageOptions(
     repo,
     actionMode,
     ...(githubToken && { githubToken }),
+    ...(hostname && { hostname }),
   };
 
   // Validate using schema from core
@@ -52,6 +54,7 @@ async function run() {
     const repo =
       core.getInput("repo") || `${context.repo.owner}/${context.repo.repo}`;
     const githubToken = core.getInput("github-token") || undefined;
+    const hostname = core.getInput("hostname") || undefined;
 
     // Simple mode inputs
     const validateBranch = core.getInput("validate-branch") === "true";
@@ -77,6 +80,7 @@ async function run() {
           repo,
           "validate-branch",
           githubToken,
+          hostname,
         );
         core.debug(
           `Calling checkMessage with options: ${JSON.stringify(messageOptions)}`,
@@ -101,6 +105,7 @@ async function run() {
           repo,
           "validate-pr-title",
           githubToken,
+          hostname,
         );
         const result = await checkMessage(messageOptions);
         results.push(result);
@@ -121,6 +126,7 @@ async function run() {
           repo,
           "validate-pr-body",
           githubToken,
+          hostname,
         );
         const result = await checkMessage(messageOptions);
         results.push(result);
@@ -143,6 +149,7 @@ async function run() {
             repo: context.repo.repo,
             prNumber,
             ...(githubToken && { githubToken }),
+            ...(hostname && { hostname }),
           };
 
           const commits = await getPullRequestCommits(commitsOptions);
@@ -163,6 +170,7 @@ async function run() {
               repo,
               "validate-commits",
               githubToken,
+              hostname,
             );
 
             const result = await checkMessage(messageOptions);
@@ -187,6 +195,7 @@ async function run() {
         issueStatus,
         repo,
         ...(githubToken && { githubToken }),
+        ...(hostname && { hostname }),
         ...(exclude && { exclude }),
       };
 

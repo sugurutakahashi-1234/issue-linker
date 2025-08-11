@@ -27,14 +27,6 @@ npm install -g @sugurutakahashi-1234/issue-linker
 npx @sugurutakahashi-1234/issue-linker -t "feat/123-new-feature" -c branch
 ```
 
-### GitHub Action
-
-Add to your workflow:
-
-```yaml
-- uses: sugurutakahashi-1234/issue-linker@v1.0.0
-```
-
 ## Usage
 
 ### CLI
@@ -80,6 +72,7 @@ issue-linker -t "Fix #123" --json
 
 ### GitHub Actions
 
+<!-- x-release-please-start-version -->
 ```yaml
 name: Validate PR
 
@@ -95,21 +88,26 @@ jobs:
       
       # Simple mode - automatic validations
       - name: Validate PR
-        uses: sugurutakahashi-1234/issue-linker@v1
+        uses: sugurutakahashi-1234/issue-linker@v1.0.0
         with:
           validate-branch: true
           validate-pr-title: true
           validate-pr-body: true
           issue-status: 'open'
-      
+```
+<!-- x-release-please-end -->
+
+<!-- x-release-please-start-version -->
+```yaml      
       # Advanced mode - custom text
       - name: Custom validation
-        uses: sugurutakahashi-1234/issue-linker@v1
+        uses: sugurutakahashi-1234/issue-linker@v1.0.0
         with:
           text: ${{ github.event.pull_request.title }}
           check-mode: 'default'
           exclude: 'WIP*'
 ```
+<!-- x-release-please-end -->
 
 ## Husky Integration
 
@@ -149,8 +147,32 @@ bunx @sugurutakahashi-1234/issue-linker -t "$message" -c commit || {
 
 ### Environment Variables
 
-- `GITHUB_TOKEN`: GitHub personal access token for API authentication
-- `GITHUB_API_URL`: Custom GitHub API URL (for GitHub Enterprise)
+- `GITHUB_TOKEN` or `GH_TOKEN`: GitHub personal access token for API authentication
+- `GH_HOST`: GitHub hostname (e.g., `github.enterprise.com`) - compatible with GitHub CLI
+- `GITHUB_SERVER_URL`: GitHub server URL (automatically set in GitHub Actions)
+
+### GitHub Enterprise Support
+
+This tool supports GitHub Enterprise Server. You can configure it in multiple ways:
+
+#### Using CLI option
+```bash
+# Use --hostname or -h to specify your GitHub Enterprise host
+issue-linker -t "Fix #123" --hostname github.enterprise.com
+
+# Short form
+issue-linker -t "Fix #123" -h github.enterprise.com
+```
+
+#### Using environment variable
+```bash
+# Set GH_HOST to use consistently (compatible with GitHub CLI)
+export GH_HOST=github.enterprise.com
+issue-linker -t "Fix #123"
+```
+
+#### In GitHub Actions
+GitHub Actions automatically sets `GITHUB_SERVER_URL` for GitHub Enterprise environments. No additional configuration is needed.
 
 ### Options
 
@@ -162,6 +184,7 @@ bunx @sugurutakahashi-1234/issue-linker -t "$message" -c commit || {
 | `issueStatus` | Filter by issue status (all/open/closed) | `all`                    |
 | `repo`        | Repository (owner/repo)                  | Detected from git remote |
 | `githubToken` | GitHub token for API access              | `GITHUB_TOKEN` env       |
+| `hostname`    | GitHub hostname for Enterprise           | `github.com` or `GH_HOST` env |
 
 ### Default Exclude Patterns
 

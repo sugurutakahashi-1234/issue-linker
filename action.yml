@@ -60,6 +60,11 @@ inputs:
       Default: uses GITHUB_TOKEN from environment
     required: false
     default: ${{ github.token }}
+  hostname:
+    description: |
+      GitHub hostname for Enterprise Server
+      Default: automatically detected from environment
+    required: false
 
 outputs:
   success:

@@ -27,6 +27,10 @@
     { "type": "chore", "section": "🔧 Maintenance" }
   ],
   "packages": {
+    ".": {
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": ["README.md"]
+    },
     "packages/cli": {
       "changelog-path": "CHANGELOG.md"
     },

@@ -1,10 +1,34 @@
 {
   "name": "issue-linker",
   "version": "0.0.0",
+  "description": "CLI tool for validating and linking GitHub issues in commit messages",
+  "keywords": [
+    "github",
+    "issues",
+    "commit",
+    "validation",
+    "cli",
+    "git"
+  ],
+  "author": "Suguru Takahashi",
+  "license": "MIT",
+  "homepage": "https://github.com/sugurutakahashi-1234/issue-linker#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sugurutakahashi-1234/issue-linker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sugurutakahashi-1234/issue-linker/issues"
+  },
   "type": "module",
   "bin": {
     "issue-linker": "dist/cli.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "exports": {
     ".": {
       "default": "./dist/cli.js"
@@ -33,7 +57,7 @@
   },
   "dependencies": {
     "@commander-js/extra-typings": "^14.0.0",
-    "@issue-linker/core": "file:/Users/sugurutakahashi/git/issue-linker/packages/core",
+    "@issue-linker/core": "workspace:*",
     "valibot": "^1.1.0"
   },
   "devDependencies": {

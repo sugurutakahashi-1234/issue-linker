@@ -2,18 +2,6 @@
   "name": "issue-linker-monorepo",
   "version": "0.0.0",
   "private": true,
-  "author": "Suguru Takahashi",
-  "description": "issue-linker monorepo",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/sugurutakahashi-1234/issue-linker.git"
-  },
-  "bugs": {
-    "url": "https://github.com/sugurutakahashi-1234/issue-linker/issues"
-  },
-  "homepage": "https://github.com/sugurutakahashi-1234/issue-linker#readme",
-  "keywords": [],
-  "license": "MIT",
   "type": "module",
   "engines": {
     "node": ">=20.0.0"

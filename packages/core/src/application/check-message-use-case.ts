@@ -92,6 +92,7 @@ export async function checkMessage(
         repository.repo,
         issueNumber,
         githubToken,
+        opts.hostname,
       );
 
       if (!result.found) {

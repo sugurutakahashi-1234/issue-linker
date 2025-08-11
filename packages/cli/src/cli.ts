@@ -38,6 +38,10 @@ program
   )
   .option("--repo <owner/repo>", "repository (default: current repository)")
   .option("--github-token <token>", "GitHub token (default: GITHUB_TOKEN env)")
+  .option(
+    "-h, --hostname <hostname>",
+    "GitHub hostname (default: github.com, or GH_HOST env)",
+  )
   .option("--json", "output full result as JSON")
   .option("--verbose", "show detailed output")
   .action(async (options) => {
@@ -52,6 +56,7 @@ program
           ...(options.exclude && { exclude: options.exclude }),
           ...(options.repo && { repo: options.repo }),
           ...(options.githubToken && { githubToken: options.githubToken }),
+          ...(options.hostname && { hostname: options.hostname }),
         });
       } catch (error) {
         if (error instanceof v.ValiError) {
