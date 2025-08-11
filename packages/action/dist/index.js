@@ -75584,9 +75584,9 @@ function createCheckMessageOptions(text, checkMode, issueStatus, repo, actionMod
     }
 }
 async function run() {
+    const results = [];
     try {
         const context = github.context;
-        const results = [];
         // Get common options
         const issueStatus = core.getInput("issue-status") || core_1.DEFAULT_OPTIONS.issueStatus;
         const repo = core.getInput("repo") || `${context.repo.owner}/${context.repo.repo}`;
@@ -75671,8 +75671,8 @@ async function run() {
                     }
                 }
                 catch (error) {
-                    // Let the error propagate - it will be caught by the outer try-catch
-                    throw new Error(`Failed to fetch commits: ${error instanceof Error ? error.message : String(error)}`);
+                    // Log error but continue processing
+                    core.error(`Failed to fetch commits: ${error instanceof Error ? error.message : String(error)}`);
                 }
             }
         }

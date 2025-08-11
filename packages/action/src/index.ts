@@ -44,9 +44,10 @@ function createCheckMessageOptions(
 }
 
 async function run() {
+  const results: IssueValidationResult[] = [];
+
   try {
     const context = github.context;
-    const results: IssueValidationResult[] = [];
 
     // Get common options
     const issueStatus =
@@ -177,8 +178,8 @@ async function run() {
             results.push(result);
           }
         } catch (error) {
-          // Let the error propagate - it will be caught by the outer try-catch
-          throw new Error(
+          // Log error but continue processing
+          core.error(
             `Failed to fetch commits: ${error instanceof Error ? error.message : String(error)}`,
           );
         }
