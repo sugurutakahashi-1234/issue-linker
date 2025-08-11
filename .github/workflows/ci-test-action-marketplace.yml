@@ -5,7 +5,7 @@ name: ci-test-action-marketplace
 #
 # DIFFERENCES from local-test-action-marketplace.yml:
 # 1. Workflow name: 'ci-test-action-marketplace' (vs 'test-action-marketplace')
-# 2. Trigger: PR on '.release-please-manifest.json' changes (vs workflow_dispatch only)
+# 2. Trigger: PR on '.release-please-manifest.json' changes + workflow_dispatch (vs workflow_dispatch only)
 # 3. Action reference: 'sugurutakahashi-1234/issue-linker@main' (vs './')
 # 4. Jobs are identical except for the action reference path
 #
@@ -17,12 +17,6 @@ on:
     paths:
       - '.release-please-manifest.json'
   workflow_dispatch:
-  workflow_run:
-    # Triggered when npm Release workflow completes
-    # Note: This requires the workflow name to match exactly with the 'name' field in cd-npm-release.yml
-    workflows: ["npm Release"]
-    types:
-      - completed
 
 jobs:
   # ================================================================

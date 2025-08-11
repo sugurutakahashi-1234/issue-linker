@@ -11,6 +11,8 @@ name: test-action-marketplace
 
 on:
   pull_request:
+    paths:
+      - '** This file does not exist - for act local testing only **'
   workflow_dispatch:
 
 jobs:
