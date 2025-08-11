@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "🧪": "========== Test ==========",
     "test": "echo '⚠️  No tests for action package (GitHub Actions environment required)'",
-    "test:quiet": "echo '✅ Tests passed (action package - no tests)'",
+    "test:quiet": "echo '⚠️  No tests for action package' > /dev/null 2>&1 && echo '✅ Tests passed' || (echo '❌ Tests failed' && exit 1)",
     "🎨": "========== Code Quality ==========",
     "fix": "biome check --write --unsafe .",
     "check": "biome check .",
