@@ -24,21 +24,18 @@ export function findIssueNumbers(text: string, checkMode: CheckMode): number[] {
       }
     }
   } else if (checkMode === "branch") {
-    // Priority patterns for branch names
-    const patterns = [
-      /^(\d{1,7})[-_]/, // Start with number: 123-feature, 123_feature
-      /\/(\d{1,7})[-_]/, // After slash: feat/123-desc, feat/123_desc
-      /#(\d{1,7})(?:\b|$)/, // With hash: #123, feat/#123-desc
-      /[-_](\d{1,7})[-_]/, // After hyphen/underscore: feature-123-, issue_123-
-    ];
+    // Extract all issue numbers from branch name
+    // Common patterns: 123-456-feature, feat/123-124, issue-123-456-fix
+    // Use negative lookbehind/lookahead to avoid matching numbers in version strings like "v2.0"
+    const pattern = /(?<![.\d])(\d{1,7})(?![.\d])/g;
+    const matches = text.matchAll(pattern);
 
-    for (const pattern of patterns) {
-      const match = text.match(pattern);
-      if (match?.[1]) {
-        const issueNumber = Number.parseInt(match[1], 10);
+    for (const match of matches) {
+      const num = match[1];
+      if (num) {
+        const issueNumber = Number.parseInt(num, 10);
         if (issueNumber > 0 && issueNumber <= 9999999) {
           numbers.add(issueNumber);
-          break; // Use first match only for branch mode
         }
       }
     }

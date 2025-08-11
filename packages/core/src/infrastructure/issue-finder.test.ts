@@ -66,11 +66,24 @@ describe("findIssueNumbers", () => {
       expect(findIssueNumbers("issue_789_fix", "branch")).toEqual([789]);
     });
 
-    it("should find only the first matching issue number", () => {
-      // Should extract 123, not 456
-      expect(findIssueNumbers("123-feature-456", "branch")).toEqual([123]);
-      expect(findIssueNumbers("feat/123-test-2", "branch")).toEqual([123]);
-      expect(findIssueNumbers("fix/456-update-v2", "branch")).toEqual([456]);
+    it("should find multiple issue numbers in branch names", () => {
+      // Should extract all issue numbers
+      expect(findIssueNumbers("123-456-feature", "branch")).toEqual([123, 456]);
+      expect(findIssueNumbers("feat/123-124-test", "branch")).toEqual([
+        123, 124,
+      ]);
+      expect(findIssueNumbers("issue-123-456-789-fix", "branch")).toEqual([
+        123, 456, 789,
+      ]);
+      expect(findIssueNumbers("feature/100-200-300", "branch")).toEqual([
+        100, 200, 300,
+      ]);
+    });
+
+    it("should handle single issue numbers correctly", () => {
+      expect(findIssueNumbers("123-feature", "branch")).toEqual([123]);
+      expect(findIssueNumbers("feat/456-test", "branch")).toEqual([456]);
+      expect(findIssueNumbers("fix/789", "branch")).toEqual([789]);
     });
 
     it("should return empty array for branches without valid issue numbers", () => {
@@ -85,17 +98,22 @@ describe("findIssueNumbers", () => {
       expect(findIssueNumbers("", "branch")).toEqual([]);
       expect(findIssueNumbers("0-feature", "branch")).toEqual([]); // 0 is invalid
       expect(findIssueNumbers("99999999-test", "branch")).toEqual([]); // Too large
-      expect(findIssueNumbers("version2", "branch")).toEqual([]); // No separator
-      expect(findIssueNumbers("test-2.0", "branch")).toEqual([]); // Decimal number
+      expect(findIssueNumbers("version2", "branch")).toEqual([2]); // Now extracts the "2"
+      expect(findIssueNumbers("test-2.0", "branch")).toEqual([]); // Decimal number not extracted
     });
 
-    it("should prioritize earlier patterns", () => {
-      // Start pattern wins over others
-      expect(findIssueNumbers("123-feature-456", "branch")).toEqual([123]);
-      // Slash pattern wins when no start pattern
-      expect(findIssueNumbers("feat/123-issue-456", "branch")).toEqual([123]);
-      // Hash pattern wins when no start/slash pattern
-      expect(findIssueNumbers("feature/#123-and-456", "branch")).toEqual([123]);
+    it("should extract all numbers regardless of position", () => {
+      // Extract all numbers from different positions
+      expect(findIssueNumbers("123-feature-456", "branch")).toEqual([123, 456]);
+      expect(findIssueNumbers("feat/123-issue-456", "branch")).toEqual([
+        123, 456,
+      ]);
+      expect(findIssueNumbers("feature/#123-and-456", "branch")).toEqual([
+        123, 456,
+      ]);
+      expect(findIssueNumbers("100-200-300-feature", "branch")).toEqual([
+        100, 200, 300,
+      ]);
     });
   });
 

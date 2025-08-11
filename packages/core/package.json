@@ -40,7 +40,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "🧪": "========== Test ==========",
     "test": "bun test",
-    "test:quiet": "bun test > /dev/null 2>&1 && echo '✅ Tests passed' || echo '❌ Tests failed'",
+    "test:quiet": "bun test > /dev/null 2>&1 && echo '✅ Tests passed' || (echo '❌ Tests failed' && exit 1)",
     "🎨": "========== Code Quality ==========",
     "fix": "biome check --write --unsafe .",
     "check": "biome check .",
