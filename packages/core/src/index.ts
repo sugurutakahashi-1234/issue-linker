@@ -13,14 +13,15 @@ export {
 } from "./domain/errors.js";
 /** @public */
 export type {
+  BaseResult,
+  BatchCommentItemResult,
+  CheckDuplicateCommentResult,
+  CheckMessageResult,
   CommentOnBranchIssuesResult,
-  CommentOnIssueResult,
-  CommentResult,
-  DuplicateCheckResult,
+  CreateIssueCommentResult,
   ErrorInfo,
   InputConfig,
   IssueInfo,
-  IssueValidationResult,
   ValidationReason,
 } from "./domain/result.js";
 /** @public */

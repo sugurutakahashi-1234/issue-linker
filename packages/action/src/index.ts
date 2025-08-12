@@ -3,11 +3,11 @@ import * as github from "@actions/github";
 import {
   type CheckMessageOptions,
   CheckMessageOptionsSchema,
+  type CheckMessageResult,
   checkMessage,
   commentOnBranchIssues,
   DEFAULT_OPTIONS,
   getPullRequestCommits,
-  type IssueValidationResult,
 } from "@issue-linker/core";
 import * as v from "valibot";
 import {
@@ -49,7 +49,7 @@ function createCheckMessageOptions(
 }
 
 async function run() {
-  const results: IssueValidationResult[] = [];
+  const results: CheckMessageResult[] = [];
 
   try {
     const context = github.context;

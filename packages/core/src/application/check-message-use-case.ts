@@ -1,7 +1,7 @@
 // Application layer - Use case for checking text messages
 
 import * as v from "valibot";
-import type { InputConfig, IssueValidationResult } from "../domain/result.js";
+import type { CheckMessageResult, InputConfig } from "../domain/result.js";
 import {
   createErrorResult,
   createExcludedResult,
@@ -31,7 +31,7 @@ import { parseRepositoryString } from "../infrastructure/repository-parser.js";
  */
 export async function checkMessage(
   options: CheckMessageOptions,
-): Promise<IssueValidationResult> {
+): Promise<CheckMessageResult> {
   // Step 1: Validate options
   const validationResult = v.safeParse(CheckMessageOptionsSchema, options);
   if (!validationResult.success) {

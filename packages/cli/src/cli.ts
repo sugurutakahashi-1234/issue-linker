@@ -9,9 +9,9 @@ import { program } from "@commander-js/extra-typings";
 import {
   type CheckMessageOptions,
   CheckMessageOptionsSchema,
+  type CheckMessageResult,
   checkMessage,
   DEFAULT_OPTIONS,
-  type IssueValidationResult,
 } from "@issue-linker/core";
 import * as v from "valibot";
 
@@ -66,8 +66,7 @@ program
         throw error;
       }
 
-      const result: IssueValidationResult =
-        await checkMessage(validatedOptions);
+      const result: CheckMessageResult = await checkMessage(validatedOptions);
 
       // Output JSON if requested
       if (options.json) {

@@ -1,4 +1,4 @@
-// Unified result type for issue validation
+// Result types for use cases
 
 import type {
   ActionMode,
@@ -37,6 +37,13 @@ export interface ErrorInfo {
   stack?: string;
 }
 
+// Base result interface for all use cases
+export interface BaseResult {
+  success: boolean;
+  message: string;
+  error?: ErrorInfo;
+}
+
 // Validation reason for quick categorization
 export type ValidationReason =
   | "excluded" // Text was excluded from validation
@@ -45,54 +52,40 @@ export type ValidationReason =
   | "invalid-issues" // Issues found but invalid
   | "error"; // Error occurred during validation
 
-// Unified result type used across all layers (core, cli, action)
-export interface IssueValidationResult {
-  // Basic information (required)
-  success: boolean;
-  message: string;
+// Result type for checkMessage use case
+export interface CheckMessageResult extends BaseResult {
   reason: ValidationReason;
-
-  // Input information (complete record of what was executed)
   input: InputConfig;
-
-  // Issue information (only when issues are found)
   issues?: IssueInfo;
-
-  // Error information (only on errors)
-  error?: ErrorInfo;
 }
 
-// Result type for comment creation
-export interface CommentResult {
-  success: boolean;
-  message: string;
+// Result type for createIssueComment use case
+export interface CreateIssueCommentResult extends BaseResult {
   commentId?: number;
+}
+
+// Result type for checkDuplicateComment use case
+export interface CheckDuplicateCommentResult {
+  duplicateFound: boolean;
+  duplicateCommentId?: number;
   error?: ErrorInfo;
 }
 
-// Result type for duplicate check
-export interface DuplicateCheckResult {
-  isDuplicate: boolean;
-  existingCommentId?: number;
-  error?: ErrorInfo;
-}
-
-// Individual comment result for batch operations
-export interface CommentOnIssueResult {
+// Individual result item for batch comment operations
+export interface BatchCommentItemResult {
   issueNumber: number;
   success: boolean;
   skipped?: boolean;
   message?: string;
   commentId?: number;
-  error?: string;
+  error?: ErrorInfo;
 }
 
-// Result type for batch comment operations
-export interface CommentOnBranchIssuesResult {
-  success: boolean;
+// Result type for commentOnBranchIssues use case
+export interface CommentOnBranchIssuesResult extends BaseResult {
   totalIssues: number;
   commented: number;
   skipped: number;
   failed: number;
-  results: CommentOnIssueResult[];
+  results: BatchCommentItemResult[];
 }

@@ -68450,7 +68450,7 @@ async function checkDuplicateComment(options) {
     const validationResult = safeParse(CheckDuplicateCommentOptionsSchema, options);
     if (!validationResult.success) {
         return {
-            isDuplicate: false,
+            duplicateFound: false,
             error: {
                 type: "validation-error",
                 message: validationResult.issues[0]?.message ?? "Invalid options provided",
@@ -68466,7 +68466,7 @@ async function checkDuplicateComment(options) {
         // Without a token, we can't check for duplicates, so assume no duplicate
         // This allows the flow to continue but may result in duplicate comments
         return {
-            isDuplicate: false,
+            duplicateFound: false,
             error: {
                 type: "auth-warning",
                 message: "No GitHub token available to check for duplicates",
@@ -68480,19 +68480,19 @@ async function checkDuplicateComment(options) {
         const duplicateComment = comments.find((comment) => comment.body.includes(validatedOptions.marker));
         if (duplicateComment) {
             return {
-                isDuplicate: true,
-                existingCommentId: duplicateComment.id,
+                duplicateFound: true,
+                duplicateCommentId: duplicateComment.id,
             };
         }
         return {
-            isDuplicate: false,
+            duplicateFound: false,
         };
     }
     catch (error) {
         // On error, assume no duplicate to allow the flow to continue
         const errorMessage = error instanceof Error ? error.message : String(error);
         return {
-            isDuplicate: false,
+            duplicateFound: false,
             error: {
                 type: "api-error",
                 message: errorMessage,
@@ -68502,7 +68502,7 @@ async function checkDuplicateComment(options) {
 }
 //# sourceMappingURL=check-duplicate-comment-use-case.js.map
 ;// CONCATENATED MODULE: ../core/dist/domain/result-factory.js
-// Factory functions for creating IssueValidationResult objects
+// Factory functions for creating CheckMessageResult objects
 /**
  * Create a result for when text is excluded from validation
  */
@@ -75748,6 +75748,7 @@ async function commentOnBranchIssues(options) {
     if (!validationResult.success) {
         return {
             success: false,
+            message: "Invalid options provided",
             totalIssues: 0,
             commented: 0,
             skipped: 0,
@@ -75772,7 +75773,7 @@ async function commentOnBranchIssues(options) {
                 githubToken,
                 hostname: validatedOptions.hostname,
             });
-            if (duplicateCheck.isDuplicate) {
+            if (duplicateCheck.duplicateFound) {
                 return {
                     issueNumber,
                     success: true,
@@ -75801,7 +75802,7 @@ async function commentOnBranchIssues(options) {
             return {
                 issueNumber,
                 success: false,
-                error: commentResult.message,
+                ...(commentResult.error && { error: commentResult.error }),
             };
         }
         catch (error) {
@@ -75809,7 +75810,10 @@ async function commentOnBranchIssues(options) {
             return {
                 issueNumber,
                 success: false,
-                error: error instanceof Error ? error.message : String(error),
+                error: {
+                    type: "unknown",
+                    message: error instanceof Error ? error.message : String(error),
+                },
             };
         }
     }));
@@ -75819,6 +75823,9 @@ async function commentOnBranchIssues(options) {
     const failed = results.filter((r) => !r.success).length;
     return {
         success: failed === 0,
+        message: failed === 0
+            ? `Successfully processed ${validatedOptions.issueNumbers.length} issue(s)`
+            : `Failed to process ${failed} of ${validatedOptions.issueNumbers.length} issue(s)`,
         totalIssues: validatedOptions.issueNumbers.length,
         commented,
         skipped,

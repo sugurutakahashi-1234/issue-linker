@@ -1,7 +1,7 @@
 // Application layer - Use case for checking duplicate comments
 
 import * as v from "valibot";
-import type { DuplicateCheckResult } from "../domain/result.js";
+import type { CheckDuplicateCommentResult } from "../domain/result.js";
 import {
   type CheckDuplicateCommentOptions,
   CheckDuplicateCommentOptionsSchema,
@@ -17,7 +17,7 @@ import { parseRepositoryString } from "../infrastructure/repository-parser.js";
  */
 export async function checkDuplicateComment(
   options: CheckDuplicateCommentOptions,
-): Promise<DuplicateCheckResult> {
+): Promise<CheckDuplicateCommentResult> {
   // Step 1: Validate options
   const validationResult = v.safeParse(
     CheckDuplicateCommentOptionsSchema,
@@ -25,7 +25,7 @@ export async function checkDuplicateComment(
   );
   if (!validationResult.success) {
     return {
-      isDuplicate: false,
+      duplicateFound: false,
       error: {
         type: "validation-error",
         message:
@@ -45,7 +45,7 @@ export async function checkDuplicateComment(
     // Without a token, we can't check for duplicates, so assume no duplicate
     // This allows the flow to continue but may result in duplicate comments
     return {
-      isDuplicate: false,
+      duplicateFound: false,
       error: {
         type: "auth-warning",
         message: "No GitHub token available to check for duplicates",
@@ -70,19 +70,19 @@ export async function checkDuplicateComment(
 
     if (duplicateComment) {
       return {
-        isDuplicate: true,
-        existingCommentId: duplicateComment.id,
+        duplicateFound: true,
+        duplicateCommentId: duplicateComment.id,
       };
     }
 
     return {
-      isDuplicate: false,
+      duplicateFound: false,
     };
   } catch (error: unknown) {
     // On error, assume no duplicate to allow the flow to continue
     const errorMessage = error instanceof Error ? error.message : String(error);
     return {
-      isDuplicate: false,
+      duplicateFound: false,
       error: {
         type: "api-error",
         message: errorMessage,

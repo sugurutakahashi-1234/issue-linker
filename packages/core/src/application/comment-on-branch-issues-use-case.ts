@@ -2,8 +2,8 @@
 
 import * as v from "valibot";
 import type {
+  BatchCommentItemResult,
   CommentOnBranchIssuesResult,
-  CommentOnIssueResult,
 } from "../domain/result.js";
 import {
   type CommentOnBranchIssuesOptions,
@@ -29,6 +29,7 @@ export async function commentOnBranchIssues(
   if (!validationResult.success) {
     return {
       success: false,
+      message: "Invalid options provided",
       totalIssues: 0,
       commented: 0,
       skipped: 0,
@@ -49,7 +50,7 @@ export async function commentOnBranchIssues(
   // Step 4: Comment on each issue (in parallel)
   const results = await Promise.all(
     validatedOptions.issueNumbers.map(
-      async (issueNumber): Promise<CommentOnIssueResult> => {
+      async (issueNumber): Promise<BatchCommentItemResult> => {
         try {
           // Check for duplicate comment
           const duplicateCheck = await checkDuplicateComment({
@@ -60,7 +61,7 @@ export async function commentOnBranchIssues(
             hostname: validatedOptions.hostname,
           });
 
-          if (duplicateCheck.isDuplicate) {
+          if (duplicateCheck.duplicateFound) {
             return {
               issueNumber,
               success: true,
@@ -92,14 +93,17 @@ export async function commentOnBranchIssues(
           return {
             issueNumber,
             success: false,
-            error: commentResult.message,
+            ...(commentResult.error && { error: commentResult.error }),
           };
         } catch (error) {
           // Handle unexpected errors
           return {
             issueNumber,
             success: false,
-            error: error instanceof Error ? error.message : String(error),
+            error: {
+              type: "unknown",
+              message: error instanceof Error ? error.message : String(error),
+            },
           };
         }
       },
@@ -113,6 +117,10 @@ export async function commentOnBranchIssues(
 
   return {
     success: failed === 0,
+    message:
+      failed === 0
+        ? `Successfully processed ${validatedOptions.issueNumbers.length} issue(s)`
+        : `Failed to process ${failed} of ${validatedOptions.issueNumbers.length} issue(s)`,
     totalIssues: validatedOptions.issueNumbers.length,
     commented,
     skipped,

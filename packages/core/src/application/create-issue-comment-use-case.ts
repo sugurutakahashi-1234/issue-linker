@@ -1,7 +1,7 @@
 // Application layer - Use case for creating issue comments
 
 import * as v from "valibot";
-import type { CommentResult } from "../domain/result.js";
+import type { CreateIssueCommentResult } from "../domain/result.js";
 import {
   type CreateIssueCommentOptions,
   CreateIssueCommentOptionsSchema,
@@ -17,7 +17,7 @@ import { parseRepositoryString } from "../infrastructure/repository-parser.js";
  */
 export async function createIssueComment(
   options: CreateIssueCommentOptions,
-): Promise<CommentResult> {
+): Promise<CreateIssueCommentResult> {
   // Step 1: Validate options
   const validationResult = v.safeParse(
     CreateIssueCommentOptionsSchema,
