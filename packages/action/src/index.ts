@@ -49,7 +49,6 @@ async function run() {
       const branchName = extractBranchNameFromContext(context);
 
       if (branchName) {
-        core.info(`Validating branch: ${branchName}`);
         const messageOptions = createCheckMessageOptions(
           branchName,
           "branch",
@@ -59,11 +58,7 @@ async function run() {
           githubToken,
           hostname,
         );
-        core.debug(
-          `Calling checkMessage with options: ${JSON.stringify(messageOptions)}`,
-        );
         const result = await checkMessage(messageOptions);
-        core.debug(`checkMessage result: ${JSON.stringify(result)}`);
         results.push(result);
 
         // Comment on issues when branch is pushed (create event)
@@ -74,10 +69,6 @@ async function run() {
           result.issues?.valid &&
           result.issues.valid.length > 0
         ) {
-          core.info(
-            `Commenting on ${result.issues.valid.length} issue(s) for branch: ${branchName}`,
-          );
-
           // Use new use case for batch commenting
           const commentResult = await commentOnBranchIssues({
             repo,
@@ -98,17 +89,17 @@ async function run() {
 
           if (commented.length > 0) {
             core.info(
-              `✅ Commented on issue${commented.length > 1 ? "s" : ""}: #${commented.map((r) => r.issueNumber).join(", #")}`,
+              `Commented on: #${commented.map((r) => r.issueNumber).join(", #")}`,
             );
           }
           if (skipped.length > 0) {
-            core.info(
-              `⏭️  Already commented on: #${skipped.map((r) => r.issueNumber).join(", #")}`,
+            core.debug(
+              `Already commented on: #${skipped.map((r) => r.issueNumber).join(", #")}`,
             );
           }
           if (failed.length > 0) {
             core.warning(
-              `⚠️  Failed to comment on: #${failed.map((r) => r.issueNumber).join(", #")}`,
+              `Failed to comment on: #${failed.map((r) => r.issueNumber).join(", #")}`,
             );
           }
         }
@@ -121,7 +112,6 @@ async function run() {
       // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
       const prTitle = context.payload.pull_request?.["title"];
       if (prTitle) {
-        core.info(`Validating PR title: ${prTitle}`);
         const messageOptions = createCheckMessageOptions(
           prTitle,
           "default",
@@ -142,7 +132,6 @@ async function run() {
       // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
       const prBody = context.payload.pull_request?.["body"];
       if (prBody) {
-        core.info(`Validating PR body`);
         const messageOptions = createCheckMessageOptions(
           prBody,
           "default",
@@ -176,16 +165,8 @@ async function run() {
           };
 
           const commits = await getPullRequestCommits(commitsOptions);
-          core.info(`Found ${commits.length} commits in PR`);
-
           // Check each commit message
           for (const commit of commits) {
-            const shortSha = commit.sha.substring(0, 7);
-
-            core.debug(
-              `Checking commit ${shortSha}: ${commit.message.split("\n")[0]}`,
-            );
-
             const messageOptions = createCheckMessageOptions(
               commit.message,
               "commit",
@@ -210,7 +191,6 @@ async function run() {
 
     // Advanced mode validation
     if (text) {
-      core.info(`Validating custom text: ${text}`);
       const messageOptions = {
         text,
         checkMode,
@@ -250,40 +230,33 @@ async function run() {
       if (result.success) {
         // Success cases
         if (result.reason === "excluded") {
-          core.info(`✅ ${prefix}Text was excluded from validation`);
+          core.info(`${prefix}Text was excluded from validation`);
         } else if (result.issues?.valid && result.issues.valid.length > 0) {
           core.info(
-            `✅ ${prefix}Valid issues: #${result.issues.valid.join(", #")}`,
+            `${prefix}Valid issues: #${result.issues.valid.join(", #")}`,
           );
         } else {
-          core.info(`✅ ${prefix}${result.message}`);
+          core.info(`${prefix}${result.message}`);
         }
       } else {
         // Failure cases
-        core.error(`❌ ${prefix}${result.message}`);
+        core.error(`${prefix}${result.message}`);
 
         // Show details for failed validations
         if (result.issues) {
           const details = [];
 
-          if (result.issues.valid.length > 0) {
-            details.push(`Valid: #${result.issues.valid.join(", #")}`);
-          }
           if (result.issues.notFound.length > 0) {
             details.push(`Not found: #${result.issues.notFound.join(", #")}`);
           }
           if (result.issues.wrongState.length > 0) {
-            const stateInfo =
-              result.input.issueStatus === "all"
-                ? "Wrong state"
-                : `Wrong state (expected: ${result.input.issueStatus})`;
             details.push(
-              `${stateInfo}: #${result.issues.wrongState.join(", #")}`,
+              `Wrong state: #${result.issues.wrongState.join(", #")}`,
             );
           }
 
           if (details.length > 0) {
-            core.info(`   Details: ${details.join(", ")}`);
+            core.info(`Details: ${details.join(", ")}`);
           }
         }
       }
