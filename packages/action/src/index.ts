@@ -14,39 +14,7 @@ import {
   extractBranchNameFromContext,
   isCreateBranchEvent,
 } from "./github-actions-helpers.js";
-
-/**
- * Helper function to create CheckMessageOptions with validation
- */
-function createCheckMessageOptions(
-  text: string,
-  checkMode: string,
-  issueStatus: string,
-  repo: string,
-  actionMode: string,
-  githubToken?: string,
-  hostname?: string,
-): CheckMessageOptions {
-  const options = {
-    text,
-    checkMode,
-    issueStatus,
-    repo,
-    actionMode,
-    ...(githubToken && { githubToken }),
-    ...(hostname && { hostname }),
-  };
-
-  // Validate using schema from core
-  try {
-    return v.parse(CheckMessageOptionsSchema, options);
-  } catch (error) {
-    if (error instanceof v.ValiError) {
-      throw new Error(`Invalid options: ${error.message}`);
-    }
-    throw error;
-  }
-}
+import { createCheckMessageOptions } from "./validation-helpers.js";
 
 async function run() {
   const results: CheckMessageResult[] = [];

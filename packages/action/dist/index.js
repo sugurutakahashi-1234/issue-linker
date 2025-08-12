@@ -37304,6 +37304,43 @@ function isCreateBranchEvent(context) {
 
 /***/ }),
 
+/***/ 3195:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.createCheckMessageOptions = createCheckMessageOptions;
+const tslib_1 = __nccwpck_require__(4176);
+const core_1 = __nccwpck_require__(2938);
+const v = tslib_1.__importStar(__nccwpck_require__(9487));
+/**
+ * Helper function to create CheckMessageOptions with validation
+ */
+function createCheckMessageOptions(text, checkMode, issueStatus, repo, actionMode, githubToken, hostname) {
+    const options = {
+        text,
+        checkMode,
+        issueStatus,
+        repo,
+        actionMode,
+        ...(githubToken && { githubToken }),
+        ...(hostname && { hostname }),
+    };
+    // Validate using schema from core
+    try {
+        return v.parse(core_1.CheckMessageOptionsSchema, options);
+    }
+    catch (error) {
+        if (error instanceof v.ValiError) {
+            throw new Error(`Invalid options: ${error.message}`);
+        }
+        throw error;
+    }
+}
+
+
+/***/ }),
+
 /***/ 2613:
 /***/ ((module) => {
 
@@ -75949,30 +75986,7 @@ const github = tslib_1.__importStar(__nccwpck_require__(5683));
 const core_1 = __nccwpck_require__(2938);
 const v = tslib_1.__importStar(__nccwpck_require__(9487));
 const github_actions_helpers_js_1 = __nccwpck_require__(8773);
-/**
- * Helper function to create CheckMessageOptions with validation
- */
-function createCheckMessageOptions(text, checkMode, issueStatus, repo, actionMode, githubToken, hostname) {
-    const options = {
-        text,
-        checkMode,
-        issueStatus,
-        repo,
-        actionMode,
-        ...(githubToken && { githubToken }),
-        ...(hostname && { hostname }),
-    };
-    // Validate using schema from core
-    try {
-        return v.parse(core_1.CheckMessageOptionsSchema, options);
-    }
-    catch (error) {
-        if (error instanceof v.ValiError) {
-            throw new Error(`Invalid options: ${error.message}`);
-        }
-        throw error;
-    }
-}
+const validation_helpers_js_1 = __nccwpck_require__(3195);
 async function run() {
     const results = [];
     try {
@@ -75998,7 +76012,7 @@ async function run() {
             const branchName = (0, github_actions_helpers_js_1.extractBranchNameFromContext)(context);
             if (branchName) {
                 core.info(`Validating branch: ${branchName}`);
-                const messageOptions = createCheckMessageOptions(branchName, "branch", issueStatus, repo, "validate-branch", githubToken, hostname);
+                const messageOptions = (0, validation_helpers_js_1.createCheckMessageOptions)(branchName, "branch", issueStatus, repo, "validate-branch", githubToken, hostname);
                 core.debug(`Calling checkMessage with options: ${JSON.stringify(messageOptions)}`);
                 const result = await (0, core_1.checkMessage)(messageOptions);
                 core.debug(`checkMessage result: ${JSON.stringify(result)}`);
@@ -76042,7 +76056,7 @@ async function run() {
             const prTitle = context.payload.pull_request?.["title"];
             if (prTitle) {
                 core.info(`Validating PR title: ${prTitle}`);
-                const messageOptions = createCheckMessageOptions(prTitle, "default", issueStatus, repo, "validate-pr-title", githubToken, hostname);
+                const messageOptions = (0, validation_helpers_js_1.createCheckMessageOptions)(prTitle, "default", issueStatus, repo, "validate-pr-title", githubToken, hostname);
                 const result = await (0, core_1.checkMessage)(messageOptions);
                 results.push(result);
             }
@@ -76055,7 +76069,7 @@ async function run() {
             const prBody = context.payload.pull_request?.["body"];
             if (prBody) {
                 core.info(`Validating PR body`);
-                const messageOptions = createCheckMessageOptions(prBody, "default", issueStatus, repo, "validate-pr-body", githubToken, hostname);
+                const messageOptions = (0, validation_helpers_js_1.createCheckMessageOptions)(prBody, "default", issueStatus, repo, "validate-pr-body", githubToken, hostname);
                 const result = await (0, core_1.checkMessage)(messageOptions);
                 results.push(result);
             }
@@ -76084,7 +76098,7 @@ async function run() {
                     for (const commit of commits) {
                         const shortSha = commit.sha.substring(0, 7);
                         core.debug(`Checking commit ${shortSha}: ${commit.message.split("\n")[0]}`);
-                        const messageOptions = createCheckMessageOptions(commit.message, "commit", issueStatus, repo, "validate-commits", githubToken, hostname);
+                        const messageOptions = (0, validation_helpers_js_1.createCheckMessageOptions)(commit.message, "commit", issueStatus, repo, "validate-commits", githubToken, hostname);
                         const result = await (0, core_1.checkMessage)(messageOptions);
                         results.push(result);
                     }

@@ -12,6 +12,7 @@ flowchart LR
         packages/cli["/cli"]:::dir
         subgraph packages/action/src["/action/src"]
             packages/action/src/github//actions//helpers.ts["github-actions-helpers.ts"]
+            packages/action/src/validation//helpers.ts["validation-helpers.ts"]
             packages/action/src/index.ts["index.ts"]
         end
     end
@@ -32,11 +33,14 @@ flowchart LR
     end
     packages/action/src/github//actions//helpers.ts-->node//modules///actions/github/lib/context.d.ts
     packages/core-->node//modules/valibot/dist/index.d.cts
+    packages/action/src/validation//helpers.ts-->packages/core
+    packages/action/src/validation//helpers.ts-->node//modules/valibot/dist/index.d.cts
     packages/action/src/index.ts-->node//modules///actions/core/lib/core.d.ts
     packages/action/src/index.ts-->node//modules///actions/github/lib/github.d.ts
     packages/action/src/index.ts-->packages/core
     packages/action/src/index.ts-->node//modules/valibot/dist/index.d.cts
     packages/action/src/index.ts-->packages/action/src/github//actions//helpers.ts
+    packages/action/src/index.ts-->packages/action/src/validation//helpers.ts
     packages/cli-->node//modules///commander//js/extra//typings/index.d.ts
     packages/cli-->packages/core
     packages/cli-->node//modules/valibot/dist/index.d.cts

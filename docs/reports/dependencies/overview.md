@@ -29,10 +29,10 @@ flowchart LR
     end
     packages/action-->node//modules///actions/github/lib/context.d.ts
     packages/core-->node//modules/valibot/dist/index.d.cts
-    packages/action-->node//modules///actions/core/lib/core.d.ts
-    packages/action-->node//modules///actions/github/lib/github.d.ts
     packages/action-->packages/core
     packages/action-->node//modules/valibot/dist/index.d.cts
+    packages/action-->node//modules///actions/core/lib/core.d.ts
+    packages/action-->node//modules///actions/github/lib/github.d.ts
     packages/cli-->node//modules///commander//js/extra//typings/index.d.ts
     packages/cli-->packages/core
     packages/cli-->node//modules/valibot/dist/index.d.cts

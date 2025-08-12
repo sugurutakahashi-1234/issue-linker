@@ -9,6 +9,7 @@ flowchart LR
     subgraph packages["packages"]
         subgraph packages/action/src["/action/src"]
             packages/action/src/github//actions//helpers.ts["github-actions-helpers.ts"]
+            packages/action/src/validation//helpers.ts["validation-helpers.ts"]
             packages/action/src/index.ts["index.ts"]
         end
         subgraph packages/core["/core"]
@@ -97,11 +98,14 @@ flowchart LR
     packages/core/dist/index.d.ts-->packages/core/dist/application/comment//on//branch//issues//use//case.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/application/create//issue//comment//use//case.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/application/get//pull//request//commits//use//case.d.ts
+    packages/action/src/validation//helpers.ts-->packages/core/dist/index.d.ts
+    packages/action/src/validation//helpers.ts-->node//modules/valibot/dist/index.d.cts
     packages/action/src/index.ts-->node//modules///actions/core/lib/core.d.ts
     packages/action/src/index.ts-->node//modules///actions/github/lib/github.d.ts
     packages/action/src/index.ts-->packages/core/dist/index.d.ts
     packages/action/src/index.ts-->node//modules/valibot/dist/index.d.cts
     packages/action/src/index.ts-->packages/action/src/github//actions//helpers.ts
+    packages/action/src/index.ts-->packages/action/src/validation//helpers.ts
     packages/cli/src/cli.ts-->node//modules///commander//js/extra//typings/index.d.ts
     packages/cli/src/cli.ts-->packages/core/dist/index.d.ts
     packages/cli/src/cli.ts-->node//modules/valibot/dist/index.d.cts

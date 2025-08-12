@@ -93,10 +93,10 @@ flowchart LR
     packages/core/dist/index.d.ts-->packages/core/dist/application/comment//on//branch//issues//use//case.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/application/create//issue//comment//use//case.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/application/get//pull//request//commits//use//case.d.ts
-    packages/action-->node//modules///actions/core/lib/core.d.ts
-    packages/action-->node//modules///actions/github/lib/github.d.ts
     packages/action-->packages/core/dist/index.d.ts
     packages/action-->node//modules/valibot/dist/index.d.cts
+    packages/action-->node//modules///actions/core/lib/core.d.ts
+    packages/action-->node//modules///actions/github/lib/github.d.ts
     packages/cli-->node//modules///commander//js/extra//typings/index.d.ts
     packages/cli-->packages/core/dist/index.d.ts
     packages/cli-->node//modules/valibot/dist/index.d.cts
