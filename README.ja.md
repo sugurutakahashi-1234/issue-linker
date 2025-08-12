@@ -38,8 +38,8 @@ npx @sugurutakahashi-1234/issue-linker -t "feat/123-new-feature" -c branch
 | オプション | 省略形 | 説明 | デフォルト |
 |--------|-------|-------------|---------|
 | `--text <text>` | `-t` | 検証するテキスト（コミットメッセージ、PRタイトル、またはブランチ名）**[必須]** | - |
-| `--check-mode <mode>` | `-c` | 検証モード: `default` \| `branch` \| `commit` | `default` |
-| `--exclude <pattern>` | - | 一致するテキストの検証をスキップする除外パターン（glob） | モード固有 |
+| `--check-mode <mode>` | `-c` | 検証モード: `default` (#123形式) \| `branch` (ブランチ名から抽出) \| `commit` (defaultと同じだがmerge/rebaseを除外) | `default` |
+| `--exclude <pattern>` | - | 除外パターン（glob） - モードのデフォルトを上書き。`""`でデフォルト無効化 | モード固有 |
 | `--issue-status <status>` | - | issueステータスでフィルター: `all` \| `open` \| `closed` | `all` |
 | `--repo <owner/repo>` | - | 対象のGitHubリポジトリ（owner/repo形式） | gitから自動検出 |
 | `--github-token <token>` | - | API認証用のGitHub個人アクセストークン | `$GITHUB_TOKEN` または `$GH_TOKEN` |
@@ -58,7 +58,7 @@ issue-linker -t "Fix: resolve authentication error #123"
 # Branch mode - extract issue from branch name
 issue-linker -t "feat/issue-123-auth-fix" -c branch
 
-# Commit mode - validate conventional commit format
+# Commit mode - same as default but excludes merge/rebase commits
 issue-linker -t "fix(auth): resolve login issue #123" -c commit
 
 # Check only open issues
@@ -67,8 +67,8 @@ issue-linker -t "Fix #123" --issue-status open
 # Custom repository
 issue-linker -t "Fix #456" --repo owner/repo
 
-# Exclude pattern (skip validation for matching text)
-issue-linker -t "[WIP] Fix #789" --exclude "\\[WIP\\]"
+# Exclude pattern (glob syntax to skip validation for matching text)
+issue-linker -t "[WIP] Fix #789" --exclude "*\\[WIP\\]*"
 
 # JSON output for CI/CD
 issue-linker -t "Fix #789" --json
@@ -84,7 +84,7 @@ issue-linker -t "Fix #999" --verbose
 
 - **`default`**: `#123`形式のみを検出（PRタイトル、説明など用）
 - **`branch`**: ブランチ名パターンからissueを検出（`123-feature`、`feat/123`など）
-- **`commit`**: defaultと同じだが、merge/rebaseコミットを除外
+- **`commit`**: defaultモードと同じ（#123形式）だが、デフォルトでmerge/rebaseコミットを除外
 
 ### GitHub Actions
 
@@ -236,11 +236,26 @@ issue-linker -t "Fix #123"
 
 ### Default Exclude Patterns
 
+**重要**: 各モードはデフォルトの除外パターンを自動適用します。カスタム`--exclude`パターンはデフォルトを上書きします（追加ではありません）。
+
 すべての除外パターンは[minimatch](https://github.com/isaacs/minimatch) glob構文を使用します:
 
-- **branchモード**: `{main,master,develop,release/*,hotfix/*}`
-- **commitモード**: `{Rebase*,Merge*,Revert*,fixup!*,squash!*}`
 - **defaultモード**: 除外なし
+- **branchモード**: `{main,master,develop,release/*,hotfix/*}` - 一般的な保護ブランチを除外
+- **commitモード**: `{Rebase*,Merge*,Revert*,fixup!*,squash!*}` - merge/rebaseコミットを除外
+
+#### Customizing Exclude Patterns
+
+```bash
+# Use mode defaults (automatic)
+issue-linker -t "main" -c branch  # Will be excluded by default
+
+# Override with custom pattern
+issue-linker -t "[WIP] Fix #123" --exclude "*\\[WIP\\]*"  # Only excludes WIP pattern
+
+# Disable all exclusions (empty pattern)
+issue-linker -t "main" -c branch --exclude ""  # Will NOT be excluded
+```
 
 ## Supported Patterns
 
@@ -264,8 +279,8 @@ feat/123-desc        ✅ (after slash)
 feature-123-desc     ✅ (after hyphen)
 
 # Excluded by default
-main                 ❌ (excluded)
-release/v1.0.0      ❌ (excluded)
+main                 ⏩ (skipped - excluded by default)
+release/v1.0.0      ⏩ (skipped - excluded by default)
 ```
 
 #### Commit Mode
@@ -274,8 +289,8 @@ release/v1.0.0      ❌ (excluded)
 "Fix #123"           ✅
 
 # Excluded by default
-"Merge branch main"  ❌ (excluded)
-"Revert 'feature'"   ❌ (excluded)
+"Merge branch main"  ⏩ (skipped - excluded by default)
+"Revert 'feature'"   ⏩ (skipped - excluded by default)
 ```
 
 ## Advanced Usage

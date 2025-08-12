@@ -30,12 +30,12 @@ program
   )
   .option(
     "-c, --check-mode <mode>",
-    "validation mode: 'default' (literal #123), 'branch' (extract from branch-123-name), 'commit' (conventional commit format)",
+    "validation mode: 'default' (literal #123), 'branch' (extract from branch-123-name), 'commit' (same as default but excludes merge/rebase commits)",
     DEFAULT_OPTIONS.mode,
   )
   .option(
     "--exclude <pattern>",
-    "exclude pattern (glob) to skip validation for matching text",
+    'exclude pattern (glob) - overrides mode defaults. Use "" to disable defaults',
   )
   .option(
     "--issue-status <status>",
@@ -159,7 +159,7 @@ Examples:
   # Branch mode - extract issue from branch name  
   $ issue-linker -t "feat/issue-123-auth-fix" -c branch
   
-  # Commit mode - validate conventional commit format
+  # Commit mode - same as default but excludes merge/rebase commits
   $ issue-linker -t "fix(auth): resolve login issue #123" -c commit
   
   # Check only open issues
@@ -168,8 +168,8 @@ Examples:
   # Custom repository
   $ issue-linker -t "Fix #456" --repo owner/repo
   
-  # Exclude pattern (skip validation for matching text)
-  $ issue-linker -t "[WIP] Fix #789" --exclude "\\[WIP\\]"
+  # Exclude pattern (glob syntax to skip validation for matching text)
+  $ issue-linker -t "[WIP] Fix #789" --exclude "*\\[WIP\\]*"
   
   # JSON output for CI/CD integration
   $ issue-linker -t "Fix #789" --json
@@ -179,6 +179,15 @@ Examples:
   
   # Verbose output for debugging
   $ issue-linker -t "Fix #999" --verbose
+
+Exclude Patterns:
+  Each mode has default exclude patterns that are automatically applied:
+    - default mode: no exclusions
+    - branch mode: {main,master,develop,release/*,hotfix/*}
+    - commit mode: {Rebase*,Merge*,Revert*,fixup!*,squash!*}
+  
+  Custom --exclude pattern will OVERRIDE mode defaults (not add to them)
+  To disable default exclusions, use --exclude "" (empty string)
 
 Environment Variables:
   GITHUB_TOKEN or GH_TOKEN     GitHub personal access token for API authentication
