@@ -10,7 +10,6 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/sugurutakahashi-1234/issue-linker/pulls)
 [![GitHub Marketplace](https://img.shields.io/badge/marketplace-issue--linker-blue?style=flat&logo=github)](https://github.com/marketplace/actions/issue-linker)
 
-[English](README.md) | [日本語](README.ja.md)
 
 Validate text contains valid GitHub issue numbers. Perfect for maintaining traceability between your code and issue tracking!
 
@@ -44,9 +43,9 @@ npx @sugurutakahashi-1234/issue-linker -t "feat/123-new-feature" -c branch
 | Option                                 | Description                                                                                                                              | Default                        |
 | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
 | `-t, --text <text>`                    | Text to validate (commit message, PR title, or branch name) **[required]**                                                               | -                              |
-| `-c, --check-mode <mode>`              | Validation mode: `default` (literal #123) \| `branch` (extract from branch name) \| `commit` (same as default but excludes merge/rebase) | `default`                      |
-| `--extract <pattern>`                  | Extraction pattern (regex) for finding issue numbers                                                                                     | Mode-specific                  |
-| `--exclude <pattern>`                  | Exclude pattern (glob) to skip validation for matching text                                                                              | Mode-specific                  |
+| `-c, --check-mode <check-mode>`        | Validation mode: `default` (literal #123) \| `branch` (extract from branch name) \| `commit` (same as default but excludes merge/rebase) | `default`                      |
+| `--extract <pattern>`                  | Custom extraction pattern (regex) that overrides check-mode defaults                                                                     | Check-mode specific            |
+| `--exclude <pattern>`                  | Custom exclude pattern (glob) that overrides check-mode defaults                                                                         | Check-mode specific            |
 | `--issue-status <status>`              | Filter by issue status: `all` \| `open` \| `closed`                                                                                      | `all`                          |
 | `--repo <owner/repo>`                  | Target GitHub repository in owner/repo format                                                                                            | Auto-detect from git           |
 | `--github-token <token>`               | GitHub personal access token for API authentication                                                                                      | `$GITHUB_TOKEN` or `$GH_TOKEN` |

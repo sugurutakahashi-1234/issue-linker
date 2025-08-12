@@ -29,17 +29,17 @@ program
     "text to validate (commit message, PR title, or branch name)",
   )
   .option(
-    "-c, --check-mode <mode>",
+    "-c, --check-mode <check-mode>",
     "validation mode: 'default' (literal #123), 'branch' (extract from branch-123-name), 'commit' (same as default but excludes merge/rebase commits)",
     DEFAULT_OPTIONS.mode,
   )
   .option(
     "--extract <pattern>",
-    "extraction pattern (regex) for finding issue numbers - overrides mode defaults",
+    "custom extraction pattern (regex) that overrides check-mode defaults",
   )
   .option(
     "--exclude <pattern>",
-    'exclude pattern (glob) - overrides mode defaults. Use "" to disable defaults',
+    "custom exclude pattern (glob) that overrides check-mode defaults",
   )
   .option(
     "--issue-status <status>",
