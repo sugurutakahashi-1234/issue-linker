@@ -85,6 +85,6 @@ outputs:
 runs:
   # TODO: Upgrade to 'node24' once act (local testing tool) supports it
   # GitHub Actions runner v2.327.1+ supports node24, but act v0.2.80 doesn't yet
-  # See: https://github.com/nektos/act/issues (waiting for node24 support)
+  # See: https://github.com/nektos/act/issues/5883
   using: 'node20'
   main: 'packages/action/dist/index.js'
