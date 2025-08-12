@@ -45,3 +45,14 @@ export const MODE_EXTRACT_REGEXES: Record<CheckMode, RegExp> = {
   commit: /#(\d+)/g, // Same as default
   branch: /(?<![.\d])(\d{1,7})(?![.\d])/g, // Numbers not in version strings (e.g., v2.0)
 } as const;
+
+// ===== Skip Markers =====
+
+/**
+ * Skip markers that bypass validation entirely
+ * Case-insensitive patterns to match [skip issue-linker] and [issue-linker skip]
+ */
+export const SKIP_MARKERS = [
+  /\[skip issue-linker\]/i,
+  /\[issue-linker skip\]/i,
+] as const;

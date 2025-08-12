@@ -69,6 +69,14 @@ issue-linker -t "Fix #321" --hostname github.enterprise.com
 issue-linker -t "Resolve PROJ-789" --extract "[A-Z]+-(\\d+)"
 ```
 
+## Skip Markers
+
+Skip validation by including `[skip issue-linker]` or `[issue-linker skip]` anywhere in your text (case-insensitive).
+
+```bash
+git commit -m "chore: update dependencies [skip issue-linker]"
+```
+
 ## Check Modes
 
 issue-linker provides three check modes for different validation contexts:

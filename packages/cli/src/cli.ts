@@ -95,12 +95,32 @@ program
       // Display human-readable result
       if (result.success) {
         // Success output
-        if (result.reason === "excluded") {
-          console.log(`✅ Text was excluded from validation`);
-        } else if (result.issues?.valid && result.issues.valid.length > 0) {
-          console.log(`✅ Valid issues: #${result.issues.valid.join(", #")}`);
-        } else {
-          console.log(`✅ ${result.message}`);
+        switch (result.reason) {
+          case "excluded":
+            console.log(`✅ Text was excluded from validation`);
+            break;
+          case "skipped":
+            console.log(`✅ Validation skipped due to skip marker`);
+            break;
+          case "valid":
+            if (result.issues?.valid && result.issues.valid.length > 0) {
+              console.log(
+                `✅ Valid issues: #${result.issues.valid.join(", #")}`,
+              );
+            } else {
+              console.log(`✅ ${result.message}`);
+            }
+            break;
+          case "no-issues":
+          case "invalid-issues":
+          case "error":
+            console.log(`✅ ${result.message}`);
+            break;
+          default: {
+            // Exhaustive check: TypeScript will error if a new reason is added
+            const _exhaustive: never = result.reason;
+            throw new Error(`Unexpected reason: ${_exhaustive}`);
+          }
         }
 
         // Show extra details in verbose mode

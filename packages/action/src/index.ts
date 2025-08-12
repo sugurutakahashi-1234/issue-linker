@@ -239,14 +239,32 @@ async function run() {
 
       if (result.success) {
         // Success cases
-        if (result.reason === "excluded") {
-          core.info(`${prefix}Text was excluded from validation`);
-        } else if (result.issues?.valid && result.issues.valid.length > 0) {
-          core.info(
-            `${prefix}Valid issues: #${result.issues.valid.join(", #")}`,
-          );
-        } else {
-          core.info(`${prefix}${result.message}`);
+        switch (result.reason) {
+          case "excluded":
+            core.info(`${prefix}Text was excluded from validation`);
+            break;
+          case "skipped":
+            core.info(`${prefix}Validation skipped due to skip marker`);
+            break;
+          case "valid":
+            if (result.issues?.valid && result.issues.valid.length > 0) {
+              core.info(
+                `${prefix}Valid issues: #${result.issues.valid.join(", #")}`,
+              );
+            } else {
+              core.info(`${prefix}${result.message}`);
+            }
+            break;
+          case "no-issues":
+          case "invalid-issues":
+          case "error":
+            core.info(`${prefix}${result.message}`);
+            break;
+          default: {
+            // Exhaustive check: TypeScript will error if a new reason is added
+            const _exhaustive: never = result.reason;
+            throw new Error(`Unexpected reason: ${_exhaustive}`);
+          }
         }
       } else {
         // Failure cases

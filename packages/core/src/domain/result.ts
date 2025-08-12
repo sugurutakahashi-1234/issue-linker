@@ -48,6 +48,7 @@ export interface BaseResult {
 // Validation reason for quick categorization
 export type ValidationReason =
   | "excluded" // Text was excluded from validation
+  | "skipped" // Validation was skipped due to skip marker
   | "valid" // Valid issues were found
   | "no-issues" // No issue numbers found in text
   | "invalid-issues" // Issues found but invalid

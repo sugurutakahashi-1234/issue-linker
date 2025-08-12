@@ -7,6 +7,7 @@ import {
   createExcludedResult,
   createInvalidResult,
   createNoIssuesResult,
+  createSkippedResult,
   createValidResult,
 } from "../domain/result-factory.js";
 import {
@@ -23,6 +24,7 @@ import { parseRepositoryFromGitUrl } from "../infrastructure/git-url-parser.js";
 import { getGitHubIssue } from "../infrastructure/github-client.js";
 import { findIssueNumbers } from "../infrastructure/issue-finder.js";
 import { parseRepositoryString } from "../infrastructure/repository-parser.js";
+import { hasSkipMarker } from "../infrastructure/skip-marker-checker.js";
 
 /**
  * Main use case for checking if text contains valid issue numbers
@@ -70,18 +72,23 @@ export async function checkMessage(
       ...(opts.actionMode && { actionMode: opts.actionMode }),
     };
 
-    // Step 2: Check exclusion
+    // Step 2: Check for skip markers
+    if (hasSkipMarker(opts.text)) {
+      return createSkippedResult(input);
+    }
+
+    // Step 3: Check exclusion
     if (shouldExclude(opts.text, checkMode, opts.exclude)) {
       return createExcludedResult(input);
     }
 
-    // Step 3: Find issue numbers
+    // Step 4: Find issue numbers
     const issueNumbers = findIssueNumbers(opts.text, checkMode, opts.extract);
     if (issueNumbers.length === 0) {
       return createNoIssuesResult(input);
     }
 
-    // Step 4: Validate each issue number
+    // Step 5: Validate each issue number
     const githubToken = opts.githubToken ?? getGitHubToken();
     const validIssues: number[] = [];
     const notFoundIssues: number[] = [];
@@ -108,7 +115,7 @@ export async function checkMessage(
       }
     }
 
-    // Step 5: Create result based on findings
+    // Step 6: Create result based on findings
     const issues = {
       found: issueNumbers,
       valid: validIssues,

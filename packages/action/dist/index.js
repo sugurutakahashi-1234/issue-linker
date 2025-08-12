@@ -37311,7 +37311,7 @@ function isCreateBranchEvent(context) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createCheckMessageOptions = createCheckMessageOptions;
 const tslib_1 = __nccwpck_require__(4176);
-const core_1 = __nccwpck_require__(2938);
+const core_1 = __nccwpck_require__(7219);
 const v = tslib_1.__importStar(__nccwpck_require__(9487));
 /**
  * Helper function to create CheckMessageOptions with validation
@@ -46752,7 +46752,7 @@ function unwrap(schema) {
 
 /***/ }),
 
-/***/ 2938:
+/***/ 7219:
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
 
 // ESM COMPAT FLAG
@@ -46819,6 +46819,15 @@ const MODE_EXTRACT_REGEXES = {
     commit: /#(\d+)/g, // Same as default
     branch: /(?<![.\d])(\d{1,7})(?![.\d])/g, // Numbers not in version strings (e.g., v2.0)
 };
+// ===== Skip Markers =====
+/**
+ * Skip markers that bypass validation entirely
+ * Case-insensitive patterns to match [skip issue-linker] and [issue-linker skip]
+ */
+const SKIP_MARKERS = [
+    /\[skip issue-linker\]/i,
+    /\[issue-linker skip\]/i,
+];
 //# sourceMappingURL=constants.js.map
 ;// CONCATENATED MODULE: ../core/dist/domain/errors.js
 // Domain layer - Error definitions
@@ -68565,6 +68574,17 @@ function createExcludedResult(input) {
     };
 }
 /**
+ * Create a result for when validation is skipped due to skip marker
+ */
+function createSkippedResult(input) {
+    return {
+        success: true,
+        message: "Validation skipped due to skip marker",
+        reason: "skipped",
+        input,
+    };
+}
+/**
  * Create a result for when no issue numbers are found
  */
 function createNoIssuesResult(input) {
@@ -75609,8 +75629,21 @@ function findIssueNumbers(text, checkMode, customPattern) {
     return Array.from(numbers);
 }
 //# sourceMappingURL=issue-finder.js.map
+;// CONCATENATED MODULE: ../core/dist/infrastructure/skip-marker-checker.js
+// Infrastructure layer - Skip marker detection
+
+/**
+ * Check if text contains a skip marker
+ * @param text - Text to check for skip markers
+ * @returns true if skip marker is found
+ */
+function hasSkipMarker(text) {
+    return SKIP_MARKERS.some((marker) => marker.test(text));
+}
+//# sourceMappingURL=skip-marker-checker.js.map
 ;// CONCATENATED MODULE: ../core/dist/application/check-message-use-case.js
 // Application layer - Use case for checking text messages
+
 
 
 
@@ -75659,16 +75692,20 @@ async function checkMessage(options) {
             repo: repo,
             ...(opts.actionMode && { actionMode: opts.actionMode }),
         };
-        // Step 2: Check exclusion
+        // Step 2: Check for skip markers
+        if (hasSkipMarker(opts.text)) {
+            return createSkippedResult(input);
+        }
+        // Step 3: Check exclusion
         if (shouldExclude(opts.text, checkMode, opts.exclude)) {
             return createExcludedResult(input);
         }
-        // Step 3: Find issue numbers
+        // Step 4: Find issue numbers
         const issueNumbers = findIssueNumbers(opts.text, checkMode, opts.extract);
         if (issueNumbers.length === 0) {
             return createNoIssuesResult(input);
         }
-        // Step 4: Validate each issue number
+        // Step 5: Validate each issue number
         const githubToken = opts.githubToken ?? getGitHubToken();
         const validIssues = [];
         const notFoundIssues = [];
@@ -75686,7 +75723,7 @@ async function checkMessage(options) {
                 validIssues.push(issueNumber);
             }
         }
-        // Step 5: Create result based on findings
+        // Step 6: Create result based on findings
         const issues = {
             found: issueNumbers,
             valid: validIssues,
@@ -75995,7 +76032,7 @@ Object.defineProperty(exports, "B", ({ value: true }));
 const tslib_1 = __nccwpck_require__(4176);
 const core = tslib_1.__importStar(__nccwpck_require__(7184));
 const github = tslib_1.__importStar(__nccwpck_require__(5683));
-const core_1 = __nccwpck_require__(2938);
+const core_1 = __nccwpck_require__(7219);
 const v = tslib_1.__importStar(__nccwpck_require__(9487));
 const github_actions_helpers_js_1 = __nccwpck_require__(8773);
 const validation_helpers_js_1 = __nccwpck_require__(3195);
@@ -76150,14 +76187,31 @@ async function run() {
             const prefix = results.length > 1 ? `[${actionMode}] ` : "";
             if (result.success) {
                 // Success cases
-                if (result.reason === "excluded") {
-                    core.info(`${prefix}Text was excluded from validation`);
-                }
-                else if (result.issues?.valid && result.issues.valid.length > 0) {
-                    core.info(`${prefix}Valid issues: #${result.issues.valid.join(", #")}`);
-                }
-                else {
-                    core.info(`${prefix}${result.message}`);
+                switch (result.reason) {
+                    case "excluded":
+                        core.info(`${prefix}Text was excluded from validation`);
+                        break;
+                    case "skipped":
+                        core.info(`${prefix}Validation skipped due to skip marker`);
+                        break;
+                    case "valid":
+                        if (result.issues?.valid && result.issues.valid.length > 0) {
+                            core.info(`${prefix}Valid issues: #${result.issues.valid.join(", #")}`);
+                        }
+                        else {
+                            core.info(`${prefix}${result.message}`);
+                        }
+                        break;
+                    case "no-issues":
+                    case "invalid-issues":
+                    case "error":
+                        core.info(`${prefix}${result.message}`);
+                        break;
+                    default: {
+                        // Exhaustive check: TypeScript will error if a new reason is added
+                        const _exhaustive = result.reason;
+                        throw new Error(`Unexpected reason: ${_exhaustive}`);
+                    }
                 }
             }
             else {

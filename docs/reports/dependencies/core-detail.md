@@ -45,6 +45,7 @@ flowchart LR
                     packages/core/src/infrastructure/git//client.ts["git-client.ts"]
                     packages/core/src/infrastructure/git//url//parser.ts["git-url-parser.ts"]
                     packages/core/src/infrastructure/issue//finder.ts["issue-finder.ts"]
+                    packages/core/src/infrastructure/skip//marker//checker.ts["skip-marker-checker.ts"]
                 end
                 subgraph packages/core/src/application["/application"]
                     packages/core/src/application/check//duplicate//comment//use//case.ts["check-duplicate-comment-use-case.ts"]
@@ -130,6 +131,7 @@ flowchart LR
     packages/core/src/infrastructure/git//url//parser.ts-->packages/core/src/domain/validation//schemas.ts
     packages/core/src/infrastructure/issue//finder.ts-->packages/core/src/domain/constants.ts
     packages/core/src/infrastructure/issue//finder.ts-->packages/core/src/domain/validation//schemas.ts
+    packages/core/src/infrastructure/skip//marker//checker.ts-->packages/core/src/domain/constants.ts
     packages/core/src/application/check//message//use//case.ts-->node//modules/valibot/dist/index.d.cts
     packages/core/src/application/check//message//use//case.ts-->packages/core/src/domain/result.ts
     packages/core/src/application/check//message//use//case.ts-->packages/core/src/domain/result//factory.ts
@@ -141,6 +143,7 @@ flowchart LR
     packages/core/src/application/check//message//use//case.ts-->packages/core/src/infrastructure/github//client.ts
     packages/core/src/application/check//message//use//case.ts-->packages/core/src/infrastructure/issue//finder.ts
     packages/core/src/application/check//message//use//case.ts-->packages/core/src/infrastructure/repository//parser.ts
+    packages/core/src/application/check//message//use//case.ts-->packages/core/src/infrastructure/skip//marker//checker.ts
     packages/core/src/application/create//issue//comment//use//case.ts-->node//modules/valibot/dist/index.d.cts
     packages/core/src/application/create//issue//comment//use//case.ts-->packages/core/src/domain/result.ts
     packages/core/src/application/create//issue//comment//use//case.ts-->packages/core/src/domain/validation//schemas.ts
