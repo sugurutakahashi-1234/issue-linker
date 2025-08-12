@@ -83,5 +83,5 @@ outputs:
     description: 'All validation results as JSON'
 
 runs:
-  using: 'node20'
+  using: 'node24'
   main: 'packages/action/dist/index.js'

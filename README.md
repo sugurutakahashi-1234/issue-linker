@@ -35,20 +35,20 @@ npx @sugurutakahashi-1234/issue-linker -t "feat/123-new-feature" -c branch
 
 #### Options
 
-| Option | Short | Description | Default |
-|--------|-------|-------------|---------|
-| `--text <text>` | `-t` | Text to validate (commit message, PR title, or branch name) **[required]** | - |
-| `--check-mode <mode>` | `-c` | Validation mode: `default` (literal #123) \| `branch` (extract from branch name) \| `commit` (same as default but excludes merge/rebase) | `default` |
-| `--extract <pattern>` | - | Extraction pattern (regex) for finding issue numbers | Mode-specific |
-| `--exclude <pattern>` | - | Exclude pattern (glob) to skip validation for matching text | Mode-specific |
-| `--issue-status <status>` | - | Filter by issue status: `all` \| `open` \| `closed` | `all` |
-| `--repo <owner/repo>` | - | Target GitHub repository in owner/repo format | Auto-detect from git |
-| `--github-token <token>` | - | GitHub personal access token for API authentication | `$GITHUB_TOKEN` or `$GH_TOKEN` |
-| `--hostname <hostname>` | `-h` | GitHub Enterprise Server hostname | `github.com` or `$GH_HOST` |
-| `--json` | - | Output result in JSON format for CI/CD integration | `false` |
-| `--verbose` | - | Show detailed validation information and debug output | `false` |
-| `--version` | `-v` | Display version number | - |
-| `--help` | - | Display help for command | - |
+| Option                    | Short | Description                                                                                                                              | Default                        |
+| ------------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| `--text <text>`           | `-t`  | Text to validate (commit message, PR title, or branch name) **[required]**                                                               | -                              |
+| `--check-mode <mode>`     | `-c`  | Validation mode: `default` (literal #123) \| `branch` (extract from branch name) \| `commit` (same as default but excludes merge/rebase) | `default`                      |
+| `--extract <pattern>`     | -     | Extraction pattern (regex) for finding issue numbers                                                                                     | Mode-specific                  |
+| `--exclude <pattern>`     | -     | Exclude pattern (glob) to skip validation for matching text                                                                              | Mode-specific                  |
+| `--issue-status <status>` | -     | Filter by issue status: `all` \| `open` \| `closed`                                                                                      | `all`                          |
+| `--repo <owner/repo>`     | -     | Target GitHub repository in owner/repo format                                                                                            | Auto-detect from git           |
+| `--github-token <token>`  | -     | GitHub personal access token for API authentication                                                                                      | `$GITHUB_TOKEN` or `$GH_TOKEN` |
+| `--hostname <hostname>`   | `-h`  | GitHub Enterprise Server hostname                                                                                                        | `github.com` or `$GH_HOST`     |
+| `--json`                  | -     | Output result in JSON format for CI/CD integration                                                                                       | `false`                        |
+| `--verbose`               | -     | Show detailed validation information and debug output                                                                                    | `false`                        |
+| `--version`               | `-v`  | Display version number                                                                                                                   | -                              |
+| `--help`                  | -     | Display help for command                                                                                                                 | -                              |
 
 #### Examples
 
@@ -91,20 +91,20 @@ issue-linker -t "Fix #999" --verbose
 
 #### Action Inputs
 
-| Input | Description | Default | Required |
-|-------|-------------|---------|----------|
-| `validate-branch` | Validate branch name | `false` | No |
-| `validate-pr-title` | Validate PR title | `false` | No |
-| `validate-pr-body` | Validate PR body | `false` | No |
-| `validate-commits` | Validate all commit messages in the PR | `false` | No |
-| `comment-on-issues-when-branch-pushed` | Comment on detected issues when a branch is first pushed | `false` | No |
-| `text` | Custom text to validate (advanced mode) | - | No |
-| `check-mode` | Check mode: `default` \| `branch` \| `commit` | `default` | No |
-| `exclude` | Custom exclude pattern (overrides check mode defaults) | - | No |
-| `issue-status` | Issue status filter: `all` \| `open` \| `closed` | `all` | No |
-| `repo` | Repository in owner/repo format | `${{ github.repository }}` | No |
-| `github-token` | GitHub token for API access | `${{ github.token }}` | No |
-| `hostname` | GitHub Enterprise Server hostname | Auto-detect | No |
+| Input                                  | Description                                              | Default                    | Required |
+| -------------------------------------- | -------------------------------------------------------- | -------------------------- | -------- |
+| `validate-branch`                      | Validate branch name                                     | `false`                    | No       |
+| `validate-pr-title`                    | Validate PR title                                        | `false`                    | No       |
+| `validate-pr-body`                     | Validate PR body                                         | `false`                    | No       |
+| `validate-commits`                     | Validate all commit messages in the PR                   | `false`                    | No       |
+| `comment-on-issues-when-branch-pushed` | Comment on detected issues when a branch is first pushed | `false`                    | No       |
+| `text`                                 | Custom text to validate (advanced mode)                  | -                          | No       |
+| `check-mode`                           | Check mode: `default` \| `branch` \| `commit`            | `default`                  | No       |
+| `exclude`                              | Custom exclude pattern (overrides check mode defaults)   | -                          | No       |
+| `issue-status`                         | Issue status filter: `all` \| `open` \| `closed`         | `all`                      | No       |
+| `repo`                                 | Repository in owner/repo format                          | `${{ github.repository }}` | No       |
+| `github-token`                         | GitHub token for API access                              | `${{ github.token }}`      | No       |
+| `hostname`                             | GitHub Enterprise Server hostname                        | Auto-detect                | No       |
 
 #### Examples
 
@@ -122,7 +122,7 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Validate PR
         uses: sugurutakahashi-1234/issue-linker@v1.0.0
@@ -300,11 +300,11 @@ release/v1.0.0      ⏩ (skipped - excluded by default)
 
 Each mode uses different regular expressions to extract issue numbers:
 
-| Mode | Pattern | Description |
-|------|---------|-------------|
-| `default` | `/#(\d+)/g` | Matches #123 format only |
-| `commit` | `/#(\d+)/g` | Same as default mode |
-| `branch` | `/(?<![.\d])(\d{1,7})(?![.\d])/g` | Matches any 1-7 digit number not part of version strings (e.g., v2.0) |
+| Mode      | Pattern                           | Description                                                           |
+| --------- | --------------------------------- | --------------------------------------------------------------------- |
+| `default` | `/#(\d+)/g`                       | Matches #123 format only                                              |
+| `commit`  | `/#(\d+)/g`                       | Same as default mode                                                  |
+| `branch`  | `/(?<![.\d])(\d{1,7})(?![.\d])/g` | Matches any 1-7 digit number not part of version strings (e.g., v2.0) |
 
 #### Pattern Behavior
 

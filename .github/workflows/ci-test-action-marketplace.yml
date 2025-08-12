@@ -28,7 +28,7 @@ jobs:
     name: Test validate-branch mode
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       
       - name: Test validate-branch mode
         id: test
@@ -61,7 +61,7 @@ jobs:
     name: Test comment-on-issues-when-branch-pushed mode
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       
       - name: Test comment-on-issues mode
         id: test
@@ -98,7 +98,7 @@ jobs:
     name: Test validate-pr-title mode
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       
       - name: Test validate-pr-title mode
         id: test
@@ -131,7 +131,7 @@ jobs:
     name: Test validate-pr-body mode
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       
       - name: Test validate-pr-body mode
         id: test
@@ -164,7 +164,7 @@ jobs:
     name: Test validate-commits mode
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       
       - name: Test validate-commits mode
         id: test
@@ -200,7 +200,7 @@ jobs:
     name: Test custom mode
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       
       - name: Test custom mode
         id: test

@@ -35,20 +35,20 @@ npx @sugurutakahashi-1234/issue-linker -t "feat/123-new-feature" -c branch
 
 #### Options
 
-| オプション | 省略形 | 説明 | デフォルト |
-|--------|-------|-------------|---------|
-| `--text <text>` | `-t` | 検証するテキスト（コミットメッセージ、PRタイトル、またはブランチ名）**[必須]** | - |
-| `--check-mode <mode>` | `-c` | 検証モード: `default` (#123形式) \| `branch` (ブランチ名から抽出) \| `commit` (defaultと同じだがmerge/rebaseを除外) | `default` |
-| `--extract <pattern>` | - | issue番号を見つけるための抽出パターン（正規表現） | モード固有 |
-| `--exclude <pattern>` | - | 除外パターン（glob） - モードのデフォルトを上書き。`""`でデフォルト無効化 | モード固有 |
-| `--issue-status <status>` | - | issueステータスでフィルター: `all` \| `open` \| `closed` | `all` |
-| `--repo <owner/repo>` | - | 対象のGitHubリポジトリ（owner/repo形式） | gitから自動検出 |
-| `--github-token <token>` | - | API認証用のGitHub個人アクセストークン | `$GITHUB_TOKEN` または `$GH_TOKEN` |
-| `--hostname <hostname>` | `-h` | GitHub Enterprise Serverのホスト名 | `github.com` または `$GH_HOST` |
-| `--json` | - | CI/CD統合用のJSON形式で結果を出力 | `false` |
-| `--verbose` | - | 詳細な検証情報とデバッグ出力を表示 | `false` |
-| `--version` | `-v` | バージョン番号を表示 | - |
-| `--help` | - | コマンドのヘルプを表示 | - |
+| オプション                | 省略形 | 説明                                                                                                                | デフォルト                         |
+| ------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| `--text <text>`           | `-t`   | 検証するテキスト（コミットメッセージ、PRタイトル、またはブランチ名）**[必須]**                                      | -                                  |
+| `--check-mode <mode>`     | `-c`   | 検証モード: `default` (#123形式) \| `branch` (ブランチ名から抽出) \| `commit` (defaultと同じだがmerge/rebaseを除外) | `default`                          |
+| `--extract <pattern>`     | -      | issue番号を見つけるための抽出パターン（正規表現）                                                                   | モード固有                         |
+| `--exclude <pattern>`     | -      | 除外パターン（glob） - モードのデフォルトを上書き。`""`でデフォルト無効化                                           | モード固有                         |
+| `--issue-status <status>` | -      | issueステータスでフィルター: `all` \| `open` \| `closed`                                                            | `all`                              |
+| `--repo <owner/repo>`     | -      | 対象のGitHubリポジトリ（owner/repo形式）                                                                            | gitから自動検出                    |
+| `--github-token <token>`  | -      | API認証用のGitHub個人アクセストークン                                                                               | `$GITHUB_TOKEN` または `$GH_TOKEN` |
+| `--hostname <hostname>`   | `-h`   | GitHub Enterprise Serverのホスト名                                                                                  | `github.com` または `$GH_HOST`     |
+| `--json`                  | -      | CI/CD統合用のJSON形式で結果を出力                                                                                   | `false`                            |
+| `--verbose`               | -      | 詳細な検証情報とデバッグ出力を表示                                                                                  | `false`                            |
+| `--version`               | `-v`   | バージョン番号を表示                                                                                                | -                                  |
+| `--help`                  | -      | コマンドのヘルプを表示                                                                                              | -                                  |
 
 #### Examples
 
@@ -91,20 +91,20 @@ issue-linker -t "Fix #999" --verbose
 
 #### Action Inputs
 
-| 入力 | 説明 | デフォルト | 必須 |
-|-------|-------------|---------|----------|
-| `validate-branch` | ブランチ名を検証 | `false` | No |
-| `validate-pr-title` | PRタイトルを検証 | `false` | No |
-| `validate-pr-body` | PR本文を検証 | `false` | No |
-| `validate-commits` | PR内のすべてのコミットメッセージを検証 | `false` | No |
-| `comment-on-issues-when-branch-pushed` | ブランチが最初にプッシュされたときに検出されたissueにコメント | `false` | No |
-| `text` | 検証するカスタムテキスト（アドバンスドモード） | - | No |
-| `check-mode` | チェックモード: `default` \| `branch` \| `commit` | `default` | No |
-| `exclude` | カスタム除外パターン（チェックモードのデフォルトをオーバーライド） | - | No |
-| `issue-status` | issueステータスフィルター: `all` \| `open` \| `closed` | `all` | No |
-| `repo` | owner/repo形式のリポジトリ | `${{ github.repository }}` | No |
-| `github-token` | APIアクセス用のGitHubトークン | `${{ github.token }}` | No |
-| `hostname` | GitHub Enterprise Serverのホスト名 | 自動検出 | No |
+| 入力                                   | 説明                                                               | デフォルト                 | 必須 |
+| -------------------------------------- | ------------------------------------------------------------------ | -------------------------- | ---- |
+| `validate-branch`                      | ブランチ名を検証                                                   | `false`                    | No   |
+| `validate-pr-title`                    | PRタイトルを検証                                                   | `false`                    | No   |
+| `validate-pr-body`                     | PR本文を検証                                                       | `false`                    | No   |
+| `validate-commits`                     | PR内のすべてのコミットメッセージを検証                             | `false`                    | No   |
+| `comment-on-issues-when-branch-pushed` | ブランチが最初にプッシュされたときに検出されたissueにコメント      | `false`                    | No   |
+| `text`                                 | 検証するカスタムテキスト（アドバンスドモード）                     | -                          | No   |
+| `check-mode`                           | チェックモード: `default` \| `branch` \| `commit`                  | `default`                  | No   |
+| `exclude`                              | カスタム除外パターン（チェックモードのデフォルトをオーバーライド） | -                          | No   |
+| `issue-status`                         | issueステータスフィルター: `all` \| `open` \| `closed`             | `all`                      | No   |
+| `repo`                                 | owner/repo形式のリポジトリ                                         | `${{ github.repository }}` | No   |
+| `github-token`                         | APIアクセス用のGitHubトークン                                      | `${{ github.token }}`      | No   |
+| `hostname`                             | GitHub Enterprise Serverのホスト名                                 | 自動検出                   | No   |
 
 #### Examples
 
@@ -122,7 +122,7 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Validate PR
         uses: sugurutakahashi-1234/issue-linker@v1.0.0
@@ -300,11 +300,11 @@ release/v1.0.0      ⏩ (skipped - excluded by default)
 
 各モードは異なる正規表現を使用してissue番号を抽出します:
 
-| モード | パターン | 説明 |
-|------|---------|-------------|
-| `default` | `/#(\d+)/g` | #123形式のみマッチ |
-| `commit` | `/#(\d+)/g` | defaultモードと同じ |
-| `branch` | `/(?<![.\d])(\d{1,7})(?![.\d])/g` | バージョン文字列（例: v2.0）の一部ではない1-7桁の数字にマッチ |
+| モード    | パターン                          | 説明                                                          |
+| --------- | --------------------------------- | ------------------------------------------------------------- |
+| `default` | `/#(\d+)/g`                       | #123形式のみマッチ                                            |
+| `commit`  | `/#(\d+)/g`                       | defaultモードと同じ                                           |
+| `branch`  | `/(?<![.\d])(\d{1,7})(?![.\d])/g` | バージョン文字列（例: v2.0）の一部ではない1-7桁の数字にマッチ |
 
 #### Pattern Behavior
 
