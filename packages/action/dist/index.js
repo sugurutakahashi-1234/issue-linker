@@ -46807,6 +46807,16 @@ const EXCLUDE_RULES = {
     branch: "{main,master,develop,release/*,hotfix/*}",
     commit: "{Rebase*,Merge*,Revert*,fixup!*,squash!*}",
 };
+// ===== Extract Patterns =====
+/**
+ * Mode-specific issue number extraction patterns
+ * All patterns should capture the issue number in group 1
+ */
+const EXTRACT_PATTERNS = {
+    default: /#(\d+)/g, // #123 format only
+    commit: /#(\d+)/g, // Same as default
+    branch: /(?<![.\d])(\d{1,7})(?![.\d])/g, // Numbers not in version strings (e.g., v2.0)
+};
 //# sourceMappingURL=constants.js.map
 ;// CONCATENATED MODULE: ../core/dist/domain/errors.js
 // Domain layer - Error definitions
@@ -75558,6 +75568,7 @@ function parseRepositoryFromGitUrl(url) {
 //# sourceMappingURL=git-url-parser.js.map
 ;// CONCATENATED MODULE: ../core/dist/infrastructure/issue-finder.js
 // Infrastructure layer - Issue number finding
+
 /**
  * Find issue numbers from text based on check mode
  * @param text - The text to search in
@@ -75566,32 +75577,14 @@ function parseRepositoryFromGitUrl(url) {
  */
 function findIssueNumbers(text, checkMode) {
     const numbers = new Set();
-    if (checkMode === "default" || checkMode === "commit") {
-        // Find #123 format only
-        const matches = text.matchAll(/#(\d+)/g);
-        for (const match of matches) {
-            const num = match[1];
-            if (num) {
-                const issueNumber = Number.parseInt(num, 10);
-                if (issueNumber > 0 && issueNumber <= 9999999) {
-                    numbers.add(issueNumber);
-                }
-            }
-        }
-    }
-    else if (checkMode === "branch") {
-        // Extract all issue numbers from branch name
-        // Common patterns: 123-456-feature, feat/123-124, issue-123-456-fix
-        // Use negative lookbehind/lookahead to avoid matching numbers in version strings like "v2.0"
-        const pattern = /(?<![.\d])(\d{1,7})(?![.\d])/g;
-        const matches = text.matchAll(pattern);
-        for (const match of matches) {
-            const num = match[1];
-            if (num) {
-                const issueNumber = Number.parseInt(num, 10);
-                if (issueNumber > 0 && issueNumber <= 9999999) {
-                    numbers.add(issueNumber);
-                }
+    const pattern = EXTRACT_PATTERNS[checkMode];
+    const matches = text.matchAll(pattern);
+    for (const match of matches) {
+        const num = match[1];
+        if (num) {
+            const issueNumber = Number.parseInt(num, 10);
+            if (issueNumber > 0 && issueNumber <= 9999999) {
+                numbers.add(issueNumber);
             }
         }
     }

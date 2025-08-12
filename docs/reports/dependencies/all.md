@@ -137,6 +137,7 @@ flowchart LR
     packages/core/src/infrastructure/git//client.ts-->node//modules/simple//git/dist/typings/index.d.ts
     packages/core/src/infrastructure/git//client.ts-->packages/core/src/domain/errors.ts
     packages/core/src/infrastructure/git//url//parser.ts-->packages/core/src/domain/validation//schemas.ts
+    packages/core/src/infrastructure/issue//finder.ts-->packages/core/src/domain/constants.ts
     packages/core/src/infrastructure/issue//finder.ts-->packages/core/src/domain/validation//schemas.ts
     packages/core/src/application/check//message//use//case.ts-->node//modules/valibot/dist/index.d.cts
     packages/core/src/application/check//message//use//case.ts-->packages/core/src/domain/result.ts

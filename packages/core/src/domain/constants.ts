@@ -32,3 +32,15 @@ export const EXCLUDE_RULES: Record<CheckMode, string | undefined> = {
   branch: "{main,master,develop,release/*,hotfix/*}",
   commit: "{Rebase*,Merge*,Revert*,fixup!*,squash!*}",
 } as const;
+
+// ===== Extract Patterns =====
+
+/**
+ * Mode-specific issue number extraction patterns
+ * All patterns should capture the issue number in group 1
+ */
+export const EXTRACT_PATTERNS: Record<CheckMode, RegExp> = {
+  default: /#(\d+)/g, // #123 format only
+  commit: /#(\d+)/g, // Same as default
+  branch: /(?<![.\d])(\d{1,7})(?![.\d])/g, // Numbers not in version strings (e.g., v2.0)
+} as const;
