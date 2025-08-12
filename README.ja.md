@@ -39,6 +39,7 @@ npx @sugurutakahashi-1234/issue-linker -t "feat/123-new-feature" -c branch
 |--------|-------|-------------|---------|
 | `--text <text>` | `-t` | 検証するテキスト（コミットメッセージ、PRタイトル、またはブランチ名）**[必須]** | - |
 | `--check-mode <mode>` | `-c` | 検証モード: `default` (#123形式) \| `branch` (ブランチ名から抽出) \| `commit` (defaultと同じだがmerge/rebaseを除外) | `default` |
+| `--extract <pattern>` | - | issue番号を見つけるための抽出パターン（正規表現） | モード固有 |
 | `--exclude <pattern>` | - | 除外パターン（glob） - モードのデフォルトを上書き。`""`でデフォルト無効化 | モード固有 |
 | `--issue-status <status>` | - | issueステータスでフィルター: `all` \| `open` \| `closed` | `all` |
 | `--repo <owner/repo>` | - | 対象のGitHubリポジトリ（owner/repo形式） | gitから自動検出 |
@@ -310,6 +311,26 @@ release/v1.0.0      ⏩ (skipped - excluded by default)
 - **default/commit**: `#`記号の後に続く数字のみを厳密にマッチ
 - **branch**: 独立した数字を抽出し、"2.0"や"v1.2.3"のようなバージョン番号を回避
 - すべてのモードでissue番号を1-7桁に制限（最大 #9999999）
+
+### Custom Extraction Patterns
+
+`--extract`オプションを使用してデフォルトの抽出パターンを上書きできます:
+
+```bash
+# GH-123 format (GitHub style with prefix)
+issue-linker -t "Fix GH-456" --extract "GH-(\d+)"
+
+# JIRA-style format (PROJECT-123)
+issue-linker -t "Resolve PROJ-789" --extract "[A-Z]+-(\d+)"
+
+# Custom format with "issue" prefix
+issue-linker -t "Closes issue123" --extract "issue(\d+)"
+```
+
+**重要な注意事項:**
+- パターンは最初のキャプチャグループ`(\d+)`でissue番号を捕獲する必要があります
+- パターンは自動的にグローバルフラグが適用されます
+- カスタムパターンはモードのデフォルトを完全に上書きします
 
 ## Advanced Usage
 

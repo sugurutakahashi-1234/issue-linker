@@ -10,6 +10,7 @@ import type {
 export interface InputConfig {
   text: string;
   checkMode: CheckMode;
+  extract?: string;
   exclude?: string;
   issueStatus: IssueStatusFilter;
   repo: string;

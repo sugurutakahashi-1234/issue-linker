@@ -44,6 +44,9 @@ inputs:
       Options: 'default', 'branch', 'commit'
     required: false
     default: 'default'
+  extract:
+    description: 'Custom extraction pattern (regex) for finding issue numbers (overrides check mode defaults)'
+    required: false
   exclude:
     description: 'Custom exclude pattern (overrides check mode defaults)'
     required: false

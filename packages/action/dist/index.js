@@ -37316,7 +37316,7 @@ const v = tslib_1.__importStar(__nccwpck_require__(9487));
 /**
  * Helper function to create CheckMessageOptions with validation
  */
-function createCheckMessageOptions(text, checkMode, issueStatus, repo, actionMode, githubToken, hostname) {
+function createCheckMessageOptions(text, checkMode, issueStatus, repo, actionMode, githubToken, hostname, extract, exclude) {
     const options = {
         text,
         checkMode,
@@ -37325,6 +37325,8 @@ function createCheckMessageOptions(text, checkMode, issueStatus, repo, actionMod
         actionMode,
         ...(githubToken && { githubToken }),
         ...(hostname && { hostname }),
+        ...(extract && { extract }),
+        ...(exclude && { exclude }),
     };
     // Validate using schema from core
     try {
@@ -54015,6 +54017,7 @@ const GetPullRequestCommitsOptionsSchema = object({
 const CheckMessageOptionsSchema = object({
     text: pipe(string(), minLength(1, "Text is required")),
     checkMode: optional(CheckModeSchema, DEFAULT_OPTIONS.mode),
+    extract: optional(string()),
     exclude: optional(string()),
     issueStatus: optional(IssueStatusFilterSchema, DEFAULT_OPTIONS.issueStatus),
     repo: optional(RepositoryStringSchema),
@@ -75570,14 +75573,29 @@ function parseRepositoryFromGitUrl(url) {
 // Infrastructure layer - Issue number finding
 
 /**
- * Find issue numbers from text based on check mode
+ * Find issue numbers from text based on check mode or custom pattern
  * @param text - The text to search in
  * @param checkMode - The check mode ("default", "branch", or "commit")
+ * @param customPattern - Optional custom extraction pattern (overrides mode default)
  * @returns Array of unique issue numbers found
  */
-function findIssueNumbers(text, checkMode) {
+function findIssueNumbers(text, checkMode, customPattern) {
     const numbers = new Set();
-    const pattern = MODE_EXTRACT_REGEXES[checkMode];
+    // Use custom pattern if provided, otherwise use mode default
+    let pattern;
+    if (customPattern) {
+        try {
+            // Ensure the pattern has global flag
+            pattern = new RegExp(customPattern, "g");
+        }
+        catch (error) {
+            // If invalid regex, throw error with helpful message
+            throw new Error(`Invalid extraction pattern: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    }
+    else {
+        pattern = MODE_EXTRACT_REGEXES[checkMode];
+    }
     const matches = text.matchAll(pattern);
     for (const match of matches) {
         const num = match[1];
@@ -75635,6 +75653,7 @@ async function checkMessage(options) {
         const input = {
             text: opts.text,
             checkMode,
+            ...(opts.extract && { extract: opts.extract }),
             ...(opts.exclude && { exclude: opts.exclude }),
             issueStatus,
             repo: repo,
@@ -75645,7 +75664,7 @@ async function checkMessage(options) {
             return createExcludedResult(input);
         }
         // Step 3: Find issue numbers
-        const issueNumbers = findIssueNumbers(opts.text, checkMode);
+        const issueNumbers = findIssueNumbers(opts.text, checkMode, opts.extract);
         if (issueNumbers.length === 0) {
             return createNoIssuesResult(input);
         }
@@ -75998,13 +76017,14 @@ async function run() {
         // Advanced mode inputs
         const text = core.getInput("text");
         const checkMode = core.getInput("check-mode") || core_1.DEFAULT_OPTIONS.mode;
+        const extract = core.getInput("extract") || undefined;
         const exclude = core.getInput("exclude") || undefined;
         // Simple mode validations
         if (validateBranch) {
             // Get branch name using helper function
             const branchName = (0, github_actions_helpers_js_1.extractBranchNameFromContext)(context);
             if (branchName) {
-                const messageOptions = (0, validation_helpers_js_1.createCheckMessageOptions)(branchName, "branch", issueStatus, repo, "validate-branch", githubToken, hostname);
+                const messageOptions = (0, validation_helpers_js_1.createCheckMessageOptions)(branchName, "branch", issueStatus, repo, "validate-branch", githubToken, hostname, extract, exclude);
                 const result = await (0, core_1.checkMessage)(messageOptions);
                 results.push(result);
                 // Comment on issues when branch is pushed (create event)
@@ -76044,7 +76064,7 @@ async function run() {
             // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
             const prTitle = context.payload.pull_request?.["title"];
             if (prTitle) {
-                const messageOptions = (0, validation_helpers_js_1.createCheckMessageOptions)(prTitle, "default", issueStatus, repo, "validate-pr-title", githubToken, hostname);
+                const messageOptions = (0, validation_helpers_js_1.createCheckMessageOptions)(prTitle, "default", issueStatus, repo, "validate-pr-title", githubToken, hostname, extract, exclude);
                 const result = await (0, core_1.checkMessage)(messageOptions);
                 results.push(result);
             }
@@ -76056,7 +76076,7 @@ async function run() {
             // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
             const prBody = context.payload.pull_request?.["body"];
             if (prBody) {
-                const messageOptions = (0, validation_helpers_js_1.createCheckMessageOptions)(prBody, "default", issueStatus, repo, "validate-pr-body", githubToken, hostname);
+                const messageOptions = (0, validation_helpers_js_1.createCheckMessageOptions)(prBody, "default", issueStatus, repo, "validate-pr-body", githubToken, hostname, extract, exclude);
                 const result = await (0, core_1.checkMessage)(messageOptions);
                 results.push(result);
             }
@@ -76082,7 +76102,7 @@ async function run() {
                     const commits = await (0, core_1.getPullRequestCommits)(commitsOptions);
                     // Check each commit message
                     for (const commit of commits) {
-                        const messageOptions = (0, validation_helpers_js_1.createCheckMessageOptions)(commit.message, "commit", issueStatus, repo, "validate-commits", githubToken, hostname);
+                        const messageOptions = (0, validation_helpers_js_1.createCheckMessageOptions)(commit.message, "commit", issueStatus, repo, "validate-commits", githubToken, hostname, extract, exclude);
                         const result = await (0, core_1.checkMessage)(messageOptions);
                         results.push(result);
                     }
@@ -76103,6 +76123,7 @@ async function run() {
                 repo,
                 ...(githubToken && { githubToken }),
                 ...(hostname && { hostname }),
+                ...(extract && { extract }),
                 ...(exclude && { exclude }),
             };
             // Validate the options

@@ -93,6 +93,7 @@ export const GetPullRequestCommitsOptionsSchema = v.object({
 export const CheckMessageOptionsSchema = v.object({
   text: v.pipe(v.string(), v.minLength(1, "Text is required")),
   checkMode: v.optional(CheckModeSchema, DEFAULT_OPTIONS.mode),
+  extract: v.optional(v.string()),
   exclude: v.optional(v.string()),
   issueStatus: v.optional(IssueStatusFilterSchema, DEFAULT_OPTIONS.issueStatus),
   repo: v.optional(RepositoryStringSchema),

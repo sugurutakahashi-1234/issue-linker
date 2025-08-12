@@ -63,6 +63,7 @@ export async function checkMessage(
     const input: InputConfig = {
       text: opts.text,
       checkMode,
+      ...(opts.extract && { extract: opts.extract }),
       ...(opts.exclude && { exclude: opts.exclude }),
       issueStatus,
       repo: repo,
@@ -75,7 +76,7 @@ export async function checkMessage(
     }
 
     // Step 3: Find issue numbers
-    const issueNumbers = findIssueNumbers(opts.text, checkMode);
+    const issueNumbers = findIssueNumbers(opts.text, checkMode, opts.extract);
     if (issueNumbers.length === 0) {
       return createNoIssuesResult(input);
     }

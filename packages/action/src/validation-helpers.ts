@@ -13,6 +13,8 @@ export function createCheckMessageOptions(
   actionMode: string,
   githubToken?: string,
   hostname?: string,
+  extract?: string,
+  exclude?: string,
 ): CheckMessageOptions {
   const options = {
     text,
@@ -22,6 +24,8 @@ export function createCheckMessageOptions(
     actionMode,
     ...(githubToken && { githubToken }),
     ...(hostname && { hostname }),
+    ...(extract && { extract }),
+    ...(exclude && { exclude }),
   };
 
   // Validate using schema from core

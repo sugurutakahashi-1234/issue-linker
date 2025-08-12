@@ -39,6 +39,7 @@ npx @sugurutakahashi-1234/issue-linker -t "feat/123-new-feature" -c branch
 |--------|-------|-------------|---------|
 | `--text <text>` | `-t` | Text to validate (commit message, PR title, or branch name) **[required]** | - |
 | `--check-mode <mode>` | `-c` | Validation mode: `default` (literal #123) \| `branch` (extract from branch name) \| `commit` (same as default but excludes merge/rebase) | `default` |
+| `--extract <pattern>` | - | Extraction pattern (regex) for finding issue numbers | Mode-specific |
 | `--exclude <pattern>` | - | Exclude pattern (glob) to skip validation for matching text | Mode-specific |
 | `--issue-status <status>` | - | Filter by issue status: `all` \| `open` \| `closed` | `all` |
 | `--repo <owner/repo>` | - | Target GitHub repository in owner/repo format | Auto-detect from git |
@@ -310,6 +311,26 @@ Each mode uses different regular expressions to extract issue numbers:
 - **default/commit**: Strictly matches the `#` symbol followed by digits
 - **branch**: Extracts standalone numbers, avoiding version numbers like "2.0" or "v1.2.3"
 - All modes limit issue numbers to 1-7 digits (max #9999999)
+
+### Custom Extraction Patterns
+
+You can override the default extraction patterns using the `--extract` option:
+
+```bash
+# GH-123 format (GitHub style with prefix)
+issue-linker -t "Fix GH-456" --extract "GH-(\d+)"
+
+# JIRA-style format (PROJECT-123)
+issue-linker -t "Resolve PROJ-789" --extract "[A-Z]+-(\d+)"
+
+# Custom format with "issue" prefix
+issue-linker -t "Closes issue123" --extract "issue(\d+)"
+```
+
+**Important Notes:**
+- The pattern must capture the issue number in the first capture group `(\d+)`
+- The pattern is applied with global flag automatically
+- Custom patterns completely override mode defaults
 
 ## Advanced Usage
 

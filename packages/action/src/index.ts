@@ -41,6 +41,7 @@ async function run() {
     // Advanced mode inputs
     const text = core.getInput("text");
     const checkMode = core.getInput("check-mode") || DEFAULT_OPTIONS.mode;
+    const extract = core.getInput("extract") || undefined;
     const exclude = core.getInput("exclude") || undefined;
 
     // Simple mode validations
@@ -57,6 +58,8 @@ async function run() {
           "validate-branch",
           githubToken,
           hostname,
+          extract,
+          exclude,
         );
         const result = await checkMessage(messageOptions);
         results.push(result);
@@ -120,6 +123,8 @@ async function run() {
           "validate-pr-title",
           githubToken,
           hostname,
+          extract,
+          exclude,
         );
         const result = await checkMessage(messageOptions);
         results.push(result);
@@ -140,6 +145,8 @@ async function run() {
           "validate-pr-body",
           githubToken,
           hostname,
+          extract,
+          exclude,
         );
         const result = await checkMessage(messageOptions);
         results.push(result);
@@ -175,6 +182,8 @@ async function run() {
               "validate-commits",
               githubToken,
               hostname,
+              extract,
+              exclude,
             );
 
             const result = await checkMessage(messageOptions);
@@ -199,6 +208,7 @@ async function run() {
         repo,
         ...(githubToken && { githubToken }),
         ...(hostname && { hostname }),
+        ...(extract && { extract }),
         ...(exclude && { exclude }),
       };
 

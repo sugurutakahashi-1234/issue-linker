@@ -34,6 +34,10 @@ program
     DEFAULT_OPTIONS.mode,
   )
   .option(
+    "--extract <pattern>",
+    "extraction pattern (regex) for finding issue numbers - overrides mode defaults",
+  )
+  .option(
     "--exclude <pattern>",
     'exclude pattern (glob) - overrides mode defaults. Use "" to disable defaults',
   )
@@ -65,6 +69,7 @@ program
           text: options.text,
           checkMode: options.checkMode,
           issueStatus: options.issueStatus,
+          ...(options.extract && { extract: options.extract }),
           ...(options.exclude && { exclude: options.exclude }),
           ...(options.repo && { repo: options.repo }),
           ...(options.githubToken && { githubToken: options.githubToken }),
@@ -188,6 +193,17 @@ Exclude Patterns:
   
   Custom --exclude pattern will OVERRIDE mode defaults (not add to them)
   To disable default exclusions, use --exclude "" (empty string)
+
+Extract Patterns:
+  Each mode has default extraction patterns for finding issue numbers:
+    - default mode: #(\d+) - matches #123 format
+    - branch mode: (?<![.\d])(\d{1,7})(?![.\d]) - matches numbers not in version strings
+    - commit mode: #(\d+) - same as default
+  
+  Custom --extract pattern will OVERRIDE mode defaults
+  Pattern must capture the issue number in group 1, e.g.:
+    - "GH-(\d+)" for GH-123 format
+    - "[A-Z]+-(\d+)" for JIRA-style PROJ-123
 
 Environment Variables:
   GITHUB_TOKEN or GH_TOKEN     GitHub personal access token for API authentication
