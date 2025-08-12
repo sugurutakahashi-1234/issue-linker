@@ -1,10 +1,16 @@
-[English](README.md) | [日本語](README.ja.md)
-
 # issue-linker 🔗
 
-[![npm version](https://badge.fury.io/js/@sugurutakahashi-1234%2Fissue-linker.svg)](https://www.npmjs.com/package/@sugurutakahashi-1234/issue-linker)
-[![GitHub Actions](https://github.com/sugurutakahashi-1234/issue-linker/actions/workflows/ci.yml/badge.svg)](https://github.com/sugurutakahashi-1234/issue-linker/actions)
+[![npm version](https://img.shields.io/npm/v/@sugurutakahashi-1234/issue-linker.svg)](https://www.npmjs.com/package/@sugurutakahashi-1234/issue-linker)
+[![npm downloads](https://img.shields.io/npm/dm/@sugurutakahashi-1234/issue-linker.svg)](https://www.npmjs.com/package/@sugurutakahashi-1234/issue-linker)
+[![install size](https://packagephobia.com/badge?p=@sugurutakahashi-1234/issue-linker)](https://packagephobia.com/result?p=@sugurutakahashi-1234/issue-linker)
+[![Build](https://github.com/sugurutakahashi-1234/issue-linker/actions/workflows/ci.yml/badge.svg)](https://github.com/sugurutakahashi-1234/issue-linker/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/sugurutakahashi-1234/issue-linker/graph/badge.svg?token=KPN7UZ7ATY)](https://codecov.io/gh/sugurutakahashi-1234/issue-linker)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub Release Date](https://img.shields.io/github/release-date/sugurutakahashi-1234/issue-linker)](https://github.com/sugurutakahashi-1234/issue-linker/releases)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/sugurutakahashi-1234/issue-linker/pulls)
+[![GitHub Marketplace](https://img.shields.io/badge/marketplace-issue--linker-blue?style=flat&logo=github)](https://github.com/marketplace/actions/issue-linker)
+
+[English](README.md) | [日本語](README.ja.md)
 
 Validate text contains valid GitHub issue numbers. Perfect for maintaining traceability between your code and issue tracking!
 
@@ -35,20 +41,20 @@ npx @sugurutakahashi-1234/issue-linker -t "feat/123-new-feature" -c branch
 
 #### Options
 
-| Option                    | Short | Description                                                                                                                              | Default                        |
-| ------------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
-| `--text <text>`           | `-t`  | Text to validate (commit message, PR title, or branch name) **[required]**                                                               | -                              |
-| `--check-mode <mode>`     | `-c`  | Validation mode: `default` (literal #123) \| `branch` (extract from branch name) \| `commit` (same as default but excludes merge/rebase) | `default`                      |
-| `--extract <pattern>`     | -     | Extraction pattern (regex) for finding issue numbers                                                                                     | Mode-specific                  |
-| `--exclude <pattern>`     | -     | Exclude pattern (glob) to skip validation for matching text                                                                              | Mode-specific                  |
-| `--issue-status <status>` | -     | Filter by issue status: `all` \| `open` \| `closed`                                                                                      | `all`                          |
-| `--repo <owner/repo>`     | -     | Target GitHub repository in owner/repo format                                                                                            | Auto-detect from git           |
-| `--github-token <token>`  | -     | GitHub personal access token for API authentication                                                                                      | `$GITHUB_TOKEN` or `$GH_TOKEN` |
-| `--hostname <hostname>`   | `-h`  | GitHub Enterprise Server hostname                                                                                                        | `github.com` or `$GH_HOST`     |
-| `--json`                  | -     | Output result in JSON format for CI/CD integration                                                                                       | `false`                        |
-| `--verbose`               | -     | Show detailed validation information and debug output                                                                                    | `false`                        |
-| `--version`               | `-v`  | Display version number                                                                                                                   | -                              |
-| `--help`                  | -     | Display help for command                                                                                                                 | -                              |
+| Option                                 | Description                                                                                                                              | Default                        |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| `-t, --text <text>`                    | Text to validate (commit message, PR title, or branch name) **[required]**                                                               | -                              |
+| `-c, --check-mode <mode>`              | Validation mode: `default` (literal #123) \| `branch` (extract from branch name) \| `commit` (same as default but excludes merge/rebase) | `default`                      |
+| `--extract <pattern>`                  | Extraction pattern (regex) for finding issue numbers                                                                                     | Mode-specific                  |
+| `--exclude <pattern>`                  | Exclude pattern (glob) to skip validation for matching text                                                                              | Mode-specific                  |
+| `--issue-status <status>`              | Filter by issue status: `all` \| `open` \| `closed`                                                                                      | `all`                          |
+| `--repo <owner/repo>`                  | Target GitHub repository in owner/repo format                                                                                            | Auto-detect from git           |
+| `--github-token <token>`               | GitHub personal access token for API authentication                                                                                      | `$GITHUB_TOKEN` or `$GH_TOKEN` |
+| `--hostname <hostname>`                | GitHub Enterprise Server hostname                                                                                                        | `github.com` or `$GH_HOST`     |
+| `--json`                               | Output result in JSON format for CI/CD integration                                                                                       | `false`                        |
+| `--verbose`                            | Show detailed validation information and debug output                                                                                    | `false`                        |
+| `-v, --version`                        | Display version number                                                                                                                   | -                              |
+| `-h, --help`                           | Display help for command                                                                                                                 | -                              |
 
 #### Examples
 
@@ -75,7 +81,7 @@ issue-linker -t "[WIP] Fix #789" --exclude "*\\[WIP\\]*"
 issue-linker -t "Fix #789" --json
 
 # GitHub Enterprise Server
-issue-linker -t "Fix #321" -h github.enterprise.com
+issue-linker -t "Fix #321" --hostname github.enterprise.com
 
 # Verbose output for debugging
 issue-linker -t "Fix #999" --verbose
@@ -226,7 +232,7 @@ For GitHub Enterprise Server, configure using one of these methods:
 
 ```bash
 # CLI option
-issue-linker -t "Fix #123" -h github.enterprise.com
+issue-linker -t "Fix #123" --hostname github.enterprise.com
 
 # Environment variable (compatible with GitHub CLI)
 export GH_HOST=github.enterprise.com

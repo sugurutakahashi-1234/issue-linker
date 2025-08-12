@@ -1,10 +1,16 @@
-[English](README.md) | [日本語](README.ja.md)
-
 # issue-linker 🔗
 
-[![npm version](https://badge.fury.io/js/@sugurutakahashi-1234%2Fissue-linker.svg)](https://www.npmjs.com/package/@sugurutakahashi-1234/issue-linker)
-[![GitHub Actions](https://github.com/sugurutakahashi-1234/issue-linker/actions/workflows/ci.yml/badge.svg)](https://github.com/sugurutakahashi-1234/issue-linker/actions)
+[![npm version](https://img.shields.io/npm/v/@sugurutakahashi-1234/issue-linker.svg)](https://www.npmjs.com/package/@sugurutakahashi-1234/issue-linker)
+[![npm downloads](https://img.shields.io/npm/dm/@sugurutakahashi-1234/issue-linker.svg)](https://www.npmjs.com/package/@sugurutakahashi-1234/issue-linker)
+[![install size](https://packagephobia.com/badge?p=@sugurutakahashi-1234/issue-linker)](https://packagephobia.com/result?p=@sugurutakahashi-1234/issue-linker)
+[![Build](https://github.com/sugurutakahashi-1234/issue-linker/actions/workflows/ci.yml/badge.svg)](https://github.com/sugurutakahashi-1234/issue-linker/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/sugurutakahashi-1234/issue-linker/graph/badge.svg?token=KPN7UZ7ATY)](https://codecov.io/gh/sugurutakahashi-1234/issue-linker)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub Release Date](https://img.shields.io/github/release-date/sugurutakahashi-1234/issue-linker)](https://github.com/sugurutakahashi-1234/issue-linker/releases)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/sugurutakahashi-1234/issue-linker/pulls)
+[![GitHub Marketplace](https://img.shields.io/badge/marketplace-issue--linker-blue?style=flat&logo=github)](https://github.com/marketplace/actions/issue-linker)
+
+[English](README.md) | [日本語](README.ja.md)
 
 テキストに有効なGitHub issue番号が含まれているかを検証します。コードとissueトラッキングの間のトレーサビリティを維持するのに最適です！
 
@@ -35,20 +41,20 @@ npx @sugurutakahashi-1234/issue-linker -t "feat/123-new-feature" -c branch
 
 #### Options
 
-| オプション                | 省略形 | 説明                                                                                                                | デフォルト                         |
-| ------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
-| `--text <text>`           | `-t`   | 検証するテキスト（コミットメッセージ、PRタイトル、またはブランチ名）**[必須]**                                      | -                                  |
-| `--check-mode <mode>`     | `-c`   | 検証モード: `default` (#123形式) \| `branch` (ブランチ名から抽出) \| `commit` (defaultと同じだがmerge/rebaseを除外) | `default`                          |
-| `--extract <pattern>`     | -      | issue番号を見つけるための抽出パターン（正規表現）                                                                   | モード固有                         |
-| `--exclude <pattern>`     | -      | 除外パターン（glob） - モードのデフォルトを上書き。`""`でデフォルト無効化                                           | モード固有                         |
-| `--issue-status <status>` | -      | issueステータスでフィルター: `all` \| `open` \| `closed`                                                            | `all`                              |
-| `--repo <owner/repo>`     | -      | 対象のGitHubリポジトリ（owner/repo形式）                                                                            | gitから自動検出                    |
-| `--github-token <token>`  | -      | API認証用のGitHub個人アクセストークン                                                                               | `$GITHUB_TOKEN` または `$GH_TOKEN` |
-| `--hostname <hostname>`   | `-h`   | GitHub Enterprise Serverのホスト名                                                                                  | `github.com` または `$GH_HOST`     |
-| `--json`                  | -      | CI/CD統合用のJSON形式で結果を出力                                                                                   | `false`                            |
-| `--verbose`               | -      | 詳細な検証情報とデバッグ出力を表示                                                                                  | `false`                            |
-| `--version`               | `-v`   | バージョン番号を表示                                                                                                | -                                  |
-| `--help`                  | -      | コマンドのヘルプを表示                                                                                              | -                                  |
+| オプション                             | 説明                                                                                                                | デフォルト                         |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| `-t, --text <text>`                    | 検証するテキスト（コミットメッセージ、PRタイトル、またはブランチ名）**[必須]**                                      | -                                  |
+| `-c, --check-mode <mode>`              | 検証モード: `default` (#123形式) \| `branch` (ブランチ名から抽出) \| `commit` (defaultと同じだがmerge/rebaseを除外) | `default`                          |
+| `--extract <pattern>`                  | issue番号を見つけるための抽出パターン（正規表現）                                                                   | モード固有                         |
+| `--exclude <pattern>`                  | 除外パターン（glob） - モードのデフォルトを上書き。`""`でデフォルト無効化                                           | モード固有                         |
+| `--issue-status <status>`              | issueステータスでフィルター: `all` \| `open` \| `closed`                                                            | `all`                              |
+| `--repo <owner/repo>`                  | 対象のGitHubリポジトリ（owner/repo形式）                                                                            | gitから自動検出                    |
+| `--github-token <token>`               | API認証用のGitHub個人アクセストークン                                                                               | `$GITHUB_TOKEN` または `$GH_TOKEN` |
+| `--hostname <hostname>`                | GitHub Enterprise Serverのホスト名                                                                                  | `github.com` または `$GH_HOST`     |
+| `--json`                               | CI/CD統合用のJSON形式で結果を出力                                                                                   | `false`                            |
+| `--verbose`                            | 詳細な検証情報とデバッグ出力を表示                                                                                  | `false`                            |
+| `-v, --version`                        | バージョン番号を表示                                                                                                | -                                  |
+| `-h, --help`                           | コマンドのヘルプを表示                                                                                              | -                                  |
 
 #### Examples
 
@@ -75,7 +81,7 @@ issue-linker -t "[WIP] Fix #789" --exclude "*\\[WIP\\]*"
 issue-linker -t "Fix #789" --json
 
 # GitHub Enterprise Server
-issue-linker -t "Fix #321" -h github.enterprise.com
+issue-linker -t "Fix #321" --hostname github.enterprise.com
 
 # Verbose output for debugging
 issue-linker -t "Fix #999" --verbose
@@ -226,7 +232,7 @@ GitHub Enterprise Serverの場合、以下のいずれかの方法で設定し�
 
 ```bash
 # CLI option
-issue-linker -t "Fix #123" -h github.enterprise.com
+issue-linker -t "Fix #123" --hostname github.enterprise.com
 
 # Environment variable (compatible with GitHub CLI)
 export GH_HOST=github.enterprise.com
