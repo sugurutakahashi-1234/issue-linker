@@ -1,6 +1,6 @@
 // Infrastructure layer - Issue number finding
 
-import { EXTRACT_PATTERNS } from "../domain/constants.js";
+import { MODE_EXTRACT_REGEXES } from "../domain/constants.js";
 import type { CheckMode } from "../domain/validation-schemas.js";
 
 /**
@@ -11,7 +11,7 @@ import type { CheckMode } from "../domain/validation-schemas.js";
  */
 export function findIssueNumbers(text: string, checkMode: CheckMode): number[] {
   const numbers = new Set<number>();
-  const pattern = EXTRACT_PATTERNS[checkMode];
+  const pattern = MODE_EXTRACT_REGEXES[checkMode];
   const matches = text.matchAll(pattern);
 
   for (const match of matches) {

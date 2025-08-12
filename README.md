@@ -293,6 +293,24 @@ release/v1.0.0      ⏩ (skipped - excluded by default)
 "Revert 'feature'"   ⏩ (skipped - excluded by default)
 ```
 
+### Technical Details
+
+#### Extraction Patterns
+
+Each mode uses different regular expressions to extract issue numbers:
+
+| Mode | Pattern | Description |
+|------|---------|-------------|
+| `default` | `/#(\d+)/g` | Matches #123 format only |
+| `commit` | `/#(\d+)/g` | Same as default mode |
+| `branch` | `/(?<![.\d])(\d{1,7})(?![.\d])/g` | Matches any 1-7 digit number not part of version strings (e.g., v2.0) |
+
+#### Pattern Behavior
+
+- **default/commit**: Strictly matches the `#` symbol followed by digits
+- **branch**: Extracts standalone numbers, avoiding version numbers like "2.0" or "v1.2.3"
+- All modes limit issue numbers to 1-7 digits (max #9999999)
+
 ## Advanced Usage
 
 ### Working with Git Commands

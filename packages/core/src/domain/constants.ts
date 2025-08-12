@@ -21,25 +21,24 @@ export const DEFAULT_OPTIONS = {
   githubToken: undefined as string | undefined,
 } as const;
 
-// ===== Exclude Rules =====
+// ===== Exclude Patterns (Glob) =====
 
 /**
- * Mode-specific exclude rules
- * All patterns use minimatch syntax
+ * Mode-specific exclude patterns using glob syntax (minimatch)
  */
-export const EXCLUDE_RULES: Record<CheckMode, string | undefined> = {
+export const MODE_EXCLUDE_GLOBS: Record<CheckMode, string | undefined> = {
   default: undefined,
   branch: "{main,master,develop,release/*,hotfix/*}",
   commit: "{Rebase*,Merge*,Revert*,fixup!*,squash!*}",
 } as const;
 
-// ===== Extract Patterns =====
+// ===== Extract Patterns (RegExp) =====
 
 /**
- * Mode-specific issue number extraction patterns
+ * Mode-specific issue number extraction using regular expressions
  * All patterns should capture the issue number in group 1
  */
-export const EXTRACT_PATTERNS: Record<CheckMode, RegExp> = {
+export const MODE_EXTRACT_REGEXES: Record<CheckMode, RegExp> = {
   default: /#(\d+)/g, // #123 format only
   commit: /#(\d+)/g, // Same as default
   branch: /(?<![.\d])(\d{1,7})(?![.\d])/g, // Numbers not in version strings (e.g., v2.0)

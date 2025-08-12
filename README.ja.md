@@ -293,6 +293,24 @@ release/v1.0.0      ⏩ (skipped - excluded by default)
 "Revert 'feature'"   ⏩ (skipped - excluded by default)
 ```
 
+### Technical Details
+
+#### Extraction Patterns
+
+各モードは異なる正規表現を使用してissue番号を抽出します:
+
+| モード | パターン | 説明 |
+|------|---------|-------------|
+| `default` | `/#(\d+)/g` | #123形式のみマッチ |
+| `commit` | `/#(\d+)/g` | defaultモードと同じ |
+| `branch` | `/(?<![.\d])(\d{1,7})(?![.\d])/g` | バージョン文字列（例: v2.0）の一部ではない1-7桁の数字にマッチ |
+
+#### Pattern Behavior
+
+- **default/commit**: `#`記号の後に続く数字のみを厳密にマッチ
+- **branch**: 独立した数字を抽出し、"2.0"や"v1.2.3"のようなバージョン番号を回避
+- すべてのモードでissue番号を1-7桁に制限（最大 #9999999）
+
 ## Advanced Usage
 
 ### Working with Git Commands

@@ -2,7 +2,11 @@
 
 // Domain layer exports
 /** @public */
-export { DEFAULT_OPTIONS, EXCLUDE_RULES } from "./domain/constants.js";
+export {
+  DEFAULT_OPTIONS,
+  MODE_EXCLUDE_GLOBS,
+  MODE_EXTRACT_REGEXES,
+} from "./domain/constants.js";
 
 /** @public */
 export {

@@ -46764,12 +46764,13 @@ __nccwpck_require__.d(__webpack_exports__, {
   CommentOnBranchIssuesOptionsSchema: () => (/* reexport */ CommentOnBranchIssuesOptionsSchema),
   CreateIssueCommentOptionsSchema: () => (/* reexport */ CreateIssueCommentOptionsSchema),
   DEFAULT_OPTIONS: () => (/* reexport */ DEFAULT_OPTIONS),
-  EXCLUDE_RULES: () => (/* reexport */ EXCLUDE_RULES),
   GetPullRequestCommitsOptionsSchema: () => (/* reexport */ GetPullRequestCommitsOptionsSchema),
   GitError: () => (/* reexport */ GitError),
   GitHubError: () => (/* reexport */ GitHubError),
   IssueNotFoundError: () => (/* reexport */ IssueNotFoundError),
   IssueStatusFilterSchema: () => (/* reexport */ IssueStatusFilterSchema),
+  MODE_EXCLUDE_GLOBS: () => (/* reexport */ MODE_EXCLUDE_GLOBS),
+  MODE_EXTRACT_REGEXES: () => (/* reexport */ MODE_EXTRACT_REGEXES),
   ValidationError: () => (/* reexport */ ValidationError),
   checkDuplicateComment: () => (/* reexport */ checkDuplicateComment),
   checkMessage: () => (/* reexport */ checkMessage),
@@ -46797,22 +46798,21 @@ const DEFAULT_OPTIONS = {
     /** Default GitHub token (undefined means use environment variable) */
     githubToken: undefined,
 };
-// ===== Exclude Rules =====
+// ===== Exclude Patterns (Glob) =====
 /**
- * Mode-specific exclude rules
- * All patterns use minimatch syntax
+ * Mode-specific exclude patterns using glob syntax (minimatch)
  */
-const EXCLUDE_RULES = {
+const MODE_EXCLUDE_GLOBS = {
     default: undefined,
     branch: "{main,master,develop,release/*,hotfix/*}",
     commit: "{Rebase*,Merge*,Revert*,fixup!*,squash!*}",
 };
-// ===== Extract Patterns =====
+// ===== Extract Patterns (RegExp) =====
 /**
- * Mode-specific issue number extraction patterns
+ * Mode-specific issue number extraction using regular expressions
  * All patterns should capture the issue number in group 1
  */
-const EXTRACT_PATTERNS = {
+const MODE_EXTRACT_REGEXES = {
     default: /#(\d+)/g, // #123 format only
     commit: /#(\d+)/g, // Same as default
     branch: /(?<![.\d])(\d{1,7})(?![.\d])/g, // Numbers not in version strings (e.g., v2.0)
@@ -70690,7 +70690,7 @@ function isBranchExcluded(branch, pattern) {
  */
 function shouldExclude(text, checkMode, customExclude) {
     // Use custom exclude pattern if provided, otherwise use mode-specific default
-    const pattern = customExclude ?? EXCLUDE_RULES[checkMode];
+    const pattern = customExclude ?? MODE_EXCLUDE_GLOBS[checkMode];
     // No pattern means no exclusion
     if (!pattern) {
         return false;
@@ -75577,7 +75577,7 @@ function parseRepositoryFromGitUrl(url) {
  */
 function findIssueNumbers(text, checkMode) {
     const numbers = new Set();
-    const pattern = EXTRACT_PATTERNS[checkMode];
+    const pattern = MODE_EXTRACT_REGEXES[checkMode];
     const matches = text.matchAll(pattern);
     for (const match of matches) {
         const num = match[1];
