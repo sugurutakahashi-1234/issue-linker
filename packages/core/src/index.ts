@@ -11,21 +11,26 @@ export {
   IssueNotFoundError,
   ValidationError,
 } from "./domain/errors.js";
-
 /** @public */
 export type {
+  CommentOnBranchIssuesResult,
+  CommentOnIssueResult,
+  CommentResult,
+  DuplicateCheckResult,
   ErrorInfo,
   InputConfig,
   IssueInfo,
   IssueValidationResult,
   ValidationReason,
 } from "./domain/result.js";
-
 /** @public */
 export type {
   ActionMode,
+  CheckDuplicateCommentOptions,
   CheckMessageOptions,
   CheckMode,
+  CommentOnBranchIssuesOptions,
+  CreateIssueCommentOptions,
   GetPullRequestCommitsOptions,
   GitHubRepository,
   Issue,
@@ -33,11 +38,13 @@ export type {
   IssueStatusFilter,
   PullRequestCommit,
 } from "./domain/validation-schemas.js";
-
 /** @public */
 export {
+  CheckDuplicateCommentOptionsSchema,
   CheckMessageOptionsSchema,
   CheckModeSchema,
+  CommentOnBranchIssuesOptionsSchema,
+  CreateIssueCommentOptionsSchema,
   GetPullRequestCommitsOptionsSchema,
   IssueStatusFilterSchema,
 } from "./domain/validation-schemas.js";
@@ -47,7 +54,16 @@ export {
 
 // Application layer exports
 /** @public */
+export { checkDuplicateComment } from "./application/check-duplicate-comment-use-case.js";
+
+/** @public */
 export { checkMessage } from "./application/check-message-use-case.js";
+
+/** @public */
+export { commentOnBranchIssues } from "./application/comment-on-branch-issues-use-case.js";
+
+/** @public */
+export { createIssueComment } from "./application/create-issue-comment-use-case.js";
 
 /** @public */
 export { getPullRequestCommits } from "./application/get-pull-request-commits-use-case.js";

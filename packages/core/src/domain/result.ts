@@ -61,3 +61,38 @@ export interface IssueValidationResult {
   // Error information (only on errors)
   error?: ErrorInfo;
 }
+
+// Result type for comment creation
+export interface CommentResult {
+  success: boolean;
+  message: string;
+  commentId?: number;
+  error?: ErrorInfo;
+}
+
+// Result type for duplicate check
+export interface DuplicateCheckResult {
+  isDuplicate: boolean;
+  existingCommentId?: number;
+  error?: ErrorInfo;
+}
+
+// Individual comment result for batch operations
+export interface CommentOnIssueResult {
+  issueNumber: number;
+  success: boolean;
+  skipped?: boolean;
+  message?: string;
+  commentId?: number;
+  error?: string;
+}
+
+// Result type for batch comment operations
+export interface CommentOnBranchIssuesResult {
+  success: boolean;
+  totalIssues: number;
+  commented: number;
+  skipped: number;
+  failed: number;
+  results: CommentOnIssueResult[];
+}

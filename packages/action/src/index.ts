@@ -4,11 +4,16 @@ import {
   type CheckMessageOptions,
   CheckMessageOptionsSchema,
   checkMessage,
+  commentOnBranchIssues,
   DEFAULT_OPTIONS,
   getPullRequestCommits,
   type IssueValidationResult,
 } from "@issue-linker/core";
 import * as v from "valibot";
+import {
+  extractBranchNameFromContext,
+  isCreateBranchEvent,
+} from "./github-actions-helpers.js";
 
 /**
  * Helper function to create CheckMessageOptions with validation
@@ -62,6 +67,8 @@ async function run() {
     const validatePrTitle = core.getInput("validate-pr-title") === "true";
     const validatePrBody = core.getInput("validate-pr-body") === "true";
     const validateCommits = core.getInput("validate-commits") === "true";
+    const commentOnIssuesWhenBranchPushed =
+      core.getInput("comment-on-issues-when-branch-pushed") === "true";
 
     // Advanced mode inputs
     const text = core.getInput("text");
@@ -70,8 +77,9 @@ async function run() {
 
     // Simple mode validations
     if (validateBranch) {
-      // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
-      const branchName = context.payload.pull_request?.["head"]?.ref;
+      // Get branch name using helper function
+      const branchName = extractBranchNameFromContext(context);
+
       if (branchName) {
         core.info(`Validating branch: ${branchName}`);
         const messageOptions = createCheckMessageOptions(
@@ -89,6 +97,50 @@ async function run() {
         const result = await checkMessage(messageOptions);
         core.debug(`checkMessage result: ${JSON.stringify(result)}`);
         results.push(result);
+
+        // Comment on issues when branch is pushed (create event)
+        if (
+          commentOnIssuesWhenBranchPushed &&
+          isCreateBranchEvent(context) &&
+          result.success &&
+          result.issues?.valid &&
+          result.issues.valid.length > 0
+        ) {
+          core.info(
+            `Commenting on ${result.issues.valid.length} issue(s) for branch: ${branchName}`,
+          );
+
+          // Use new use case for batch commenting
+          const commentResult = await commentOnBranchIssues({
+            repo,
+            issueNumbers: result.issues.valid,
+            branchName,
+            ...(githubToken && { githubToken }),
+            ...(hostname && { hostname }),
+          });
+
+          // Log results
+          for (const r of commentResult.results) {
+            if (r.success && !r.skipped) {
+              core.info(`✅ Commented on issue #${r.issueNumber}`);
+            } else if (r.skipped) {
+              core.info(
+                `Skipping duplicate comment on issue #${r.issueNumber}`,
+              );
+            } else {
+              core.warning(
+                `Failed to comment on issue #${r.issueNumber}: ${r.error}`,
+              );
+            }
+          }
+
+          // Log summary
+          if (commentResult.commented > 0 || commentResult.skipped > 0) {
+            core.info(
+              `Summary: ${commentResult.commented} commented, ${commentResult.skipped} skipped, ${commentResult.failed} failed`,
+            );
+          }
+        }
       } else {
         core.warning("Branch name not found in context");
       }
@@ -146,8 +198,7 @@ async function run() {
         try {
           // Get commits using core function
           const commitsOptions = {
-            owner: context.repo.owner,
-            repo: context.repo.repo,
+            repo: `${context.repo.owner}/${context.repo.repo}`,
             prNumber,
             ...(githubToken && { githubToken }),
             ...(hostname && { hostname }),

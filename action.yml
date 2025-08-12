@@ -26,6 +26,13 @@ inputs:
     description: 'Validate all commit messages in the PR'
     required: false
     default: 'false'
+  comment-on-issues-when-branch-pushed:
+    description: |
+      Comment on detected issues when a branch is first pushed to GitHub.
+      Requires validate-branch to be enabled.
+      Works best with the 'create' event trigger.
+    required: false
+    default: 'false'
   
   # Advanced mode (custom text)
   text:

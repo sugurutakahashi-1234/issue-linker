@@ -109,6 +109,35 @@ jobs:
 ```
 <!-- x-release-please-end -->
 
+### Automatic Issue Comments
+
+Automatically comment on issues when a branch referencing them is first pushed to GitHub:
+
+<!-- x-release-please-start-version -->
+```yaml
+name: Comment on Issues
+
+on:
+  create:  # Triggers when a branch is created
+
+jobs:
+  comment:
+    if: github.ref_type == 'branch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: sugurutakahashi-1234/issue-linker@v1.0.0
+        with:
+          validate-branch: true
+          comment-on-issues-when-branch-pushed: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+```
+<!-- x-release-please-end -->
+
+This will:
+1. Detect issue numbers from your branch name (e.g., `feat/123-456-feature` → #123, #456)
+2. Post a comment "🚀 Development started on branch `feat/123-456-feature`" on each detected issue
+3. Skip duplicate comments (won't comment again if the same branch is pushed multiple times)
+
 ## Husky Integration
 
 Add to your Git hooks for automatic validation:
@@ -185,6 +214,7 @@ GitHub Actions automatically sets `GITHUB_SERVER_URL` for GitHub Enterprise envi
 | `repo`        | Repository (owner/repo)                  | Detected from git remote |
 | `githubToken` | GitHub token for API access              | `GITHUB_TOKEN` env       |
 | `hostname`    | GitHub hostname for Enterprise           | `github.com` or `GH_HOST` env |
+| `comment-on-issues-when-branch-pushed` | Comment on issues when branch is created (Actions only) | `false` |
 
 ### Default Exclude Patterns
 

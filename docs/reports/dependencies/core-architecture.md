@@ -20,7 +20,10 @@ flowchart LR
                     packages/core/dist/domain/result.d.ts["result.d.ts"]
                 end
                 subgraph packages/core/dist/application["/application"]
+                    packages/core/dist/application/check//duplicate//comment//use//case.d.ts["check-duplicate-comment-use-case.d.ts"]
                     packages/core/dist/application/check//message//use//case.d.ts["check-message-use-case.d.ts"]
+                    packages/core/dist/application/comment//on//branch//issues//use//case.d.ts["comment-on-branch-issues-use-case.d.ts"]
+                    packages/core/dist/application/create//issue//comment//use//case.d.ts["create-issue-comment-use-case.d.ts"]
                     packages/core/dist/application/get//pull//request//commits//use//case.d.ts["get-pull-request-commits-use-case.d.ts"]
                 end
             end
@@ -33,30 +36,41 @@ flowchart LR
         end
     end
     subgraph node//modules["node_modules"]
+        node//modules///actions/github/lib/context.d.ts["@actions/github"]
         node//modules/valibot/dist/index.d.cts["valibot"]
         node//modules///actions/core/lib/core.d.ts["@actions/core"]
         node//modules///actions/github/lib/github.d.ts["@actions/github"]
         node//modules///commander//js/extra//typings/index.d.ts["@commander-js/extra-typings"]
-        node//modules///types/micromatch/index.d.ts["@types/micromatch"]
-        node//modules/minimatch/dist/commonjs/index.d.ts["minimatch"]
         node//modules///t3//oss/env//core/dist/index.d.ts["@t3-oss/env-core"]
-        node//modules/simple//git/dist/typings/index.d.ts["simple-git"]
         node//modules///octokit/plugin//retry/dist//types/index.d.ts["@octokit/plugin-retry"]
         node//modules///octokit/plugin//throttling/dist//types/index.d.ts["@octokit/plugin-throttling"]
         node//modules///octokit/request//error/dist//types/index.d.ts["@octokit/request-error"]
         node//modules/octokit/dist//types/index.d.ts["octokit"]
+        node//modules///types/micromatch/index.d.ts["@types/micromatch"]
+        node//modules/minimatch/dist/commonjs/index.d.ts["minimatch"]
+        node//modules/simple//git/dist/typings/index.d.ts["simple-git"]
     end
+    packages/action-->node//modules///actions/github/lib/context.d.ts
     packages/core/dist/domain/validation//schemas.d.ts-->node//modules/valibot/dist/index.d.cts
     packages/core/dist/domain/constants.d.ts-->packages/core/dist/domain/validation//schemas.d.ts
     packages/core/dist/domain/result.d.ts-->packages/core/dist/domain/validation//schemas.d.ts
+    packages/core/dist/application/check//duplicate//comment//use//case.d.ts-->packages/core/dist/domain/result.d.ts
+    packages/core/dist/application/check//duplicate//comment//use//case.d.ts-->packages/core/dist/domain/validation//schemas.d.ts
     packages/core/dist/application/check//message//use//case.d.ts-->packages/core/dist/domain/result.d.ts
     packages/core/dist/application/check//message//use//case.d.ts-->packages/core/dist/domain/validation//schemas.d.ts
+    packages/core/dist/application/comment//on//branch//issues//use//case.d.ts-->packages/core/dist/domain/result.d.ts
+    packages/core/dist/application/comment//on//branch//issues//use//case.d.ts-->packages/core/dist/domain/validation//schemas.d.ts
+    packages/core/dist/application/create//issue//comment//use//case.d.ts-->packages/core/dist/domain/result.d.ts
+    packages/core/dist/application/create//issue//comment//use//case.d.ts-->packages/core/dist/domain/validation//schemas.d.ts
     packages/core/dist/application/get//pull//request//commits//use//case.d.ts-->packages/core/dist/domain/validation//schemas.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/domain/constants.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/domain/errors.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/domain/result.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/domain/validation//schemas.d.ts
+    packages/core/dist/index.d.ts-->packages/core/dist/application/check//duplicate//comment//use//case.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/application/check//message//use//case.d.ts
+    packages/core/dist/index.d.ts-->packages/core/dist/application/comment//on//branch//issues//use//case.d.ts
+    packages/core/dist/index.d.ts-->packages/core/dist/application/create//issue//comment//use//case.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/application/get//pull//request//commits//use//case.d.ts
     packages/action-->node//modules///actions/core/lib/core.d.ts
     packages/action-->node//modules///actions/github/lib/github.d.ts
@@ -66,11 +80,8 @@ flowchart LR
     packages/cli-->packages/core/dist/index.d.ts
     packages/cli-->node//modules/valibot/dist/index.d.cts
     packages/core/src/domain-->node//modules/valibot/dist/index.d.cts
-    packages/core/src/infrastructure-->node//modules///types/micromatch/index.d.ts
-    packages/core/src/infrastructure-->node//modules/minimatch/dist/commonjs/index.d.ts
-    packages/core/src/infrastructure-->packages/core/src/domain
     packages/core/src/domain-->node//modules///t3//oss/env//core/dist/index.d.ts
-    packages/core/src/infrastructure-->node//modules/simple//git/dist/typings/index.d.ts
+    packages/core/src/infrastructure-->packages/core/src/domain
     packages/core/src/infrastructure-->node//modules///octokit/plugin//retry/dist//types/index.d.ts
     packages/core/src/infrastructure-->node//modules///octokit/plugin//throttling/dist//types/index.d.ts
     packages/core/src/infrastructure-->node//modules///octokit/request//error/dist//types/index.d.ts
@@ -78,6 +89,9 @@ flowchart LR
     packages/core/src/application-->node//modules/valibot/dist/index.d.cts
     packages/core/src/application-->packages/core/src/domain
     packages/core/src/application-->packages/core/src/infrastructure
+    packages/core/src/infrastructure-->node//modules///types/micromatch/index.d.ts
+    packages/core/src/infrastructure-->node//modules/minimatch/dist/commonjs/index.d.ts
+    packages/core/src/infrastructure-->node//modules/simple//git/dist/typings/index.d.ts
     packages/core/src/index.ts-->packages/core/src/domain
     packages/core/src/index.ts-->packages/core/src/application
 ```

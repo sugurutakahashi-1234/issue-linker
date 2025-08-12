@@ -10,6 +10,13 @@ import { DEFAULT_OPTIONS } from "./constants.js";
 const IssueStatusSchema = v.picklist(["open", "closed"]);
 export const IssueStatusFilterSchema = v.picklist(["all", "open", "closed"]);
 
+// Common repository string validation
+const RepositoryStringSchema = v.pipe(
+  v.string(),
+  v.regex(/^[^/]+\/[^/]+$/, "Invalid repository format. Expected 'owner/repo'"),
+  v.minLength(1, "Repository is required"),
+);
+
 // Mode schemas
 export const CheckModeSchema = v.picklist(["default", "branch", "commit"]);
 const ActionModeSchema = v.picklist([
@@ -73,25 +80,61 @@ const GitHubIssueResultSchema = v.object({
 
 // GetPullRequestCommits options schema
 export const GetPullRequestCommitsOptionsSchema = v.object({
-  owner: v.pipe(v.string(), v.minLength(1, "Owner is required")),
-  repo: v.pipe(v.string(), v.minLength(1, "Repository is required")),
+  repo: RepositoryStringSchema,
   prNumber: v.pipe(
     v.number(),
     v.minValue(1, "Pull request number must be positive"),
   ),
   githubToken: v.optional(v.string()),
+  hostname: v.optional(v.string()),
 });
 
 // CheckMessage options schema
 export const CheckMessageOptionsSchema = v.object({
-  text: v.string(),
+  text: v.pipe(v.string(), v.minLength(1, "Text is required")),
   checkMode: v.optional(CheckModeSchema, DEFAULT_OPTIONS.mode),
   exclude: v.optional(v.string()),
   issueStatus: v.optional(IssueStatusFilterSchema, DEFAULT_OPTIONS.issueStatus),
-  repo: v.optional(v.string()),
+  repo: v.optional(RepositoryStringSchema),
+  actionMode: v.optional(ActionModeSchema),
   githubToken: v.optional(v.string()),
   hostname: v.optional(v.string()),
-  actionMode: v.optional(ActionModeSchema),
+});
+
+// CreateIssueComment options schema
+export const CreateIssueCommentOptionsSchema = v.object({
+  repo: RepositoryStringSchema,
+  issueNumber: v.pipe(
+    v.number(),
+    v.minValue(1, "Issue number must be positive"),
+  ),
+  body: v.pipe(v.string(), v.minLength(1, "Comment body is required")),
+  githubToken: v.optional(v.string()),
+  hostname: v.optional(v.string()),
+});
+
+// CheckDuplicateComment options schema
+export const CheckDuplicateCommentOptionsSchema = v.object({
+  repo: RepositoryStringSchema,
+  issueNumber: v.pipe(
+    v.number(),
+    v.minValue(1, "Issue number must be positive"),
+  ),
+  marker: v.pipe(v.string(), v.minLength(1, "Marker is required")),
+  githubToken: v.optional(v.string()),
+  hostname: v.optional(v.string()),
+});
+
+// CommentOnBranchIssues options schema
+export const CommentOnBranchIssuesOptionsSchema = v.object({
+  repo: RepositoryStringSchema,
+  issueNumbers: v.pipe(
+    v.array(v.number()),
+    v.minLength(1, "At least one issue number is required"),
+  ),
+  branchName: v.pipe(v.string(), v.minLength(1, "Branch name is required")),
+  githubToken: v.optional(v.string()),
+  hostname: v.optional(v.string()),
 });
 
 // ===== Type Inference =====
@@ -112,4 +155,13 @@ export type GetPullRequestCommitsOptions = v.InferOutput<
 >;
 export type CheckMessageOptions = v.InferOutput<
   typeof CheckMessageOptionsSchema
+>;
+export type CreateIssueCommentOptions = v.InferOutput<
+  typeof CreateIssueCommentOptionsSchema
+>;
+export type CheckDuplicateCommentOptions = v.InferOutput<
+  typeof CheckDuplicateCommentOptionsSchema
+>;
+export type CommentOnBranchIssuesOptions = v.InferOutput<
+  typeof CommentOnBranchIssuesOptionsSchema
 >;
