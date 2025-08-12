@@ -244,7 +244,11 @@ jobs:
           echo ""
           echo "📊 Test Results:"
           echo ""
-          echo '${{ toJson(needs) }}' | jq -r 'to_entries[] | "  [\(.value.result)] \(.key)"'
+          # Display results in fixed order matching the test execution order
+          for job in test-validate-branch test-comment-on-branch-issues test-validate-pr-title test-validate-pr-body test-validate-commits test-custom-mode; do
+            result=$(echo '${{ toJson(needs) }}' | jq -r --arg job "$job" '.[$job].result // "skipped"')
+            echo "  [$result] $job"
+          done
           echo ""
           
           # Check if any job failed
