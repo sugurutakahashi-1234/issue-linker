@@ -83,9 +83,5 @@ export interface BatchCommentItemResult {
 
 // Result type for commentOnBranchIssues use case
 export interface CommentOnBranchIssuesResult extends BaseResult {
-  totalIssues: number;
-  commented: number;
-  skipped: number;
-  failed: number;
   results: BatchCommentItemResult[];
 }

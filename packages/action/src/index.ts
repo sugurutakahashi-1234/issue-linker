@@ -119,25 +119,28 @@ async function run() {
             ...(hostname && { hostname }),
           });
 
-          // Log results
-          for (const r of commentResult.results) {
-            if (r.success && !r.skipped) {
-              core.info(`✅ Commented on issue #${r.issueNumber}`);
-            } else if (r.skipped) {
-              core.info(
-                `Skipping duplicate comment on issue #${r.issueNumber}`,
-              );
-            } else {
-              core.warning(
-                `Failed to comment on issue #${r.issueNumber}: ${r.error}`,
-              );
-            }
-          }
+          // Log results in compact format
+          const commented = commentResult.results.filter(
+            (r) => r.success && !r.skipped,
+          );
+          const skipped = commentResult.results.filter(
+            (r) => r.success && r.skipped,
+          );
+          const failed = commentResult.results.filter((r) => !r.success);
 
-          // Log summary
-          if (commentResult.commented > 0 || commentResult.skipped > 0) {
+          if (commented.length > 0) {
             core.info(
-              `Summary: ${commentResult.commented} commented, ${commentResult.skipped} skipped, ${commentResult.failed} failed`,
+              `✅ Commented on issue${commented.length > 1 ? "s" : ""}: #${commented.map((r) => r.issueNumber).join(", #")}`,
+            );
+          }
+          if (skipped.length > 0) {
+            core.info(
+              `⏭️  Already commented on: #${skipped.map((r) => r.issueNumber).join(", #")}`,
+            );
+          }
+          if (failed.length > 0) {
+            core.warning(
+              `⚠️  Failed to comment on: #${failed.map((r) => r.issueNumber).join(", #")}`,
             );
           }
         }
@@ -268,20 +271,8 @@ async function run() {
 
     // Set outputs
     const allSuccess = results.every((r) => r.success);
-    const allFoundIssues = [
-      ...new Set(results.flatMap((r) => r.issues?.found || [])),
-    ];
-
-    // Create summary
-    const summary = {
-      totalValidations: results.length,
-      failed: results.filter((r) => !r.success).length,
-      allIssues: allFoundIssues,
-    };
-
     core.setOutput("success", allSuccess.toString());
     core.setOutput("results", JSON.stringify(results));
-    core.setOutput("summary", JSON.stringify(summary));
 
     // Log results
     for (const result of results) {

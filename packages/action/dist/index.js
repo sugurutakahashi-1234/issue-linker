@@ -75749,10 +75749,6 @@ async function commentOnBranchIssues(options) {
         return {
             success: false,
             message: "Invalid options provided",
-            totalIssues: 0,
-            commented: 0,
-            skipped: 0,
-            failed: 0,
             results: [],
         };
     }
@@ -75817,19 +75813,11 @@ async function commentOnBranchIssues(options) {
             };
         }
     }));
-    // Step 5: Calculate summary
-    const commented = results.filter((r) => r.success && !r.skipped).length;
-    const skipped = results.filter((r) => r.success && r.skipped).length;
-    const failed = results.filter((r) => !r.success).length;
+    // Step 5: Return results
+    const hasFailures = results.some((r) => !r.success);
     return {
-        success: failed === 0,
-        message: failed === 0
-            ? `Successfully processed ${validatedOptions.issueNumbers.length} issue(s)`
-            : `Failed to process ${failed} of ${validatedOptions.issueNumbers.length} issue(s)`,
-        totalIssues: validatedOptions.issueNumbers.length,
-        commented,
-        skipped,
-        failed,
+        success: !hasFailures,
+        message: `Processed ${validatedOptions.issueNumbers.length} issue(s)`,
         results,
     };
 }
@@ -76030,21 +76018,18 @@ async function run() {
                         ...(githubToken && { githubToken }),
                         ...(hostname && { hostname }),
                     });
-                    // Log results
-                    for (const r of commentResult.results) {
-                        if (r.success && !r.skipped) {
-                            core.info(`✅ Commented on issue #${r.issueNumber}`);
-                        }
-                        else if (r.skipped) {
-                            core.info(`Skipping duplicate comment on issue #${r.issueNumber}`);
-                        }
-                        else {
-                            core.warning(`Failed to comment on issue #${r.issueNumber}: ${r.error}`);
-                        }
+                    // Log results in compact format
+                    const commented = commentResult.results.filter((r) => r.success && !r.skipped);
+                    const skipped = commentResult.results.filter((r) => r.success && r.skipped);
+                    const failed = commentResult.results.filter((r) => !r.success);
+                    if (commented.length > 0) {
+                        core.info(`✅ Commented on issue${commented.length > 1 ? "s" : ""}: #${commented.map((r) => r.issueNumber).join(", #")}`);
                     }
-                    // Log summary
-                    if (commentResult.commented > 0 || commentResult.skipped > 0) {
-                        core.info(`Summary: ${commentResult.commented} commented, ${commentResult.skipped} skipped, ${commentResult.failed} failed`);
+                    if (skipped.length > 0) {
+                        core.info(`⏭️  Already commented on: #${skipped.map((r) => r.issueNumber).join(", #")}`);
+                    }
+                    if (failed.length > 0) {
+                        core.warning(`⚠️  Failed to comment on: #${failed.map((r) => r.issueNumber).join(", #")}`);
                     }
                 }
             }
@@ -76139,18 +76124,8 @@ async function run() {
         }
         // Set outputs
         const allSuccess = results.every((r) => r.success);
-        const allFoundIssues = [
-            ...new Set(results.flatMap((r) => r.issues?.found || [])),
-        ];
-        // Create summary
-        const summary = {
-            totalValidations: results.length,
-            failed: results.filter((r) => !r.success).length,
-            allIssues: allFoundIssues,
-        };
         core.setOutput("success", allSuccess.toString());
         core.setOutput("results", JSON.stringify(results));
-        core.setOutput("summary", JSON.stringify(summary));
         // Log results
         for (const result of results) {
             const actionMode = result.input.actionMode || "custom";

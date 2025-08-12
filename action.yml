@@ -78,8 +78,6 @@ outputs:
     description: 'Whether all validations passed'
   results:
     description: 'All validation results as JSON'
-  summary:
-    description: 'Summary of validations (JSON)'
 
 runs:
   using: 'node20'

@@ -30,10 +30,6 @@ export async function commentOnBranchIssues(
     return {
       success: false,
       message: "Invalid options provided",
-      totalIssues: 0,
-      commented: 0,
-      skipped: 0,
-      failed: 0,
       results: [],
     };
   }
@@ -110,21 +106,12 @@ export async function commentOnBranchIssues(
     ),
   );
 
-  // Step 5: Calculate summary
-  const commented = results.filter((r) => r.success && !r.skipped).length;
-  const skipped = results.filter((r) => r.success && r.skipped).length;
-  const failed = results.filter((r) => !r.success).length;
+  // Step 5: Return results
+  const hasFailures = results.some((r) => !r.success);
 
   return {
-    success: failed === 0,
-    message:
-      failed === 0
-        ? `Successfully processed ${validatedOptions.issueNumbers.length} issue(s)`
-        : `Failed to process ${failed} of ${validatedOptions.issueNumbers.length} issue(s)`,
-    totalIssues: validatedOptions.issueNumbers.length,
-    commented,
-    skipped,
-    failed,
+    success: !hasFailures,
+    message: `Processed ${validatedOptions.issueNumbers.length} issue(s)`,
     results,
   };
 }
