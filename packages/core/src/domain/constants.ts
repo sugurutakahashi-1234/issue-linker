@@ -28,8 +28,10 @@ export const DEFAULT_OPTIONS = {
  */
 export const MODE_EXCLUDE_GLOBS: Record<CheckMode, string | undefined> = {
   default: undefined,
-  branch: "{main,master,develop,release/*,hotfix/*}",
-  commit: "{Rebase*,Merge*,Revert*,fixup!*,squash!*}",
+  branch:
+    "{main,master,develop,release/**,renovate/**,dependabot/**,release-please*,snyk/**,imgbot/**,all-contributors/**}",
+  commit:
+    "{Rebase*,Merge*,Revert*,fixup!*,squash!*,Applied suggestion*,Apply automatic changes,Automated Change*,Update branch*,Auto-merge*,(cherry picked from commit*,Initial commit,Update README.md,Update *.md,Updated content}",
 } as const;
 
 // ===== Extract Patterns (RegExp) =====

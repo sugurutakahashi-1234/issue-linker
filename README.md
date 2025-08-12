@@ -10,71 +10,54 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/sugurutakahashi-1234/issue-linker/pulls)
 [![GitHub Marketplace](https://img.shields.io/badge/marketplace-issue--linker-blue?style=flat&logo=github)](https://github.com/marketplace/actions/issue-linker)
 
-
 Validate text contains valid GitHub issue numbers. Perfect for maintaining traceability between your code and issue tracking!
-
-## Features
-
-- 🔍 **Issue Validation**: Verify issue numbers exist in your GitHub repository
-- 🎯 **Flexible Text Validation**: Check any text for issue references
-- 🌿 **Smart Mode Detection**: Different linking patterns for branches, commits, and general text
-- 🎭 **Customizable Patterns**: Override default exclusion patterns
-- 🚀 **Fast & Lightweight**: Built with performance in mind
-- 🛠️ **Multiple Integrations**: CLI, GitHub Actions, and programmatic API
 
 ## Installation
 
-### CLI Tool
-
 ```bash
-# Global installation
 npm install -g @sugurutakahashi-1234/issue-linker
-
-# Or use directly with npx
-npx @sugurutakahashi-1234/issue-linker -t "feat/123-new-feature" -c branch
 ```
 
-## Usage
-
-### CLI
-
-#### Options
-
-| Option                                 | Description                                                                                                                              | Default                        |
-| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
-| `-t, --text <text>`                    | Text to validate (commit message, PR title, or branch name) **[required]**                                                               | -                              |
-| `-c, --check-mode <check-mode>`        | Validation mode: `default` (literal #123) \| `branch` (extract from branch name) \| `commit` (same as default but excludes merge/rebase) | `default`                      |
-| `--extract <pattern>`                  | Custom extraction pattern (regex) that overrides check-mode defaults                                                                     | Check-mode specific            |
-| `--exclude <pattern>`                  | Custom exclude pattern (glob) that overrides check-mode defaults                                                                         | Check-mode specific            |
-| `--issue-status <status>`              | Filter by issue status: `all` \| `open` \| `closed`                                                                                      | `all`                          |
-| `--repo <owner/repo>`                  | Target GitHub repository in owner/repo format                                                                                            | Auto-detect from git           |
-| `--github-token <token>`               | GitHub personal access token for API authentication                                                                                      | `$GITHUB_TOKEN` or `$GH_TOKEN` |
-| `--hostname <hostname>`                | GitHub Enterprise Server hostname                                                                                                        | `github.com` or `$GH_HOST`     |
-| `--json`                               | Output result in JSON format for CI/CD integration                                                                                       | `false`                        |
-| `--verbose`                            | Show detailed validation information and debug output                                                                                    | `false`                        |
-| `-v, --version`                        | Display version number                                                                                                                   | -                              |
-| `-h, --help`                           | Display help for command                                                                                                                 | -                              |
-
-#### Examples
+## Quick Start
 
 ```bash
-# Basic usage - validate commit message
-issue-linker -t "Fix: resolve authentication error #123"
+# Validate commit message with issue number
+npx @sugurutakahashi-1234/issue-linker -t "Fix: resolve authentication error #123"
 
-# Branch mode - extract issue from branch name
-issue-linker -t "feat/issue-123-auth-fix" -c branch
-
-# Commit mode - same as default but excludes merge/rebase commits
-issue-linker -t "fix(auth): resolve login issue #123" -c commit
+# Validate branch name
+npx @sugurutakahashi-1234/issue-linker -t "feat/123-auth-fix" -c branch
 
 # Check only open issues
-issue-linker -t "Fix #123" --issue-status open
+npx @sugurutakahashi-1234/issue-linker -t "Fix #123" --issue-status open
+```
 
+## CLI Reference
+
+### Options
+
+| Option                                 | Description                                                               | Default                        |
+| -------------------------------------- | ------------------------------------------------------------------------- | ------------------------------ |
+| `-t, --text <text>`                    | Text to validate **[required]**                                          | -                              |
+| `-c, --check-mode <check-mode>`        | Validation mode: `default` \| `branch` \| `commit`                       | `default`                      |
+| `--extract <pattern>`                  | Custom extraction pattern (regex) that overrides check-mode defaults     | Check-mode specific            |
+| `--exclude <pattern>`                  | Custom exclude pattern (glob) that overrides check-mode defaults         | Check-mode specific            |
+| `--issue-status <status>`              | Filter by issue status: `all` \| `open` \| `closed`                      | `all`                          |
+| `--repo <owner/repo>`                  | Target GitHub repository                                                 | Auto-detect from git           |
+| `--github-token <token>`               | GitHub personal access token                                             | `$GITHUB_TOKEN` or `$GH_TOKEN` |
+| `--hostname <hostname>`                | GitHub Enterprise Server hostname                                        | `github.com` or `$GH_HOST`     |
+| `--json`                               | Output result in JSON format                                             | `false`                        |
+| `--verbose`                            | Show detailed validation information                                     | `false`                        |
+| `-v, --version`                        | Display version number                                                   | -                              |
+| `-h, --help`                           | Display help for command                                                 | -                              |
+
+### Examples
+
+```bash
 # Custom repository
 issue-linker -t "Fix #456" --repo owner/repo
 
-# Exclude pattern (glob syntax to skip validation for matching text)
-issue-linker -t "[WIP] Fix #789" --exclude "*\\[WIP\\]*"
+# Exclude WIP commits
+issue-linker -t "[WIP] Fix #789" --exclude "*[WIP]*"
 
 # JSON output for CI/CD
 issue-linker -t "Fix #789" --json
@@ -82,38 +65,101 @@ issue-linker -t "Fix #789" --json
 # GitHub Enterprise Server
 issue-linker -t "Fix #321" --hostname github.enterprise.com
 
-# Verbose output for debugging
-issue-linker -t "Fix #999" --verbose
+# Custom extraction pattern (e.g., JIRA-style)
+issue-linker -t "Resolve PROJ-789" --extract "[A-Z]+-(\\d+)"
 ```
 
-#### Check Modes
+## Check Modes
 
-- **`default`**: Finds `#123` format only (for PR titles, descriptions, etc.)
-- **`branch`**: Finds issues from branch naming patterns (`123-feature`, `feat/123`, etc.)
-- **`commit`**: Same as default mode (#123 format) but excludes merge/rebase commits by default
+issue-linker provides three check modes for different validation contexts:
 
-### GitHub Actions
+### `default`
+- **Use case**: PR titles, descriptions, and general text
+- **Default --extract** (regex): `#(\d+)` - Detects `#123` format only
+- **Default --exclude**: None
 
-#### Action Inputs
+### `commit`
+- **Use case**: Commit message validation
+- **Default --extract** (regex): `#(\d+)` - Detects `#123` format only
+- **Default --exclude** (glob pattern): `{Rebase*,Merge*,Revert*,fixup!*,squash!*,Applied suggestion*,Apply automatic changes,Automated Change*,Update branch*,Auto-merge*,(cherry picked from commit*,Initial commit,Update README.md,Update *.md,Updated content}`
 
-| Input                                  | Description                                              | Default                    | Required |
-| -------------------------------------- | -------------------------------------------------------- | -------------------------- | -------- |
-| `validate-branch`                      | Validate branch name                                     | `false`                    | No       |
-| `validate-pr-title`                    | Validate PR title                                        | `false`                    | No       |
-| `validate-pr-body`                     | Validate PR body                                         | `false`                    | No       |
-| `validate-commits`                     | Validate all commit messages in the PR                   | `false`                    | No       |
-| `comment-on-issues-when-branch-pushed` | Comment on detected issues when a branch is first pushed | `false`                    | No       |
-| `text`                                 | Custom text to validate (advanced mode)                  | -                          | No       |
-| `check-mode`                           | Check mode: `default` \| `branch` \| `commit`            | `default`                  | No       |
-| `exclude`                              | Custom exclude pattern (overrides check mode defaults)   | -                          | No       |
-| `issue-status`                         | Issue status filter: `all` \| `open` \| `closed`         | `all`                      | No       |
-| `repo`                                 | Repository in owner/repo format                          | `${{ github.repository }}` | No       |
-| `github-token`                         | GitHub token for API access                              | `${{ github.token }}`      | No       |
-| `hostname`                             | GitHub Enterprise Server hostname                        | Auto-detect                | No       |
+### `branch`
+- **Use case**: Branch name validation
+- **Default --extract** (regex): `(?<![.\d])(\d{1,7})(?![.\d])` - Extracts standalone numbers (e.g., `123-feature`, `feat/123`)
+- **Default --exclude** (glob pattern): `{main,master,develop,release/**,renovate/**,dependabot/**,release-please*,snyk/**,imgbot/**,all-contributors/**}`
 
-#### Examples
+## Integration Examples
 
-##### Simple Mode - Automatic Validations
+### Husky Git Hooks
+
+#### Post-checkout Hook
+```bash
+# .husky/post-checkout
+if [ "$3" = "1" ]; then
+  branch=$(git branch --show-current)
+  npx @sugurutakahashi-1234/issue-linker -t "$branch" -c branch || {
+    echo "⚠️  Warning: Branch name doesn't contain a valid issue number"
+  }
+fi
+```
+
+#### Commit-msg Hook
+```bash
+# .husky/commit-msg
+message=$(cat $1)
+npx @sugurutakahashi-1234/issue-linker -t "$message" -c commit || {
+  echo "❌ Commit message must reference a valid issue number"
+  exit 1
+}
+```
+
+### Git Commands
+
+```bash
+# Validate current branch
+issue-linker -t "$(git branch --show-current)" -c branch
+
+# Validate last commit
+issue-linker -t "$(git --no-pager log -1 --pretty=%s)" -c commit
+
+# Validate all commits in a PR
+git --no-pager log main..HEAD --pretty=%s | while read msg; do
+  issue-linker -t "$msg" -c commit
+done
+```
+
+### GitHub CLI
+
+```bash
+# Validate PR title
+issue-linker -t "$(gh pr view --json title -q .title)"
+
+# Validate PR body
+issue-linker -t "$(gh pr view --json body -q .body)"
+```
+
+## Configuration
+
+### Environment Variables
+
+- `GITHUB_TOKEN` or `GH_TOKEN`: GitHub personal access token
+- `GH_HOST`: GitHub Enterprise Server hostname
+- `GITHUB_SERVER_URL`: GitHub server URL (auto-set in GitHub Actions)
+
+### GitHub Enterprise
+
+```bash
+# CLI option
+issue-linker -t "Fix #123" --hostname github.enterprise.com
+
+# Environment variable
+export GH_HOST=github.enterprise.com
+issue-linker -t "Fix #123"
+```
+
+## GitHub Actions
+
+### Basic Setup
 
 <!-- x-release-please-start-version -->
 ```yaml
@@ -139,23 +185,38 @@ jobs:
 ```
 <!-- x-release-please-end -->
 
-##### Advanced Mode - Custom Text
+### Action Inputs
 
+| Input                                  | Description                                              | Default                    |
+| -------------------------------------- | -------------------------------------------------------- | -------------------------- |
+| `validate-branch`                      | Validate branch name                                     | `false`                    |
+| `validate-pr-title`                    | Validate PR title                                        | `false`                    |
+| `validate-pr-body`                     | Validate PR body                                         | `false`                    |
+| `validate-commits`                     | Validate all commit messages in the PR                   | `false`                    |
+| `comment-on-issues-when-branch-pushed` | Comment on detected issues when a branch is first pushed | `false`                    |
+| `text`                                 | Custom text to validate                                  | -                          |
+| `check-mode`                           | Check mode: `default` \| `branch` \| `commit`            | `default`                  |
+| `exclude`                              | Custom exclude pattern                                   | -                          |
+| `issue-status`                         | Issue status filter: `all` \| `open` \| `closed`         | `all`                      |
+| `repo`                                 | Repository in owner/repo format                          | `${{ github.repository }}` |
+| `github-token`                         | GitHub token for API access                              | `${{ github.token }}`      |
+| `hostname`                             | GitHub Enterprise Server hostname                        | Auto-detect                |
+
+### Advanced Examples
+
+#### Custom Validation
 <!-- x-release-please-start-version -->
-```yaml      
-      - name: Custom validation
-        uses: sugurutakahashi-1234/issue-linker@v1.0.0
-        with:
-          text: ${{ github.event.pull_request.title }}
-          check-mode: 'default'
-          exclude: 'WIP*'
+```yaml
+- name: Custom validation
+  uses: sugurutakahashi-1234/issue-linker@v1.0.0
+  with:
+    text: ${{ github.event.pull_request.title }}
+    check-mode: 'default'
+    exclude: 'WIP*'
 ```
 <!-- x-release-please-end -->
 
-##### Automatic Issue Comments
-
-Automatically comment on issues when a branch referencing them is first pushed to GitHub:
-
+#### Automatic Issue Comments
 <!-- x-release-please-start-version -->
 ```yaml
 name: Comment on Issues
@@ -175,194 +236,6 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 <!-- x-release-please-end -->
-
-This will:
-1. Detect issue numbers from your branch name (e.g., `feat/123-456-feature` → #123, #456)
-2. Post a comment "🚀 Development started on branch `feat/123-456-feature`" on each detected issue
-3. Skip duplicate comments (won't comment again if the same branch is pushed multiple times)
-
-## Husky Integration
-
-Add to your Git hooks for automatic validation:
-
-### Post-checkout Hook
-
-```bash
-# .husky/post-checkout
-
-# This hook validates the branch name on branch checkouts.
-# It runs only when a branch is checked out (when $3 is "1"), not a file.
-if [ "$3" = "1" ]; then
-  branch=$(git branch --show-current)
-  bunx @sugurutakahashi-1234/issue-linker -t "$branch" -c branch || {
-    echo "⚠️  Warning: Branch name doesn't contain a valid issue number"
-  }
-fi
-```
-
-### Commit-msg Hook
-
-```bash
-# .husky/commit-msg
-
-# This hook ensures commit messages contain a valid issue number.
-# It reads the commit message from the file passed as the first argument ($1).
-# If validation fails, the commit is aborted.
-message=$(cat $1)
-bunx @sugurutakahashi-1234/issue-linker -t "$message" -c commit || {
-  echo "❌ Commit message must reference a valid issue number"
-  exit 1
-}
-```
-
-## Configuration
-
-### Environment Variables
-
-The following environment variables are automatically detected when not provided via CLI options:
-
-- `GITHUB_TOKEN` or `GH_TOKEN`: GitHub personal access token for API authentication
-- `GH_HOST`: GitHub Enterprise Server hostname (compatible with GitHub CLI)
-- `GITHUB_SERVER_URL`: GitHub server URL (automatically set in GitHub Actions)
-
-### GitHub Enterprise Support
-
-For GitHub Enterprise Server, configure using one of these methods:
-
-```bash
-# CLI option
-issue-linker -t "Fix #123" --hostname github.enterprise.com
-
-# Environment variable (compatible with GitHub CLI)
-export GH_HOST=github.enterprise.com
-issue-linker -t "Fix #123"
-
-# GitHub Actions automatically detects from GITHUB_SERVER_URL
-```
-
-### Default Exclude Patterns
-
-**Important**: Each mode automatically applies default exclude patterns. Custom `--exclude` patterns will OVERRIDE these defaults (not add to them).
-
-All exclude patterns use [minimatch](https://github.com/isaacs/minimatch) glob syntax:
-
-- **default mode**: No exclusions
-- **branch mode**: `{main,master,develop,release/*,hotfix/*}` - Excludes common protected branches
-- **commit mode**: `{Rebase*,Merge*,Revert*,fixup!*,squash!*}` - Excludes merge/rebase commits
-
-#### Customizing Exclude Patterns
-
-```bash
-# Use mode defaults (automatic)
-issue-linker -t "main" -c branch  # Will be excluded by default
-
-# Override with custom pattern
-issue-linker -t "[WIP] Fix #123" --exclude "*\\[WIP\\]*"  # Only excludes WIP pattern
-
-# Disable all exclusions (empty pattern)
-issue-linker -t "main" -c branch --exclude ""  # Will NOT be excluded
-```
-
-## Supported Patterns
-
-### Mode-Specific Detection
-
-#### Default Mode
-```bash
-# Finds #123 format only
-"Fix #123"            ✅
-"#456 and #789"       ✅ (multiple)
-"Issue 123"           ❌
-"feat/123"            ❌
-```
-
-#### Branch Mode
-```bash
-# Various branch patterns (priority order)
-123-feature           ✅ (number at start)
-feat/123-desc        ✅ (after slash)
-#123-feature         ✅ (with hash)
-feature-123-desc     ✅ (after hyphen)
-
-# Excluded by default
-main                 ⏩ (skipped - excluded by default)
-release/v1.0.0      ⏩ (skipped - excluded by default)
-```
-
-#### Commit Mode
-```bash
-# Same as default mode
-"Fix #123"           ✅
-
-# Excluded by default
-"Merge branch main"  ⏩ (skipped - excluded by default)
-"Revert 'feature'"   ⏩ (skipped - excluded by default)
-```
-
-### Technical Details
-
-#### Extraction Patterns
-
-Each mode uses different regular expressions to extract issue numbers:
-
-| Mode      | Pattern                           | Description                                                           |
-| --------- | --------------------------------- | --------------------------------------------------------------------- |
-| `default` | `/#(\d+)/g`                       | Matches #123 format only                                              |
-| `commit`  | `/#(\d+)/g`                       | Same as default mode                                                  |
-| `branch`  | `/(?<![.\d])(\d{1,7})(?![.\d])/g` | Matches any 1-7 digit number not part of version strings (e.g., v2.0) |
-
-#### Pattern Behavior
-
-- **default/commit**: Strictly matches the `#` symbol followed by digits
-- **branch**: Extracts standalone numbers, avoiding version numbers like "2.0" or "v1.2.3"
-- All modes limit issue numbers to 1-7 digits (max #9999999)
-
-### Custom Extraction Patterns
-
-You can override the default extraction patterns using the `--extract` option:
-
-```bash
-# GH-123 format (GitHub style with prefix)
-issue-linker -t "Fix GH-456" --extract "GH-(\d+)"
-
-# JIRA-style format (PROJECT-123)
-issue-linker -t "Resolve PROJ-789" --extract "[A-Z]+-(\d+)"
-
-# Custom format with "issue" prefix
-issue-linker -t "Closes issue123" --extract "issue(\d+)"
-```
-
-**Important Notes:**
-- The pattern must capture the issue number in the first capture group `(\d+)`
-- The pattern is applied with global flag automatically
-- Custom patterns completely override mode defaults
-
-## Advanced Usage
-
-### Working with Git Commands
-
-```bash
-# Validate current branch
-issue-linker -t "$(git branch --show-current)" -c branch
-
-# Validate last commit
-issue-linker -t "$(git --no-pager log -1 --pretty=%s)" -c commit
-
-# Validate all commit messages in a PR
-git --no-pager log main..HEAD --pretty=%s | while read msg; do
-  issue-linker -t "$msg" -c commit
-done
-```
-
-### GitHub CLI Integration
-
-```bash
-# Validate PR title
-issue-linker -t "$(gh pr view --json title -q .title)"
-
-# Validate PR body
-issue-linker -t "$(gh pr view --json body -q .body)"
-```
 
 ## Contributing
 
