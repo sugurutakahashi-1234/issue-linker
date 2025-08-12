@@ -26,6 +26,13 @@ inputs:
     description: 'Validate all commit messages in the PR'
     required: false
     default: 'false'
+  comment-on-issues-when-branch-pushed:
+    description: |
+      Comment on detected issues when a branch is first pushed to GitHub.
+      Requires validate-branch to be enabled.
+      Works best with the 'create' event trigger.
+    required: false
+    default: 'false'
   
   # Advanced mode (custom text)
   text:
@@ -37,6 +44,9 @@ inputs:
       Options: 'default', 'branch', 'commit'
     required: false
     default: 'default'
+  extract:
+    description: 'Custom extraction pattern (regex) for finding issue numbers (overrides check mode defaults)'
+    required: false
   exclude:
     description: 'Custom exclude pattern (overrides check mode defaults)'
     required: false
@@ -71,8 +81,6 @@ outputs:
     description: 'Whether all validations passed'
   results:
     description: 'All validation results as JSON'
-  summary:
-    description: 'Summary of validations (JSON)'
 
 runs:
   using: 'node20'

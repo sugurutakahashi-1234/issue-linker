@@ -205,3 +205,110 @@ export async function fetchPullRequestCommits(
     throw error;
   }
 }
+
+/**
+ * Create a comment on an issue (internal use only)
+ * @param owner - Repository owner
+ * @param repo - Repository name
+ * @param issueNumber - Issue number
+ * @param body - Comment body
+ * @param token - Optional GitHub token
+ * @param hostname - Optional GitHub hostname for Enterprise
+ * @returns Comment ID on success
+ * @internal
+ */
+export async function createGitHubIssueComment(
+  owner: string,
+  repo: string,
+  issueNumber: number,
+  body: string,
+  token?: string,
+  hostname?: string,
+): Promise<number> {
+  const octokit = createOctokit(token, hostname);
+
+  try {
+    const { data } = await octokit.rest.issues.createComment({
+      owner,
+      repo,
+      issue_number: issueNumber,
+      body,
+      headers: {
+        Accept: "application/vnd.github+json",
+      },
+    });
+
+    return data.id;
+  } catch (error: unknown) {
+    // Handle API errors
+    if (error instanceof RequestError) {
+      if (error.status === 404) {
+        throw new GitHubError(`Issue #${issueNumber} not found`, error.status);
+      }
+      if (error.status === 403 || error.status === 401) {
+        throw new GitHubError(
+          "Insufficient permissions to comment on issues",
+          error.status,
+        );
+      }
+      throw new GitHubError(
+        `Failed to create comment on issue #${issueNumber}: ${error.message}`,
+        error.status,
+      );
+    }
+
+    // Re-throw unexpected errors
+    throw error;
+  }
+}
+
+/**
+ * List comments on an issue (internal use only)
+ * @param owner - Repository owner
+ * @param repo - Repository name
+ * @param issueNumber - Issue number
+ * @param token - Optional GitHub token
+ * @param hostname - Optional GitHub hostname for Enterprise
+ * @returns Array of comment bodies
+ * @internal
+ */
+export async function listGitHubIssueComments(
+  owner: string,
+  repo: string,
+  issueNumber: number,
+  token?: string,
+  hostname?: string,
+): Promise<Array<{ id: number; body: string }>> {
+  const octokit = createOctokit(token, hostname);
+
+  try {
+    const { data } = await octokit.rest.issues.listComments({
+      owner,
+      repo,
+      issue_number: issueNumber,
+      headers: {
+        Accept: "application/vnd.github+json",
+      },
+    });
+
+    return data.map((comment) => ({
+      id: comment.id,
+      body: comment.body ?? "",
+    }));
+  } catch (error: unknown) {
+    // Handle API errors
+    if (error instanceof RequestError) {
+      if (error.status === 404) {
+        // Issue doesn't exist - return empty array
+        return [];
+      }
+      throw new GitHubError(
+        `Failed to list comments for issue #${issueNumber}: ${error.message}`,
+        error.status,
+      );
+    }
+
+    // Re-throw unexpected errors
+    throw error;
+  }
+}

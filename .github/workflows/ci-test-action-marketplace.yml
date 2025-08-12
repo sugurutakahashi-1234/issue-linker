@@ -53,7 +53,44 @@ jobs:
           fi
 
   # ================================================================
-  # Test 2: PR Title validation mode
+  # Test 2: Comment on branch issues mode
+  # ================================================================
+  test-comment-on-branch-issues:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    name: Test comment-on-issues-when-branch-pushed mode
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Test comment-on-issues mode
+        id: test
+        uses: sugurutakahashi-1234/issue-linker@main
+        with:
+          validate-branch: true
+          comment-on-issues-when-branch-pushed: true
+        continue-on-error: true
+      
+      - name: Verify execution completed
+        run: |
+          # Note: comment-on-issues-when-branch-pushed requires 'create' event and GitHub API access.
+          # In test environment, it won't actually comment but should execute without crashing.
+          # This test only verifies that the action executes to completion,
+          # not the actual commenting logic which is tested in unit tests.
+          
+          # Check that outputs were set (even if no comments were made)
+          if [[ -n "${{ steps.test.outputs.success }}" ]]; then
+            echo "✅ comment-on-issues mode executed to completion"
+            echo "   Output success: ${{ steps.test.outputs.success }}"
+            echo "   Output results: ${{ steps.test.outputs.results }}"
+            exit 0
+          else
+            echo "❌ comment-on-issues mode did not complete execution"
+            exit 1
+          fi
+
+  # ================================================================
+  # Test 3: PR Title validation mode
   # ================================================================
   test-validate-pr-title:
     runs-on: ubuntu-latest
@@ -86,7 +123,7 @@ jobs:
           fi
 
   # ================================================================
-  # Test 3: PR Body validation mode
+  # Test 4: PR Body validation mode
   # ================================================================
   test-validate-pr-body:
     runs-on: ubuntu-latest
@@ -119,7 +156,7 @@ jobs:
           fi
 
   # ================================================================
-  # Test 4: Commits validation mode
+  # Test 5: Commits validation mode
   # ================================================================
   test-validate-commits:
     runs-on: ubuntu-latest
@@ -155,7 +192,7 @@ jobs:
           fi
 
   # ================================================================
-  # Test 5: Custom mode
+  # Test 6: Custom mode
   # ================================================================
   test-custom-mode:
     runs-on: ubuntu-latest
@@ -196,6 +233,7 @@ jobs:
     timeout-minutes: 5
     needs: [
       test-validate-branch,
+      test-comment-on-branch-issues,
       test-validate-pr-title,
       test-validate-pr-body,
       test-validate-commits,
@@ -209,7 +247,11 @@ jobs:
           echo ""
           echo "📊 Test Results:"
           echo ""
-          echo '${{ toJson(needs) }}' | jq -r 'to_entries[] | "  [\(.value.result)] \(.key)"'
+          # Display results in fixed order matching the test execution order
+          for job in test-validate-branch test-comment-on-branch-issues test-validate-pr-title test-validate-pr-body test-validate-commits test-custom-mode; do
+            result=$(echo '${{ toJson(needs) }}' | jq -r --arg job "$job" '.[$job].result // "skipped"')
+            echo "  [$result] $job"
+          done
           echo ""
           
           # Check if any job failed

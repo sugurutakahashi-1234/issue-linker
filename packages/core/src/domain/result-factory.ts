@@ -1,18 +1,16 @@
-// Factory functions for creating IssueValidationResult objects
+// Factory functions for creating CheckMessageResult objects
 
 import type {
+  CheckMessageResult,
   ErrorInfo,
   InputConfig,
   IssueInfo,
-  IssueValidationResult,
 } from "./result.js";
 
 /**
  * Create a result for when text is excluded from validation
  */
-export function createExcludedResult(
-  input: InputConfig,
-): IssueValidationResult {
+export function createExcludedResult(input: InputConfig): CheckMessageResult {
   return {
     success: true,
     message: "Text was excluded from validation",
@@ -24,9 +22,7 @@ export function createExcludedResult(
 /**
  * Create a result for when no issue numbers are found
  */
-export function createNoIssuesResult(
-  input: InputConfig,
-): IssueValidationResult {
+export function createNoIssuesResult(input: InputConfig): CheckMessageResult {
   return {
     success: false,
     message: "No issue number found in text",
@@ -41,7 +37,7 @@ export function createNoIssuesResult(
 export function createValidResult(
   issues: IssueInfo,
   input: InputConfig,
-): IssueValidationResult {
+): CheckMessageResult {
   return {
     success: true,
     message: `Valid issue(s) found: #${issues.valid.join(", #")} in ${input.repo}`,
@@ -57,7 +53,7 @@ export function createValidResult(
 export function createInvalidResult(
   issues: IssueInfo,
   input: InputConfig,
-): IssueValidationResult {
+): CheckMessageResult {
   // Build detailed message
   const parts: string[] = [];
 
@@ -86,7 +82,7 @@ export function createInvalidResult(
 export function createErrorResult(
   error: Error | unknown,
   input: InputConfig,
-): IssueValidationResult {
+): CheckMessageResult {
   const errorInfo: ErrorInfo = {
     type: error instanceof Error ? error.constructor.name : "UnknownError",
     message: error instanceof Error ? error.message : String(error),

@@ -9,9 +9,9 @@ import { program } from "@commander-js/extra-typings";
 import {
   type CheckMessageOptions,
   CheckMessageOptionsSchema,
+  type CheckMessageResult,
   checkMessage,
   DEFAULT_OPTIONS,
-  type IssueValidationResult,
 } from "@issue-linker/core";
 import * as v from "valibot";
 
@@ -23,27 +23,43 @@ const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
 program
   .name("issue-linker")
   .description("Validate text contains valid GitHub issue numbers")
-  .version(packageJson.version)
-  .requiredOption("-t, --text <text>", "text to validate")
+  .version(packageJson.version, "-v, --version", "display version number")
+  .requiredOption(
+    "-t, --text <text>",
+    "text to validate (commit message, PR title, or branch name)",
+  )
   .option(
     "-c, --check-mode <mode>",
-    "check mode: default | branch | commit",
+    "validation mode: 'default' (literal #123), 'branch' (extract from branch-123-name), 'commit' (same as default but excludes merge/rebase commits)",
     DEFAULT_OPTIONS.mode,
   )
-  .option("--exclude <pattern>", "exclude pattern (glob)")
+  .option(
+    "--extract <pattern>",
+    "extraction pattern (regex) for finding issue numbers - overrides mode defaults",
+  )
+  .option(
+    "--exclude <pattern>",
+    'exclude pattern (glob) - overrides mode defaults. Use "" to disable defaults',
+  )
   .option(
     "--issue-status <status>",
-    "issue status filter: all | open | closed",
+    "filter by issue status: 'all' (any state), 'open' (only open issues), 'closed' (only closed issues)",
     DEFAULT_OPTIONS.issueStatus,
   )
-  .option("--repo <owner/repo>", "repository (default: current repository)")
-  .option("--github-token <token>", "GitHub token (default: GITHUB_TOKEN env)")
+  .option(
+    "--repo <owner/repo>",
+    "target GitHub repository in owner/repo format (default: auto-detect from git remote)",
+  )
+  .option(
+    "--github-token <token>",
+    "GitHub personal access token for API authentication (default: $GITHUB_TOKEN or $GH_TOKEN)",
+  )
   .option(
     "-h, --hostname <hostname>",
-    "GitHub hostname (default: github.com, or GH_HOST env)",
+    "GitHub Enterprise Server hostname (default: github.com or $GH_HOST)",
   )
-  .option("--json", "output full result as JSON")
-  .option("--verbose", "show detailed output")
+  .option("--json", "output result in JSON format for CI/CD integration")
+  .option("--verbose", "show detailed validation information and debug output")
   .action(async (options) => {
     try {
       // Validate CLI options using schema from core
@@ -53,6 +69,7 @@ program
           text: options.text,
           checkMode: options.checkMode,
           issueStatus: options.issueStatus,
+          ...(options.extract && { extract: options.extract }),
           ...(options.exclude && { exclude: options.exclude }),
           ...(options.repo && { repo: options.repo }),
           ...(options.githubToken && { githubToken: options.githubToken }),
@@ -66,8 +83,7 @@ program
         throw error;
       }
 
-      const result: IssueValidationResult =
-        await checkMessage(validatedOptions);
+      const result: CheckMessageResult = await checkMessage(validatedOptions);
 
       // Output JSON if requested
       if (options.json) {
@@ -137,7 +153,69 @@ program
       console.error(`❌ Unexpected error: ${String(error)}`);
       process.exit(2);
     }
-  });
+  })
+  .addHelpText(
+    "after",
+    `
+Examples:
+  # Basic usage - validate commit message
+  $ issue-linker -t "Fix: resolve authentication error #123"
+  
+  # Branch mode - extract issue from branch name  
+  $ issue-linker -t "feat/issue-123-auth-fix" -c branch
+  
+  # Commit mode - same as default but excludes merge/rebase commits
+  $ issue-linker -t "fix(auth): resolve login issue #123" -c commit
+  
+  # Check only open issues
+  $ issue-linker -t "Fix #123" --issue-status open
+  
+  # Custom repository
+  $ issue-linker -t "Fix #456" --repo owner/repo
+  
+  # Exclude pattern (glob syntax to skip validation for matching text)
+  $ issue-linker -t "[WIP] Fix #789" --exclude "*\\[WIP\\]*"
+  
+  # JSON output for CI/CD integration
+  $ issue-linker -t "Fix #789" --json
+  
+  # GitHub Enterprise Server
+  $ issue-linker -t "Fix #321" -h github.enterprise.com
+  
+  # Verbose output for debugging
+  $ issue-linker -t "Fix #999" --verbose
+
+Exclude Patterns:
+  Each mode has default exclude patterns that are automatically applied:
+    - default mode: no exclusions
+    - branch mode: {main,master,develop,release/*,hotfix/*}
+    - commit mode: {Rebase*,Merge*,Revert*,fixup!*,squash!*}
+  
+  Custom --exclude pattern will OVERRIDE mode defaults (not add to them)
+  To disable default exclusions, use --exclude "" (empty string)
+
+Extract Patterns:
+  Each mode has default extraction patterns for finding issue numbers:
+    - default mode: #(\d+) - matches #123 format
+    - branch mode: (?<![.\d])(\d{1,7})(?![.\d]) - matches numbers not in version strings
+    - commit mode: #(\d+) - same as default
+  
+  Custom --extract pattern will OVERRIDE mode defaults
+  Pattern must capture the issue number in group 1, e.g.:
+    - "GH-(\d+)" for GH-123 format
+    - "[A-Z]+-(\d+)" for JIRA-style PROJ-123
+
+Environment Variables:
+  GITHUB_TOKEN or GH_TOKEN     GitHub personal access token for API authentication
+  GH_HOST                      GitHub Enterprise Server hostname (e.g., github.enterprise.com)
+  GITHUB_SERVER_URL           GitHub server URL (automatically set in GitHub Actions)
+
+  These environment variables are automatically detected when not provided via CLI options.
+
+For more information:
+  https://github.com/sugurutakahashi-1234/issue-linker
+`,
+  );
 
 // Parse command line arguments
 program.parse();

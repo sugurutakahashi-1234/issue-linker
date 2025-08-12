@@ -3,48 +3,21 @@ import * as github from "@actions/github";
 import {
   type CheckMessageOptions,
   CheckMessageOptionsSchema,
+  type CheckMessageResult,
   checkMessage,
+  commentOnBranchIssues,
   DEFAULT_OPTIONS,
   getPullRequestCommits,
-  type IssueValidationResult,
 } from "@issue-linker/core";
 import * as v from "valibot";
-
-/**
- * Helper function to create CheckMessageOptions with validation
- */
-function createCheckMessageOptions(
-  text: string,
-  checkMode: string,
-  issueStatus: string,
-  repo: string,
-  actionMode: string,
-  githubToken?: string,
-  hostname?: string,
-): CheckMessageOptions {
-  const options = {
-    text,
-    checkMode,
-    issueStatus,
-    repo,
-    actionMode,
-    ...(githubToken && { githubToken }),
-    ...(hostname && { hostname }),
-  };
-
-  // Validate using schema from core
-  try {
-    return v.parse(CheckMessageOptionsSchema, options);
-  } catch (error) {
-    if (error instanceof v.ValiError) {
-      throw new Error(`Invalid options: ${error.message}`);
-    }
-    throw error;
-  }
-}
+import {
+  extractBranchNameFromContext,
+  isCreateBranchEvent,
+} from "./github-actions-helpers.js";
+import { createCheckMessageOptions } from "./validation-helpers.js";
 
 async function run() {
-  const results: IssueValidationResult[] = [];
+  const results: CheckMessageResult[] = [];
 
   try {
     const context = github.context;
@@ -62,18 +35,21 @@ async function run() {
     const validatePrTitle = core.getInput("validate-pr-title") === "true";
     const validatePrBody = core.getInput("validate-pr-body") === "true";
     const validateCommits = core.getInput("validate-commits") === "true";
+    const commentOnIssuesWhenBranchPushed =
+      core.getInput("comment-on-issues-when-branch-pushed") === "true";
 
     // Advanced mode inputs
     const text = core.getInput("text");
     const checkMode = core.getInput("check-mode") || DEFAULT_OPTIONS.mode;
+    const extract = core.getInput("extract") || undefined;
     const exclude = core.getInput("exclude") || undefined;
 
     // Simple mode validations
     if (validateBranch) {
-      // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
-      const branchName = context.payload.pull_request?.["head"]?.ref;
+      // Get branch name using helper function
+      const branchName = extractBranchNameFromContext(context);
+
       if (branchName) {
-        core.info(`Validating branch: ${branchName}`);
         const messageOptions = createCheckMessageOptions(
           branchName,
           "branch",
@@ -82,13 +58,54 @@ async function run() {
           "validate-branch",
           githubToken,
           hostname,
-        );
-        core.debug(
-          `Calling checkMessage with options: ${JSON.stringify(messageOptions)}`,
+          extract,
+          exclude,
         );
         const result = await checkMessage(messageOptions);
-        core.debug(`checkMessage result: ${JSON.stringify(result)}`);
         results.push(result);
+
+        // Comment on issues when branch is pushed (create event)
+        if (
+          commentOnIssuesWhenBranchPushed &&
+          isCreateBranchEvent(context) &&
+          result.success &&
+          result.issues?.valid &&
+          result.issues.valid.length > 0
+        ) {
+          // Use new use case for batch commenting
+          const commentResult = await commentOnBranchIssues({
+            repo,
+            issueNumbers: result.issues.valid,
+            branchName,
+            ...(githubToken && { githubToken }),
+            ...(hostname && { hostname }),
+          });
+
+          // Log results in compact format
+          const commented = commentResult.results.filter(
+            (r) => r.success && !r.skipped,
+          );
+          const skipped = commentResult.results.filter(
+            (r) => r.success && r.skipped,
+          );
+          const failed = commentResult.results.filter((r) => !r.success);
+
+          if (commented.length > 0) {
+            core.info(
+              `Commented on: #${commented.map((r) => r.issueNumber).join(", #")}`,
+            );
+          }
+          if (skipped.length > 0) {
+            core.debug(
+              `Already commented on: #${skipped.map((r) => r.issueNumber).join(", #")}`,
+            );
+          }
+          if (failed.length > 0) {
+            core.warning(
+              `Failed to comment on: #${failed.map((r) => r.issueNumber).join(", #")}`,
+            );
+          }
+        }
       } else {
         core.warning("Branch name not found in context");
       }
@@ -98,7 +115,6 @@ async function run() {
       // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
       const prTitle = context.payload.pull_request?.["title"];
       if (prTitle) {
-        core.info(`Validating PR title: ${prTitle}`);
         const messageOptions = createCheckMessageOptions(
           prTitle,
           "default",
@@ -107,6 +123,8 @@ async function run() {
           "validate-pr-title",
           githubToken,
           hostname,
+          extract,
+          exclude,
         );
         const result = await checkMessage(messageOptions);
         results.push(result);
@@ -119,7 +137,6 @@ async function run() {
       // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
       const prBody = context.payload.pull_request?.["body"];
       if (prBody) {
-        core.info(`Validating PR body`);
         const messageOptions = createCheckMessageOptions(
           prBody,
           "default",
@@ -128,6 +145,8 @@ async function run() {
           "validate-pr-body",
           githubToken,
           hostname,
+          extract,
+          exclude,
         );
         const result = await checkMessage(messageOptions);
         results.push(result);
@@ -146,24 +165,15 @@ async function run() {
         try {
           // Get commits using core function
           const commitsOptions = {
-            owner: context.repo.owner,
-            repo: context.repo.repo,
+            repo: `${context.repo.owner}/${context.repo.repo}`,
             prNumber,
             ...(githubToken && { githubToken }),
             ...(hostname && { hostname }),
           };
 
           const commits = await getPullRequestCommits(commitsOptions);
-          core.info(`Found ${commits.length} commits in PR`);
-
           // Check each commit message
           for (const commit of commits) {
-            const shortSha = commit.sha.substring(0, 7);
-
-            core.debug(
-              `Checking commit ${shortSha}: ${commit.message.split("\n")[0]}`,
-            );
-
             const messageOptions = createCheckMessageOptions(
               commit.message,
               "commit",
@@ -172,6 +182,8 @@ async function run() {
               "validate-commits",
               githubToken,
               hostname,
+              extract,
+              exclude,
             );
 
             const result = await checkMessage(messageOptions);
@@ -188,7 +200,6 @@ async function run() {
 
     // Advanced mode validation
     if (text) {
-      core.info(`Validating custom text: ${text}`);
       const messageOptions = {
         text,
         checkMode,
@@ -197,6 +208,7 @@ async function run() {
         repo,
         ...(githubToken && { githubToken }),
         ...(hostname && { hostname }),
+        ...(extract && { extract }),
         ...(exclude && { exclude }),
       };
 
@@ -217,20 +229,8 @@ async function run() {
 
     // Set outputs
     const allSuccess = results.every((r) => r.success);
-    const allFoundIssues = [
-      ...new Set(results.flatMap((r) => r.issues?.found || [])),
-    ];
-
-    // Create summary
-    const summary = {
-      totalValidations: results.length,
-      failed: results.filter((r) => !r.success).length,
-      allIssues: allFoundIssues,
-    };
-
     core.setOutput("success", allSuccess.toString());
     core.setOutput("results", JSON.stringify(results));
-    core.setOutput("summary", JSON.stringify(summary));
 
     // Log results
     for (const result of results) {
@@ -240,40 +240,33 @@ async function run() {
       if (result.success) {
         // Success cases
         if (result.reason === "excluded") {
-          core.info(`✅ ${prefix}Text was excluded from validation`);
+          core.info(`${prefix}Text was excluded from validation`);
         } else if (result.issues?.valid && result.issues.valid.length > 0) {
           core.info(
-            `✅ ${prefix}Valid issues: #${result.issues.valid.join(", #")}`,
+            `${prefix}Valid issues: #${result.issues.valid.join(", #")}`,
           );
         } else {
-          core.info(`✅ ${prefix}${result.message}`);
+          core.info(`${prefix}${result.message}`);
         }
       } else {
         // Failure cases
-        core.error(`❌ ${prefix}${result.message}`);
+        core.error(`${prefix}${result.message}`);
 
         // Show details for failed validations
         if (result.issues) {
           const details = [];
 
-          if (result.issues.valid.length > 0) {
-            details.push(`Valid: #${result.issues.valid.join(", #")}`);
-          }
           if (result.issues.notFound.length > 0) {
             details.push(`Not found: #${result.issues.notFound.join(", #")}`);
           }
           if (result.issues.wrongState.length > 0) {
-            const stateInfo =
-              result.input.issueStatus === "all"
-                ? "Wrong state"
-                : `Wrong state (expected: ${result.input.issueStatus})`;
             details.push(
-              `${stateInfo}: #${result.issues.wrongState.join(", #")}`,
+              `Wrong state: #${result.issues.wrongState.join(", #")}`,
             );
           }
 
           if (details.length > 0) {
-            core.info(`   Details: ${details.join(", ")}`);
+            core.info(`Details: ${details.join(", ")}`);
           }
         }
       }

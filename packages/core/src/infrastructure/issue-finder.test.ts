@@ -125,4 +125,46 @@ describe("findIssueNumbers", () => {
       expect(findIssueNumbers("#1 #2 #1 #3 #2", "default")).toEqual([1, 2, 3]);
     });
   });
+
+  describe("custom extraction patterns", () => {
+    it("should use custom pattern when provided", () => {
+      // GH-123 format
+      expect(findIssueNumbers("Fix GH-456", "default", "GH-(\\d+)")).toEqual([
+        456,
+      ]);
+      expect(
+        findIssueNumbers("GH-123 and GH-789", "default", "GH-(\\d+)"),
+      ).toEqual([123, 789]);
+
+      // JIRA-style format
+      expect(findIssueNumbers("PROJ-456", "default", "[A-Z]+-(\\d+)")).toEqual([
+        456,
+      ]);
+      expect(
+        findIssueNumbers("ABC-123 and DEF-789", "default", "[A-Z]+-(\\d+)"),
+      ).toEqual([123, 789]);
+
+      // Custom patterns override mode defaults
+      expect(findIssueNumbers("Fix #123", "default", "GH-(\\d+)")).toEqual([]); // #123 not matched by GH-(\d+)
+    });
+
+    it("should handle invalid regex patterns", () => {
+      expect(() => findIssueNumbers("test", "default", "[invalid(")).toThrow(
+        "Invalid extraction pattern",
+      );
+    });
+
+    it("should extract from first capture group", () => {
+      // Pattern with multiple groups - only first group is used
+      expect(
+        findIssueNumbers("issue-123-fix", "default", "issue-(\\d+)-(\\w+)"),
+      ).toEqual([123]);
+    });
+
+    it("should return unique numbers with custom pattern", () => {
+      expect(
+        findIssueNumbers("GH-123 GH-456 GH-123", "default", "GH-(\\d+)"),
+      ).toEqual([123, 456]);
+    });
+  });
 });

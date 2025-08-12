@@ -8,6 +8,7 @@ import {
 } from "../domain/validation-schemas.js";
 import { getGitHubToken } from "../infrastructure/env-accessor.js";
 import { fetchPullRequestCommits } from "../infrastructure/github-client.js";
+import { parseRepositoryString } from "../infrastructure/repository-parser.js";
 
 /**
  * Get commits from a pull request
@@ -20,14 +21,18 @@ export async function getPullRequestCommits(
   // Validate options
   const options = v.parse(GetPullRequestCommitsOptionsSchema, opts);
 
+  // Parse repository string
+  const { owner, repo } = parseRepositoryString(options.repo);
+
   // Get GitHub token
   const githubToken = options.githubToken ?? getGitHubToken();
 
   // Fetch commits from GitHub API (already transformed to PullRequestCommit[])
   return await fetchPullRequestCommits(
-    options.owner,
-    options.repo,
+    owner,
+    repo,
     options.prNumber,
     githubToken,
+    options.hostname,
   );
 }
