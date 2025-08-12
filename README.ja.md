@@ -6,16 +6,16 @@
 [![GitHub Actions](https://github.com/sugurutakahashi-1234/issue-linker/actions/workflows/ci.yml/badge.svg)](https://github.com/sugurutakahashi-1234/issue-linker/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Validate text contains valid GitHub issue numbers. Perfect for maintaining traceability between your code and issue tracking!
+テキストに有効なGitHub issue番号が含まれているかを検証します。コードとissueトラッキングの間のトレーサビリティを維持するのに最適です！
 
 ## Features
 
-- 🔍 **Issue Validation**: Verify issue numbers exist in your GitHub repository
-- 🎯 **Flexible Text Validation**: Check any text for issue references
-- 🌿 **Smart Mode Detection**: Different linking patterns for branches, commits, and general text
-- 🎭 **Customizable Patterns**: Override default exclusion patterns
-- 🚀 **Fast & Lightweight**: Built with performance in mind
-- 🛠️ **Multiple Integrations**: CLI, GitHub Actions, and programmatic API
+- 🔍 **Issue検証**: GitHubリポジトリに存在するissue番号を確認
+- 🎯 **柔軟なテキスト検証**: あらゆるテキストのissue参照をチェック
+- 🌿 **スマートモード検出**: ブランチ、コミット、一般テキストに対する異なるリンクパターン
+- 🎭 **カスタマイズ可能なパターン**: デフォルトの除外パターンをオーバーライド
+- 🚀 **高速＆軽量**: パフォーマンスを重視して構築
+- 🛠️ **複数の統合方法**: CLI、GitHub Actions、プログラマティックAPI
 
 ## Installation
 
@@ -35,19 +35,19 @@ npx @sugurutakahashi-1234/issue-linker -t "feat/123-new-feature" -c branch
 
 #### Options
 
-| Option | Short | Description | Default |
+| オプション | 省略形 | 説明 | デフォルト |
 |--------|-------|-------------|---------|
-| `--text <text>` | `-t` | Text to validate (commit message, PR title, or branch name) **[required]** | - |
-| `--check-mode <mode>` | `-c` | Validation mode: `default` \| `branch` \| `commit` | `default` |
-| `--exclude <pattern>` | - | Exclude pattern (glob) to skip validation for matching text | Mode-specific |
-| `--issue-status <status>` | - | Filter by issue status: `all` \| `open` \| `closed` | `all` |
-| `--repo <owner/repo>` | - | Target GitHub repository in owner/repo format | Auto-detect from git |
-| `--github-token <token>` | - | GitHub personal access token for API authentication | `$GITHUB_TOKEN` or `$GH_TOKEN` |
-| `--hostname <hostname>` | `-h` | GitHub Enterprise Server hostname | `github.com` or `$GH_HOST` |
-| `--json` | - | Output result in JSON format for CI/CD integration | `false` |
-| `--verbose` | - | Show detailed validation information and debug output | `false` |
-| `--version` | `-v` | Display version number | - |
-| `--help` | - | Display help for command | - |
+| `--text <text>` | `-t` | 検証するテキスト（コミットメッセージ、PRタイトル、またはブランチ名）**[必須]** | - |
+| `--check-mode <mode>` | `-c` | 検証モード: `default` \| `branch` \| `commit` | `default` |
+| `--exclude <pattern>` | - | 一致するテキストの検証をスキップする除外パターン（glob） | モード固有 |
+| `--issue-status <status>` | - | issueステータスでフィルター: `all` \| `open` \| `closed` | `all` |
+| `--repo <owner/repo>` | - | 対象のGitHubリポジトリ（owner/repo形式） | gitから自動検出 |
+| `--github-token <token>` | - | API認証用のGitHub個人アクセストークン | `$GITHUB_TOKEN` または `$GH_TOKEN` |
+| `--hostname <hostname>` | `-h` | GitHub Enterprise Serverのホスト名 | `github.com` または `$GH_HOST` |
+| `--json` | - | CI/CD統合用のJSON形式で結果を出力 | `false` |
+| `--verbose` | - | 詳細な検証情報とデバッグ出力を表示 | `false` |
+| `--version` | `-v` | バージョン番号を表示 | - |
+| `--help` | - | コマンドのヘルプを表示 | - |
 
 #### Examples
 
@@ -82,28 +82,28 @@ issue-linker -t "Fix #999" --verbose
 
 #### Check Modes
 
-- **`default`**: Finds `#123` format only (for PR titles, descriptions, etc.)
-- **`branch`**: Finds issues from branch naming patterns (`123-feature`, `feat/123`, etc.)
-- **`commit`**: Same as default but excludes merge/rebase commits
+- **`default`**: `#123`形式のみを検出（PRタイトル、説明など用）
+- **`branch`**: ブランチ名パターンからissueを検出（`123-feature`、`feat/123`など）
+- **`commit`**: defaultと同じだが、merge/rebaseコミットを除外
 
 ### GitHub Actions
 
 #### Action Inputs
 
-| Input | Description | Default | Required |
+| 入力 | 説明 | デフォルト | 必須 |
 |-------|-------------|---------|----------|
-| `validate-branch` | Validate branch name | `false` | No |
-| `validate-pr-title` | Validate PR title | `false` | No |
-| `validate-pr-body` | Validate PR body | `false` | No |
-| `validate-commits` | Validate all commit messages in the PR | `false` | No |
-| `comment-on-issues-when-branch-pushed` | Comment on detected issues when a branch is first pushed | `false` | No |
-| `text` | Custom text to validate (advanced mode) | - | No |
-| `check-mode` | Check mode: `default` \| `branch` \| `commit` | `default` | No |
-| `exclude` | Custom exclude pattern (overrides check mode defaults) | - | No |
-| `issue-status` | Issue status filter: `all` \| `open` \| `closed` | `all` | No |
-| `repo` | Repository in owner/repo format | `${{ github.repository }}` | No |
-| `github-token` | GitHub token for API access | `${{ github.token }}` | No |
-| `hostname` | GitHub Enterprise Server hostname | Auto-detect | No |
+| `validate-branch` | ブランチ名を検証 | `false` | No |
+| `validate-pr-title` | PRタイトルを検証 | `false` | No |
+| `validate-pr-body` | PR本文を検証 | `false` | No |
+| `validate-commits` | PR内のすべてのコミットメッセージを検証 | `false` | No |
+| `comment-on-issues-when-branch-pushed` | ブランチが最初にプッシュされたときに検出されたissueにコメント | `false` | No |
+| `text` | 検証するカスタムテキスト（アドバンスドモード） | - | No |
+| `check-mode` | チェックモード: `default` \| `branch` \| `commit` | `default` | No |
+| `exclude` | カスタム除外パターン（チェックモードのデフォルトをオーバーライド） | - | No |
+| `issue-status` | issueステータスフィルター: `all` \| `open` \| `closed` | `all` | No |
+| `repo` | owner/repo形式のリポジトリ | `${{ github.repository }}` | No |
+| `github-token` | APIアクセス用のGitHubトークン | `${{ github.token }}` | No |
+| `hostname` | GitHub Enterprise Serverのホスト名 | 自動検出 | No |
 
 #### Examples
 
@@ -148,7 +148,7 @@ jobs:
 
 ##### Automatic Issue Comments
 
-Automatically comment on issues when a branch referencing them is first pushed to GitHub:
+issueを参照するブランチが最初にGitHubにプッシュされたときに自動的にコメントします:
 
 <!-- x-release-please-start-version -->
 ```yaml
@@ -170,14 +170,14 @@ jobs:
 ```
 <!-- x-release-please-end -->
 
-This will:
-1. Detect issue numbers from your branch name (e.g., `feat/123-456-feature` → #123, #456)
-2. Post a comment "🚀 Development started on branch `feat/123-456-feature`" on each detected issue
-3. Skip duplicate comments (won't comment again if the same branch is pushed multiple times)
+これにより:
+1. ブランチ名からissue番号を検出（例: `feat/123-456-feature` → #123, #456）
+2. 各検出されたissueに"🚀 Development started on branch `feat/123-456-feature`"とコメントを投稿
+3. 重複コメントをスキップ（同じブランチが複数回プッシュされても再コメントしない）
 
 ## Husky Integration
 
-Add to your Git hooks for automatic validation:
+自動検証のためGitフックに追加:
 
 ### Post-checkout Hook
 
@@ -213,15 +213,15 @@ bunx @sugurutakahashi-1234/issue-linker -t "$message" -c commit || {
 
 ### Environment Variables
 
-The following environment variables are automatically detected when not provided via CLI options:
+以下の環境変数はCLIオプションで指定されない場合に自動的に検出されます:
 
-- `GITHUB_TOKEN` or `GH_TOKEN`: GitHub personal access token for API authentication
-- `GH_HOST`: GitHub Enterprise Server hostname (compatible with GitHub CLI)
-- `GITHUB_SERVER_URL`: GitHub server URL (automatically set in GitHub Actions)
+- `GITHUB_TOKEN` または `GH_TOKEN`: API認証用のGitHub個人アクセストークン
+- `GH_HOST`: GitHub Enterprise Serverのホスト名（GitHub CLI互換）
+- `GITHUB_SERVER_URL`: GitHubサーバーURL（GitHub Actionsで自動設定）
 
 ### GitHub Enterprise Support
 
-For GitHub Enterprise Server, configure using one of these methods:
+GitHub Enterprise Serverの場合、以下のいずれかの方法で設定します:
 
 ```bash
 # CLI option
@@ -236,11 +236,11 @@ issue-linker -t "Fix #123"
 
 ### Default Exclude Patterns
 
-All exclude patterns use [minimatch](https://github.com/isaacs/minimatch) glob syntax:
+すべての除外パターンは[minimatch](https://github.com/isaacs/minimatch) glob構文を使用します:
 
-- **branch mode**: `{main,master,develop,release/*,hotfix/*}`
-- **commit mode**: `{Rebase*,Merge*,Revert*,fixup!*,squash!*}`
-- **default mode**: No exclusions
+- **branchモード**: `{main,master,develop,release/*,hotfix/*}`
+- **commitモード**: `{Rebase*,Merge*,Revert*,fixup!*,squash!*}`
+- **defaultモード**: 除外なし
 
 ## Supported Patterns
 
@@ -307,7 +307,7 @@ issue-linker -t "$(gh pr view --json body -q .body)"
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+コントリビューションを歓迎します！お気軽にPull Requestを送ってください。
 
 ## License
 

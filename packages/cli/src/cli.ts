@@ -23,27 +23,39 @@ const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
 program
   .name("issue-linker")
   .description("Validate text contains valid GitHub issue numbers")
-  .version(packageJson.version)
-  .requiredOption("-t, --text <text>", "text to validate")
+  .version(packageJson.version, "-v, --version", "display version number")
+  .requiredOption(
+    "-t, --text <text>",
+    "text to validate (commit message, PR title, or branch name)",
+  )
   .option(
     "-c, --check-mode <mode>",
-    "check mode: default | branch | commit",
+    "validation mode: 'default' (literal #123), 'branch' (extract from branch-123-name), 'commit' (conventional commit format)",
     DEFAULT_OPTIONS.mode,
   )
-  .option("--exclude <pattern>", "exclude pattern (glob)")
+  .option(
+    "--exclude <pattern>",
+    "exclude pattern (glob) to skip validation for matching text",
+  )
   .option(
     "--issue-status <status>",
-    "issue status filter: all | open | closed",
+    "filter by issue status: 'all' (any state), 'open' (only open issues), 'closed' (only closed issues)",
     DEFAULT_OPTIONS.issueStatus,
   )
-  .option("--repo <owner/repo>", "repository (default: current repository)")
-  .option("--github-token <token>", "GitHub token (default: GITHUB_TOKEN env)")
+  .option(
+    "--repo <owner/repo>",
+    "target GitHub repository in owner/repo format (default: auto-detect from git remote)",
+  )
+  .option(
+    "--github-token <token>",
+    "GitHub personal access token for API authentication (default: $GITHUB_TOKEN or $GH_TOKEN)",
+  )
   .option(
     "-h, --hostname <hostname>",
-    "GitHub hostname (default: github.com, or GH_HOST env)",
+    "GitHub Enterprise Server hostname (default: github.com or $GH_HOST)",
   )
-  .option("--json", "output full result as JSON")
-  .option("--verbose", "show detailed output")
+  .option("--json", "output result in JSON format for CI/CD integration")
+  .option("--verbose", "show detailed validation information and debug output")
   .action(async (options) => {
     try {
       // Validate CLI options using schema from core
@@ -136,7 +148,49 @@ program
       console.error(`❌ Unexpected error: ${String(error)}`);
       process.exit(2);
     }
-  });
+  })
+  .addHelpText(
+    "after",
+    `
+Examples:
+  # Basic usage - validate commit message
+  $ issue-linker -t "Fix: resolve authentication error #123"
+  
+  # Branch mode - extract issue from branch name  
+  $ issue-linker -t "feat/issue-123-auth-fix" -c branch
+  
+  # Commit mode - validate conventional commit format
+  $ issue-linker -t "fix(auth): resolve login issue #123" -c commit
+  
+  # Check only open issues
+  $ issue-linker -t "Fix #123" --issue-status open
+  
+  # Custom repository
+  $ issue-linker -t "Fix #456" --repo owner/repo
+  
+  # Exclude pattern (skip validation for matching text)
+  $ issue-linker -t "[WIP] Fix #789" --exclude "\\[WIP\\]"
+  
+  # JSON output for CI/CD integration
+  $ issue-linker -t "Fix #789" --json
+  
+  # GitHub Enterprise Server
+  $ issue-linker -t "Fix #321" -h github.enterprise.com
+  
+  # Verbose output for debugging
+  $ issue-linker -t "Fix #999" --verbose
+
+Environment Variables:
+  GITHUB_TOKEN or GH_TOKEN     GitHub personal access token for API authentication
+  GH_HOST                      GitHub Enterprise Server hostname (e.g., github.enterprise.com)
+  GITHUB_SERVER_URL           GitHub server URL (automatically set in GitHub Actions)
+
+  These environment variables are automatically detected when not provided via CLI options.
+
+For more information:
+  https://github.com/sugurutakahashi-1234/issue-linker
+`,
+  );
 
 // Parse command line arguments
 program.parse();
