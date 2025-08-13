@@ -16,11 +16,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -56,5 +51,5 @@ jobs:
           disable_search: false                   # Enable automatic coverage file search
           report_type: coverage                   # Specify coverage report type
 
-      # - name: E2E Tests
-      #   run: bun run test:e2e
+      - name: E2E Tests
+        run: bun run test:e2e

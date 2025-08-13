@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/issue-linker.svg)](https://www.npmjs.com/package/issue-linker)
 [![npm downloads](https://img.shields.io/npm/dm/issue-linker.svg)](https://www.npmjs.com/package/issue-linker)
 [![install size](https://packagephobia.com/badge?p=issue-linker)](https://packagephobia.com/result?p=issue-linker)
-[![Build](https://github.com/sugurutakahashi-1234/issue-linker/actions/workflows/ci.yml/badge.svg)](https://github.com/sugurutakahashi-1234/issue-linker/actions/workflows/ci.yml)
+[![Build](https://github.com/sugurutakahashi-1234/issue-linker/actions/workflows/ci-push-main.yml/badge.svg)](https://github.com/sugurutakahashi-1234/issue-linker/actions/workflows/ci-push-main.yml)
 [![codecov](https://codecov.io/gh/sugurutakahashi-1234/issue-linker/graph/badge.svg?token=KPN7UZ7ATY)](https://codecov.io/gh/sugurutakahashi-1234/issue-linker)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub Marketplace](https://img.shields.io/badge/marketplace-issue--linker-blue?style=flat&logo=github)](https://github.com/marketplace/actions/issue-linker)
