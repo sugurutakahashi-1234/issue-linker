@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.1](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.0.0...v1.0.1) (2025-08-13)
+
+
+### 🐛 Bug Fixes
+
+* monorepo publish improvements and README fixes ([#14](https://github.com/sugurutakahashi-1234/issue-linker/issues/14)) ([e027b94](https://github.com/sugurutakahashi-1234/issue-linker/commit/e027b947467ef04d8752f787b98ac5af99ac680d))
+
+
+### 👷 CI/CD
+
+* update release-please branch pattern ([#16](https://github.com/sugurutakahashi-1234/issue-linker/issues/16)) ([4220ce4](https://github.com/sugurutakahashi-1234/issue-linker/commit/4220ce4203404d450f9ca4e07e70e6ff6e951a74))
+
 ## 1.0.0 (2025-08-13)
 
 
