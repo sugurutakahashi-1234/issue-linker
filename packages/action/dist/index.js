@@ -70658,19 +70658,19 @@ minimatch.unescape = unescape_unescape;
 // Constants for issue-linker
 // ===== Exclude Patterns (Glob) =====
 /**
- * Mode-specific exclude patterns using glob syntax (minimatch)
+ * Exclude patterns for each check mode using glob syntax (minimatch)
  */
-const MODE_EXCLUDE_GLOBS = {
+const EXCLUDE_PATTERNS = {
     default: undefined,
     branch: "{main,master,develop,release/**,renovate/**,dependabot/**,release-please*,snyk/**,imgbot/**,all-contributors/**}",
     commit: "{Rebase*,Merge*,Revert*,fixup!*,squash!*,Applied suggestion*,Apply automatic changes,Automated Change*,Update branch*,Auto-merge*,(cherry picked from commit*,Initial commit,Update README.md,Update *.md,Updated content}",
 };
 // ===== Extract Patterns (RegExp) =====
 /**
- * Mode-specific issue number extraction using regular expressions
+ * Extract patterns for issue numbers using regular expressions
  * All patterns should capture the issue number in group 1
  */
-const MODE_EXTRACT_REGEXES = {
+const EXTRACT_PATTERNS = {
     default: /#(\d+)/g, // #123 format only
     commit: /#(\d+)/g, // Same as default
     branch: /(?<![.\d])(\d{1,7})(?![.\d])/g, // Numbers not in version strings (e.g., v2.0)
@@ -70710,7 +70710,7 @@ function isBranchExcluded(branch, pattern) {
  */
 function shouldExclude(text, checkMode, customExclude) {
     // Use custom exclude pattern if provided, otherwise use mode-specific default
-    const pattern = customExclude ?? MODE_EXCLUDE_GLOBS[checkMode];
+    const pattern = customExclude ?? EXCLUDE_PATTERNS[checkMode];
     // No pattern means no exclusion
     if (!pattern) {
         return false;
@@ -75611,7 +75611,7 @@ function findIssueNumbers(text, checkMode, customPattern) {
         }
     }
     else {
-        pattern = MODE_EXTRACT_REGEXES[checkMode];
+        pattern = EXTRACT_PATTERNS[checkMode];
     }
     const matches = text.matchAll(pattern);
     for (const match of matches) {

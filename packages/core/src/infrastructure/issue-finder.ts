@@ -1,6 +1,6 @@
 // Infrastructure layer - Issue number finding
 
-import { MODE_EXTRACT_REGEXES } from "../domain/constants.js";
+import { EXTRACT_PATTERNS } from "../domain/constants.js";
 import type { CheckMode } from "../domain/validation-schemas.js";
 
 /**
@@ -30,7 +30,7 @@ export function findIssueNumbers(
       );
     }
   } else {
-    pattern = MODE_EXTRACT_REGEXES[checkMode];
+    pattern = EXTRACT_PATTERNS[checkMode];
   }
 
   const matches = text.matchAll(pattern);
