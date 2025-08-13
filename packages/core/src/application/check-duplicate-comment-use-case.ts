@@ -3,8 +3,9 @@
 import * as v from "valibot";
 import type { CheckDuplicateCommentResult } from "../domain/result.js";
 import {
-  type CheckDuplicateCommentOptions,
-  CheckDuplicateCommentOptionsSchema,
+  type CheckDuplicateCommentArgs,
+  CheckDuplicateCommentArgsSchema,
+  type ValidatedCheckDuplicateCommentArgs,
 } from "../domain/validation-schemas.js";
 import { getGitHubToken } from "../infrastructure/env-accessor.js";
 import { listGitHubIssueComments } from "../infrastructure/github-client.js";
@@ -12,35 +13,33 @@ import { parseRepositoryString } from "../infrastructure/repository-parser.js";
 
 /**
  * Check if a comment with a specific marker already exists on an issue
- * @param options - Options for checking duplicate comments
+ * @param args - Arguments for checking duplicate comments
  * @returns Result indicating if a duplicate exists
  */
 export async function checkDuplicateComment(
-  options: CheckDuplicateCommentOptions,
+  args: CheckDuplicateCommentArgs,
 ): Promise<CheckDuplicateCommentResult> {
-  // Step 1: Validate options
-  const validationResult = v.safeParse(
-    CheckDuplicateCommentOptionsSchema,
-    options,
-  );
+  // Step 1: Validate args
+  const validationResult = v.safeParse(CheckDuplicateCommentArgsSchema, args);
   if (!validationResult.success) {
     return {
       duplicateFound: false,
       error: {
         type: "validation-error",
         message:
-          validationResult.issues[0]?.message ?? "Invalid options provided",
+          validationResult.issues[0]?.message ?? "Invalid arguments provided",
       },
     };
   }
 
-  const validatedOptions = validationResult.output;
+  const validatedArgs: ValidatedCheckDuplicateCommentArgs =
+    validationResult.output;
 
   // Step 2: Parse repository string
-  const { owner, repo } = parseRepositoryString(validatedOptions.repo);
+  const { owner, repo } = parseRepositoryString(validatedArgs.repo);
 
-  // Step 3: Get GitHub token (from options or environment)
-  const token = validatedOptions.githubToken ?? getGitHubToken();
+  // Step 3: Get GitHub token (from args or environment)
+  const token = validatedArgs.githubToken ?? getGitHubToken();
   if (!token) {
     // Without a token, we can't check for duplicates, so assume no duplicate
     // This allows the flow to continue but may result in duplicate comments
@@ -58,14 +57,14 @@ export async function checkDuplicateComment(
     const comments = await listGitHubIssueComments(
       owner,
       repo,
-      validatedOptions.issueNumber,
+      validatedArgs.issueNumber,
       token,
-      validatedOptions.hostname,
+      validatedArgs.hostname,
     );
 
     // Step 5: Check for marker in comments
     const duplicateComment = comments.find((comment) =>
-      comment.body.includes(validatedOptions.marker),
+      comment.body.includes(validatedArgs.marker),
     );
 
     if (duplicateComment) {

@@ -7,7 +7,16 @@
     "issues",
     "validation",
     "library",
-    "core"
+    "core",
+    "github-api",
+    "octokit",
+    "issue-tracker",
+    "pull-request",
+    "branch-validation",
+    "commit-validation",
+    "github-enterprise",
+    "issue-comment",
+    "typescript"
   ],
   "author": "Suguru Takahashi",
   "license": "MIT",

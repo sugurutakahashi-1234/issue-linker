@@ -2,7 +2,26 @@
 // Define schemas once and derive TypeScript types from them
 
 import * as v from "valibot";
-import { DEFAULT_OPTIONS } from "./constants.js";
+
+// ===== Default Values =====
+
+/**
+ * Default configuration for schema validation
+ * INTERNAL USE ONLY - DO NOT EXPORT
+ * To get default values, use v.getDefaults(Schema) instead
+ */
+const DEFAULT_CONFIG = {
+  /** Default check mode */
+  mode: "default" as const,
+  /** Default issue status filter */
+  issueStatus: "all" as const,
+  /** Default exclude pattern (undefined means no exclusion) */
+  exclude: undefined as string | undefined,
+  /** Default repository (undefined means auto-detect from git) */
+  repo: undefined as string | undefined,
+  /** Default GitHub token (undefined means use environment variable) */
+  githubToken: undefined as string | undefined,
+} as const;
 
 // ===== Base Schemas =====
 
@@ -76,10 +95,10 @@ const GitHubIssueResultSchema = v.object({
   ),
 });
 
-// ===== Options Schemas =====
+// ===== Args Schemas =====
 
-// GetPullRequestCommits options schema
-export const GetPullRequestCommitsOptionsSchema = v.object({
+// GetPullRequestCommits args schema
+export const GetPullRequestCommitsArgsSchema = v.object({
   repo: RepositoryStringSchema,
   prNumber: v.pipe(
     v.number(),
@@ -89,21 +108,21 @@ export const GetPullRequestCommitsOptionsSchema = v.object({
   hostname: v.optional(v.string()),
 });
 
-// CheckMessage options schema
-export const CheckMessageOptionsSchema = v.object({
+// CheckMessage args schema
+export const CheckMessageArgsSchema = v.object({
   text: v.pipe(v.string(), v.minLength(1, "Text is required")),
-  checkMode: v.optional(CheckModeSchema, DEFAULT_OPTIONS.mode),
+  checkMode: v.optional(CheckModeSchema, DEFAULT_CONFIG.mode),
   extract: v.optional(v.string()),
   exclude: v.optional(v.string()),
-  issueStatus: v.optional(IssueStatusFilterSchema, DEFAULT_OPTIONS.issueStatus),
+  issueStatus: v.optional(IssueStatusFilterSchema, DEFAULT_CONFIG.issueStatus),
   repo: v.optional(RepositoryStringSchema),
   actionMode: v.optional(ActionModeSchema),
   githubToken: v.optional(v.string()),
   hostname: v.optional(v.string()),
 });
 
-// CreateIssueComment options schema
-export const CreateIssueCommentOptionsSchema = v.object({
+// CreateIssueComment args schema
+export const CreateIssueCommentArgsSchema = v.object({
   repo: RepositoryStringSchema,
   issueNumber: v.pipe(
     v.number(),
@@ -114,8 +133,8 @@ export const CreateIssueCommentOptionsSchema = v.object({
   hostname: v.optional(v.string()),
 });
 
-// CheckDuplicateComment options schema
-export const CheckDuplicateCommentOptionsSchema = v.object({
+// CheckDuplicateComment args schema
+export const CheckDuplicateCommentArgsSchema = v.object({
   repo: RepositoryStringSchema,
   issueNumber: v.pipe(
     v.number(),
@@ -126,8 +145,8 @@ export const CheckDuplicateCommentOptionsSchema = v.object({
   hostname: v.optional(v.string()),
 });
 
-// CommentOnBranchIssues options schema
-export const CommentOnBranchIssuesOptionsSchema = v.object({
+// CommentOnBranchIssues args schema
+export const CommentOnBranchIssuesArgsSchema = v.object({
   repo: RepositoryStringSchema,
   issueNumbers: v.pipe(
     v.array(v.number()),
@@ -151,18 +170,34 @@ export type Issue = v.InferOutput<typeof IssueSchema>;
 export type GitHubRepository = v.InferOutput<typeof GitHubRepositorySchema>;
 export type GitHubIssueResult = v.InferOutput<typeof GitHubIssueResultSchema>;
 
-export type GetPullRequestCommitsOptions = v.InferOutput<
-  typeof GetPullRequestCommitsOptionsSchema
+// Args types for external API (Input)
+export type GetPullRequestCommitsArgs = v.InferInput<
+  typeof GetPullRequestCommitsArgsSchema
 >;
-export type CheckMessageOptions = v.InferOutput<
-  typeof CheckMessageOptionsSchema
+export type CheckMessageArgs = v.InferInput<typeof CheckMessageArgsSchema>;
+export type CreateIssueCommentArgs = v.InferInput<
+  typeof CreateIssueCommentArgsSchema
 >;
-export type CreateIssueCommentOptions = v.InferOutput<
-  typeof CreateIssueCommentOptionsSchema
+export type CheckDuplicateCommentArgs = v.InferInput<
+  typeof CheckDuplicateCommentArgsSchema
 >;
-export type CheckDuplicateCommentOptions = v.InferOutput<
-  typeof CheckDuplicateCommentOptionsSchema
+export type CommentOnBranchIssuesArgs = v.InferInput<
+  typeof CommentOnBranchIssuesArgsSchema
 >;
-export type CommentOnBranchIssuesOptions = v.InferOutput<
-  typeof CommentOnBranchIssuesOptionsSchema
+
+// Validated args types for internal use (Output)
+export type ValidatedGetPullRequestCommitsArgs = v.InferOutput<
+  typeof GetPullRequestCommitsArgsSchema
+>;
+export type ValidatedCheckMessageArgs = v.InferOutput<
+  typeof CheckMessageArgsSchema
+>;
+export type ValidatedCreateIssueCommentArgs = v.InferOutput<
+  typeof CreateIssueCommentArgsSchema
+>;
+export type ValidatedCheckDuplicateCommentArgs = v.InferOutput<
+  typeof CheckDuplicateCommentArgsSchema
+>;
+export type ValidatedCommentOnBranchIssuesArgs = v.InferOutput<
+  typeof CommentOnBranchIssuesArgsSchema
 >;

@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 
 // Main CLI entry point for issue-linker
 
@@ -7,17 +7,19 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { program } from "@commander-js/extra-typings";
 import {
-  type CheckMessageOptions,
-  CheckMessageOptionsSchema,
+  type CheckMessageArgs,
+  CheckMessageArgsSchema,
   type CheckMessageResult,
   checkMessage,
-  DEFAULT_OPTIONS,
 } from "@issue-linker/core";
 import * as v from "valibot";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const packageJsonPath = join(__dirname, "..", "package.json");
 const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
+
+// Get default values from schema
+const defaultValues = v.getDefaults(CheckMessageArgsSchema);
 
 // Configure main program
 program
@@ -29,22 +31,22 @@ program
     "text to validate (commit message, PR title, or branch name)",
   )
   .option(
-    "-c, --check-mode <mode>",
+    "-c, --check-mode <check-mode>",
     "validation mode: 'default' (literal #123), 'branch' (extract from branch-123-name), 'commit' (same as default but excludes merge/rebase commits)",
-    DEFAULT_OPTIONS.mode,
+    defaultValues.checkMode,
   )
   .option(
     "--extract <pattern>",
-    "extraction pattern (regex) for finding issue numbers - overrides mode defaults",
+    "custom extraction pattern (regex) that overrides check-mode defaults",
   )
   .option(
     "--exclude <pattern>",
-    'exclude pattern (glob) - overrides mode defaults. Use "" to disable defaults',
+    "custom exclude pattern (glob) that overrides check-mode defaults",
   )
   .option(
     "--issue-status <status>",
     "filter by issue status: 'all' (any state), 'open' (only open issues), 'closed' (only closed issues)",
-    DEFAULT_OPTIONS.issueStatus,
+    defaultValues.issueStatus,
   )
   .option(
     "--repo <owner/repo>",
@@ -55,17 +57,18 @@ program
     "GitHub personal access token for API authentication (default: $GITHUB_TOKEN or $GH_TOKEN)",
   )
   .option(
-    "-h, --hostname <hostname>",
+    "--hostname <hostname>",
     "GitHub Enterprise Server hostname (default: github.com or $GH_HOST)",
   )
   .option("--json", "output result in JSON format for CI/CD integration")
   .option("--verbose", "show detailed validation information and debug output")
+  .helpOption("-h, --help", "display help for command")
   .action(async (options) => {
     try {
-      // Validate CLI options using schema from core
-      let validatedOptions: CheckMessageOptions;
+      // Validate CLI args using schema from core
+      let validatedArgs: CheckMessageArgs;
       try {
-        validatedOptions = v.parse(CheckMessageOptionsSchema, {
+        validatedArgs = v.parse(CheckMessageArgsSchema, {
           text: options.text,
           checkMode: options.checkMode,
           issueStatus: options.issueStatus,
@@ -83,7 +86,7 @@ program
         throw error;
       }
 
-      const result: CheckMessageResult = await checkMessage(validatedOptions);
+      const result: CheckMessageResult = await checkMessage(validatedArgs);
 
       // Output JSON if requested
       if (options.json) {
@@ -94,12 +97,32 @@ program
       // Display human-readable result
       if (result.success) {
         // Success output
-        if (result.reason === "excluded") {
-          console.log(`✅ Text was excluded from validation`);
-        } else if (result.issues?.valid && result.issues.valid.length > 0) {
-          console.log(`✅ Valid issues: #${result.issues.valid.join(", #")}`);
-        } else {
-          console.log(`✅ ${result.message}`);
+        switch (result.reason) {
+          case "excluded":
+            console.log(`✅ Text was excluded from validation`);
+            break;
+          case "skipped":
+            console.log(`✅ Validation skipped due to skip marker`);
+            break;
+          case "valid":
+            if (result.issues?.valid && result.issues.valid.length > 0) {
+              console.log(
+                `✅ Valid issues: #${result.issues.valid.join(", #")}`,
+              );
+            } else {
+              console.log(`✅ ${result.message}`);
+            }
+            break;
+          case "no-issues":
+          case "invalid-issues":
+          case "error":
+            console.log(`✅ ${result.message}`);
+            break;
+          default: {
+            // Exhaustive check: TypeScript will error if a new reason is added
+            const _exhaustive: never = result.reason;
+            throw new Error(`Unexpected reason: ${_exhaustive}`);
+          }
         }
 
         // Show extra details in verbose mode
@@ -158,59 +181,36 @@ program
     "after",
     `
 Examples:
-  # Basic usage - validate commit message
-  $ issue-linker -t "Fix: resolve authentication error #123"
-  
-  # Branch mode - extract issue from branch name  
-  $ issue-linker -t "feat/issue-123-auth-fix" -c branch
-  
-  # Commit mode - same as default but excludes merge/rebase commits
-  $ issue-linker -t "fix(auth): resolve login issue #123" -c commit
-  
-  # Check only open issues
-  $ issue-linker -t "Fix #123" --issue-status open
-  
-  # Custom repository
-  $ issue-linker -t "Fix #456" --repo owner/repo
-  
-  # Exclude pattern (glob syntax to skip validation for matching text)
-  $ issue-linker -t "[WIP] Fix #789" --exclude "*\\[WIP\\]*"
-  
-  # JSON output for CI/CD integration
-  $ issue-linker -t "Fix #789" --json
-  
-  # GitHub Enterprise Server
-  $ issue-linker -t "Fix #321" -h github.enterprise.com
-  
-  # Verbose output for debugging
-  $ issue-linker -t "Fix #999" --verbose
 
-Exclude Patterns:
-  Each mode has default exclude patterns that are automatically applied:
-    - default mode: no exclusions
-    - branch mode: {main,master,develop,release/*,hotfix/*}
-    - commit mode: {Rebase*,Merge*,Revert*,fixup!*,squash!*}
-  
-  Custom --exclude pattern will OVERRIDE mode defaults (not add to them)
-  To disable default exclusions, use --exclude "" (empty string)
+  Basic validation:
+    $ issue-linker -t "Fix: resolve authentication error #123"
+    ✅ Valid issues: #123
 
-Extract Patterns:
-  Each mode has default extraction patterns for finding issue numbers:
-    - default mode: #(\d+) - matches #123 format
-    - branch mode: (?<![.\d])(\d{1,7})(?![.\d]) - matches numbers not in version strings
-    - commit mode: #(\d+) - same as default
-  
-  Custom --extract pattern will OVERRIDE mode defaults
-  Pattern must capture the issue number in group 1, e.g.:
-    - "GH-(\d+)" for GH-123 format
-    - "[A-Z]+-(\d+)" for JIRA-style PROJ-123
+    $ issue-linker -t "feat/123-auth-fix" -c branch  
+    ✅ Valid issues: #123
 
-Environment Variables:
-  GITHUB_TOKEN or GH_TOKEN     GitHub personal access token for API authentication
-  GH_HOST                      GitHub Enterprise Server hostname (e.g., github.enterprise.com)
-  GITHUB_SERVER_URL           GitHub server URL (automatically set in GitHub Actions)
+    $ issue-linker -t "Fix typo in README"
+    ❌ No issue numbers found
 
-  These environment variables are automatically detected when not provided via CLI options.
+  Git integration:
+    $ issue-linker -t "$(git branch --show-current)" -c branch
+    $ issue-linker -t "$(git log -1 --pretty=%s)" -c commit
+
+  Skip validation:
+    $ issue-linker -t "Release v2.0.0 [skip issue-linker]"
+    ✅ Validation skipped due to skip marker
+
+    $ issue-linker -t "[WIP] Fix #789" --exclude "*[WIP]*"
+    ✅ Text was excluded from validation
+
+  Custom options:
+    $ issue-linker -t "Fix #123" --issue-status open
+    $ issue-linker -t "Fix #456" --repo owner/repo
+    $ issue-linker -t "Fix #321" --hostname github.enterprise.com
+    $ issue-linker -t "Fix #789" --json
+
+Skip Markers:
+  Use [skip issue-linker] or [issue-linker skip] to bypass validation
 
 For more information:
   https://github.com/sugurutakahashi-1234/issue-linker

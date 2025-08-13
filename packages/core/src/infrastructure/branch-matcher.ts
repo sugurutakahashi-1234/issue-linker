@@ -2,7 +2,7 @@
 
 import micromatch from "micromatch";
 import { minimatch } from "minimatch";
-import { MODE_EXCLUDE_GLOBS } from "../domain/constants.js";
+import { EXCLUDE_PATTERNS } from "../domain/constants.js";
 import type {
   CheckMode,
   IssueStatus,
@@ -33,7 +33,7 @@ export function shouldExclude(
   customExclude?: string,
 ): boolean {
   // Use custom exclude pattern if provided, otherwise use mode-specific default
-  const pattern = customExclude ?? MODE_EXCLUDE_GLOBS[checkMode];
+  const pattern = customExclude ?? EXCLUDE_PATTERNS[checkMode];
 
   // No pattern means no exclusion
   if (!pattern) {

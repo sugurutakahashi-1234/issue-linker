@@ -1,6 +1,6 @@
 # @issue-linker/core
 
-Core library for issue-linker functionality.
+A CLI and GitHub Action that validates issue references (#123) in any text - commit messages, branch names, PR titles, or custom strings.
 
 ## Installation
 

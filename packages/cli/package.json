@@ -1,14 +1,24 @@
 {
   "name": "issue-linker",
   "version": "0.0.0",
-  "description": "CLI tool for validating and linking GitHub issues in commit messages",
+  "description": "A CLI and GitHub Action that validates issue references (#123) in any text - commit messages, branch names, PR titles, or custom strings",
   "keywords": [
     "github",
     "issues",
     "commit",
     "validation",
     "cli",
-    "git"
+    "git",
+    "branch-name",
+    "pr-title",
+    "commit-message",
+    "github-action",
+    "pre-commit",
+    "husky",
+    "ci-cd",
+    "issue-reference",
+    "developer-tools",
+    "automation"
   ],
   "author": "Suguru Takahashi",
   "license": "MIT",

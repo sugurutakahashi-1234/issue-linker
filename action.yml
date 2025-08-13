@@ -1,6 +1,6 @@
 name: 'Issue Linker'
 
-description: 'Validate text contains valid GitHub issue numbers'
+description: 'A CLI and GitHub Action that validates issue references (#123) in any text'
 
 author: 'Suguru Takahashi'
 
@@ -23,7 +23,9 @@ inputs:
     required: false
     default: 'false'
   validate-commits:
-    description: 'Validate all commit messages in the PR'
+    description: |
+      Validate all commit messages in the PR
+      Requires pull_request event context
     required: false
     default: 'false'
   comment-on-issues-when-branch-pushed:
@@ -34,7 +36,7 @@ inputs:
     required: false
     default: 'false'
   
-  # Advanced mode (custom text)
+  # Custom mode (custom validation)
   text:
     description: 'Custom text to validate'
     required: false
@@ -45,10 +47,10 @@ inputs:
     required: false
     default: 'default'
   extract:
-    description: 'Custom extraction pattern (regex) for finding issue numbers (overrides check mode defaults)'
+    description: 'Custom extraction pattern (regex) that overrides check-mode defaults'
     required: false
   exclude:
-    description: 'Custom exclude pattern (overrides check mode defaults)'
+    description: 'Custom exclude pattern (glob) that overrides check-mode defaults'
     required: false
   
   # Common settings
@@ -83,5 +85,8 @@ outputs:
     description: 'All validation results as JSON'
 
 runs:
+  # TODO: Upgrade to 'node24' once act (local testing tool) supports it
+  # GitHub Actions runner v2.327.1+ supports node24, but act v0.2.80 doesn't yet
+  # See: https://github.com/nektos/act/issues/5883
   using: 'node20'
   main: 'packages/action/dist/index.js'

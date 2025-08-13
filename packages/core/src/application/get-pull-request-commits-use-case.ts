@@ -2,9 +2,10 @@
 
 import * as v from "valibot";
 import {
-  type GetPullRequestCommitsOptions,
-  GetPullRequestCommitsOptionsSchema,
+  type GetPullRequestCommitsArgs,
+  GetPullRequestCommitsArgsSchema,
   type PullRequestCommit,
+  type ValidatedGetPullRequestCommitsArgs,
 } from "../domain/validation-schemas.js";
 import { getGitHubToken } from "../infrastructure/env-accessor.js";
 import { fetchPullRequestCommits } from "../infrastructure/github-client.js";
@@ -12,27 +13,30 @@ import { parseRepositoryString } from "../infrastructure/repository-parser.js";
 
 /**
  * Get commits from a pull request
- * @param opts Options for getting pull request commits
+ * @param args Arguments for getting pull request commits
  * @returns Array of pull request commits
  */
 export async function getPullRequestCommits(
-  opts: GetPullRequestCommitsOptions,
+  args: GetPullRequestCommitsArgs,
 ): Promise<PullRequestCommit[]> {
-  // Validate options
-  const options = v.parse(GetPullRequestCommitsOptionsSchema, opts);
+  // Validate args
+  const validatedArgs: ValidatedGetPullRequestCommitsArgs = v.parse(
+    GetPullRequestCommitsArgsSchema,
+    args,
+  );
 
   // Parse repository string
-  const { owner, repo } = parseRepositoryString(options.repo);
+  const { owner, repo } = parseRepositoryString(validatedArgs.repo);
 
   // Get GitHub token
-  const githubToken = options.githubToken ?? getGitHubToken();
+  const githubToken = validatedArgs.githubToken ?? getGitHubToken();
 
   // Fetch commits from GitHub API (already transformed to PullRequestCommit[])
   return await fetchPullRequestCommits(
     owner,
     repo,
-    options.prNumber,
+    validatedArgs.prNumber,
     githubToken,
-    options.hostname,
+    validatedArgs.hostname,
   );
 }

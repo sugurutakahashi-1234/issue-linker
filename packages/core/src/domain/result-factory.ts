@@ -20,6 +20,18 @@ export function createExcludedResult(input: InputConfig): CheckMessageResult {
 }
 
 /**
+ * Create a result for when validation is skipped due to skip marker
+ */
+export function createSkippedResult(input: InputConfig): CheckMessageResult {
+  return {
+    success: true,
+    message: "Validation skipped due to skip marker",
+    reason: "skipped",
+    input,
+  };
+}
+
+/**
  * Create a result for when no issue numbers are found
  */
 export function createNoIssuesResult(input: InputConfig): CheckMessageResult {

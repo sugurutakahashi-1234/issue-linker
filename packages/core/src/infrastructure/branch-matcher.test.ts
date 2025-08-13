@@ -56,13 +56,29 @@ describe("branch-matcher", () => {
         expect(shouldExclude("master", "branch")).toBe(true);
         expect(shouldExclude("develop", "branch")).toBe(true);
         expect(shouldExclude("release/1.0", "branch")).toBe(true);
-        expect(shouldExclude("hotfix/urgent", "branch")).toBe(true);
       });
 
-      it("should not exclude feature branches", () => {
+      it("should exclude bot branches", () => {
+        expect(shouldExclude("renovate/react-18.x", "branch")).toBe(true);
+        expect(
+          shouldExclude("dependabot/npm_and_yarn/webpack-5.91.0", "branch"),
+        ).toBe(true);
+        expect(shouldExclude("release-please--branches--main", "branch")).toBe(
+          true,
+        );
+        expect(shouldExclude("snyk/fix-vulnerability", "branch")).toBe(true);
+        expect(shouldExclude("imgbot/optimize-images", "branch")).toBe(true);
+        expect(shouldExclude("all-contributors/add-user", "branch")).toBe(true);
+      });
+
+      it("should not exclude feature branches including hotfix", () => {
         expect(shouldExclude("feature/123", "branch")).toBe(false);
         expect(shouldExclude("123-feature", "branch")).toBe(false);
         expect(shouldExclude("fix/456", "branch")).toBe(false);
+        expect(shouldExclude("hotfix/urgent-123", "branch")).toBe(false);
+        expect(shouldExclude("hotfix/123-security-patch", "branch")).toBe(
+          false,
+        );
       });
     });
 
@@ -75,10 +91,30 @@ describe("branch-matcher", () => {
         expect(shouldExclude("squash! old commit", "commit")).toBe(true);
       });
 
+      it("should exclude automatic generated commits", () => {
+        expect(
+          shouldExclude("Applied suggestion from code review", "commit"),
+        ).toBe(true);
+        expect(shouldExclude("Apply automatic changes", "commit")).toBe(true);
+        expect(shouldExclude("Automated Change by bot", "commit")).toBe(true);
+        expect(shouldExclude("Update branch from main", "commit")).toBe(true);
+        expect(shouldExclude("Auto-merge pull request", "commit")).toBe(true);
+        expect(
+          shouldExclude("(cherry picked from commit abc123)", "commit"),
+        ).toBe(true);
+        expect(shouldExclude("Initial commit", "commit")).toBe(true);
+        expect(shouldExclude("Update README.md", "commit")).toBe(true);
+        expect(shouldExclude("Update docs.md", "commit")).toBe(true);
+        expect(shouldExclude("Updated content", "commit")).toBe(true);
+      });
+
       it("should not exclude regular commits", () => {
         expect(shouldExclude("feat: add feature", "commit")).toBe(false);
         expect(shouldExclude("fix: resolve bug", "commit")).toBe(false);
         expect(shouldExclude("Add new feature", "commit")).toBe(false);
+        expect(shouldExclude("Update user authentication", "commit")).toBe(
+          false,
+        );
       });
     });
 

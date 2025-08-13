@@ -7,11 +7,13 @@ import {
   createExcludedResult,
   createInvalidResult,
   createNoIssuesResult,
+  createSkippedResult,
   createValidResult,
 } from "../domain/result-factory.js";
 import {
-  type CheckMessageOptions,
-  CheckMessageOptionsSchema,
+  type CheckMessageArgs,
+  CheckMessageArgsSchema,
+  type ValidatedCheckMessageArgs,
 } from "../domain/validation-schemas.js";
 import {
   isIssueStateAllowed,
@@ -23,66 +25,76 @@ import { parseRepositoryFromGitUrl } from "../infrastructure/git-url-parser.js";
 import { getGitHubIssue } from "../infrastructure/github-client.js";
 import { findIssueNumbers } from "../infrastructure/issue-finder.js";
 import { parseRepositoryString } from "../infrastructure/repository-parser.js";
+import { hasSkipMarker } from "../infrastructure/skip-marker-checker.js";
 
 /**
  * Main use case for checking if text contains valid issue numbers
- * @param options - Options for the check
+ * @param args - Arguments for the check
  * @returns Result of the check
  */
 export async function checkMessage(
-  options: CheckMessageOptions,
+  args: CheckMessageArgs,
 ): Promise<CheckMessageResult> {
-  // Step 1: Validate options
-  const validationResult = v.safeParse(CheckMessageOptionsSchema, options);
+  // Step 1: Validate args
+  const validationResult = v.safeParse(CheckMessageArgsSchema, args);
   if (!validationResult.success) {
     const input: InputConfig = {
-      text: options.text ?? "",
+      text: args.text ?? "",
       checkMode: "default",
       issueStatus: "all",
       repo: "",
-      ...(options.actionMode && { actionMode: options.actionMode }),
+      ...(args.actionMode && { actionMode: args.actionMode }),
     };
     const error = new Error(
-      validationResult.issues[0]?.message ?? "Invalid options provided",
+      validationResult.issues[0]?.message ?? "Invalid arguments provided",
     );
     return createErrorResult(error, input);
   }
 
-  const opts = validationResult.output;
-  const checkMode = opts.checkMode ?? "default";
-  const issueStatus = opts.issueStatus ?? "all";
+  const validatedArgs: ValidatedCheckMessageArgs = validationResult.output;
+  const checkMode = validatedArgs.checkMode;
+  const issueStatus = validatedArgs.issueStatus;
 
   try {
     // Get repository information early for input config
-    const repository = opts.repo
-      ? parseRepositoryString(opts.repo)
+    const repository = validatedArgs.repo
+      ? parseRepositoryString(validatedArgs.repo)
       : parseRepositoryFromGitUrl(await getGitRemoteUrl());
     const repo = `${repository.owner}/${repository.repo}`;
 
     // Build input config
     const input: InputConfig = {
-      text: opts.text,
+      text: validatedArgs.text,
       checkMode,
-      ...(opts.extract && { extract: opts.extract }),
-      ...(opts.exclude && { exclude: opts.exclude }),
+      ...(validatedArgs.extract && { extract: validatedArgs.extract }),
+      ...(validatedArgs.exclude && { exclude: validatedArgs.exclude }),
       issueStatus,
       repo: repo,
-      ...(opts.actionMode && { actionMode: opts.actionMode }),
+      ...(validatedArgs.actionMode && { actionMode: validatedArgs.actionMode }),
     };
 
-    // Step 2: Check exclusion
-    if (shouldExclude(opts.text, checkMode, opts.exclude)) {
+    // Step 2: Check for skip markers
+    if (hasSkipMarker(validatedArgs.text)) {
+      return createSkippedResult(input);
+    }
+
+    // Step 3: Check exclusion
+    if (shouldExclude(validatedArgs.text, checkMode, validatedArgs.exclude)) {
       return createExcludedResult(input);
     }
 
-    // Step 3: Find issue numbers
-    const issueNumbers = findIssueNumbers(opts.text, checkMode, opts.extract);
+    // Step 4: Find issue numbers
+    const issueNumbers = findIssueNumbers(
+      validatedArgs.text,
+      checkMode,
+      validatedArgs.extract,
+    );
     if (issueNumbers.length === 0) {
       return createNoIssuesResult(input);
     }
 
-    // Step 4: Validate each issue number
-    const githubToken = opts.githubToken ?? getGitHubToken();
+    // Step 5: Validate each issue number
+    const githubToken = validatedArgs.githubToken ?? getGitHubToken();
     const validIssues: number[] = [];
     const notFoundIssues: number[] = [];
     const wrongStateIssues: number[] = [];
@@ -93,7 +105,7 @@ export async function checkMessage(
         repository.repo,
         issueNumber,
         githubToken,
-        opts.hostname,
+        validatedArgs.hostname,
       );
 
       if (!result.found) {
@@ -108,7 +120,7 @@ export async function checkMessage(
       }
     }
 
-    // Step 5: Create result based on findings
+    // Step 6: Create result based on findings
     const issues = {
       found: issueNumbers,
       valid: validIssues,
@@ -128,12 +140,12 @@ export async function checkMessage(
   } catch (error) {
     // Error handling - create minimal input config if we don't have repo info yet
     const input: InputConfig = {
-      text: opts.text,
+      text: validatedArgs.text,
       checkMode,
-      ...(opts.exclude && { exclude: opts.exclude }),
+      ...(validatedArgs.exclude && { exclude: validatedArgs.exclude }),
       issueStatus,
-      repo: opts.repo ?? "",
-      ...(opts.actionMode && { actionMode: opts.actionMode }),
+      repo: validatedArgs.repo ?? "",
+      ...(validatedArgs.actionMode && { actionMode: validatedArgs.actionMode }),
     };
     return createErrorResult(error, input);
   }
