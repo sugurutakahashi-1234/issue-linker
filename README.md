@@ -152,22 +152,19 @@ issue-linker -t "$(gh pr view --json body -q .body)"
 
 ## Configuration
 
-### Environment Variables
-
-- `GITHUB_TOKEN` or `GH_TOKEN`: GitHub personal access token
-- `GH_HOST`: GitHub Enterprise Server hostname
-- `GITHUB_SERVER_URL`: GitHub server URL (auto-set in GitHub Actions)
-
 ### GitHub Enterprise
 
+For GitHub Enterprise Server, specify your instance hostname:
+
 ```bash
-# CLI option
+# Using CLI option (recommended)
 issue-linker -t "Fix #123" --hostname github.enterprise.com
 
-# Environment variable
-export GH_HOST=github.enterprise.com
-issue-linker -t "Fix #123"
+# Using GitHub token (optional)
+issue-linker -t "Fix #123" --github-token your-token
 ```
+
+> **Note**: The tool can also auto-detect settings from environment variables like `GH_HOST` (GitHub CLI compatible) and `GITHUB_TOKEN`/`GH_TOKEN` for convenience, but explicit CLI options are recommended for clarity.
 
 ## GitHub Actions
 
