@@ -35,20 +35,20 @@ npx @sugurutakahashi-1234/issue-linker -t "Fix #123" --issue-status open
 
 ### Options
 
-| Option                                 | Description                                                               | Default                        |
-| -------------------------------------- | ------------------------------------------------------------------------- | ------------------------------ |
-| `-t, --text <text>`                    | Text to validate **[required]**                                          | -                              |
-| `-c, --check-mode <check-mode>`        | Validation mode: `default` \| `branch` \| `commit`                       | `default`                      |
-| `--extract <pattern>`                  | Custom extraction pattern (regex) that overrides check-mode defaults     | Check-mode specific            |
-| `--exclude <pattern>`                  | Custom exclude pattern (glob) that overrides check-mode defaults         | Check-mode specific            |
-| `--issue-status <status>`              | Filter by issue status: `all` \| `open` \| `closed`                      | `all`                          |
-| `--repo <owner/repo>`                  | Target GitHub repository                                                 | Auto-detect from git           |
-| `--github-token <token>`               | GitHub personal access token                                             | `$GITHUB_TOKEN` or `$GH_TOKEN` |
-| `--hostname <hostname>`                | GitHub Enterprise Server hostname                                        | `github.com` or `$GH_HOST`     |
-| `--json`                               | Output result in JSON format                                             | `false`                        |
-| `--verbose`                            | Show detailed validation information                                     | `false`                        |
-| `-v, --version`                        | Display version number                                                   | -                              |
-| `-h, --help`                           | Display help for command                                                 | -                              |
+| Option                          | Description                                                          | Default                        |
+| ------------------------------- | -------------------------------------------------------------------- | ------------------------------ |
+| `-t, --text <text>`             | Text to validate **[required]**                                      | -                              |
+| `-c, --check-mode <check-mode>` | Validation mode: `default` \| `branch` \| `commit`                   | `default`                      |
+| `--extract <pattern>`           | Custom extraction pattern (regex) that overrides check-mode defaults | Check-mode specific            |
+| `--exclude <pattern>`           | Custom exclude pattern (glob) that overrides check-mode defaults     | Check-mode specific            |
+| `--issue-status <status>`       | Filter by issue status: `all` \| `open` \| `closed`                  | `all`                          |
+| `--repo <owner/repo>`           | Target GitHub repository                                             | Auto-detect from git           |
+| `--github-token <token>`        | GitHub personal access token                                         | `$GITHUB_TOKEN` or `$GH_TOKEN` |
+| `--hostname <hostname>`         | GitHub Enterprise Server hostname                                    | `github.com` or `$GH_HOST`     |
+| `--json`                        | Output result in JSON format                                         | `false`                        |
+| `--verbose`                     | Show detailed validation information                                 | `false`                        |
+| `-v, --version`                 | Display version number                                               | -                              |
+| `-h, --help`                    | Display help for command                                             | -                              |
 
 ### Examples
 
@@ -196,20 +196,20 @@ jobs:
 
 ### Action Inputs
 
-| Input                                  | Description                                              | Default                    |
-| -------------------------------------- | -------------------------------------------------------- | -------------------------- |
-| `validate-branch`                      | Validate branch name                                     | `false`                    |
-| `validate-pr-title`                    | Validate PR title                                        | `false`                    |
-| `validate-pr-body`                     | Validate PR body                                         | `false`                    |
-| `validate-commits`                     | Validate all commit messages in the PR                   | `false`                    |
+| Input                                  | Description                                                                                                                            | Default                    |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `validate-branch`                      | Validate branch name                                                                                                                   | `false`                    |
+| `validate-pr-title`                    | Validate PR title                                                                                                                      | `false`                    |
+| `validate-pr-body`                     | Validate PR body                                                                                                                       | `false`                    |
+| `validate-commits`                     | Validate all commit messages in the PR                                                                                                 | `false`                    |
 | `comment-on-issues-when-branch-pushed` | Comment on detected issues when a branch is first pushed. **Requires `validate-branch: true`**. Works best with `create` event trigger | `false`                    |
-| `text`                                 | Custom text to validate                                  | -                          |
-| `check-mode`                           | Check mode: `default` \| `branch` \| `commit`            | `default`                  |
-| `exclude`                              | Custom exclude pattern                                   | -                          |
-| `issue-status`                         | Issue status filter: `all` \| `open` \| `closed`         | `all`                      |
-| `repo`                                 | Repository in owner/repo format                          | `${{ github.repository }}` |
-| `github-token`                         | GitHub token for API access                              | `${{ github.token }}`      |
-| `hostname`                             | GitHub Enterprise Server hostname                        | Auto-detect                |
+| `text`                                 | Custom text to validate                                                                                                                | -                          |
+| `check-mode`                           | Check mode: `default` \| `branch` \| `commit`                                                                                          | `default`                  |
+| `exclude`                              | Custom exclude pattern                                                                                                                 | -                          |
+| `issue-status`                         | Issue status filter: `all` \| `open` \| `closed`                                                                                       | `all`                      |
+| `repo`                                 | Repository in owner/repo format                                                                                                        | `${{ github.repository }}` |
+| `github-token`                         | GitHub token for API access                                                                                                            | `${{ github.token }}`      |
+| `hostname`                             | GitHub Enterprise Server hostname                                                                                                      | Auto-detect                |
 
 ### Advanced Examples
 
@@ -245,7 +245,6 @@ jobs:
         with:
           validate-branch: true
           comment-on-issues-when-branch-pushed: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 <!-- x-release-please-end -->
 
