@@ -46771,8 +46771,6 @@ __nccwpck_require__.d(__webpack_exports__, {
   GitHubError: () => (/* reexport */ GitHubError),
   IssueNotFoundError: () => (/* reexport */ IssueNotFoundError),
   IssueStatusFilterSchema: () => (/* reexport */ IssueStatusFilterSchema),
-  MODE_EXCLUDE_GLOBS: () => (/* reexport */ MODE_EXCLUDE_GLOBS),
-  MODE_EXTRACT_REGEXES: () => (/* reexport */ MODE_EXTRACT_REGEXES),
   ValidationError: () => (/* reexport */ ValidationError),
   checkDuplicateComment: () => (/* reexport */ checkDuplicateComment),
   checkMessage: () => (/* reexport */ checkMessage),
