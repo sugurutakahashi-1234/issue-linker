@@ -66,11 +66,13 @@ jobs:
       - name: Publish to npm
         if: ${{ steps.release.outputs.release_created }}
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          # Publish all public packages to npm using workspaces
+          # Publish all public packages to npm using bun from root
+          # bun automatically converts workspace:* to actual versions
           # Private packages (action) are automatically skipped
-          npm publish --workspaces --access public
+          # Using NPM_CONFIG_TOKEN for bun publish authentication
+          bun run npm-publish
 
       - name: Get created tag
         if: ${{ steps.release.outputs.release_created }}

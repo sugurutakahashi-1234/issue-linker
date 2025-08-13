@@ -1,8 +1,8 @@
 # issue-linker
 
-[![npm version](https://img.shields.io/npm/v/@sugurutakahashi-1234/issue-linker.svg)](https://www.npmjs.com/package/@sugurutakahashi-1234/issue-linker)
-[![npm downloads](https://img.shields.io/npm/dm/@sugurutakahashi-1234/issue-linker.svg)](https://www.npmjs.com/package/@sugurutakahashi-1234/issue-linker)
-[![install size](https://packagephobia.com/badge?p=@sugurutakahashi-1234/issue-linker)](https://packagephobia.com/result?p=@sugurutakahashi-1234/issue-linker)
+[![npm version](https://img.shields.io/npm/v/issue-linker.svg)](https://www.npmjs.com/package/issue-linker)
+[![npm downloads](https://img.shields.io/npm/dm/issue-linker.svg)](https://www.npmjs.com/package/issue-linker)
+[![install size](https://packagephobia.com/badge?p=issue-linker)](https://packagephobia.com/result?p=issue-linker)
 [![Build](https://github.com/sugurutakahashi-1234/issue-linker/actions/workflows/ci.yml/badge.svg)](https://github.com/sugurutakahashi-1234/issue-linker/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/sugurutakahashi-1234/issue-linker/graph/badge.svg?token=KPN7UZ7ATY)](https://codecov.io/gh/sugurutakahashi-1234/issue-linker)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -36,23 +36,23 @@ Most validators only check format. issue-linker checks reality.
 ## Installation
 
 ```bash
-npm install -g @sugurutakahashi-1234/issue-linker
+npm install -g issue-linker
 ```
 
 ## Quick Start
 
 ```bash
 # Validate text with issue reference
-npx @sugurutakahashi-1234/issue-linker -t "Fix #123"
+npx issue-linker -t "Fix #123"
 
 # Check only open issues
-npx @sugurutakahashi-1234/issue-linker -t "Fix #123" --issue-status open
+npx issue-linker -t "Fix #123" --issue-status open
 
 # Validate your current branch name
-npx @sugurutakahashi-1234/issue-linker -t "$(git branch --show-current)" -c branch
+npx issue-linker -t "$(git branch --show-current)" -c branch
 
 # Validate your last commit message
-npx @sugurutakahashi-1234/issue-linker -t "$(git log -1 --pretty=%s)" -c commit
+npx issue-linker -t "$(git log -1 --pretty=%s)" -c commit
 ```
 
 ## CLI Reference
@@ -222,7 +222,7 @@ jobs:
 # .husky/post-checkout
 if [ "$3" = "1" ]; then
   branch=$(git branch --show-current)
-  npx @sugurutakahashi-1234/issue-linker -t "$branch" -c branch || {
+  npx issue-linker -t "$branch" -c branch || {
     echo "⚠️  Warning: Branch name doesn't contain a valid issue number"
   }
 fi
@@ -232,7 +232,7 @@ fi
 ```bash
 # .husky/commit-msg
 message=$(cat $1)
-npx @sugurutakahashi-1234/issue-linker -t "$message" -c commit || {
+npx issue-linker -t "$message" -c commit || {
   echo "❌ Commit message must reference a valid issue number"
   exit 1
 }
