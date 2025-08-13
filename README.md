@@ -69,18 +69,6 @@ issue-linker -t "Fix #321" --hostname github.enterprise.com
 issue-linker -t "Resolve PROJ-789" --extract "[A-Z]+-(\\d+)"
 ```
 
-## Skip Markers
-
-Skip validation by including `[skip issue-linker]` or `[issue-linker skip]` anywhere in your text (case-insensitive). Works in all check modes.
-
-```bash
-# Skip auto-generated PR titles
-issue-linker -t "Release v2.0.0 [skip issue-linker]"
-
-# Skip dependency updates
-issue-linker -t "chore: update dependencies [skip issue-linker]" -c commit
-```
-
 ## Check Modes
 
 issue-linker provides three check modes for different validation contexts:
@@ -100,7 +88,116 @@ issue-linker provides three check modes for different validation contexts:
 - **Default --extract** (regex): `(?<![.\d])(\d{1,7})(?![.\d])` - Extracts standalone numbers (e.g., `123-feature`, `feat/123`)
 - **Default --exclude** (glob pattern): `{main,master,develop,release/**,renovate/**,dependabot/**,release-please*,snyk/**,imgbot/**,all-contributors/**}`
 
-## Integration Examples
+## Skip Markers
+
+Skip validation by including `[skip issue-linker]` or `[issue-linker skip]` anywhere in your text (case-insensitive). Works in all check modes.
+
+```bash
+# Skip auto-generated PR titles
+issue-linker -t "Release v2.0.0 [skip issue-linker]"
+
+# Skip dependency updates
+issue-linker -t "chore: update dependencies [skip issue-linker]" -c commit
+```
+
+## GitHub Actions
+
+### Basic Setup
+
+<!-- x-release-please-start-version -->
+```yaml
+name: Validate PR Issue References
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  validate-issue-references:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      
+      - name: Check issue references in PR
+        uses: sugurutakahashi-1234/issue-linker@v1.0.0
+        with:
+          validate-branch: true
+          validate-pr-title: true
+          validate-pr-body: true
+          validate-commits: true
+```
+<!-- x-release-please-end -->
+
+### Action Inputs
+
+The action provides two modes:
+- **Simple validations** (`validate-*` options): Pre-configured for common use cases with sensible defaults
+- **Custom validation** (`text` + `check-mode` + `extract` + `exclude`): Full control over what and how to validate
+
+**Common settings**: `issue-status`, `repo`, `github-token`, and `hostname` work with both modes.
+
+For simple validations, the action automatically applies the appropriate check-mode:
+- `validate-branch`: Uses `branch` check-mode to extract issue numbers from branch names (e.g., `123-feature`, `feat/123`)
+- `validate-pr-title` & `validate-pr-body`: Use `default` check-mode to detect `#123` format
+- `validate-commits`: Uses `commit` check-mode with auto-exclusion of merge/rebase commits. **Only works in PR context** (validates commits in the current PR)
+
+| Input                                  | Description                                                                                                                            | Default                    |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `validate-branch`                      | Validate branch name                                                                                                                   | `false`                    |
+| `validate-pr-title`                    | Validate PR title                                                                                                                      | `false`                    |
+| `validate-pr-body`                     | Validate PR body                                                                                                                       | `false`                    |
+| `validate-commits`                     | Validate all commit messages in the PR. **Requires `pull_request` event**                                                             | `false`                    |
+| `comment-on-issues-when-branch-pushed` | Comment on detected issues when a branch is first pushed. **Requires `validate-branch: true`**. Works best with `create` event trigger | `false`                    |
+| `text`                                 | Custom text to validate                                                                                                                | -                          |
+| `check-mode`                           | Check mode: `default` \| `branch` \| `commit`                                                                                          | `default`                  |
+| `extract`                              | Custom extraction pattern (regex) that overrides check-mode defaults                                                                   | -                          |
+| `exclude`                              | Custom exclude pattern (glob) that overrides check-mode defaults                                                                       | -                          |
+| `issue-status`                         | Issue status filter: `all` \| `open` \| `closed`                                                                                       | `all`                      |
+| `repo`                                 | Repository in owner/repo format                                                                                                        | `${{ github.repository }}` |
+| `github-token`                         | GitHub token for API access                                                                                                            | `${{ github.token }}`      |
+| `hostname`                             | GitHub Enterprise Server hostname                                                                                                      | Auto-detect                |
+
+### Advanced Examples
+
+#### Custom Validation
+<!-- x-release-please-start-version -->
+```yaml
+- name: Custom validation
+  uses: sugurutakahashi-1234/issue-linker@v1.0.0
+  with:
+    text: ${{ github.event.pull_request.title }}
+    check-mode: 'default'
+    exclude: 'WIP*'
+```
+<!-- x-release-please-end -->
+
+#### Automatic Issue Comments
+
+Automatically comments on referenced issues when a new branch is created (once per branch).
+
+<!-- x-release-please-start-version -->
+```yaml
+name: Auto-link Branch Push to Issues
+
+on:
+  create:  # Triggers once per branch (when first pushed to GitHub)
+
+jobs:
+  link-branch-to-referenced-issues:
+    if: github.ref_type == 'branch'  # Only for branches, not tags
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write  # Required for commenting on issues
+    steps:
+      - name: Comment on referenced issues
+        uses: sugurutakahashi-1234/issue-linker@v1.0.0
+        with:
+          validate-branch: true
+          comment-on-issues-when-branch-pushed: true
+```
+<!-- x-release-please-end -->
+
+## Other Integrations
 
 ### Husky Git Hooks
 
@@ -149,104 +246,6 @@ issue-linker -t "$(gh pr view --json title -q .title)"
 # Validate PR body
 issue-linker -t "$(gh pr view --json body -q .body)"
 ```
-
-## Configuration
-
-### GitHub Enterprise
-
-For GitHub Enterprise Server, specify your instance hostname:
-
-```bash
-# Using CLI option (recommended)
-issue-linker -t "Fix #123" --hostname github.enterprise.com
-
-# Using GitHub token (optional)
-issue-linker -t "Fix #123" --github-token your-token
-```
-
-> **Note**: The tool can also auto-detect settings from environment variables like `GH_HOST` (GitHub CLI compatible) and `GITHUB_TOKEN`/`GH_TOKEN` for convenience, but explicit CLI options are recommended for clarity.
-
-## GitHub Actions
-
-### Basic Setup
-
-<!-- x-release-please-start-version -->
-```yaml
-name: Validate PR
-
-on:
-  pull_request:
-    types: [opened, edited, synchronize]
-
-jobs:
-  validate:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      
-      - name: Validate PR
-        uses: sugurutakahashi-1234/issue-linker@v1.0.0
-        with:
-          validate-branch: true
-          validate-pr-title: true
-          validate-pr-body: true
-          issue-status: 'open'
-```
-<!-- x-release-please-end -->
-
-### Action Inputs
-
-| Input                                  | Description                                                                                                                            | Default                    |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `validate-branch`                      | Validate branch name                                                                                                                   | `false`                    |
-| `validate-pr-title`                    | Validate PR title                                                                                                                      | `false`                    |
-| `validate-pr-body`                     | Validate PR body                                                                                                                       | `false`                    |
-| `validate-commits`                     | Validate all commit messages in the PR                                                                                                 | `false`                    |
-| `comment-on-issues-when-branch-pushed` | Comment on detected issues when a branch is first pushed. **Requires `validate-branch: true`**. Works best with `create` event trigger | `false`                    |
-| `text`                                 | Custom text to validate                                                                                                                | -                          |
-| `check-mode`                           | Check mode: `default` \| `branch` \| `commit`                                                                                          | `default`                  |
-| `exclude`                              | Custom exclude pattern                                                                                                                 | -                          |
-| `issue-status`                         | Issue status filter: `all` \| `open` \| `closed`                                                                                       | `all`                      |
-| `repo`                                 | Repository in owner/repo format                                                                                                        | `${{ github.repository }}` |
-| `github-token`                         | GitHub token for API access                                                                                                            | `${{ github.token }}`      |
-| `hostname`                             | GitHub Enterprise Server hostname                                                                                                      | Auto-detect                |
-
-### Advanced Examples
-
-#### Custom Validation
-<!-- x-release-please-start-version -->
-```yaml
-- name: Custom validation
-  uses: sugurutakahashi-1234/issue-linker@v1.0.0
-  with:
-    text: ${{ github.event.pull_request.title }}
-    check-mode: 'default'
-    exclude: 'WIP*'
-```
-<!-- x-release-please-end -->
-
-#### Automatic Issue Comments
-
-Automatically comments on referenced issues when a new branch is created (once per branch).
-
-<!-- x-release-please-start-version -->
-```yaml
-name: Comment on Issues
-
-on:
-  create:  # Triggers once per branch (when first pushed to GitHub)
-
-jobs:
-  comment:
-    if: github.ref_type == 'branch'  # Only for branches, not tags
-    runs-on: ubuntu-latest
-    steps:
-      - uses: sugurutakahashi-1234/issue-linker@v1.0.0
-        with:
-          validate-branch: true
-          comment-on-issues-when-branch-pushed: true
-```
-<!-- x-release-please-end -->
 
 ## Contributing
 
