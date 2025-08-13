@@ -12,13 +12,7 @@
  * Detailed functional tests are covered in packages/cli/src/cli.test.ts
  */
 import { execSync } from "node:child_process";
-import {
-  existsSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -61,30 +55,33 @@ try {
   });
   console.log("✅ Core package built");
 
-  // Step 3: Create npm package with bundled dependencies
-  console.log("\n📦 Creating npm package...");
-  // First, we need to temporarily update the package.json to use file paths instead of workspace:*
-  const corePackageDir = join(projectRoot, "packages", "core");
-  const tempPackageJson = { ...packageJson };
-  tempPackageJson.dependencies = {
-    ...tempPackageJson.dependencies,
-    "@issue-linker/core": `file:${corePackageDir}`,
-  };
+  // Step 3: Install workspace packages properly using npm
+  console.log("\n📦 Creating npm packages with proper workspace resolution...");
 
-  // Create a temporary package.json for packing
-  const originalPackageJsonContent = readFileSync(packageJsonPath, "utf-8");
-  writeFileSync(packageJsonPath, JSON.stringify(tempPackageJson, null, 2));
+  // Use npm pack with workspace protocol resolution
+  // First pack from the root to handle workspace dependencies
+  console.log("📦 Packing from workspace root...");
+  const packOutput = execSync(
+    `npm pack ./packages/cli --pack-destination ${tmpdir()}`,
+    { cwd: projectRoot },
+  )
+    .toString()
+    .trim();
 
-  try {
-    const packOutput = execSync("npm pack", { cwd: cliPackageDir })
-      .toString()
-      .trim();
-    packageFile = packOutput.split("\n").pop() || ""; // Get the last line (filename)
-    console.log(`✅ Created: ${packageFile}`);
-  } finally {
-    // Restore original package.json
-    writeFileSync(packageJsonPath, originalPackageJsonContent);
+  const tempPackageFile = packOutput.split("\n").pop() || "";
+  const tempPackagePath = join(tmpdir(), tempPackageFile);
+
+  // Move to CLI directory for consistency
+  packageFile = `issue-linker-0.0.0.tgz`;
+  const finalPackagePath = join(cliPackageDir, packageFile);
+
+  if (existsSync(finalPackagePath)) {
+    rmSync(finalPackagePath);
   }
+
+  // Move the package to the expected location
+  execSync(`mv "${tempPackagePath}" "${finalPackagePath}"`);
+  console.log(`✅ Created CLI package: ${packageFile}`);
 
   // Check package size
   const sizeOutput = execSync(`npm pack --dry-run --json`, {
