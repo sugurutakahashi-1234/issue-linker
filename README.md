@@ -202,7 +202,7 @@ jobs:
 | `validate-pr-title`                    | Validate PR title                                        | `false`                    |
 | `validate-pr-body`                     | Validate PR body                                         | `false`                    |
 | `validate-commits`                     | Validate all commit messages in the PR                   | `false`                    |
-| `comment-on-issues-when-branch-pushed` | Comment on detected issues when a branch is first pushed | `false`                    |
+| `comment-on-issues-when-branch-pushed` | Comment on detected issues when a branch is first pushed. **Requires `validate-branch: true`**. Works best with `create` event trigger | `false`                    |
 | `text`                                 | Custom text to validate                                  | -                          |
 | `check-mode`                           | Check mode: `default` \| `branch` \| `commit`            | `default`                  |
 | `exclude`                              | Custom exclude pattern                                   | -                          |
@@ -226,16 +226,19 @@ jobs:
 <!-- x-release-please-end -->
 
 #### Automatic Issue Comments
+
+Automatically comments on referenced issues when a new branch is created (once per branch).
+
 <!-- x-release-please-start-version -->
 ```yaml
 name: Comment on Issues
 
 on:
-  create:  # Triggers when a branch is created
+  create:  # Triggers once per branch (when first pushed to GitHub)
 
 jobs:
   comment:
-    if: github.ref_type == 'branch'
+    if: github.ref_type == 'branch'  # Only for branches, not tags
     runs-on: ubuntu-latest
     steps:
       - uses: sugurutakahashi-1234/issue-linker@v1.0.0

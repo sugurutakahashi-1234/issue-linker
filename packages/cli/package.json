@@ -8,7 +8,17 @@
     "commit",
     "validation",
     "cli",
-    "git"
+    "git",
+    "branch-name",
+    "pr-title",
+    "commit-message",
+    "github-action",
+    "pre-commit",
+    "husky",
+    "ci-cd",
+    "issue-reference",
+    "developer-tools",
+    "automation"
   ],
   "author": "Suguru Takahashi",
   "license": "MIT",
