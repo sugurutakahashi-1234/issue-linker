@@ -181,9 +181,36 @@ program
     "after",
     `
 Examples:
-  $ issue-linker -t "Fix: resolve authentication error #123"
-  $ issue-linker -t "feat/issue-123-auth-fix" -c branch
-  $ issue-linker -t "Fix #123" --issue-status open
+
+  Basic validation:
+    $ issue-linker -t "Fix: resolve authentication error #123"
+    ✅ Valid issues: #123
+
+    $ issue-linker -t "feat/123-auth-fix" -c branch  
+    ✅ Valid issues: #123
+
+    $ issue-linker -t "Fix typo in README"
+    ❌ No issue numbers found
+
+  Git integration:
+    $ issue-linker -t "$(git branch --show-current)" -c branch
+    $ issue-linker -t "$(git log -1 --pretty=%s)" -c commit
+
+  Skip validation:
+    $ issue-linker -t "Release v2.0.0 [skip issue-linker]"
+    ✅ Validation skipped due to skip marker
+
+    $ issue-linker -t "[WIP] Fix #789" --exclude "*[WIP]*"
+    ✅ Text was excluded from validation
+
+  Custom options:
+    $ issue-linker -t "Fix #123" --issue-status open
+    $ issue-linker -t "Fix #456" --repo owner/repo
+    $ issue-linker -t "Resolve PROJ-789" --extract "[A-Z]+-(\\d+)"
+    $ issue-linker -t "Fix #789" --json
+
+Skip Markers:
+  Use [skip issue-linker] or [issue-linker skip] to bypass validation
 
 For more information:
   https://github.com/sugurutakahashi-1234/issue-linker

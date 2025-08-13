@@ -71,10 +71,14 @@ issue-linker -t "Resolve PROJ-789" --extract "[A-Z]+-(\\d+)"
 
 ## Skip Markers
 
-Skip validation by including `[skip issue-linker]` or `[issue-linker skip]` anywhere in your text (case-insensitive).
+Skip validation by including `[skip issue-linker]` or `[issue-linker skip]` anywhere in your text (case-insensitive). Works in all check modes.
 
 ```bash
-git commit -m "chore: update dependencies [skip issue-linker]"
+# Skip auto-generated PR titles
+issue-linker -t "Release v2.0.0 [skip issue-linker]"
+
+# Skip dependency updates
+issue-linker -t "chore: update dependencies [skip issue-linker]" -c commit
 ```
 
 ## Check Modes
