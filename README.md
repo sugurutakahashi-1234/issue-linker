@@ -10,6 +10,29 @@
 
 A CLI and GitHub Action that validates issue references (#123) in any text - commit messages, branch names, PR titles, or custom strings.
 
+## Why issue-linker?
+
+**issue-linker verifies that your issue references actually exist** - not just that they're formatted correctly.
+
+Working on `feat/123-new-feature` and committing with `Fix #123`? What if:
+- You meant #132 (typo)
+- Issue #123 is already closed
+- Your team requires issue numbers in branches/commits but you forgot to create the issue
+
+Format validators can't catch this. issue-linker can.
+
+### Key Features
+
+- ⚡ **Fast & lightweight** - Minimal dependencies, quick validation
+- 🔍 **Real verification** - Uses GitHub API to check issues actually exist
+- 🎯 **Smart detection** - Different patterns for branches vs commits
+- 🚦 **Status filtering** - Check if issues are open, closed, or any
+- 🔧 **Flexible integration** - CLI, Git hooks, GitHub Actions
+- 🏢 **Enterprise ready** - Full GitHub Enterprise Server support
+- 📊 **JSON output** - Integrate with any CI/CD pipeline
+
+Most validators only check format. issue-linker checks reality.
+
 ## Installation
 
 ```bash
