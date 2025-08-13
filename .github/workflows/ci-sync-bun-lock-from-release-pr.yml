@@ -1,4 +1,4 @@
-name: CI - Sync bun.lock from Release PR
+name: ci-sync-bun-lock-from-release-pr
 
 on:
   pull_request:

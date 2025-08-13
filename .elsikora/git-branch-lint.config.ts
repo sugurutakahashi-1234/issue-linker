@@ -28,6 +28,7 @@ const config: IBranchLintConfig = {
     "main",
     "develop", // GitFlow development branch
     // Release Please creates this branch automatically for release management
+    "release-please--branches--main",
     "release-please--branches--main--components--issue-linker",
   ],
   rules: {

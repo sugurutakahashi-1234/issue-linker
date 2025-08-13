@@ -1,36 +1,11 @@
 #!/usr/bin/env bun
 /**
- * NPM Package E2E Test (Minimal)
+ * NPM Package E2E Test
  *
- * Tests the essential NPM package lifecycle:
- * 1. Create package with `bun pm pack` (converts workspace:* to actual versions)
- * 2. Install locally with dependencies
- * 3. Run basic CLI commands
- * 4. Test npx execution
- * 5. Clean up installation
- *
- * IMPORTANT: Automatic Pre-Release Detection
- * ==========================================
- * This E2E test automatically detects if packages are published to npm:
- * - If packages are NOT published → Test is skipped (exit 0)
- * - If packages ARE published → Test runs normally
- *
- * This allows the test to work in both pre-release and post-release scenarios.
- *
- * Why E2E tests don't work before npm publish:
- * 1. `bun pm pack` converts `workspace:*` → `0.0.0`
- * 2. `npm install` tries to fetch `@issue-linker/core@0.0.0` from registry
- * 3. Package doesn't exist in registry yet = installation fails
- *
- * This is a common challenge for monorepo E2E testing and our automatic
- * detection provides a clean solution without manual intervention.
- *
- * For projects using this as a template:
- * - This pattern works automatically - no changes needed
- * - E2E tests will start working after your first npm publish
- * - Use integration tests (*.test.ts) for pre-release testing
- *
- * Detailed functional tests are covered in packages/cli/src/cli.test.ts
+ * Tests the package lifecycle before publishing:
+ * 1. Build and pack both packages with bun
+ * 2. Install locally with npm
+ * 3. Test CLI execution
  */
 import { execSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
@@ -39,146 +14,85 @@ import { join } from "node:path";
 
 console.log("🧪 Starting npm package E2E test...\n");
 
-// Check if @issue-linker/core is published to npm registry
-console.log("🔍 Checking if @issue-linker/core is published to npm...");
-try {
-  execSync("npm view @issue-linker/core version", { stdio: "pipe" });
-  console.log("✅ @issue-linker/core found in npm registry");
-} catch {
-  console.log("⚠️  @issue-linker/core not found in npm registry");
-  console.log("    E2E test skipped - packages need to be published first");
-  console.log("    See comments above for detailed explanation\n");
-  console.log("✅ Skipping E2E test - this is expected before first release");
-  process.exit(0);
-}
-
 const projectRoot = join(import.meta.dir, "..", "..");
 const cliPackageDir = join(projectRoot, "packages", "cli");
-const packageJsonPath = join(cliPackageDir, "package.json");
-const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
+const corePackageDir = join(projectRoot, "packages", "core");
+const packageJson = JSON.parse(
+  readFileSync(join(cliPackageDir, "package.json"), "utf-8"),
+);
 const packageName = packageJson.name;
-let packageFile: string | null = null;
-const corePackagePath: string | null = null;
-let isInstalled = false;
+
 let tempDir: string | null = null;
-
-// Clean up any existing npm installation
-try {
-  console.log("🧹 Checking for existing npm installation...");
-  execSync(`npm uninstall -g ${packageName}`, { stdio: "pipe" });
-  console.log("✅ Removed existing npm installation");
-} catch {
-  // Package not installed, which is fine
-  console.log("✅ No existing npm installation found");
-}
+let cliPackageFile: string | null = null;
+let corePackageFile: string | null = null;
 
 try {
-  // Step 1: Check if built
-  const distDir = join(cliPackageDir, "dist");
-  if (!existsSync(distDir)) {
+  // Step 1: Check if packages are built
+  if (!existsSync(join(cliPackageDir, "dist"))) {
     console.error(
       "❌ CLI package not built. Please run 'bun run build' first.",
     );
     process.exit(1);
   }
 
-  // Step 2: Build core package first (since CLI depends on it)
-  console.log("\n🔨 Building core package...");
+  // Step 2: Build core package
+  console.log("🔨 Building core package...");
   execSync("bun run build", {
-    cwd: join(projectRoot, "packages", "core"),
+    cwd: corePackageDir,
     stdio: "inherit",
   });
   console.log("✅ Core package built");
 
-  // Step 3: Create npm packages using bun (automatically handles workspace:*)
-  console.log("\n📦 Creating npm packages using bun...");
+  // Step 3: Create npm packages using bun pm pack
+  console.log("\n📦 Creating npm packages...");
 
-  // First, pack the core package
-  console.log("  Packing @issue-linker/core with bun...");
-  const corePackageDir = join(projectRoot, "packages", "core");
+  // Pack core package
+  console.log("  Packing @issue-linker/core...");
   const corePackOutput = execSync("bun pm pack", {
     cwd: corePackageDir,
   }).toString();
-  const coreFilenameMatch = corePackOutput.match(
-    /(issue-linker-core-[\d.]+\.tgz)/m,
-  );
-  const corePackageFile = coreFilenameMatch
-    ? coreFilenameMatch[1]
-    : "issue-linker-core-0.0.0.tgz";
+  const coreMatch = corePackOutput.match(/(issue-linker-core-[\d.]+\.tgz)/);
+  corePackageFile = coreMatch ? coreMatch[1] : "issue-linker-core-1.0.0.tgz";
   const corePackagePath = join(corePackageDir, corePackageFile);
-  console.log(`  ✅ Core package created: ${corePackageFile}`);
+  console.log(`  ✅ Core package: ${corePackageFile}`);
 
-  // Then pack the CLI package
-  console.log("  Packing issue-linker CLI with bun...");
-  const packOutput = execSync("bun pm pack", { cwd: cliPackageDir }).toString();
+  // Pack CLI package
+  console.log("  Packing issue-linker CLI...");
+  const cliPackOutput = execSync("bun pm pack", {
+    cwd: cliPackageDir,
+  }).toString();
+  const cliMatch = cliPackOutput.match(/(issue-linker-[\d.]+\.tgz)/);
+  cliPackageFile = cliMatch ? cliMatch[1] : "issue-linker-1.0.0.tgz";
+  const cliPackagePath = join(cliPackageDir, cliPackageFile);
+  console.log(`  ✅ CLI package: ${cliPackageFile}`);
 
-  // Extract the filename from bun's output
-  const filenameMatch = packOutput.match(/(issue-linker-[\d.]+\.tgz)/m);
-  packageFile = filenameMatch ? filenameMatch[1] : "issue-linker-0.0.0.tgz";
-  console.log(`  ✅ CLI package created: ${packageFile}`);
-
-  // Check package size from bun's output
-  const sizeMatch = packOutput.match(/Packed size: ([\d.]+[KMG]B)/m);
-  if (sizeMatch) {
-    console.log(`📊 Package size: ${sizeMatch[1]}`);
-    // Convert to MB for warning check
-    const sizeStr = sizeMatch[1];
-    let sizeMB = 0;
-    if (sizeStr.endsWith("KB")) {
-      sizeMB = parseFloat(sizeStr) / 1024;
-    } else if (sizeStr.endsWith("MB")) {
-      sizeMB = parseFloat(sizeStr);
-    } else if (sizeStr.endsWith("GB")) {
-      sizeMB = parseFloat(sizeStr) * 1024;
-    }
-    if (sizeMB > 5) {
-      console.warn(
-        `⚠️  Warning: Package size is large (${sizeMB.toFixed(2)} MB)`,
-      );
-    }
-  }
-
-  // Step 4: Create test directory and install packages locally
-  console.log("\n📥 Creating test environment...");
-
-  // Create a temp directory for testing
+  // Step 4: Install packages in temp directory
+  console.log("\n📥 Installing packages...");
   tempDir = mkdtempSync(join(tmpdir(), "e2e-test-"));
-  console.log(`  Created test directory: ${tempDir}`);
+  console.log(`  Test directory: ${tempDir}`);
 
-  // Install both packages in the temp directory
-  console.log("  Installing packages locally...");
-  execSync(
-    `npm install ${corePackagePath} ${join(cliPackageDir, packageFile)}`,
-    {
-      cwd: tempDir,
-      stdio: "inherit",
-    },
-  );
-
-  // Link the CLI globally from the local installation
-  console.log("  Linking CLI globally...");
-  execSync(`npm link ${packageName}`, {
+  execSync(`npm install "${corePackagePath}" "${cliPackagePath}"`, {
     cwd: tempDir,
-    stdio: "pipe",
+    stdio: "inherit",
   });
-  isInstalled = true;
 
-  // Step 5: Test basic commands
-  console.log("\n🧪 Testing basic commands...");
+  // Step 5: Test CLI execution
+  console.log("\n🧪 Testing CLI commands...");
+  const cliCommand = join(tempDir, "node_modules", ".bin", packageName);
 
-  // Test version
+  // Test --version
   console.log("  Testing --version...");
-  const version = execSync(`${packageName} --version`).toString().trim();
-  console.log(`  ✅ Version: ${version}`);
+  const version = execSync(`"${cliCommand}" --version`).toString().trim();
   if (version !== packageJson.version) {
     throw new Error(
       `Version mismatch: expected ${packageJson.version}, got ${version}`,
     );
   }
+  console.log(`  ✅ Version: ${version}`);
 
-  // Test help
+  // Test --help
   console.log("  Testing --help...");
-  const helpOutput = execSync(`${packageName} --help`).toString();
+  const helpOutput = execSync(`"${cliCommand}" --help`).toString();
   if (
     !helpOutput.includes("-t, --text") ||
     !helpOutput.includes("--check-mode")
@@ -187,34 +101,27 @@ try {
   }
   console.log("  ✅ Help command works");
 
-  // Step 6: Test simple functionality
-  console.log("\n🧪 Testing basic functionality...");
-
-  // Test with excluded branch name (should succeed)
-  console.log("  Testing excluded branch validation...");
-  const excludedOutput = execSync(
-    `${packageName} -t main --check-mode branch`,
+  // Test basic functionality
+  console.log("  Testing branch validation...");
+  const output = execSync(
+    `"${cliCommand}" -t main --check-mode branch`,
   ).toString();
-  if (!excludedOutput.includes("excluded from validation")) {
-    throw new Error("Excluded branch test failed");
+  if (!output.includes("excluded from validation")) {
+    throw new Error("Branch validation test failed");
   }
-  console.log("  ✅ Excluded branch validation works");
+  console.log("  ✅ Branch validation works");
 
-  // Step 7: Test with npx
-  console.log("\n🧪 Testing npx execution...");
-
-  // Test npx with the already installed package
-  console.log("  Testing npx with installed package...");
-  const npxOutput = execSync(`npx ${packageName} --version`, { cwd: tempDir })
+  // Step 6: Test npx execution
+  console.log("\n🧪 Testing npx...");
+  const npxVersion = execSync(`npx ${packageName} --version`, { cwd: tempDir })
     .toString()
     .trim();
-
-  if (npxOutput !== packageJson.version) {
+  if (npxVersion !== packageJson.version) {
     throw new Error(
-      `npx version test failed: expected ${packageJson.version}, got ${npxOutput}`,
+      `npx test failed: expected ${packageJson.version}, got ${npxVersion}`,
     );
   }
-  console.log("  ✅ npx execution works correctly");
+  console.log("  ✅ npx works correctly");
 
   console.log("\n✅ All tests passed!");
 } catch (error) {
@@ -227,30 +134,19 @@ try {
   // Cleanup
   console.log("\n🧹 Cleaning up...");
 
-  if (isInstalled) {
-    try {
-      execSync(`npm uninstall -g ${packageName} @issue-linker/core`, {
-        stdio: "pipe",
-      });
-      console.log("✅ npm packages uninstalled");
-    } catch {
-      console.warn("⚠️  Failed to uninstall npm packages");
-    }
+  if (tempDir && existsSync(tempDir)) {
+    rmSync(tempDir, { recursive: true });
+    console.log("✅ Temp directory removed");
   }
 
-  if (packageFile && existsSync(join(cliPackageDir, packageFile))) {
-    rmSync(join(cliPackageDir, packageFile));
+  if (cliPackageFile && existsSync(join(cliPackageDir, cliPackageFile))) {
+    rmSync(join(cliPackageDir, cliPackageFile));
     console.log("✅ CLI package file removed");
   }
 
-  if (corePackagePath && existsSync(corePackagePath)) {
-    rmSync(corePackagePath);
+  if (corePackageFile && existsSync(join(corePackageDir, corePackageFile))) {
+    rmSync(join(corePackageDir, corePackageFile));
     console.log("✅ Core package file removed");
-  }
-
-  if (tempDir && existsSync(tempDir)) {
-    rmSync(tempDir, { recursive: true });
-    console.log("✅ Temporary directory removed");
   }
 }
 
