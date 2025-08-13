@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.0.1](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.0.0...v1.0.1) (2025-08-13)
+
+
+### 🐛 Bug Fixes
+
+* monorepo publish improvements and README fixes ([#14](https://github.com/sugurutakahashi-1234/issue-linker/issues/14)) ([e027b94](https://github.com/sugurutakahashi-1234/issue-linker/commit/e027b947467ef04d8752f787b98ac5af99ac680d))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @issue-linker/core bumped to 1.0.1
+
 ## 1.0.0 (2025-08-13)
 
 

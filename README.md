@@ -137,7 +137,7 @@ jobs:
       - uses: actions/checkout@v5
       
       - name: Check issue references in PR
-        uses: sugurutakahashi-1234/issue-linker@v1.0.0
+        uses: sugurutakahashi-1234/issue-linker@v1.0.1
         with:
           validate-branch: true
           validate-pr-title: true
@@ -179,7 +179,7 @@ For simple validations, the action automatically applies the appropriate check-m
 <!-- x-release-please-start-version -->
 ```yaml
 - name: Custom validation
-  uses: sugurutakahashi-1234/issue-linker@v1.0.0
+  uses: sugurutakahashi-1234/issue-linker@v1.0.1
   with:
     text: ${{ github.event.pull_request.title }}
     check-mode: 'default'
@@ -206,7 +206,7 @@ jobs:
       issues: write  # Required for commenting on issues
     steps:
       - name: Comment on referenced issues
-        uses: sugurutakahashi-1234/issue-linker@v1.0.0
+        uses: sugurutakahashi-1234/issue-linker@v1.0.1
         with:
           validate-branch: true
           comment-on-issues-when-branch-pushed: true
