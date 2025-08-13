@@ -191,7 +191,8 @@
       "Bash(GITHUB_TOKEN=\"\" GH_TOKEN=\"\" bun test --no-coverage)",
       "Bash(brew upgrade:*)",
       "WebSearch",
-      "Bash(git revert:*)"
+      "Bash(git revert:*)",
+      "WebFetch(domain:docs.npmjs.com)"
     ],
     "deny": []
   },
