@@ -206,7 +206,7 @@ Examples:
   Custom options:
     $ issue-linker -t "Fix #123" --issue-status open
     $ issue-linker -t "Fix #456" --repo owner/repo
-    $ issue-linker -t "Resolve PROJ-789" --extract "[A-Z]+-(\\d+)"
+    $ issue-linker -t "Fix #321" --hostname github.enterprise.com
     $ issue-linker -t "Fix #789" --json
 
 Skip Markers:

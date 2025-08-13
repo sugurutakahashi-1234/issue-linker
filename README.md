@@ -1,4 +1,4 @@
-# issue-linker 🔗
+# issue-linker
 
 [![npm version](https://img.shields.io/npm/v/@sugurutakahashi-1234/issue-linker.svg)](https://www.npmjs.com/package/@sugurutakahashi-1234/issue-linker)
 [![npm downloads](https://img.shields.io/npm/dm/@sugurutakahashi-1234/issue-linker.svg)](https://www.npmjs.com/package/@sugurutakahashi-1234/issue-linker)
@@ -6,8 +6,6 @@
 [![Build](https://github.com/sugurutakahashi-1234/issue-linker/actions/workflows/ci.yml/badge.svg)](https://github.com/sugurutakahashi-1234/issue-linker/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/sugurutakahashi-1234/issue-linker/graph/badge.svg?token=KPN7UZ7ATY)](https://codecov.io/gh/sugurutakahashi-1234/issue-linker)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitHub Release Date](https://img.shields.io/github/release-date/sugurutakahashi-1234/issue-linker)](https://github.com/sugurutakahashi-1234/issue-linker/releases)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/sugurutakahashi-1234/issue-linker/pulls)
 [![GitHub Marketplace](https://img.shields.io/badge/marketplace-issue--linker-blue?style=flat&logo=github)](https://github.com/marketplace/actions/issue-linker)
 
 A CLI and GitHub Action that validates issue references (#123) in any text - commit messages, branch names, PR titles, or custom strings.
@@ -21,14 +19,17 @@ npm install -g @sugurutakahashi-1234/issue-linker
 ## Quick Start
 
 ```bash
-# Validate commit message with issue number
-npx @sugurutakahashi-1234/issue-linker -t "Fix: resolve authentication error #123"
-
-# Validate branch name
-npx @sugurutakahashi-1234/issue-linker -t "feat/123-auth-fix" -c branch
+# Validate text with issue reference
+npx @sugurutakahashi-1234/issue-linker -t "Fix #123"
 
 # Check only open issues
 npx @sugurutakahashi-1234/issue-linker -t "Fix #123" --issue-status open
+
+# Validate your current branch name
+npx @sugurutakahashi-1234/issue-linker -t "$(git branch --show-current)" -c branch
+
+# Validate your last commit message
+npx @sugurutakahashi-1234/issue-linker -t "$(git log -1 --pretty=%s)" -c commit
 ```
 
 ## CLI Reference
@@ -53,9 +54,6 @@ npx @sugurutakahashi-1234/issue-linker -t "Fix #123" --issue-status open
 ### Examples
 
 ```bash
-# Custom repository
-issue-linker -t "Fix #456" --repo owner/repo
-
 # Exclude WIP commits
 issue-linker -t "[WIP] Fix #789" --exclude "*[WIP]*"
 
@@ -64,9 +62,6 @@ issue-linker -t "Fix #789" --json
 
 # GitHub Enterprise Server
 issue-linker -t "Fix #321" --hostname github.enterprise.com
-
-# Custom extraction pattern (e.g., JIRA-style)
-issue-linker -t "Resolve PROJ-789" --extract "[A-Z]+-(\\d+)"
 ```
 
 ## Check Modes
@@ -146,7 +141,7 @@ For simple validations, the action automatically applies the appropriate check-m
 | `validate-branch`                      | Validate branch name                                                                                                                   | `false`                    |
 | `validate-pr-title`                    | Validate PR title                                                                                                                      | `false`                    |
 | `validate-pr-body`                     | Validate PR body                                                                                                                       | `false`                    |
-| `validate-commits`                     | Validate all commit messages in the PR. **Requires `pull_request` event**                                                             | `false`                    |
+| `validate-commits`                     | Validate all commit messages in the PR. **Requires `pull_request` event**                                                              | `false`                    |
 | `comment-on-issues-when-branch-pushed` | Comment on detected issues when a branch is first pushed. **Requires `validate-branch: true`**. Works best with `create` event trigger | `false`                    |
 | `text`                                 | Custom text to validate                                                                                                                | -                          |
 | `check-mode`                           | Check mode: `default` \| `branch` \| `commit`                                                                                          | `default`                  |
@@ -157,9 +152,7 @@ For simple validations, the action automatically applies the appropriate check-m
 | `github-token`                         | GitHub token for API access                                                                                                            | `${{ github.token }}`      |
 | `hostname`                             | GitHub Enterprise Server hostname                                                                                                      | Auto-detect                |
 
-### Advanced Examples
-
-#### Custom Validation
+### Custom Validation Example
 <!-- x-release-please-start-version -->
 ```yaml
 - name: Custom validation
@@ -232,8 +225,8 @@ issue-linker -t "$(git branch --show-current)" -c branch
 issue-linker -t "$(git --no-pager log -1 --pretty=%s)" -c commit
 
 # Validate all commits in a PR
-git --no-pager log main..HEAD --pretty=%s | while read msg; do
-  issue-linker -t "$msg" -c commit
+git --no-pager log main..HEAD --pretty=%s | while read commit_message; do
+  issue-linker -t "$commit_message" -c commit
 done
 ```
 
