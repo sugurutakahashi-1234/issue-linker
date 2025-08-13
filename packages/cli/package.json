@@ -57,7 +57,7 @@
   },
   "dependencies": {
     "@commander-js/extra-typings": "^14.0.0",
-    "@issue-linker/core": "workspace:*",
+    "@issue-linker/core": "file:/Users/sugurutakahashi/git/issue-linker/packages/core",
     "valibot": "^1.1.0"
   },
   "devDependencies": {

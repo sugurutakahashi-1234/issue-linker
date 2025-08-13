@@ -37319,10 +37319,10 @@ const v = tslib_1.__importStar(__nccwpck_require__(9487));
 function createCheckMessageArgs(text, checkMode, issueStatus, repo, actionMode, githubToken, hostname, extract, exclude) {
     const options = {
         text,
-        checkMode,
-        issueStatus,
         repo,
         actionMode,
+        ...(checkMode && { checkMode }),
+        ...(issueStatus && { issueStatus }),
         ...(githubToken && { githubToken }),
         ...(hostname && { hostname }),
         ...(extract && { extract }),
@@ -46765,7 +46765,6 @@ __nccwpck_require__.d(__webpack_exports__, {
   CheckModeSchema: () => (/* reexport */ CheckModeSchema),
   CommentOnBranchIssuesArgsSchema: () => (/* reexport */ CommentOnBranchIssuesArgsSchema),
   CreateIssueCommentArgsSchema: () => (/* reexport */ CreateIssueCommentArgsSchema),
-  DEFAULT_OPTIONS: () => (/* reexport */ DEFAULT_OPTIONS),
   GetPullRequestCommitsArgsSchema: () => (/* reexport */ GetPullRequestCommitsArgsSchema),
   GitError: () => (/* reexport */ GitError),
   GitHubError: () => (/* reexport */ GitHubError),
@@ -46779,54 +46778,6 @@ __nccwpck_require__.d(__webpack_exports__, {
   getPullRequestCommits: () => (/* reexport */ getPullRequestCommits)
 });
 
-;// CONCATENATED MODULE: ../core/dist/domain/constants.js
-// Constants for issue-linker
-// ===== Default Values =====
-/**
- * Default options for all check operations
- * Single source of truth for all default values
- */
-const DEFAULT_OPTIONS = {
-    /** Default check mode */
-    mode: "default",
-    /** Default issue status filter */
-    issueStatus: "all",
-    /** Default exclude pattern (undefined means no exclusion) */
-    exclude: undefined,
-    /** Default repository (undefined means auto-detect from git) */
-    repo: undefined,
-    /** Default GitHub token (undefined means use environment variable) */
-    githubToken: undefined,
-};
-// ===== Exclude Patterns (Glob) =====
-/**
- * Mode-specific exclude patterns using glob syntax (minimatch)
- */
-const MODE_EXCLUDE_GLOBS = {
-    default: undefined,
-    branch: "{main,master,develop,release/**,renovate/**,dependabot/**,release-please*,snyk/**,imgbot/**,all-contributors/**}",
-    commit: "{Rebase*,Merge*,Revert*,fixup!*,squash!*,Applied suggestion*,Apply automatic changes,Automated Change*,Update branch*,Auto-merge*,(cherry picked from commit*,Initial commit,Update README.md,Update *.md,Updated content}",
-};
-// ===== Extract Patterns (RegExp) =====
-/**
- * Mode-specific issue number extraction using regular expressions
- * All patterns should capture the issue number in group 1
- */
-const MODE_EXTRACT_REGEXES = {
-    default: /#(\d+)/g, // #123 format only
-    commit: /#(\d+)/g, // Same as default
-    branch: /(?<![.\d])(\d{1,7})(?![.\d])/g, // Numbers not in version strings (e.g., v2.0)
-};
-// ===== Skip Markers =====
-/**
- * Skip markers that bypass validation entirely
- * Case-insensitive patterns to match [skip issue-linker] and [issue-linker skip]
- */
-const SKIP_MARKERS = [
-    /\[skip issue-linker\]/i,
-    /\[issue-linker skip\]/i,
-];
-//# sourceMappingURL=constants.js.map
 ;// CONCATENATED MODULE: ../core/dist/domain/errors.js
 // Domain layer - Error definitions
 /**
@@ -53956,7 +53907,24 @@ function unwrap(schema) {
 // Domain layer - Centralized valibot validation schemas
 // Define schemas once and derive TypeScript types from them
 
-
+// ===== Default Values =====
+/**
+ * Default configuration for schema validation
+ * INTERNAL USE ONLY - DO NOT EXPORT
+ * To get default values, use v.getDefaults(Schema) instead
+ */
+const DEFAULT_CONFIG = {
+    /** Default check mode */
+    mode: "default",
+    /** Default issue status filter */
+    issueStatus: "all",
+    /** Default exclude pattern (undefined means no exclusion) */
+    exclude: undefined,
+    /** Default repository (undefined means auto-detect from git) */
+    repo: undefined,
+    /** Default GitHub token (undefined means use environment variable) */
+    githubToken: undefined,
+};
 // ===== Base Schemas =====
 // Issue status schemas
 const IssueStatusSchema = picklist(["open", "closed"]);
@@ -54023,10 +53991,10 @@ const GetPullRequestCommitsArgsSchema = object({
 // CheckMessage args schema
 const CheckMessageArgsSchema = object({
     text: pipe(string(), minLength(1, "Text is required")),
-    checkMode: optional(CheckModeSchema, DEFAULT_OPTIONS.mode),
+    checkMode: optional(CheckModeSchema, DEFAULT_CONFIG.mode),
     extract: optional(string()),
     exclude: optional(string()),
-    issueStatus: optional(IssueStatusFilterSchema, DEFAULT_OPTIONS.issueStatus),
+    issueStatus: optional(IssueStatusFilterSchema, DEFAULT_CONFIG.issueStatus),
     repo: optional(RepositoryStringSchema),
     actionMode: optional(ActionModeSchema),
     githubToken: optional(string()),
@@ -70686,6 +70654,37 @@ minimatch.Minimatch = Minimatch;
 minimatch.escape = escape_escape;
 minimatch.unescape = unescape_unescape;
 //# sourceMappingURL=index.js.map
+;// CONCATENATED MODULE: ../core/dist/domain/constants.js
+// Constants for issue-linker
+// ===== Exclude Patterns (Glob) =====
+/**
+ * Mode-specific exclude patterns using glob syntax (minimatch)
+ */
+const MODE_EXCLUDE_GLOBS = {
+    default: undefined,
+    branch: "{main,master,develop,release/**,renovate/**,dependabot/**,release-please*,snyk/**,imgbot/**,all-contributors/**}",
+    commit: "{Rebase*,Merge*,Revert*,fixup!*,squash!*,Applied suggestion*,Apply automatic changes,Automated Change*,Update branch*,Auto-merge*,(cherry picked from commit*,Initial commit,Update README.md,Update *.md,Updated content}",
+};
+// ===== Extract Patterns (RegExp) =====
+/**
+ * Mode-specific issue number extraction using regular expressions
+ * All patterns should capture the issue number in group 1
+ */
+const MODE_EXTRACT_REGEXES = {
+    default: /#(\d+)/g, // #123 format only
+    commit: /#(\d+)/g, // Same as default
+    branch: /(?<![.\d])(\d{1,7})(?![.\d])/g, // Numbers not in version strings (e.g., v2.0)
+};
+// ===== Skip Markers =====
+/**
+ * Skip markers that bypass validation entirely
+ * Case-insensitive patterns to match [skip issue-linker] and [issue-linker skip]
+ */
+const SKIP_MARKERS = [
+    /\[skip issue-linker\]/i,
+    /\[issue-linker skip\]/i,
+];
+//# sourceMappingURL=constants.js.map
 ;// CONCATENATED MODULE: ../core/dist/infrastructure/branch-matcher.js
 // Infrastructure layer - Validation functions
 
@@ -75936,8 +75935,6 @@ async function getPullRequestCommits(args) {
 
 /** @public */
 
-/** @public */
-
 // Infrastructure layer exports (if needed by external packages)
 // None for now
 // Application layer exports
@@ -76039,7 +76036,7 @@ async function run() {
     try {
         const context = github.context;
         // Get common options
-        const issueStatus = core.getInput("issue-status") || core_1.DEFAULT_OPTIONS.issueStatus;
+        const issueStatus = core.getInput("issue-status") || undefined;
         const repo = core.getInput("repo") || `${context.repo.owner}/${context.repo.repo}`;
         const githubToken = core.getInput("github-token") || undefined;
         const hostname = core.getInput("hostname") || undefined;
@@ -76051,7 +76048,7 @@ async function run() {
         const commentOnIssuesWhenBranchPushed = core.getInput("comment-on-issues-when-branch-pushed") === "true";
         // Advanced mode inputs
         const text = core.getInput("text");
-        const checkMode = core.getInput("check-mode") || core_1.DEFAULT_OPTIONS.mode;
+        const checkMode = core.getInput("check-mode") || undefined;
         const extract = core.getInput("extract") || undefined;
         const exclude = core.getInput("exclude") || undefined;
         // Simple mode validations

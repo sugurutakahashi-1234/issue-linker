@@ -7,8 +7,8 @@ import * as v from "valibot";
  */
 export function createCheckMessageArgs(
   text: string,
-  checkMode: string,
-  issueStatus: string,
+  checkMode: string | undefined,
+  issueStatus: string | undefined,
   repo: string,
   actionMode: string,
   githubToken?: string,
@@ -18,10 +18,10 @@ export function createCheckMessageArgs(
 ): CheckMessageArgs {
   const options = {
     text,
-    checkMode,
-    issueStatus,
     repo,
     actionMode,
+    ...(checkMode && { checkMode }),
+    ...(issueStatus && { issueStatus }),
     ...(githubToken && { githubToken }),
     ...(hostname && { hostname }),
     ...(extract && { extract }),

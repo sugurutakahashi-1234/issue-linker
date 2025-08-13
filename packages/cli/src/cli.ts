@@ -11,13 +11,15 @@ import {
   CheckMessageArgsSchema,
   type CheckMessageResult,
   checkMessage,
-  DEFAULT_OPTIONS,
 } from "@issue-linker/core";
 import * as v from "valibot";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const packageJsonPath = join(__dirname, "..", "package.json");
 const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
+
+// Get default values from schema
+const defaultValues = v.getDefaults(CheckMessageArgsSchema);
 
 // Configure main program
 program
@@ -31,7 +33,7 @@ program
   .option(
     "-c, --check-mode <check-mode>",
     "validation mode: 'default' (literal #123), 'branch' (extract from branch-123-name), 'commit' (same as default but excludes merge/rebase commits)",
-    DEFAULT_OPTIONS.mode,
+    defaultValues.checkMode,
   )
   .option(
     "--extract <pattern>",
@@ -44,7 +46,7 @@ program
   .option(
     "--issue-status <status>",
     "filter by issue status: 'all' (any state), 'open' (only open issues), 'closed' (only closed issues)",
-    DEFAULT_OPTIONS.issueStatus,
+    defaultValues.issueStatus,
   )
   .option(
     "--repo <owner/repo>",

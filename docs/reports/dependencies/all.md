@@ -16,9 +16,8 @@ flowchart LR
             subgraph packages/core/dist["/dist"]
                 packages/core/dist/index.d.ts["index.d.ts"]
                 subgraph packages/core/dist/domain["/domain"]
-                    packages/core/dist/domain/validation//schemas.d.ts["validation-schemas.d.ts"]
-                    packages/core/dist/domain/constants.d.ts["constants.d.ts"]
                     packages/core/dist/domain/errors.d.ts["errors.d.ts"]
+                    packages/core/dist/domain/validation//schemas.d.ts["validation-schemas.d.ts"]
                     packages/core/dist/domain/result.d.ts["result.d.ts"]
                 end
                 subgraph packages/core/dist/application["/application"]
@@ -32,12 +31,12 @@ flowchart LR
             subgraph packages/core/src["/src"]
                 packages/core/src/index.ts["index.ts"]
                 subgraph packages/core/src/domain["/domain"]
-                    packages/core/src/domain/validation//schemas.ts["validation-schemas.ts"]
-                    packages/core/src/domain/constants.ts["constants.ts"]
                     packages/core/src/domain/errors.ts["errors.ts"]
+                    packages/core/src/domain/validation//schemas.ts["validation-schemas.ts"]
                     packages/core/src/domain/result.ts["result.ts"]
                     packages/core/src/domain/env.ts["env.ts"]
                     packages/core/src/domain/result//factory.ts["result-factory.ts"]
+                    packages/core/src/domain/constants.ts["constants.ts"]
                 end
                 subgraph packages/core/src/infrastructure["/infrastructure"]
                     packages/core/src/infrastructure/env//accessor.ts["env-accessor.ts"]
@@ -79,7 +78,6 @@ flowchart LR
     end
     packages/action/src/github//actions//helpers.ts-->node//modules///actions/github/lib/context.d.ts
     packages/core/dist/domain/validation//schemas.d.ts-->node//modules/valibot/dist/index.d.cts
-    packages/core/dist/domain/constants.d.ts-->packages/core/dist/domain/validation//schemas.d.ts
     packages/core/dist/domain/result.d.ts-->packages/core/dist/domain/validation//schemas.d.ts
     packages/core/dist/application/check//duplicate//comment//use//case.d.ts-->packages/core/dist/domain/result.d.ts
     packages/core/dist/application/check//duplicate//comment//use//case.d.ts-->packages/core/dist/domain/validation//schemas.d.ts
@@ -90,7 +88,6 @@ flowchart LR
     packages/core/dist/application/create//issue//comment//use//case.d.ts-->packages/core/dist/domain/result.d.ts
     packages/core/dist/application/create//issue//comment//use//case.d.ts-->packages/core/dist/domain/validation//schemas.d.ts
     packages/core/dist/application/get//pull//request//commits//use//case.d.ts-->packages/core/dist/domain/validation//schemas.d.ts
-    packages/core/dist/index.d.ts-->packages/core/dist/domain/constants.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/domain/errors.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/domain/result.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/domain/validation//schemas.d.ts
@@ -111,8 +108,6 @@ flowchart LR
     packages/cli/src/cli.ts-->packages/core/dist/index.d.ts
     packages/cli/src/cli.ts-->node//modules/valibot/dist/index.d.cts
     packages/core/src/domain/validation//schemas.ts-->node//modules/valibot/dist/index.d.cts
-    packages/core/src/domain/validation//schemas.ts-->packages/core/src/domain/constants.ts
-    packages/core/src/domain/constants.ts-->packages/core/src/domain/validation//schemas.ts
     packages/core/src/domain/result.ts-->packages/core/src/domain/validation//schemas.ts
     packages/core/src/domain/env.ts-->node//modules///t3//oss/env//core/dist/index.d.ts
     packages/core/src/domain/env.ts-->node//modules/valibot/dist/index.d.cts
@@ -131,6 +126,7 @@ flowchart LR
     packages/core/src/application/check//duplicate//comment//use//case.ts-->packages/core/src/infrastructure/github//client.ts
     packages/core/src/application/check//duplicate//comment//use//case.ts-->packages/core/src/infrastructure/repository//parser.ts
     packages/core/src/domain/result//factory.ts-->packages/core/src/domain/result.ts
+    packages/core/src/domain/constants.ts-->packages/core/src/domain/validation//schemas.ts
     packages/core/src/infrastructure/branch//matcher.ts-->node//modules///types/micromatch/index.d.ts
     packages/core/src/infrastructure/branch//matcher.ts-->node//modules/minimatch/dist/commonjs/index.d.ts
     packages/core/src/infrastructure/branch//matcher.ts-->packages/core/src/domain/constants.ts
@@ -170,7 +166,6 @@ flowchart LR
     packages/core/src/application/get//pull//request//commits//use//case.ts-->packages/core/src/infrastructure/env//accessor.ts
     packages/core/src/application/get//pull//request//commits//use//case.ts-->packages/core/src/infrastructure/github//client.ts
     packages/core/src/application/get//pull//request//commits//use//case.ts-->packages/core/src/infrastructure/repository//parser.ts
-    packages/core/src/index.ts-->packages/core/src/domain/constants.ts
     packages/core/src/index.ts-->packages/core/src/domain/errors.ts
     packages/core/src/index.ts-->packages/core/src/domain/result.ts
     packages/core/src/index.ts-->packages/core/src/domain/validation//schemas.ts

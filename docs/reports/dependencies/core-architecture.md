@@ -14,9 +14,8 @@ flowchart LR
             subgraph packages/core/dist["/dist"]
                 packages/core/dist/index.d.ts["index.d.ts"]
                 subgraph packages/core/dist/domain["/domain"]
-                    packages/core/dist/domain/validation//schemas.d.ts["validation-schemas.d.ts"]
-                    packages/core/dist/domain/constants.d.ts["constants.d.ts"]
                     packages/core/dist/domain/errors.d.ts["errors.d.ts"]
+                    packages/core/dist/domain/validation//schemas.d.ts["validation-schemas.d.ts"]
                     packages/core/dist/domain/result.d.ts["result.d.ts"]
                 end
                 subgraph packages/core/dist/application["/application"]
@@ -52,7 +51,6 @@ flowchart LR
     end
     packages/action-->node//modules///actions/github/lib/context.d.ts
     packages/core/dist/domain/validation//schemas.d.ts-->node//modules/valibot/dist/index.d.cts
-    packages/core/dist/domain/constants.d.ts-->packages/core/dist/domain/validation//schemas.d.ts
     packages/core/dist/domain/result.d.ts-->packages/core/dist/domain/validation//schemas.d.ts
     packages/core/dist/application/check//duplicate//comment//use//case.d.ts-->packages/core/dist/domain/result.d.ts
     packages/core/dist/application/check//duplicate//comment//use//case.d.ts-->packages/core/dist/domain/validation//schemas.d.ts
@@ -63,7 +61,6 @@ flowchart LR
     packages/core/dist/application/create//issue//comment//use//case.d.ts-->packages/core/dist/domain/result.d.ts
     packages/core/dist/application/create//issue//comment//use//case.d.ts-->packages/core/dist/domain/validation//schemas.d.ts
     packages/core/dist/application/get//pull//request//commits//use//case.d.ts-->packages/core/dist/domain/validation//schemas.d.ts
-    packages/core/dist/index.d.ts-->packages/core/dist/domain/constants.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/domain/errors.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/domain/result.d.ts
     packages/core/dist/index.d.ts-->packages/core/dist/domain/validation//schemas.d.ts

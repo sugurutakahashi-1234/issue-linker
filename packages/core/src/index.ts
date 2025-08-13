@@ -2,9 +2,6 @@
 
 // Domain layer exports
 /** @public */
-export { DEFAULT_OPTIONS } from "./domain/constants.js";
-
-/** @public */
 export {
   GitError,
   GitHubError,

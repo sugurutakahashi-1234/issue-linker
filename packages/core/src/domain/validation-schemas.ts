@@ -2,7 +2,26 @@
 // Define schemas once and derive TypeScript types from them
 
 import * as v from "valibot";
-import { DEFAULT_OPTIONS } from "./constants.js";
+
+// ===== Default Values =====
+
+/**
+ * Default configuration for schema validation
+ * INTERNAL USE ONLY - DO NOT EXPORT
+ * To get default values, use v.getDefaults(Schema) instead
+ */
+const DEFAULT_CONFIG = {
+  /** Default check mode */
+  mode: "default" as const,
+  /** Default issue status filter */
+  issueStatus: "all" as const,
+  /** Default exclude pattern (undefined means no exclusion) */
+  exclude: undefined as string | undefined,
+  /** Default repository (undefined means auto-detect from git) */
+  repo: undefined as string | undefined,
+  /** Default GitHub token (undefined means use environment variable) */
+  githubToken: undefined as string | undefined,
+} as const;
 
 // ===== Base Schemas =====
 
@@ -92,10 +111,10 @@ export const GetPullRequestCommitsArgsSchema = v.object({
 // CheckMessage args schema
 export const CheckMessageArgsSchema = v.object({
   text: v.pipe(v.string(), v.minLength(1, "Text is required")),
-  checkMode: v.optional(CheckModeSchema, DEFAULT_OPTIONS.mode),
+  checkMode: v.optional(CheckModeSchema, DEFAULT_CONFIG.mode),
   extract: v.optional(v.string()),
   exclude: v.optional(v.string()),
-  issueStatus: v.optional(IssueStatusFilterSchema, DEFAULT_OPTIONS.issueStatus),
+  issueStatus: v.optional(IssueStatusFilterSchema, DEFAULT_CONFIG.issueStatus),
   repo: v.optional(RepositoryStringSchema),
   actionMode: v.optional(ActionModeSchema),
   githubToken: v.optional(v.string()),

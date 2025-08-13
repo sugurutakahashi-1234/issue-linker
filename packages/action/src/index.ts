@@ -6,7 +6,6 @@ import {
   type CheckMessageResult,
   checkMessage,
   commentOnBranchIssues,
-  DEFAULT_OPTIONS,
   getPullRequestCommits,
 } from "@issue-linker/core";
 import * as v from "valibot";
@@ -23,8 +22,7 @@ async function run() {
     const context = github.context;
 
     // Get common options
-    const issueStatus =
-      core.getInput("issue-status") || DEFAULT_OPTIONS.issueStatus;
+    const issueStatus = core.getInput("issue-status") || undefined;
     const repo =
       core.getInput("repo") || `${context.repo.owner}/${context.repo.repo}`;
     const githubToken = core.getInput("github-token") || undefined;
@@ -40,7 +38,7 @@ async function run() {
 
     // Advanced mode inputs
     const text = core.getInput("text");
-    const checkMode = core.getInput("check-mode") || DEFAULT_OPTIONS.mode;
+    const checkMode = core.getInput("check-mode") || undefined;
     const extract = core.getInput("extract") || undefined;
     const exclude = core.getInput("exclude") || undefined;
 
