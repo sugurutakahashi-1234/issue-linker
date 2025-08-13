@@ -10,7 +10,7 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/sugurutakahashi-1234/issue-linker/pulls)
 [![GitHub Marketplace](https://img.shields.io/badge/marketplace-issue--linker-blue?style=flat&logo=github)](https://github.com/marketplace/actions/issue-linker)
 
-Validate text contains valid GitHub issue numbers. Perfect for maintaining traceability between your code and issue tracking!
+A CLI and GitHub Action that validates issue references (#123) in any text - commit messages, branch names, PR titles, or custom strings.
 
 ## Installation
 

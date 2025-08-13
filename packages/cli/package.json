@@ -1,7 +1,7 @@
 {
   "name": "issue-linker",
   "version": "0.0.0",
-  "description": "CLI tool for validating and linking GitHub issues in commit messages",
+  "description": "A CLI and GitHub Action that validates issue references (#123) in any text - commit messages, branch names, PR titles, or custom strings",
   "keywords": [
     "github",
     "issues",
@@ -57,7 +57,7 @@
   },
   "dependencies": {
     "@commander-js/extra-typings": "^14.0.0",
-    "@issue-linker/core": "file:/Users/sugurutakahashi/git/issue-linker/packages/core",
+    "@issue-linker/core": "workspace:*",
     "valibot": "^1.1.0"
   },
   "devDependencies": {
