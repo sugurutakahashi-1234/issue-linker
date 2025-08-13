@@ -61,6 +61,9 @@
     "check": "biome check .",
     "📚": "========== Documentation ==========",
     "docs:deps-graph": "tsg --tsconfig ../../tsconfig.typescript-graph.json --LR --abstraction packages/action --abstraction packages/core --md ../../docs/reports/dependencies/cli.md",
+    "📦": "========== Publishing ==========",
+    "npm-publish:dry-run": "bun publish --dry-run",
+    "npm-publish": "bun publish --access public",
     "🚀": "========== CI & Clean ==========",
     "ci": "bun run fix && bun run check && bun run build && bun run typecheck && bun run test:quiet",
     "clean": "rm -rf dist *.tsbuildinfo"

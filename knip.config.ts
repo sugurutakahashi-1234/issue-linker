@@ -3,7 +3,7 @@ import type { KnipConfig } from "knip";
 const config: KnipConfig = {
   // Let knip auto-detect entry points from package.json
   ignoreDependencies: ["tslib", "@commitlint/cli"], // tslib is a runtime dependency, @commitlint/cli is used in CI only
-  ignoreBinaries: ["node-size", "act"], // node-size: used in npm scripts, act: used for local testing
+  ignoreBinaries: ["node-size", "act", "publish"], // node-size: used in npm scripts, act: used for local testing, publish: bun publish command
   ignoreExportsUsedInFile: false,
   ignore: [".elsikora/git-branch-lint.config.ts"], // git-branch-lint configuration file
 
