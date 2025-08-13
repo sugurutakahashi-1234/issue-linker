@@ -1,8 +1,8 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import {
-  type CheckMessageOptions,
-  CheckMessageOptionsSchema,
+  type CheckMessageArgs,
+  CheckMessageArgsSchema,
   type CheckMessageResult,
   checkMessage,
   commentOnBranchIssues,
@@ -14,7 +14,7 @@ import {
   extractBranchNameFromContext,
   isCreateBranchEvent,
 } from "./github-actions-helpers.js";
-import { createCheckMessageOptions } from "./validation-helpers.js";
+import { createCheckMessageArgs } from "./validation-helpers.js";
 
 async function run() {
   const results: CheckMessageResult[] = [];
@@ -50,7 +50,7 @@ async function run() {
       const branchName = extractBranchNameFromContext(context);
 
       if (branchName) {
-        const messageOptions = createCheckMessageOptions(
+        const messageArgs = createCheckMessageArgs(
           branchName,
           "branch",
           issueStatus,
@@ -61,7 +61,7 @@ async function run() {
           extract,
           exclude,
         );
-        const result = await checkMessage(messageOptions);
+        const result = await checkMessage(messageArgs);
         results.push(result);
 
         // Comment on issues when branch is pushed (create event)
@@ -115,7 +115,7 @@ async function run() {
       // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
       const prTitle = context.payload.pull_request?.["title"];
       if (prTitle) {
-        const messageOptions = createCheckMessageOptions(
+        const messageArgs = createCheckMessageArgs(
           prTitle,
           "default",
           issueStatus,
@@ -126,7 +126,7 @@ async function run() {
           extract,
           exclude,
         );
-        const result = await checkMessage(messageOptions);
+        const result = await checkMessage(messageArgs);
         results.push(result);
       } else {
         core.warning("PR title not found in context");
@@ -137,7 +137,7 @@ async function run() {
       // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
       const prBody = context.payload.pull_request?.["body"];
       if (prBody) {
-        const messageOptions = createCheckMessageOptions(
+        const messageArgs = createCheckMessageArgs(
           prBody,
           "default",
           issueStatus,
@@ -148,7 +148,7 @@ async function run() {
           extract,
           exclude,
         );
-        const result = await checkMessage(messageOptions);
+        const result = await checkMessage(messageArgs);
         results.push(result);
       } else {
         core.warning("PR body not found in context");
@@ -174,7 +174,7 @@ async function run() {
           const commits = await getPullRequestCommits(commitsOptions);
           // Check each commit message
           for (const commit of commits) {
-            const messageOptions = createCheckMessageOptions(
+            const messageArgs = createCheckMessageArgs(
               commit.message,
               "commit",
               issueStatus,
@@ -186,7 +186,7 @@ async function run() {
               exclude,
             );
 
-            const result = await checkMessage(messageOptions);
+            const result = await checkMessage(messageArgs);
             results.push(result);
           }
         } catch (error) {
@@ -212,18 +212,18 @@ async function run() {
         ...(exclude && { exclude }),
       };
 
-      // Validate the options
-      let validatedOptions: CheckMessageOptions;
+      // Validate the args
+      let validatedArgs: CheckMessageArgs;
       try {
-        validatedOptions = v.parse(CheckMessageOptionsSchema, messageOptions);
+        validatedArgs = v.parse(CheckMessageArgsSchema, messageOptions);
       } catch (error) {
         if (error instanceof v.ValiError) {
-          throw new Error(`Invalid advanced mode options: ${error.message}`);
+          throw new Error(`Invalid advanced mode arguments: ${error.message}`);
         }
         throw error;
       }
 
-      const result = await checkMessage(validatedOptions);
+      const result = await checkMessage(validatedArgs);
       results.push(result);
     }
 

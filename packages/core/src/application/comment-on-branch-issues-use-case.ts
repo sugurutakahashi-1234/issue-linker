@@ -6,8 +6,9 @@ import type {
   CommentOnBranchIssuesResult,
 } from "../domain/result.js";
 import {
-  type CommentOnBranchIssuesOptions,
-  CommentOnBranchIssuesOptionsSchema,
+  type CommentOnBranchIssuesArgs,
+  CommentOnBranchIssuesArgsSchema,
+  type ValidatedCommentOnBranchIssuesArgs,
 } from "../domain/validation-schemas.js";
 import { getGitHubToken } from "../infrastructure/env-accessor.js";
 import { checkDuplicateComment } from "./check-duplicate-comment-use-case.js";
@@ -15,46 +16,44 @@ import { createIssueComment } from "./create-issue-comment-use-case.js";
 
 /**
  * Comment on multiple issues when a branch referencing them is pushed
- * @param options - Options for commenting on issues
+ * @param args - Arguments for commenting on issues
  * @returns Result of the batch comment operation
  */
 export async function commentOnBranchIssues(
-  options: CommentOnBranchIssuesOptions,
+  args: CommentOnBranchIssuesArgs,
 ): Promise<CommentOnBranchIssuesResult> {
-  // Step 1: Validate options
-  const validationResult = v.safeParse(
-    CommentOnBranchIssuesOptionsSchema,
-    options,
-  );
+  // Step 1: Validate args
+  const validationResult = v.safeParse(CommentOnBranchIssuesArgsSchema, args);
   if (!validationResult.success) {
     return {
       success: false,
-      message: "Invalid options provided",
+      message: "Invalid arguments provided",
       results: [],
     };
   }
 
-  const validatedOptions = validationResult.output;
+  const validatedArgs: ValidatedCommentOnBranchIssuesArgs =
+    validationResult.output;
 
   // Step 2: Get GitHub token
-  const githubToken = validatedOptions.githubToken ?? getGitHubToken();
+  const githubToken = validatedArgs.githubToken ?? getGitHubToken();
 
   // Step 3: Build comment body and marker
-  const marker = `<!-- issue-linker:branch:${validatedOptions.branchName} -->`;
-  const commentBody = `🚀 Development started on branch \`${validatedOptions.branchName}\`\n${marker}`;
+  const marker = `<!-- issue-linker:branch:${validatedArgs.branchName} -->`;
+  const commentBody = `🚀 Development started on branch \`${validatedArgs.branchName}\`\n${marker}`;
 
   // Step 4: Comment on each issue (in parallel)
   const results = await Promise.all(
-    validatedOptions.issueNumbers.map(
+    validatedArgs.issueNumbers.map(
       async (issueNumber): Promise<BatchCommentItemResult> => {
         try {
           // Check for duplicate comment
           const duplicateCheck = await checkDuplicateComment({
-            repo: validatedOptions.repo,
+            repo: validatedArgs.repo,
             issueNumber,
             marker,
             githubToken,
-            hostname: validatedOptions.hostname,
+            hostname: validatedArgs.hostname,
           });
 
           if (duplicateCheck.duplicateFound) {
@@ -68,11 +67,11 @@ export async function commentOnBranchIssues(
 
           // Create comment
           const commentResult = await createIssueComment({
-            repo: validatedOptions.repo,
+            repo: validatedArgs.repo,
             issueNumber,
             body: commentBody,
             githubToken,
-            hostname: validatedOptions.hostname,
+            hostname: validatedArgs.hostname,
           });
 
           if (commentResult.success) {
@@ -111,7 +110,7 @@ export async function commentOnBranchIssues(
 
   return {
     success: !hasFailures,
-    message: `Processed ${validatedOptions.issueNumbers.length} issue(s)`,
+    message: `Processed ${validatedArgs.issueNumbers.length} issue(s)`,
     results,
   };
 }

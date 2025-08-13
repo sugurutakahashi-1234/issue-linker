@@ -1,11 +1,11 @@
-import type { CheckMessageOptions } from "@issue-linker/core";
-import { CheckMessageOptionsSchema } from "@issue-linker/core";
+import type { CheckMessageArgs } from "@issue-linker/core";
+import { CheckMessageArgsSchema } from "@issue-linker/core";
 import * as v from "valibot";
 
 /**
- * Helper function to create CheckMessageOptions with validation
+ * Helper function to create CheckMessageArgs with validation
  */
-export function createCheckMessageOptions(
+export function createCheckMessageArgs(
   text: string,
   checkMode: string,
   issueStatus: string,
@@ -15,7 +15,7 @@ export function createCheckMessageOptions(
   hostname?: string,
   extract?: string,
   exclude?: string,
-): CheckMessageOptions {
+): CheckMessageArgs {
   const options = {
     text,
     checkMode,
@@ -30,10 +30,10 @@ export function createCheckMessageOptions(
 
   // Validate using schema from core
   try {
-    return v.parse(CheckMessageOptionsSchema, options);
+    return v.parse(CheckMessageArgsSchema, options);
   } catch (error) {
     if (error instanceof v.ValiError) {
-      throw new Error(`Invalid options: ${error.message}`);
+      throw new Error(`Invalid arguments: ${error.message}`);
     }
     throw error;
   }

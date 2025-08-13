@@ -7,8 +7,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { program } from "@commander-js/extra-typings";
 import {
-  type CheckMessageOptions,
-  CheckMessageOptionsSchema,
+  type CheckMessageArgs,
+  CheckMessageArgsSchema,
   type CheckMessageResult,
   checkMessage,
   DEFAULT_OPTIONS,
@@ -63,10 +63,10 @@ program
   .helpOption("-h, --help", "display help for command")
   .action(async (options) => {
     try {
-      // Validate CLI options using schema from core
-      let validatedOptions: CheckMessageOptions;
+      // Validate CLI args using schema from core
+      let validatedArgs: CheckMessageArgs;
       try {
-        validatedOptions = v.parse(CheckMessageOptionsSchema, {
+        validatedArgs = v.parse(CheckMessageArgsSchema, {
           text: options.text,
           checkMode: options.checkMode,
           issueStatus: options.issueStatus,
@@ -84,7 +84,7 @@ program
         throw error;
       }
 
-      const result: CheckMessageResult = await checkMessage(validatedOptions);
+      const result: CheckMessageResult = await checkMessage(validatedArgs);
 
       // Output JSON if requested
       if (options.json) {

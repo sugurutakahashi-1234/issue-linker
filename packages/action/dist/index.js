@@ -37309,14 +37309,14 @@ function isCreateBranchEvent(context) {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createCheckMessageOptions = createCheckMessageOptions;
+exports.createCheckMessageArgs = createCheckMessageArgs;
 const tslib_1 = __nccwpck_require__(4176);
 const core_1 = __nccwpck_require__(7219);
 const v = tslib_1.__importStar(__nccwpck_require__(9487));
 /**
- * Helper function to create CheckMessageOptions with validation
+ * Helper function to create CheckMessageArgs with validation
  */
-function createCheckMessageOptions(text, checkMode, issueStatus, repo, actionMode, githubToken, hostname, extract, exclude) {
+function createCheckMessageArgs(text, checkMode, issueStatus, repo, actionMode, githubToken, hostname, extract, exclude) {
     const options = {
         text,
         checkMode,
@@ -37330,11 +37330,11 @@ function createCheckMessageOptions(text, checkMode, issueStatus, repo, actionMod
     };
     // Validate using schema from core
     try {
-        return v.parse(core_1.CheckMessageOptionsSchema, options);
+        return v.parse(core_1.CheckMessageArgsSchema, options);
     }
     catch (error) {
         if (error instanceof v.ValiError) {
-            throw new Error(`Invalid options: ${error.message}`);
+            throw new Error(`Invalid arguments: ${error.message}`);
         }
         throw error;
     }
@@ -46760,13 +46760,13 @@ __nccwpck_require__.r(__webpack_exports__);
 
 // EXPORTS
 __nccwpck_require__.d(__webpack_exports__, {
-  CheckDuplicateCommentOptionsSchema: () => (/* reexport */ CheckDuplicateCommentOptionsSchema),
-  CheckMessageOptionsSchema: () => (/* reexport */ CheckMessageOptionsSchema),
+  CheckDuplicateCommentArgsSchema: () => (/* reexport */ CheckDuplicateCommentArgsSchema),
+  CheckMessageArgsSchema: () => (/* reexport */ CheckMessageArgsSchema),
   CheckModeSchema: () => (/* reexport */ CheckModeSchema),
-  CommentOnBranchIssuesOptionsSchema: () => (/* reexport */ CommentOnBranchIssuesOptionsSchema),
-  CreateIssueCommentOptionsSchema: () => (/* reexport */ CreateIssueCommentOptionsSchema),
+  CommentOnBranchIssuesArgsSchema: () => (/* reexport */ CommentOnBranchIssuesArgsSchema),
+  CreateIssueCommentArgsSchema: () => (/* reexport */ CreateIssueCommentArgsSchema),
   DEFAULT_OPTIONS: () => (/* reexport */ DEFAULT_OPTIONS),
-  GetPullRequestCommitsOptionsSchema: () => (/* reexport */ GetPullRequestCommitsOptionsSchema),
+  GetPullRequestCommitsArgsSchema: () => (/* reexport */ GetPullRequestCommitsArgsSchema),
   GitError: () => (/* reexport */ GitError),
   GitHubError: () => (/* reexport */ GitHubError),
   IssueNotFoundError: () => (/* reexport */ IssueNotFoundError),
@@ -54014,16 +54014,16 @@ const GitHubIssueResultSchema = object({
         message: string(),
     })),
 });
-// ===== Options Schemas =====
-// GetPullRequestCommits options schema
-const GetPullRequestCommitsOptionsSchema = object({
+// ===== Args Schemas =====
+// GetPullRequestCommits args schema
+const GetPullRequestCommitsArgsSchema = object({
     repo: RepositoryStringSchema,
     prNumber: pipe(number(), minValue(1, "Pull request number must be positive")),
     githubToken: optional(string()),
     hostname: optional(string()),
 });
-// CheckMessage options schema
-const CheckMessageOptionsSchema = object({
+// CheckMessage args schema
+const CheckMessageArgsSchema = object({
     text: pipe(string(), minLength(1, "Text is required")),
     checkMode: optional(CheckModeSchema, DEFAULT_OPTIONS.mode),
     extract: optional(string()),
@@ -54034,24 +54034,24 @@ const CheckMessageOptionsSchema = object({
     githubToken: optional(string()),
     hostname: optional(string()),
 });
-// CreateIssueComment options schema
-const CreateIssueCommentOptionsSchema = object({
+// CreateIssueComment args schema
+const CreateIssueCommentArgsSchema = object({
     repo: RepositoryStringSchema,
     issueNumber: pipe(number(), minValue(1, "Issue number must be positive")),
     body: pipe(string(), minLength(1, "Comment body is required")),
     githubToken: optional(string()),
     hostname: optional(string()),
 });
-// CheckDuplicateComment options schema
-const CheckDuplicateCommentOptionsSchema = object({
+// CheckDuplicateComment args schema
+const CheckDuplicateCommentArgsSchema = object({
     repo: RepositoryStringSchema,
     issueNumber: pipe(number(), minValue(1, "Issue number must be positive")),
     marker: pipe(string(), minLength(1, "Marker is required")),
     githubToken: optional(string()),
     hostname: optional(string()),
 });
-// CommentOnBranchIssues options schema
-const CommentOnBranchIssuesOptionsSchema = object({
+// CommentOnBranchIssues args schema
+const CommentOnBranchIssuesArgsSchema = object({
     repo: RepositoryStringSchema,
     issueNumbers: pipe(array(number()), minLength(1, "At least one issue number is required")),
     branchName: pipe(string(), minLength(1, "Branch name is required")),
@@ -68501,26 +68501,26 @@ function parseRepositoryString(repository) {
 
 /**
  * Check if a comment with a specific marker already exists on an issue
- * @param options - Options for checking duplicate comments
+ * @param args - Arguments for checking duplicate comments
  * @returns Result indicating if a duplicate exists
  */
-async function checkDuplicateComment(options) {
-    // Step 1: Validate options
-    const validationResult = safeParse(CheckDuplicateCommentOptionsSchema, options);
+async function checkDuplicateComment(args) {
+    // Step 1: Validate args
+    const validationResult = safeParse(CheckDuplicateCommentArgsSchema, args);
     if (!validationResult.success) {
         return {
             duplicateFound: false,
             error: {
                 type: "validation-error",
-                message: validationResult.issues[0]?.message ?? "Invalid options provided",
+                message: validationResult.issues[0]?.message ?? "Invalid arguments provided",
             },
         };
     }
-    const validatedOptions = validationResult.output;
+    const validatedArgs = validationResult.output;
     // Step 2: Parse repository string
-    const { owner, repo } = parseRepositoryString(validatedOptions.repo);
-    // Step 3: Get GitHub token (from options or environment)
-    const token = validatedOptions.githubToken ?? getGitHubToken();
+    const { owner, repo } = parseRepositoryString(validatedArgs.repo);
+    // Step 3: Get GitHub token (from args or environment)
+    const token = validatedArgs.githubToken ?? getGitHubToken();
     if (!token) {
         // Without a token, we can't check for duplicates, so assume no duplicate
         // This allows the flow to continue but may result in duplicate comments
@@ -68534,9 +68534,9 @@ async function checkDuplicateComment(options) {
     }
     try {
         // Step 4: Get existing comments
-        const comments = await listGitHubIssueComments(owner, repo, validatedOptions.issueNumber, token, validatedOptions.hostname);
+        const comments = await listGitHubIssueComments(owner, repo, validatedArgs.issueNumber, token, validatedArgs.hostname);
         // Step 5: Check for marker in comments
-        const duplicateComment = comments.find((comment) => comment.body.includes(validatedOptions.marker));
+        const duplicateComment = comments.find((comment) => comment.body.includes(validatedArgs.marker));
         if (duplicateComment) {
             return {
                 duplicateFound: true,
@@ -75656,62 +75656,62 @@ function hasSkipMarker(text) {
 
 /**
  * Main use case for checking if text contains valid issue numbers
- * @param options - Options for the check
+ * @param args - Arguments for the check
  * @returns Result of the check
  */
-async function checkMessage(options) {
-    // Step 1: Validate options
-    const validationResult = safeParse(CheckMessageOptionsSchema, options);
+async function checkMessage(args) {
+    // Step 1: Validate args
+    const validationResult = safeParse(CheckMessageArgsSchema, args);
     if (!validationResult.success) {
         const input = {
-            text: options.text ?? "",
+            text: args.text ?? "",
             checkMode: "default",
             issueStatus: "all",
             repo: "",
-            ...(options.actionMode && { actionMode: options.actionMode }),
+            ...(args.actionMode && { actionMode: args.actionMode }),
         };
-        const error = new Error(validationResult.issues[0]?.message ?? "Invalid options provided");
+        const error = new Error(validationResult.issues[0]?.message ?? "Invalid arguments provided");
         return createErrorResult(error, input);
     }
-    const opts = validationResult.output;
-    const checkMode = opts.checkMode ?? "default";
-    const issueStatus = opts.issueStatus ?? "all";
+    const validatedArgs = validationResult.output;
+    const checkMode = validatedArgs.checkMode;
+    const issueStatus = validatedArgs.issueStatus;
     try {
         // Get repository information early for input config
-        const repository = opts.repo
-            ? parseRepositoryString(opts.repo)
+        const repository = validatedArgs.repo
+            ? parseRepositoryString(validatedArgs.repo)
             : parseRepositoryFromGitUrl(await getGitRemoteUrl());
         const repo = `${repository.owner}/${repository.repo}`;
         // Build input config
         const input = {
-            text: opts.text,
+            text: validatedArgs.text,
             checkMode,
-            ...(opts.extract && { extract: opts.extract }),
-            ...(opts.exclude && { exclude: opts.exclude }),
+            ...(validatedArgs.extract && { extract: validatedArgs.extract }),
+            ...(validatedArgs.exclude && { exclude: validatedArgs.exclude }),
             issueStatus,
             repo: repo,
-            ...(opts.actionMode && { actionMode: opts.actionMode }),
+            ...(validatedArgs.actionMode && { actionMode: validatedArgs.actionMode }),
         };
         // Step 2: Check for skip markers
-        if (hasSkipMarker(opts.text)) {
+        if (hasSkipMarker(validatedArgs.text)) {
             return createSkippedResult(input);
         }
         // Step 3: Check exclusion
-        if (shouldExclude(opts.text, checkMode, opts.exclude)) {
+        if (shouldExclude(validatedArgs.text, checkMode, validatedArgs.exclude)) {
             return createExcludedResult(input);
         }
         // Step 4: Find issue numbers
-        const issueNumbers = findIssueNumbers(opts.text, checkMode, opts.extract);
+        const issueNumbers = findIssueNumbers(validatedArgs.text, checkMode, validatedArgs.extract);
         if (issueNumbers.length === 0) {
             return createNoIssuesResult(input);
         }
         // Step 5: Validate each issue number
-        const githubToken = opts.githubToken ?? getGitHubToken();
+        const githubToken = validatedArgs.githubToken ?? getGitHubToken();
         const validIssues = [];
         const notFoundIssues = [];
         const wrongStateIssues = [];
         for (const issueNumber of issueNumbers) {
-            const result = await getGitHubIssue(repository.owner, repository.repo, issueNumber, githubToken, opts.hostname);
+            const result = await getGitHubIssue(repository.owner, repository.repo, issueNumber, githubToken, validatedArgs.hostname);
             if (!result.found) {
                 notFoundIssues.push(issueNumber);
             }
@@ -75742,12 +75742,12 @@ async function checkMessage(options) {
     catch (error) {
         // Error handling - create minimal input config if we don't have repo info yet
         const input = {
-            text: opts.text,
+            text: validatedArgs.text,
             checkMode,
-            ...(opts.exclude && { exclude: opts.exclude }),
+            ...(validatedArgs.exclude && { exclude: validatedArgs.exclude }),
             issueStatus,
-            repo: opts.repo ?? "",
-            ...(opts.actionMode && { actionMode: opts.actionMode }),
+            repo: validatedArgs.repo ?? "",
+            ...(validatedArgs.actionMode && { actionMode: validatedArgs.actionMode }),
         };
         return createErrorResult(error, input);
     }
@@ -75762,27 +75762,27 @@ async function checkMessage(options) {
 
 /**
  * Create a comment on a GitHub issue
- * @param options - Options for creating the comment
+ * @param args - Arguments for creating the comment
  * @returns Result of the comment creation
  */
-async function createIssueComment(options) {
-    // Step 1: Validate options
-    const validationResult = safeParse(CreateIssueCommentOptionsSchema, options);
+async function createIssueComment(args) {
+    // Step 1: Validate args
+    const validationResult = safeParse(CreateIssueCommentArgsSchema, args);
     if (!validationResult.success) {
         return {
             success: false,
-            message: `Invalid options: ${validationResult.issues[0]?.message ?? "Unknown error"}`,
+            message: `Invalid arguments: ${validationResult.issues[0]?.message ?? "Unknown error"}`,
             error: {
                 type: "validation-error",
-                message: validationResult.issues[0]?.message ?? "Invalid options provided",
+                message: validationResult.issues[0]?.message ?? "Invalid arguments provided",
             },
         };
     }
-    const validatedOptions = validationResult.output;
+    const validatedArgs = validationResult.output;
     // Step 2: Parse repository string
-    const { owner, repo } = parseRepositoryString(validatedOptions.repo);
-    // Step 3: Get GitHub token (from options or environment)
-    const token = validatedOptions.githubToken ?? getGitHubToken();
+    const { owner, repo } = parseRepositoryString(validatedArgs.repo);
+    // Step 3: Get GitHub token (from args or environment)
+    const token = validatedArgs.githubToken ?? getGitHubToken();
     if (!token) {
         return {
             success: false,
@@ -75795,10 +75795,10 @@ async function createIssueComment(options) {
     }
     try {
         // Step 4: Create the comment
-        const commentId = await createGitHubIssueComment(owner, repo, validatedOptions.issueNumber, validatedOptions.body, token, validatedOptions.hostname);
+        const commentId = await createGitHubIssueComment(owner, repo, validatedArgs.issueNumber, validatedArgs.body, token, validatedArgs.hostname);
         return {
             success: true,
-            message: `Comment created successfully on issue #${validatedOptions.issueNumber}`,
+            message: `Comment created successfully on issue #${validatedArgs.issueNumber}`,
             commentId,
         };
     }
@@ -75825,35 +75825,35 @@ async function createIssueComment(options) {
 
 /**
  * Comment on multiple issues when a branch referencing them is pushed
- * @param options - Options for commenting on issues
+ * @param args - Arguments for commenting on issues
  * @returns Result of the batch comment operation
  */
-async function commentOnBranchIssues(options) {
-    // Step 1: Validate options
-    const validationResult = safeParse(CommentOnBranchIssuesOptionsSchema, options);
+async function commentOnBranchIssues(args) {
+    // Step 1: Validate args
+    const validationResult = safeParse(CommentOnBranchIssuesArgsSchema, args);
     if (!validationResult.success) {
         return {
             success: false,
-            message: "Invalid options provided",
+            message: "Invalid arguments provided",
             results: [],
         };
     }
-    const validatedOptions = validationResult.output;
+    const validatedArgs = validationResult.output;
     // Step 2: Get GitHub token
-    const githubToken = validatedOptions.githubToken ?? getGitHubToken();
+    const githubToken = validatedArgs.githubToken ?? getGitHubToken();
     // Step 3: Build comment body and marker
-    const marker = `<!-- issue-linker:branch:${validatedOptions.branchName} -->`;
-    const commentBody = `🚀 Development started on branch \`${validatedOptions.branchName}\`\n${marker}`;
+    const marker = `<!-- issue-linker:branch:${validatedArgs.branchName} -->`;
+    const commentBody = `🚀 Development started on branch \`${validatedArgs.branchName}\`\n${marker}`;
     // Step 4: Comment on each issue (in parallel)
-    const results = await Promise.all(validatedOptions.issueNumbers.map(async (issueNumber) => {
+    const results = await Promise.all(validatedArgs.issueNumbers.map(async (issueNumber) => {
         try {
             // Check for duplicate comment
             const duplicateCheck = await checkDuplicateComment({
-                repo: validatedOptions.repo,
+                repo: validatedArgs.repo,
                 issueNumber,
                 marker,
                 githubToken,
-                hostname: validatedOptions.hostname,
+                hostname: validatedArgs.hostname,
             });
             if (duplicateCheck.duplicateFound) {
                 return {
@@ -75865,11 +75865,11 @@ async function commentOnBranchIssues(options) {
             }
             // Create comment
             const commentResult = await createIssueComment({
-                repo: validatedOptions.repo,
+                repo: validatedArgs.repo,
                 issueNumber,
                 body: commentBody,
                 githubToken,
-                hostname: validatedOptions.hostname,
+                hostname: validatedArgs.hostname,
             });
             if (commentResult.success) {
                 return {
@@ -75903,7 +75903,7 @@ async function commentOnBranchIssues(options) {
     const hasFailures = results.some((r) => !r.success);
     return {
         success: !hasFailures,
-        message: `Processed ${validatedOptions.issueNumbers.length} issue(s)`,
+        message: `Processed ${validatedArgs.issueNumbers.length} issue(s)`,
         results,
     };
 }
@@ -75917,18 +75917,18 @@ async function commentOnBranchIssues(options) {
 
 /**
  * Get commits from a pull request
- * @param opts Options for getting pull request commits
+ * @param args Arguments for getting pull request commits
  * @returns Array of pull request commits
  */
-async function getPullRequestCommits(opts) {
-    // Validate options
-    const options = parse(GetPullRequestCommitsOptionsSchema, opts);
+async function getPullRequestCommits(args) {
+    // Validate args
+    const validatedArgs = parse(GetPullRequestCommitsArgsSchema, args);
     // Parse repository string
-    const { owner, repo } = parseRepositoryString(options.repo);
+    const { owner, repo } = parseRepositoryString(validatedArgs.repo);
     // Get GitHub token
-    const githubToken = options.githubToken ?? getGitHubToken();
+    const githubToken = validatedArgs.githubToken ?? getGitHubToken();
     // Fetch commits from GitHub API (already transformed to PullRequestCommit[])
-    return await fetchPullRequestCommits(owner, repo, options.prNumber, githubToken, options.hostname);
+    return await fetchPullRequestCommits(owner, repo, validatedArgs.prNumber, githubToken, validatedArgs.hostname);
 }
 //# sourceMappingURL=get-pull-request-commits-use-case.js.map
 ;// CONCATENATED MODULE: ../core/dist/index.js
@@ -76061,8 +76061,8 @@ async function run() {
             // Get branch name using helper function
             const branchName = (0, github_actions_helpers_js_1.extractBranchNameFromContext)(context);
             if (branchName) {
-                const messageOptions = (0, validation_helpers_js_1.createCheckMessageOptions)(branchName, "branch", issueStatus, repo, "validate-branch", githubToken, hostname, extract, exclude);
-                const result = await (0, core_1.checkMessage)(messageOptions);
+                const messageArgs = (0, validation_helpers_js_1.createCheckMessageArgs)(branchName, "branch", issueStatus, repo, "validate-branch", githubToken, hostname, extract, exclude);
+                const result = await (0, core_1.checkMessage)(messageArgs);
                 results.push(result);
                 // Comment on issues when branch is pushed (create event)
                 if (commentOnIssuesWhenBranchPushed &&
@@ -76101,8 +76101,8 @@ async function run() {
             // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
             const prTitle = context.payload.pull_request?.["title"];
             if (prTitle) {
-                const messageOptions = (0, validation_helpers_js_1.createCheckMessageOptions)(prTitle, "default", issueStatus, repo, "validate-pr-title", githubToken, hostname, extract, exclude);
-                const result = await (0, core_1.checkMessage)(messageOptions);
+                const messageArgs = (0, validation_helpers_js_1.createCheckMessageArgs)(prTitle, "default", issueStatus, repo, "validate-pr-title", githubToken, hostname, extract, exclude);
+                const result = await (0, core_1.checkMessage)(messageArgs);
                 results.push(result);
             }
             else {
@@ -76113,8 +76113,8 @@ async function run() {
             // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
             const prBody = context.payload.pull_request?.["body"];
             if (prBody) {
-                const messageOptions = (0, validation_helpers_js_1.createCheckMessageOptions)(prBody, "default", issueStatus, repo, "validate-pr-body", githubToken, hostname, extract, exclude);
-                const result = await (0, core_1.checkMessage)(messageOptions);
+                const messageArgs = (0, validation_helpers_js_1.createCheckMessageArgs)(prBody, "default", issueStatus, repo, "validate-pr-body", githubToken, hostname, extract, exclude);
+                const result = await (0, core_1.checkMessage)(messageArgs);
                 results.push(result);
             }
             else {
@@ -76139,8 +76139,8 @@ async function run() {
                     const commits = await (0, core_1.getPullRequestCommits)(commitsOptions);
                     // Check each commit message
                     for (const commit of commits) {
-                        const messageOptions = (0, validation_helpers_js_1.createCheckMessageOptions)(commit.message, "commit", issueStatus, repo, "validate-commits", githubToken, hostname, extract, exclude);
-                        const result = await (0, core_1.checkMessage)(messageOptions);
+                        const messageArgs = (0, validation_helpers_js_1.createCheckMessageArgs)(commit.message, "commit", issueStatus, repo, "validate-commits", githubToken, hostname, extract, exclude);
+                        const result = await (0, core_1.checkMessage)(messageArgs);
                         results.push(result);
                     }
                 }
@@ -76163,18 +76163,18 @@ async function run() {
                 ...(extract && { extract }),
                 ...(exclude && { exclude }),
             };
-            // Validate the options
-            let validatedOptions;
+            // Validate the args
+            let validatedArgs;
             try {
-                validatedOptions = v.parse(core_1.CheckMessageOptionsSchema, messageOptions);
+                validatedArgs = v.parse(core_1.CheckMessageArgsSchema, messageOptions);
             }
             catch (error) {
                 if (error instanceof v.ValiError) {
-                    throw new Error(`Invalid advanced mode options: ${error.message}`);
+                    throw new Error(`Invalid advanced mode arguments: ${error.message}`);
                 }
                 throw error;
             }
-            const result = await (0, core_1.checkMessage)(validatedOptions);
+            const result = await (0, core_1.checkMessage)(validatedArgs);
             results.push(result);
         }
         // Set outputs

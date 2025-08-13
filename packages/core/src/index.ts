@@ -31,12 +31,12 @@ export type {
 /** @public */
 export type {
   ActionMode,
-  CheckDuplicateCommentOptions,
-  CheckMessageOptions,
+  CheckDuplicateCommentArgs,
+  CheckMessageArgs,
   CheckMode,
-  CommentOnBranchIssuesOptions,
-  CreateIssueCommentOptions,
-  GetPullRequestCommitsOptions,
+  CommentOnBranchIssuesArgs,
+  CreateIssueCommentArgs,
+  GetPullRequestCommitsArgs,
   GitHubRepository,
   Issue,
   IssueStatus,
@@ -45,12 +45,12 @@ export type {
 } from "./domain/validation-schemas.js";
 /** @public */
 export {
-  CheckDuplicateCommentOptionsSchema,
-  CheckMessageOptionsSchema,
+  CheckDuplicateCommentArgsSchema,
+  CheckMessageArgsSchema,
   CheckModeSchema,
-  CommentOnBranchIssuesOptionsSchema,
-  CreateIssueCommentOptionsSchema,
-  GetPullRequestCommitsOptionsSchema,
+  CommentOnBranchIssuesArgsSchema,
+  CreateIssueCommentArgsSchema,
+  GetPullRequestCommitsArgsSchema,
   IssueStatusFilterSchema,
 } from "./domain/validation-schemas.js";
 

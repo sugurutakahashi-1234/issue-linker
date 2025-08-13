@@ -3,8 +3,9 @@
 import * as v from "valibot";
 import type { CreateIssueCommentResult } from "../domain/result.js";
 import {
-  type CreateIssueCommentOptions,
-  CreateIssueCommentOptionsSchema,
+  type CreateIssueCommentArgs,
+  CreateIssueCommentArgsSchema,
+  type ValidatedCreateIssueCommentArgs,
 } from "../domain/validation-schemas.js";
 import { getGitHubToken } from "../infrastructure/env-accessor.js";
 import { createGitHubIssueComment } from "../infrastructure/github-client.js";
@@ -12,36 +13,34 @@ import { parseRepositoryString } from "../infrastructure/repository-parser.js";
 
 /**
  * Create a comment on a GitHub issue
- * @param options - Options for creating the comment
+ * @param args - Arguments for creating the comment
  * @returns Result of the comment creation
  */
 export async function createIssueComment(
-  options: CreateIssueCommentOptions,
+  args: CreateIssueCommentArgs,
 ): Promise<CreateIssueCommentResult> {
-  // Step 1: Validate options
-  const validationResult = v.safeParse(
-    CreateIssueCommentOptionsSchema,
-    options,
-  );
+  // Step 1: Validate args
+  const validationResult = v.safeParse(CreateIssueCommentArgsSchema, args);
   if (!validationResult.success) {
     return {
       success: false,
-      message: `Invalid options: ${validationResult.issues[0]?.message ?? "Unknown error"}`,
+      message: `Invalid arguments: ${validationResult.issues[0]?.message ?? "Unknown error"}`,
       error: {
         type: "validation-error",
         message:
-          validationResult.issues[0]?.message ?? "Invalid options provided",
+          validationResult.issues[0]?.message ?? "Invalid arguments provided",
       },
     };
   }
 
-  const validatedOptions = validationResult.output;
+  const validatedArgs: ValidatedCreateIssueCommentArgs =
+    validationResult.output;
 
   // Step 2: Parse repository string
-  const { owner, repo } = parseRepositoryString(validatedOptions.repo);
+  const { owner, repo } = parseRepositoryString(validatedArgs.repo);
 
-  // Step 3: Get GitHub token (from options or environment)
-  const token = validatedOptions.githubToken ?? getGitHubToken();
+  // Step 3: Get GitHub token (from args or environment)
+  const token = validatedArgs.githubToken ?? getGitHubToken();
   if (!token) {
     return {
       success: false,
@@ -58,15 +57,15 @@ export async function createIssueComment(
     const commentId = await createGitHubIssueComment(
       owner,
       repo,
-      validatedOptions.issueNumber,
-      validatedOptions.body,
+      validatedArgs.issueNumber,
+      validatedArgs.body,
       token,
-      validatedOptions.hostname,
+      validatedArgs.hostname,
     );
 
     return {
       success: true,
-      message: `Comment created successfully on issue #${validatedOptions.issueNumber}`,
+      message: `Comment created successfully on issue #${validatedArgs.issueNumber}`,
       commentId,
     };
   } catch (error: unknown) {
