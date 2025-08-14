@@ -14,6 +14,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          # Checkout the actual branch instead of detached HEAD
+          ref: ${{ github.head_ref }}
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -23,11 +26,19 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Debug branch information
+        run: |
+          echo "🔍 Current branch name: $(git rev-parse --abbrev-ref HEAD)"
+          echo "📌 GitHub head ref: ${{ github.head_ref }}"
+          echo "📌 GitHub ref: ${{ github.ref }}"
+          echo "📌 GitHub ref name: ${{ github.ref_name }}"
+          
       - name: Validate branch name
         # Configuration file: .elsikora/git-branch-lint.config.ts
         run: |
           bun run validate:branch || {
             echo "❌ Branch name validation failed!"
+            echo "🔍 Current branch: $(git rev-parse --abbrev-ref HEAD)"
             echo "📝 Please check the configuration at: .elsikora/git-branch-lint.config.ts"
             echo "📚 See allowed branch patterns in the config file."
             exit 1
