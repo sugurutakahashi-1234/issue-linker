@@ -175,7 +175,8 @@
       "Bash(./packages/cli/dist/cli.js -t \"Fix #6\" --issue-status open)",
       "Bash(issue-linker:*)",
       "Bash(git --no-pager log -1 --pretty=%s)",
-      "Bash(do echo \"Checking: $file\")"
+      "Bash(do echo \"Checking: $file\")",
+      "Bash(time:*)"
     ],
     "deny": []
   },
