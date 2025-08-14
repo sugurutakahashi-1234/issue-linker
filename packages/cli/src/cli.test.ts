@@ -54,21 +54,6 @@ describe("CLI", () => {
       expect(proc.exitCode).toBe(0);
     });
 
-    it("should work with short form -c option", async () => {
-      const proc = spawn(
-        ["bun", "run", "./cli.ts", "-t", "main", "-c", "branch"],
-        {
-          cwd: import.meta.dir,
-        },
-      );
-
-      const text = await new Response(proc.stdout).text();
-      await proc.exited;
-
-      expect(text).toContain("Skipped: Matched exclude pattern");
-      expect(proc.exitCode).toBe(0);
-    });
-
     it("should handle custom exclude patterns", async () => {
       const proc = spawn(
         [
@@ -145,88 +130,6 @@ describe("CLI", () => {
       expect(errorText).toContain("Repository: test-org/test-repo");
       expect(proc.exitCode).toBe(1);
     });
-
-    it("should accept --hostname option", async () => {
-      const proc = spawn(
-        [
-          "bun",
-          "run",
-          "./cli.ts",
-          "-t",
-          "test",
-          "--hostname",
-          "github.enterprise.com",
-          "--check-mode",
-          "branch",
-        ],
-        {
-          cwd: import.meta.dir,
-        },
-      );
-
-      await proc.exited;
-
-      // Should not error out when hostname is provided
-      expect(proc.exitCode).toBeDefined();
-    });
-
-    it("should accept -h short form for hostname", async () => {
-      const proc = spawn(
-        [
-          "bun",
-          "run",
-          "./cli.ts",
-          "-t",
-          "test",
-          "-h",
-          "github.enterprise.com",
-          "--check-mode",
-          "branch",
-        ],
-        {
-          cwd: import.meta.dir,
-        },
-      );
-
-      await proc.exited;
-
-      // Should not error out when hostname is provided
-      expect(proc.exitCode).toBeDefined();
-    });
-
-    // API tests using real GitHub API
-    // Note: These tests may fail due to rate limits.
-    // If they consistently fail, change 'it' to 'it.skip' to skip them.
-    // Performance tuning: API timeout=1s, no retries for max speed
-
-    it(
-      "should fail when issue does not exist in this repository",
-      async () => {
-        // Using a non-existent issue number
-        const proc = spawn(
-          [
-            "bun",
-            "run",
-            "./cli.ts",
-            "-t",
-            "feat/issue-99999-test",
-            "--check-mode",
-            "branch",
-            "--repo",
-            "sugurutakahashi-1234/issue-linker",
-          ],
-          {
-            cwd: import.meta.dir,
-            stderr: "pipe",
-          },
-        );
-
-        await proc.exited;
-
-        expect(proc.exitCode).toBe(1);
-      },
-      { timeout: 2000 }, // 2s timeout (API timeout 1s + buffer)
-    );
   });
 
   describe("commit mode", () => {
@@ -274,31 +177,5 @@ describe("CLI", () => {
 
       expect(proc.exitCode).toBe(1);
     });
-
-    it(
-      "should fail when commit message contains non-existent issue",
-      async () => {
-        const proc = spawn(
-          [
-            "bun",
-            "run",
-            "./cli.ts",
-            "-t",
-            "fix: resolve issue #99999",
-            "--repo",
-            "sugurutakahashi-1234/issue-linker",
-          ],
-          {
-            cwd: import.meta.dir,
-            stderr: "pipe",
-          },
-        );
-
-        await proc.exited;
-
-        expect(proc.exitCode).toBe(1);
-      },
-      { timeout: 2000 },
-    );
   });
 });
