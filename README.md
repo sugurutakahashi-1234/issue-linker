@@ -44,16 +44,16 @@ npm install -g issue-linker
 Check if issue references actually exist in your repository:
 
 ```bash
-$ npx issue-linker -t "Fix #123"
+npx issue-linker -t "Fix #123"
 # > ✅ Valid issues: #123 in owner/repo
 
-$ npx issue-linker -t "Add feature #999"
+npx issue-linker -t "Add feature #999"
 # > ❌ Issues not found: #999 in owner/repo
 
-$ npx issue-linker -t "Implement #123" --issue-status closed
+npx issue-linker -t "Implement #123" --issue-status closed
 # > ❌ Wrong state: #123 is open (expected: closed) in owner/repo
 
-$ npx issue-linker -t "feature/auth-improvements-123" -c branch
+npx issue-linker -t "feature/auth-improvements-123" -c branch
 # > ✅ Valid issues: #123 in owner/repo
 ```
 
@@ -90,19 +90,19 @@ npx issue-linker -t "$(git log -1 --pretty=%s)" -c commit
 
 ```bash
 # Exclude WIP commits
-$ issue-linker -t "[WIP] Fix #789" --exclude "*[WIP]*"
+issue-linker -t "[WIP] Fix #789" --exclude "*[WIP]*"
 # > ⏭️ Skipped: Matched exclude pattern "*[WIP]*"
 
 # JSON output for CI/CD
-$ issue-linker -t "Fix #789" --json
-{
-  "success": true,
-  "message": "Valid issues: #789 in owner/repo",
-  ...
-}
+issue-linker -t "Fix #789" --json
+# > {
+# >   "success": true,
+# >   "message": "Valid issues: #789 in owner/repo",
+# >   ...
+# > }
 
 # GitHub Enterprise Server
-$ issue-linker -t "Fix #321" --hostname github.enterprise.com
+issue-linker -t "Fix #321" --hostname github.enterprise.com
 # > ✅ Valid issues: #321 in owner/repo
 ```
 
@@ -131,11 +131,11 @@ Skip validation by including `[skip issue-linker]` or `[issue-linker skip]` anyw
 
 ```bash
 # Skip auto-generated PR titles
-$ issue-linker -t "Release v2.0.0 [skip issue-linker]"
+issue-linker -t "Release v2.0.0 [skip issue-linker]"
 # > ⏭️ Skipped: Contains [skip issue-linker] marker
 
 # Skip dependency updates
-$ issue-linker -t "chore: update dependencies [issue-linker skip]" -c commit
+issue-linker -t "chore: update dependencies [issue-linker skip]" -c commit
 # > ⏭️ Skipped: Contains [issue-linker skip] marker
 ```
 
