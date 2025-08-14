@@ -8,7 +8,7 @@ import {
   type ValidatedCreateIssueCommentArgs,
 } from "../domain/validation-schemas.js";
 import { getGitHubToken } from "../infrastructure/env-accessor.js";
-import { createGitHubIssueComment } from "../infrastructure/github-client.js";
+import { createIssueComment as createGitHubComment } from "../infrastructure/github-client.js";
 import { parseRepositoryString } from "../infrastructure/repository-parser.js";
 
 /**
@@ -54,7 +54,7 @@ export async function createIssueComment(
 
   try {
     // Step 4: Create the comment
-    const commentId = await createGitHubIssueComment(
+    const commentId = await createGitHubComment(
       owner,
       repo,
       validatedArgs.issueNumber,

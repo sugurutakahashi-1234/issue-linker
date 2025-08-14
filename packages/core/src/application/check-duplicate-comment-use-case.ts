@@ -8,7 +8,7 @@ import {
   type ValidatedCheckDuplicateCommentArgs,
 } from "../domain/validation-schemas.js";
 import { getGitHubToken } from "../infrastructure/env-accessor.js";
-import { listGitHubIssueComments } from "../infrastructure/github-client.js";
+import { listIssueComments } from "../infrastructure/github-client.js";
 import { parseRepositoryString } from "../infrastructure/repository-parser.js";
 
 /**
@@ -54,7 +54,7 @@ export async function checkDuplicateComment(
 
   try {
     // Step 4: Get existing comments
-    const comments = await listGitHubIssueComments(
+    const comments = await listIssueComments(
       owner,
       repo,
       validatedArgs.issueNumber,

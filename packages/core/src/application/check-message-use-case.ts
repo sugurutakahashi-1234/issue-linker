@@ -15,17 +15,17 @@ import {
   CheckMessageArgsSchema,
   type ValidatedCheckMessageArgs,
 } from "../domain/validation-schemas.js";
-import {
-  isIssueStateAllowed,
-  shouldExclude,
-} from "../infrastructure/branch-matcher.js";
 import { getGitHubToken } from "../infrastructure/env-accessor.js";
 import { getGitRemoteUrl } from "../infrastructure/git-client.js";
 import { parseRepositoryFromGitUrl } from "../infrastructure/git-url-parser.js";
-import { getGitHubIssue } from "../infrastructure/github-client.js";
+import { getIssue } from "../infrastructure/github-client.js";
 import { findIssueNumbers } from "../infrastructure/issue-finder.js";
 import { parseRepositoryString } from "../infrastructure/repository-parser.js";
 import { findSkipMarker } from "../infrastructure/skip-marker-checker.js";
+import {
+  isIssueStateAllowed,
+  shouldExclude,
+} from "../infrastructure/validation-matcher.js";
 
 /**
  * Main use case for checking if text contains valid issue numbers
@@ -109,7 +109,7 @@ export async function checkMessage(
     }> = [];
 
     for (const issueNumber of issueNumbers) {
-      const result = await getGitHubIssue(
+      const result = await getIssue(
         repository.owner,
         repository.repo,
         issueNumber,

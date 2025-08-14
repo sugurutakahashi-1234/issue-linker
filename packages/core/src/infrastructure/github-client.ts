@@ -76,7 +76,7 @@ function createOctokit(token?: string, hostname?: string): Octokit {
  * @param hostname - Optional GitHub hostname for Enterprise
  * @returns Result object containing issue or error information
  */
-export async function getGitHubIssue(
+export async function getIssue(
   owner: string,
   repo: string,
   issueNumber: number,
@@ -217,7 +217,7 @@ export async function fetchPullRequestCommits(
  * @returns Comment ID on success
  * @internal
  */
-export async function createGitHubIssueComment(
+export async function createIssueComment(
   owner: string,
   repo: string,
   issueNumber: number,
@@ -272,7 +272,7 @@ export async function createGitHubIssueComment(
  * @returns Array of comment bodies
  * @internal
  */
-export async function listGitHubIssueComments(
+export async function listIssueComments(
   owner: string,
   repo: string,
   issueNumber: number,

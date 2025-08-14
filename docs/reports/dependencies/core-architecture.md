@@ -45,8 +45,8 @@ flowchart LR
         node//modules///octokit/plugin//throttling/dist//types/index.d.ts["@octokit/plugin-throttling"]
         node//modules///octokit/request//error/dist//types/index.d.ts["@octokit/request-error"]
         node//modules/octokit/dist//types/index.d.ts["octokit"]
-        node//modules///types/micromatch/index.d.ts["@types/micromatch"]
         node//modules/simple//git/dist/typings/index.d.ts["simple-git"]
+        node//modules///types/micromatch/index.d.ts["@types/micromatch"]
     end
     packages/action-->node//modules///actions/github/lib/context.d.ts
     packages/core/dist/domain/validation//schemas.d.ts-->node//modules/valibot/dist/index.d.cts
@@ -72,8 +72,8 @@ flowchart LR
     packages/action-->node//modules/valibot/dist/index.d.cts
     packages/action-->node//modules///actions/core/lib/core.d.ts
     packages/action-->node//modules///actions/github/lib/github.d.ts
-    packages/cli-->node//modules///commander//js/extra//typings/index.d.ts
     packages/cli-->packages/core/dist/index.d.ts
+    packages/cli-->node//modules///commander//js/extra//typings/index.d.ts
     packages/cli-->node//modules/valibot/dist/index.d.cts
     packages/core/src/domain-->node//modules/valibot/dist/index.d.cts
     packages/core/src/domain-->node//modules///t3//oss/env//core/dist/index.d.ts
@@ -85,8 +85,8 @@ flowchart LR
     packages/core/src/application-->node//modules/valibot/dist/index.d.cts
     packages/core/src/application-->packages/core/src/domain
     packages/core/src/application-->packages/core/src/infrastructure
-    packages/core/src/infrastructure-->node//modules///types/micromatch/index.d.ts
     packages/core/src/infrastructure-->node//modules/simple//git/dist/typings/index.d.ts
+    packages/core/src/infrastructure-->node//modules///types/micromatch/index.d.ts
     packages/core/src/index.ts-->packages/core/src/domain
     packages/core/src/index.ts-->packages/core/src/application
 ```
