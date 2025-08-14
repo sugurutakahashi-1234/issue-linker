@@ -31,12 +31,8 @@
       "changelog-path": "CHANGELOG.md",
       "extra-files": ["README.md"]
     },
-    "packages/cli": {
-      "changelog-path": "CHANGELOG.md"
-    },
-    "packages/core": {
-      "changelog-path": "CHANGELOG.md"
-    }
+    "packages/cli": {},
+    "packages/core": {}
   },
   "plugins": ["node-workspace"]
 }
