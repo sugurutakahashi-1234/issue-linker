@@ -51,13 +51,29 @@ jobs:
           rm -f bun.lock
           bun install
 
-      - name: Run CI
+      - name: Check code quality
         if: ${{ steps.release.outputs.release_created }}
-        run: bun run ci
+        run: bun run check
 
       - name: Build
         if: ${{ steps.release.outputs.release_created }}
         run: bun run build
+
+      - name: Type check
+        if: ${{ steps.release.outputs.release_created }}
+        run: bun run typecheck
+
+      - name: Check dependencies
+        if: ${{ steps.release.outputs.release_created }}
+        run: bun run knip
+
+      - name: Test Coverage
+        if: ${{ steps.release.outputs.release_created }}
+        run: bun run test:coverage
+
+      - name: E2E Tests
+        if: ${{ steps.release.outputs.release_created }}
+        run: bun run test:e2e
 
       # Setup Node.js for npm publish command
       # Although we use Bun for development, npm publish requires Node.js environment
