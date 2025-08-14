@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.5.0](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.4.1...v1.5.0) (2025-08-14)
+
+
+### 🔧 Maintenance
+
+* bump version to 1.5.0 ([7af205f](https://github.com/sugurutakahashi-1234/issue-linker/commit/7af205f12d67e575b7792d4cd28fa9267fb1b9a2))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @issue-linker/core bumped to 1.5.0
+
 ## [1.4.1](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.4.0...v1.4.1) (2025-08-14)
 
 
