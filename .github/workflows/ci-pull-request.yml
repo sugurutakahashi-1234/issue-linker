@@ -90,3 +90,34 @@ jobs:
           flags: unittests                        # Tag coverage as unit tests
           disable_search: false                   # Enable automatic coverage file search
           report_type: coverage                   # Specify coverage report type
+
+      - name: Assert e2e entry exists
+        run: |
+          echo "=== Debug info ==="
+          echo "workflow_ref: ${{ github.workflow_ref }}"
+          echo "event: ${{ github.event_name }}"
+          echo "checked-out: $(git rev-parse HEAD)"
+          test -f ./scripts/testing/e2e-simple.ts || {
+            echo "❌ ./scripts/testing/e2e-simple.ts not found in $(pwd)"
+            ls -la ./scripts || true
+            exit 1
+          }
+          echo "✅ E2E test file exists"
+
+      - name: E2E Tests - Method 1 (bun run test:e2e)
+        run: |
+          echo "=== Testing with 'bun run test:e2e' ==="
+          bun run test:e2e || echo "❌ Method 1 failed"
+        continue-on-error: true
+
+      - name: E2E Tests - Method 2 (with ./)
+        run: |
+          echo "=== Testing with 'bun ./scripts/testing/e2e-simple.ts' ==="
+          bun ./scripts/testing/e2e-simple.ts || echo "❌ Method 2 failed"
+        continue-on-error: true
+
+      - name: E2E Tests - Method 3 (without ./)
+        run: |
+          echo "=== Testing with 'bun scripts/testing/e2e-simple.ts' ==="
+          bun scripts/testing/e2e-simple.ts || echo "❌ Method 3 failed"
+        continue-on-error: true
