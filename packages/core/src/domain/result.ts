@@ -23,12 +23,18 @@ export interface InputConfig {
   actionMode?: ActionMode;
 }
 
+// Wrong state issue details
+interface WrongStateIssue {
+  number: number;
+  actualState: "open" | "closed";
+}
+
 // Issue information when issues are found
 export interface IssueInfo {
   found: number[]; // All issue numbers found in text
   valid: number[]; // Issues that exist and match status filter
   notFound: number[]; // Issues that don't exist in repository
-  wrongState: number[]; // Issues with wrong state (e.g., closed when open required)
+  wrongState: WrongStateIssue[]; // Issues with wrong state including actual state info
 }
 
 // Error information when validation fails

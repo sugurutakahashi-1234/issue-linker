@@ -236,36 +236,10 @@ async function run() {
       const prefix = results.length > 1 ? `[${actionMode}] ` : "";
 
       if (result.success) {
-        // Success cases
-        switch (result.reason) {
-          case "excluded":
-            core.info(`${prefix}Text was excluded from validation`);
-            break;
-          case "skipped":
-            core.info(`${prefix}Validation skipped due to skip marker`);
-            break;
-          case "valid":
-            if (result.issues?.valid && result.issues.valid.length > 0) {
-              core.info(
-                `${prefix}Valid issues: #${result.issues.valid.join(", #")}`,
-              );
-            } else {
-              core.info(`${prefix}${result.message}`);
-            }
-            break;
-          case "no-issues":
-          case "invalid-issues":
-          case "error":
-            core.info(`${prefix}${result.message}`);
-            break;
-          default: {
-            // Exhaustive check: TypeScript will error if a new reason is added
-            const _exhaustive: never = result.reason;
-            throw new Error(`Unexpected reason: ${_exhaustive}`);
-          }
-        }
+        // Success cases - simply use the message from result-factory
+        core.info(`${prefix}${result.message}`);
       } else {
-        // Failure cases
+        // Failure cases - simply use the message from result-factory
         core.error(`${prefix}${result.message}`);
 
         // Show details for failed validations
@@ -276,9 +250,10 @@ async function run() {
             details.push(`Not found: #${result.issues.notFound.join(", #")}`);
           }
           if (result.issues.wrongState.length > 0) {
-            details.push(
-              `Wrong state: #${result.issues.wrongState.join(", #")}`,
+            const wrongStateMessages = result.issues.wrongState.map(
+              (issue) => `#${issue.number} is ${issue.actualState}`,
             );
+            details.push(`Wrong state: ${wrongStateMessages.join(", ")}`);
           }
 
           if (details.length > 0) {

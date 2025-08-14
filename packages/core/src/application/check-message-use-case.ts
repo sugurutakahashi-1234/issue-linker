@@ -25,7 +25,7 @@ import { parseRepositoryFromGitUrl } from "../infrastructure/git-url-parser.js";
 import { getGitHubIssue } from "../infrastructure/github-client.js";
 import { findIssueNumbers } from "../infrastructure/issue-finder.js";
 import { parseRepositoryString } from "../infrastructure/repository-parser.js";
-import { hasSkipMarker } from "../infrastructure/skip-marker-checker.js";
+import { findSkipMarker } from "../infrastructure/skip-marker-checker.js";
 
 /**
  * Main use case for checking if text contains valid issue numbers
@@ -74,13 +74,19 @@ export async function checkMessage(
     };
 
     // Step 2: Check for skip markers
-    if (hasSkipMarker(validatedArgs.text)) {
-      return createSkippedResult(input);
+    const skipMarker = findSkipMarker(validatedArgs.text);
+    if (skipMarker) {
+      return createSkippedResult(input, skipMarker);
     }
 
     // Step 3: Check exclusion
-    if (shouldExclude(validatedArgs.text, checkMode, validatedArgs.exclude)) {
-      return createExcludedResult(input);
+    const excludeResult = shouldExclude(
+      validatedArgs.text,
+      checkMode,
+      validatedArgs.exclude,
+    );
+    if (excludeResult.excluded) {
+      return createExcludedResult(input, excludeResult.pattern);
     }
 
     // Step 4: Find issue numbers
@@ -97,7 +103,10 @@ export async function checkMessage(
     const githubToken = validatedArgs.githubToken ?? getGitHubToken();
     const validIssues: number[] = [];
     const notFoundIssues: number[] = [];
-    const wrongStateIssues: number[] = [];
+    const wrongStateIssues: Array<{
+      number: number;
+      actualState: "open" | "closed";
+    }> = [];
 
     for (const issueNumber of issueNumbers) {
       const result = await getGitHubIssue(
@@ -114,7 +123,10 @@ export async function checkMessage(
         result.issue &&
         !isIssueStateAllowed(result.issue.state, issueStatus)
       ) {
-        wrongStateIssues.push(issueNumber);
+        wrongStateIssues.push({
+          number: issueNumber,
+          actualState: result.issue.state,
+        });
       } else if (result.issue) {
         validIssues.push(issueNumber);
       }

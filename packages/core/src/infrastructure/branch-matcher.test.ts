@@ -35,94 +35,137 @@ describe("branch-matcher", () => {
   describe("shouldExclude", () => {
     describe("custom exclude pattern", () => {
       it("should use custom pattern when provided", () => {
-        expect(shouldExclude("test-branch", "default", "test-*")).toBe(true);
-        expect(shouldExclude("prod-branch", "default", "test-*")).toBe(false);
-        expect(shouldExclude("wip/feature", "branch", "{wip/*,tmp/*}")).toBe(
+        expect(shouldExclude("test-branch", "default", "test-*").excluded).toBe(
           true,
         );
+        expect(shouldExclude("prod-branch", "default", "test-*").excluded).toBe(
+          false,
+        );
+        expect(
+          shouldExclude("wip/feature", "branch", "{wip/*,tmp/*}").excluded,
+        ).toBe(true);
       });
 
       it("should override default patterns", () => {
         // Even though "main" would be excluded by default in branch mode,
         // custom pattern takes precedence
-        expect(shouldExclude("main", "branch", "develop")).toBe(false);
-        expect(shouldExclude("develop", "branch", "develop")).toBe(true);
+        expect(shouldExclude("main", "branch", "develop").excluded).toBe(false);
+        expect(shouldExclude("develop", "branch", "develop").excluded).toBe(
+          true,
+        );
+      });
+
+      it("should return the pattern when excluded", () => {
+        const result = shouldExclude("test-branch", "default", "test-*");
+        expect(result.excluded).toBe(true);
+        expect(result.pattern).toBe("test-*");
       });
     });
 
     describe("branch mode defaults", () => {
       it("should exclude default protected branches", () => {
-        expect(shouldExclude("main", "branch")).toBe(true);
-        expect(shouldExclude("master", "branch")).toBe(true);
-        expect(shouldExclude("develop", "branch")).toBe(true);
-        expect(shouldExclude("release/1.0", "branch")).toBe(true);
+        expect(shouldExclude("main", "branch").excluded).toBe(true);
+        expect(shouldExclude("master", "branch").excluded).toBe(true);
+        expect(shouldExclude("develop", "branch").excluded).toBe(true);
+        expect(shouldExclude("release/1.0", "branch").excluded).toBe(true);
       });
 
       it("should exclude bot branches", () => {
-        expect(shouldExclude("renovate/react-18.x", "branch")).toBe(true);
-        expect(
-          shouldExclude("dependabot/npm_and_yarn/webpack-5.91.0", "branch"),
-        ).toBe(true);
-        expect(shouldExclude("release-please--branches--main", "branch")).toBe(
+        expect(shouldExclude("renovate/react-18.x", "branch").excluded).toBe(
           true,
         );
-        expect(shouldExclude("snyk/fix-vulnerability", "branch")).toBe(true);
-        expect(shouldExclude("imgbot/optimize-images", "branch")).toBe(true);
-        expect(shouldExclude("all-contributors/add-user", "branch")).toBe(true);
+        expect(
+          shouldExclude("dependabot/npm_and_yarn/webpack-5.91.0", "branch")
+            .excluded,
+        ).toBe(true);
+        expect(
+          shouldExclude("release-please--branches--main", "branch").excluded,
+        ).toBe(true);
+        expect(shouldExclude("snyk/fix-vulnerability", "branch").excluded).toBe(
+          true,
+        );
+        expect(shouldExclude("imgbot/optimize-images", "branch").excluded).toBe(
+          true,
+        );
+        expect(
+          shouldExclude("all-contributors/add-user", "branch").excluded,
+        ).toBe(true);
       });
 
       it("should not exclude feature branches including hotfix", () => {
-        expect(shouldExclude("feature/123", "branch")).toBe(false);
-        expect(shouldExclude("123-feature", "branch")).toBe(false);
-        expect(shouldExclude("fix/456", "branch")).toBe(false);
-        expect(shouldExclude("hotfix/urgent-123", "branch")).toBe(false);
-        expect(shouldExclude("hotfix/123-security-patch", "branch")).toBe(
+        expect(shouldExclude("feature/123", "branch").excluded).toBe(false);
+        expect(shouldExclude("123-feature", "branch").excluded).toBe(false);
+        expect(shouldExclude("fix/456", "branch").excluded).toBe(false);
+        expect(shouldExclude("hotfix/urgent-123", "branch").excluded).toBe(
           false,
         );
+        expect(
+          shouldExclude("hotfix/123-security-patch", "branch").excluded,
+        ).toBe(false);
       });
     });
 
     describe("commit mode defaults", () => {
       it("should exclude commits with specific prefixes", () => {
-        expect(shouldExclude("Rebase branch", "commit")).toBe(true);
-        expect(shouldExclude("Merge pull request", "commit")).toBe(true);
-        expect(shouldExclude("Revert commit", "commit")).toBe(true);
-        expect(shouldExclude("fixup! previous commit", "commit")).toBe(true);
-        expect(shouldExclude("squash! old commit", "commit")).toBe(true);
+        expect(shouldExclude("Rebase branch", "commit").excluded).toBe(true);
+        expect(shouldExclude("Merge pull request", "commit").excluded).toBe(
+          true,
+        );
+        expect(shouldExclude("Revert commit", "commit").excluded).toBe(true);
+        expect(shouldExclude("fixup! previous commit", "commit").excluded).toBe(
+          true,
+        );
+        expect(shouldExclude("squash! old commit", "commit").excluded).toBe(
+          true,
+        );
       });
 
       it("should exclude automatic generated commits", () => {
         expect(
-          shouldExclude("Applied suggestion from code review", "commit"),
+          shouldExclude("Applied suggestion from code review", "commit")
+            .excluded,
         ).toBe(true);
-        expect(shouldExclude("Apply automatic changes", "commit")).toBe(true);
-        expect(shouldExclude("Automated Change by bot", "commit")).toBe(true);
-        expect(shouldExclude("Update branch from main", "commit")).toBe(true);
-        expect(shouldExclude("Auto-merge pull request", "commit")).toBe(true);
         expect(
-          shouldExclude("(cherry picked from commit abc123)", "commit"),
+          shouldExclude("Apply automatic changes", "commit").excluded,
         ).toBe(true);
-        expect(shouldExclude("Initial commit", "commit")).toBe(true);
-        expect(shouldExclude("Update README.md", "commit")).toBe(true);
-        expect(shouldExclude("Update docs.md", "commit")).toBe(true);
-        expect(shouldExclude("Updated content", "commit")).toBe(true);
+        expect(
+          shouldExclude("Automated Change by bot", "commit").excluded,
+        ).toBe(true);
+        expect(
+          shouldExclude("Update branch from main", "commit").excluded,
+        ).toBe(true);
+        expect(
+          shouldExclude("Auto-merge pull request", "commit").excluded,
+        ).toBe(true);
+        expect(
+          shouldExclude("(cherry picked from commit abc123)", "commit")
+            .excluded,
+        ).toBe(true);
+        expect(shouldExclude("Initial commit", "commit").excluded).toBe(true);
+        expect(shouldExclude("Update README.md", "commit").excluded).toBe(true);
+        expect(shouldExclude("Update docs.md", "commit").excluded).toBe(true);
+        expect(shouldExclude("Updated content", "commit").excluded).toBe(true);
       });
 
       it("should not exclude regular commits", () => {
-        expect(shouldExclude("feat: add feature", "commit")).toBe(false);
-        expect(shouldExclude("fix: resolve bug", "commit")).toBe(false);
-        expect(shouldExclude("Add new feature", "commit")).toBe(false);
-        expect(shouldExclude("Update user authentication", "commit")).toBe(
+        expect(shouldExclude("feat: add feature", "commit").excluded).toBe(
           false,
         );
+        expect(shouldExclude("fix: resolve bug", "commit").excluded).toBe(
+          false,
+        );
+        expect(shouldExclude("Add new feature", "commit").excluded).toBe(false);
+        expect(
+          shouldExclude("Update user authentication", "commit").excluded,
+        ).toBe(false);
       });
     });
 
     describe("default mode", () => {
       it("should not exclude anything by default", () => {
-        expect(shouldExclude("anything", "default")).toBe(false);
-        expect(shouldExclude("main", "default")).toBe(false);
-        expect(shouldExclude("Merge commit", "default")).toBe(false);
+        expect(shouldExclude("anything", "default").excluded).toBe(false);
+        expect(shouldExclude("main", "default").excluded).toBe(false);
+        expect(shouldExclude("Merge commit", "default").excluded).toBe(false);
       });
     });
   });
