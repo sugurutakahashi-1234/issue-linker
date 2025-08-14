@@ -23,10 +23,12 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Install dependencies
-        # NOTE: Not using --frozen-lockfile because release-please updates package.json versions
-        # but bun.lock still references old versions, causing installation failures
-        run: bun install
-
       - name: Validate branch name
-        run: bun run validate:branch
+        # Configuration file: .elsikora/git-branch-lint.config.ts
+        run: |
+          bunx @elsikora/git-branch-lint || {
+            echo "❌ Branch name validation failed!"
+            echo "📝 Please check the configuration at: .elsikora/git-branch-lint.config.ts"
+            echo "📚 See allowed branch patterns in the config file."
+            exit 1
+          }

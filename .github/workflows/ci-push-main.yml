@@ -24,7 +24,9 @@ jobs:
       - name: Install dependencies
         # NOTE: Not using --frozen-lockfile because release-please updates package.json versions
         # but bun.lock still references old versions, causing installation failures
-        run: bun install
+        run: |
+          rm -f bun.lock
+          bun install
 
       - name: Check code quality
         run: bun run check
