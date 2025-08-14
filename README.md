@@ -45,16 +45,16 @@ Check if issue references actually exist in your repository:
 
 ```bash
 $ npx issue-linker -t "Fix #123"
-> ✅ Valid issues: #123
+# > ✅ Valid issues: #123 in owner/repo
 
 $ npx issue-linker -t "Add feature #999"
-> ❌ Issues not found: #999 in owner/repo
+# > ❌ Issues not found: #999 in owner/repo
 
 $ npx issue-linker -t "Implement #123" --issue-status closed
-> ❌ Wrong state: #123 in owner/repo
+# > ❌ Wrong state: #123 is open (expected: closed) in owner/repo
 
 $ npx issue-linker -t "feature/auth-improvements-123" -c branch
-> ✅ Valid issues: #123
+# > ✅ Valid issues: #123 in owner/repo
 ```
 
 ### More Examples

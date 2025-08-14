@@ -171,7 +171,9 @@
       "WebSearch",
       "Bash(git revert:*)",
       "WebFetch(domain:docs.npmjs.com)",
-      "Bash(git remote set-url:*)"
+      "Bash(git remote set-url:*)",
+      "Bash(./packages/cli/dist/cli.js -t \"Fix #6\" --issue-status open)",
+      "Bash(issue-linker:*)"
     ],
     "deny": []
   },

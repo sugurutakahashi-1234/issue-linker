@@ -96,34 +96,8 @@ program
 
       // Display human-readable result
       if (result.success) {
-        // Success output
-        switch (result.reason) {
-          case "excluded":
-            console.log(`✅ Text was excluded from validation`);
-            break;
-          case "skipped":
-            console.log(`✅ Validation skipped due to skip marker`);
-            break;
-          case "valid":
-            if (result.issues?.valid && result.issues.valid.length > 0) {
-              console.log(
-                `✅ Valid issues: #${result.issues.valid.join(", #")}`,
-              );
-            } else {
-              console.log(`✅ ${result.message}`);
-            }
-            break;
-          case "no-issues":
-          case "invalid-issues":
-          case "error":
-            console.log(`✅ ${result.message}`);
-            break;
-          default: {
-            // Exhaustive check: TypeScript will error if a new reason is added
-            const _exhaustive: never = result.reason;
-            throw new Error(`Unexpected reason: ${_exhaustive}`);
-          }
-        }
+        // Success output - simply use the message from result-factory
+        console.log(`✅ ${result.message}`);
 
         // Show extra details in verbose mode
         if (options.verbose) {
@@ -136,7 +110,7 @@ program
         }
         process.exit(0);
       } else {
-        // Error output
+        // Error output - simply use the message from result-factory
         console.error(`❌ ${result.message}`);
 
         // Show details
@@ -150,13 +124,14 @@ program
             details.push(`Not found: #${result.issues.notFound.join(", #")}`);
           }
           if (result.issues.wrongState.length > 0) {
-            const stateInfo =
-              result.input.issueStatus === "all"
-                ? "Wrong state"
-                : `Wrong state (expected: ${result.input.issueStatus})`;
-            details.push(
-              `${stateInfo}: #${result.issues.wrongState.join(", #")}`,
-            );
+            const wrongStateMessages = result.issues.wrongState.map((issue) => {
+              const expected =
+                result.input.issueStatus === "all"
+                  ? ""
+                  : ` (expected: ${result.input.issueStatus})`;
+              return `#${issue.number} is ${issue.actualState}${expected}`;
+            });
+            details.push(`Wrong state: ${wrongStateMessages.join(", ")}`);
           }
 
           if (details.length > 0) {

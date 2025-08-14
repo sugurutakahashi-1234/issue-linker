@@ -68567,7 +68567,7 @@ function createNoIssuesResult(input) {
 function createValidResult(issues, input) {
     return {
         success: true,
-        message: `Valid issue(s) found: #${issues.valid.join(", #")} in ${input.repo}`,
+        message: `Valid issues: #${issues.valid.join(", #")} in ${input.repo}`,
         reason: "valid",
         input,
         issues,
@@ -68583,7 +68583,12 @@ function createInvalidResult(issues, input) {
         parts.push(`Issues not found: #${issues.notFound.join(", #")}`);
     }
     if (issues.wrongState.length > 0) {
-        parts.push(`Wrong state: #${issues.wrongState.join(", #")}`);
+        // Build detailed wrong state message
+        const wrongStateMessages = issues.wrongState.map((issue) => {
+            const expected = input.issueStatus === "all" ? "" : ` (expected: ${input.issueStatus})`;
+            return `#${issue.number} is ${issue.actualState}${expected}`;
+        });
+        parts.push(`Wrong state: ${wrongStateMessages.join(", ")}`);
     }
     const message = `${parts.join("; ")} in ${input.repo}`;
     return {
@@ -75714,7 +75719,10 @@ async function checkMessage(args) {
             }
             else if (result.issue &&
                 !isIssueStateAllowed(result.issue.state, issueStatus)) {
-                wrongStateIssues.push(issueNumber);
+                wrongStateIssues.push({
+                    number: issueNumber,
+                    actualState: result.issue.state,
+                });
             }
             else if (result.issue) {
                 validIssues.push(issueNumber);
@@ -76181,36 +76189,11 @@ async function run() {
             const actionMode = result.input.actionMode || "custom";
             const prefix = results.length > 1 ? `[${actionMode}] ` : "";
             if (result.success) {
-                // Success cases
-                switch (result.reason) {
-                    case "excluded":
-                        core.info(`${prefix}Text was excluded from validation`);
-                        break;
-                    case "skipped":
-                        core.info(`${prefix}Validation skipped due to skip marker`);
-                        break;
-                    case "valid":
-                        if (result.issues?.valid && result.issues.valid.length > 0) {
-                            core.info(`${prefix}Valid issues: #${result.issues.valid.join(", #")}`);
-                        }
-                        else {
-                            core.info(`${prefix}${result.message}`);
-                        }
-                        break;
-                    case "no-issues":
-                    case "invalid-issues":
-                    case "error":
-                        core.info(`${prefix}${result.message}`);
-                        break;
-                    default: {
-                        // Exhaustive check: TypeScript will error if a new reason is added
-                        const _exhaustive = result.reason;
-                        throw new Error(`Unexpected reason: ${_exhaustive}`);
-                    }
-                }
+                // Success cases - simply use the message from result-factory
+                core.info(`${prefix}${result.message}`);
             }
             else {
-                // Failure cases
+                // Failure cases - simply use the message from result-factory
                 core.error(`${prefix}${result.message}`);
                 // Show details for failed validations
                 if (result.issues) {
@@ -76219,7 +76202,8 @@ async function run() {
                         details.push(`Not found: #${result.issues.notFound.join(", #")}`);
                     }
                     if (result.issues.wrongState.length > 0) {
-                        details.push(`Wrong state: #${result.issues.wrongState.join(", #")}`);
+                        const wrongStateMessages = result.issues.wrongState.map((issue) => `#${issue.number} is ${issue.actualState}`);
+                        details.push(`Wrong state: ${wrongStateMessages.join(", ")}`);
                     }
                     if (details.length > 0) {
                         core.info(`Details: ${details.join(", ")}`);

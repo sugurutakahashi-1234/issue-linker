@@ -97,7 +97,10 @@ export async function checkMessage(
     const githubToken = validatedArgs.githubToken ?? getGitHubToken();
     const validIssues: number[] = [];
     const notFoundIssues: number[] = [];
-    const wrongStateIssues: number[] = [];
+    const wrongStateIssues: Array<{
+      number: number;
+      actualState: "open" | "closed";
+    }> = [];
 
     for (const issueNumber of issueNumbers) {
       const result = await getGitHubIssue(
@@ -114,7 +117,10 @@ export async function checkMessage(
         result.issue &&
         !isIssueStateAllowed(result.issue.state, issueStatus)
       ) {
-        wrongStateIssues.push(issueNumber);
+        wrongStateIssues.push({
+          number: issueNumber,
+          actualState: result.issue.state,
+        });
       } else if (result.issue) {
         validIssues.push(issueNumber);
       }
