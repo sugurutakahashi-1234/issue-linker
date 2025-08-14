@@ -28,18 +28,23 @@
   ],
   "packages": {
     ".": {
+      "component": "root",
       "changelog-path": "CHANGELOG.md",
       "extra-files": ["README.md"]
     },
-    "packages/cli": {},
-    "packages/core": {}
+    "packages/cli": {
+      "component": "cli"
+    },
+    "packages/core": {
+      "component": "core"
+    }
   },
   "plugins": [
     "node-workspace",
     {
       "type": "linked-versions",
       "groupName": "issue-linker",
-      "components": [".", "packages/cli", "packages/core"]
+      "components": ["root", "cli", "core"]
     }
   ]
 }
