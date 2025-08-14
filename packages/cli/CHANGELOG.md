@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.1](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.3.0...v1.3.1) (2025-08-14)
+
+
+### 🐛 Bug Fixes
+
+* prevent post-release tasks from running on release-please PR updates ([#31](https://github.com/sugurutakahashi-1234/issue-linker/issues/31)) ([c94c24f](https://github.com/sugurutakahashi-1234/issue-linker/commit/c94c24f82c4c8a3e2cc5c27c09960d99c76c16b3))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @issue-linker/core bumped to 1.3.1
+
 ## [1.3.0](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.2.0...v1.3.0) (2025-08-14)
 
 
