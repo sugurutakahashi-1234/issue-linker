@@ -104,7 +104,7 @@ issue-linker provides three check modes for different validation contexts:
 ### `commit`
 - **Use case**: Commit message validation
 - **Default --extract** (regex): `#(\d+)` - Detects `#123` format only
-- **Default --exclude** (glob pattern): `{Rebase*,Merge*,Revert*,fixup!*,squash!*,Applied suggestion*,Apply automatic changes,Automated Change*,Update branch*,Auto-merge*,(cherry picked from commit*,Initial commit,Update README.md,Update *.md,Updated content}`
+- **Default --exclude** (glob pattern): `{Rebase*,Merge*,Revert*,fixup!*,squash!*,Applied suggestion*,Apply automatic changes,Automated Change*,Update branch*,Auto-merge*,*cherry picked from commit*,Initial commit,Update README.md,Update *.md,Updated content}`
 
 ### `branch`
 - **Use case**: Branch name validation

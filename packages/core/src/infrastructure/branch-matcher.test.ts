@@ -52,6 +52,23 @@ describe("branch-matcher", () => {
           false,
         );
       });
+
+      it("should handle patterns with slashes correctly", () => {
+        // Test case for release/** pattern in branch mode
+        expect(shouldExclude("release/v1.0.0", "branch").excluded).toBe(true);
+        expect(shouldExclude("release/1.2.3", "branch").excluded).toBe(true);
+
+        // Test case for Update *.md pattern in commit mode
+        expect(shouldExclude("Update README.md", "commit").excluded).toBe(true);
+        expect(shouldExclude("Update docs.md", "commit").excluded).toBe(true);
+      });
+
+      it("should handle dot files patterns", () => {
+        // Test if .md files are handled correctly
+        expect(shouldExclude("Update .gitignore.md", "commit").excluded).toBe(
+          true,
+        );
+      });
     });
 
     describe("default mode", () => {
