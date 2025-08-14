@@ -33,7 +33,7 @@ const config: IBranchLintConfig = {
   ],
   rules: {
     "branch-pattern": ":type/:name",
-    "branch-subject-pattern": "[a-z0-9-]+",
+    "branch-subject-pattern": "[a-z0-9.-]+",
     "branch-min-length": 5,
     "branch-max-length": 50,
   },

@@ -100,7 +100,7 @@ jobs:
           if ! git diff --quiet -- bun.lock; then
             echo "changed=true" >> $GITHUB_OUTPUT
             echo "📦 bun.lock has changes:"
-            git diff --stat -- bun.lock
+            git diff -- bun.lock
           else
             echo "changed=false" >> $GITHUB_OUTPUT
             echo "✅ No changes to bun.lock"

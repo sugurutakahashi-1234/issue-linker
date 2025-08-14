@@ -37,7 +37,7 @@
     },
     "packages/cli": {
       "name": "issue-linker",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "bin": {
         "issue-linker": "dist/cli.js",
       },
@@ -54,7 +54,7 @@
     },
     "packages/core": {
       "name": "@issue-linker/core",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "dependencies": {
         "@octokit/plugin-retry": "^8.0.1",
         "@octokit/plugin-throttling": "^11.0.1",
