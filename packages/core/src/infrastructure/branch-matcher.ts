@@ -1,7 +1,6 @@
 // Infrastructure layer - Validation functions
 
 import micromatch from "micromatch";
-import { minimatch } from "minimatch";
 import { EXCLUDE_PATTERNS } from "../domain/constants.js";
 import type {
   CheckMode,
@@ -40,7 +39,7 @@ export function shouldExclude(
     return { excluded: false };
   }
 
-  const excluded = minimatch(text, pattern);
+  const excluded = micromatch.isMatch(text, pattern);
   return excluded ? { excluded, pattern } : { excluded };
 }
 

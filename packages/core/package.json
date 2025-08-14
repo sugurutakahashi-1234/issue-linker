@@ -70,7 +70,6 @@
     "@octokit/request-error": "^7.0.0",
     "@t3-oss/env-core": "^0.13.8",
     "micromatch": "^4.0.8",
-    "minimatch": "^10.0.3",
     "octokit": "^5.0.3",
     "simple-git": "^3.28.0",
     "valibot": "^1.1.0"

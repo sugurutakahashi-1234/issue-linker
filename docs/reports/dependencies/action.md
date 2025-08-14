@@ -28,7 +28,6 @@ flowchart LR
         node//modules///octokit/request//error/dist//types/index.d.ts["@octokit/request-error"]
         node//modules/octokit/dist//types/index.d.ts["octokit"]
         node//modules///types/micromatch/index.d.ts["@types/micromatch"]
-        node//modules/minimatch/dist/commonjs/index.d.ts["minimatch"]
         node//modules/simple//git/dist/typings/index.d.ts["simple-git"]
     end
     packages/action/src/github//actions//helpers.ts-->node//modules///actions/github/lib/context.d.ts
@@ -50,7 +49,6 @@ flowchart LR
     packages/core-->node//modules///octokit/request//error/dist//types/index.d.ts
     packages/core-->node//modules/octokit/dist//types/index.d.ts
     packages/core-->node//modules///types/micromatch/index.d.ts
-    packages/core-->node//modules/minimatch/dist/commonjs/index.d.ts
     packages/core-->node//modules/simple//git/dist/typings/index.d.ts
 ```
 
