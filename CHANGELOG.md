@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.0](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.3.1...v1.4.0) (2025-08-14)
+
+
+### ✨ Features
+
+* create bun.lock update PR as draft ([#34](https://github.com/sugurutakahashi-1234/issue-linker/issues/34)) ([f397c49](https://github.com/sugurutakahashi-1234/issue-linker/commit/f397c497f95c22c8015665717217ed68981ec7b2))
+
+
+### 🔧 Maintenance
+
+* update bun.lock after v1.3.1 release ([#32](https://github.com/sugurutakahashi-1234/issue-linker/issues/32)) ([ade1b86](https://github.com/sugurutakahashi-1234/issue-linker/commit/ade1b862fbe901fbde4bcb7715ffba8870c658cb))
+
 ## [1.3.1](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.3.0...v1.3.1) (2025-08-14)
 
 
