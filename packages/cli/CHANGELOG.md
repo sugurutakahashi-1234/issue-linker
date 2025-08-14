@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.5.1](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.5.0...v1.5.1) (2025-08-14)
+
+
+### ♻️ Code Refactoring
+
+* improve verbose logging for validation results ([#41](https://github.com/sugurutakahashi-1234/issue-linker/issues/41)) ([3fd4c35](https://github.com/sugurutakahashi-1234/issue-linker/commit/3fd4c35d00c945fd7c969199de918a04bf1582d1))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @issue-linker/core bumped to 1.5.1
+
 ## [1.5.0](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.4.1...v1.5.0) (2025-08-14)
 
 
