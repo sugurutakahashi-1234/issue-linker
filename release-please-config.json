@@ -34,5 +34,12 @@
     "packages/cli": {},
     "packages/core": {}
   },
-  "plugins": ["node-workspace"]
+  "plugins": [
+    "node-workspace",
+    {
+      "type": "linked-versions",
+      "groupName": "issue-linker",
+      "components": [".", "packages/cli", "packages/core"]
+    }
+  ]
 }
