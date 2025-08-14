@@ -94,8 +94,8 @@ flowchart LR
     packages/action-->node//modules/valibot/dist/index.d.cts
     packages/action-->node//modules///actions/core/lib/core.d.ts
     packages/action-->node//modules///actions/github/lib/github.d.ts
-    packages/cli-->node//modules///commander//js/extra//typings/index.d.ts
     packages/cli-->packages/core/dist/index.d.ts
+    packages/cli-->node//modules///commander//js/extra//typings/index.d.ts
     packages/cli-->node//modules/valibot/dist/index.d.cts
     packages/core/src/domain/validation//schemas.ts-->node//modules/valibot/dist/index.d.cts
     packages/core/src/domain/result.ts-->packages/core/src/domain/validation//schemas.ts

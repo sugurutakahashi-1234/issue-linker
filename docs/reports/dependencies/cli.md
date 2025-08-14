@@ -11,6 +11,7 @@ flowchart LR
         packages/action["/action"]:::dir
         packages/core["/core"]:::dir
         subgraph packages/cli/src["/cli/src"]
+            packages/cli/src/verbose//logger.ts["verbose-logger.ts"]
             packages/cli/src/cli.ts["cli.ts"]
         end
     end
@@ -34,9 +35,11 @@ flowchart LR
     packages/action-->node//modules/valibot/dist/index.d.cts
     packages/action-->node//modules///actions/core/lib/core.d.ts
     packages/action-->node//modules///actions/github/lib/github.d.ts
+    packages/cli/src/verbose//logger.ts-->packages/core
     packages/cli/src/cli.ts-->node//modules///commander//js/extra//typings/index.d.ts
     packages/cli/src/cli.ts-->packages/core
     packages/cli/src/cli.ts-->node//modules/valibot/dist/index.d.cts
+    packages/cli/src/cli.ts-->packages/cli/src/verbose//logger.ts
     packages/core-->node//modules///t3//oss/env//core/dist/index.d.ts
     packages/core-->node//modules///octokit/plugin//retry/dist//types/index.d.ts
     packages/core-->node//modules///octokit/plugin//throttling/dist//types/index.d.ts

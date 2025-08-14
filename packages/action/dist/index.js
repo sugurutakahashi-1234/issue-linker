@@ -74174,12 +74174,38 @@ async function run() {
                 core.error(`${prefix}${result.message}`);
                 // Show details for failed validations
                 if (result.issues) {
+                    // Note: We don't show text preview in GitHub Actions since the input is visible in the workflow
+                    // Check mode (show if not default)
+                    if (result.input.checkMode !== "default") {
+                        core.info(`Check mode: ${result.input.checkMode}`);
+                    }
+                    // Extract pattern (show if custom)
+                    if (result.input.extract) {
+                        core.info(`Extract pattern: "${result.input.extract}"`);
+                    }
+                    // Exclude pattern (show if set)
+                    if (result.input.exclude) {
+                        core.info(`Exclude pattern: "${result.input.exclude}"`);
+                    }
+                    // Issue status filter
+                    core.info(`Issue status: ${result.input.issueStatus}`);
+                    // Repository
+                    core.info(`Repository: ${result.input.repo}`);
+                    // Issue details
                     const details = [];
+                    if (result.issues.valid.length > 0) {
+                        details.push(`Valid issues: #${result.issues.valid.join(", #")}`);
+                    }
                     if (result.issues.notFound.length > 0) {
-                        details.push(`Not found: #${result.issues.notFound.join(", #")}`);
+                        details.push(`Issues not found: #${result.issues.notFound.join(", #")}`);
                     }
                     if (result.issues.wrongState.length > 0) {
-                        const wrongStateMessages = result.issues.wrongState.map((issue) => `#${issue.number} is ${issue.actualState}`);
+                        const wrongStateMessages = result.issues.wrongState.map((issue) => {
+                            const expected = result.input.issueStatus === "all"
+                                ? ""
+                                : ` (expected: ${result.input.issueStatus})`;
+                            return `#${issue.number} is ${issue.actualState}${expected}`;
+                        });
                         details.push(`Wrong state: ${wrongStateMessages.join(", ")}`);
                     }
                     if (details.length > 0) {

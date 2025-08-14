@@ -13,6 +13,7 @@ import {
   checkMessage,
 } from "@issue-linker/core";
 import * as v from "valibot";
+import { printVerboseDetails } from "./verbose-logger.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const packageJsonPath = join(__dirname, "..", "package.json");
@@ -105,12 +106,7 @@ program
 
         // Show extra details in verbose mode
         if (options.verbose) {
-          if (result.input.checkMode !== "default") {
-            console.log(`   Check mode: ${result.input.checkMode}`);
-          }
-          if (result.input.repo) {
-            console.log(`   Repository: ${result.input.repo}`);
-          }
+          printVerboseDetails(result, console.log);
         }
         process.exit(0);
       } else {
@@ -118,36 +114,8 @@ program
         console.error(`❌ ${result.message}`);
 
         // Show details
-        if (result.issues && options.verbose) {
-          const details = [];
-
-          if (result.issues.valid.length > 0) {
-            details.push(`Valid: #${result.issues.valid.join(", #")}`);
-          }
-          if (result.issues.notFound.length > 0) {
-            details.push(`Not found: #${result.issues.notFound.join(", #")}`);
-          }
-          if (result.issues.wrongState.length > 0) {
-            const wrongStateMessages = result.issues.wrongState.map((issue) => {
-              const expected =
-                result.input.issueStatus === "all"
-                  ? ""
-                  : ` (expected: ${result.input.issueStatus})`;
-              return `#${issue.number} is ${issue.actualState}${expected}`;
-            });
-            details.push(`Wrong state: ${wrongStateMessages.join(", ")}`);
-          }
-
-          if (details.length > 0) {
-            console.error(`   Details: ${details.join(", ")}`);
-          }
-
-          if (result.input.checkMode !== "default") {
-            console.error(`   Check mode: ${result.input.checkMode}`);
-          }
-          if (result.input.repo) {
-            console.error(`   Repository: ${result.input.repo}`);
-          }
+        if (options.verbose) {
+          printVerboseDetails(result, console.error);
         }
         process.exit(1);
       }

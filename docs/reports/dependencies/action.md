@@ -40,8 +40,8 @@ flowchart LR
     packages/action/src/index.ts-->node//modules/valibot/dist/index.d.cts
     packages/action/src/index.ts-->packages/action/src/github//actions//helpers.ts
     packages/action/src/index.ts-->packages/action/src/validation//helpers.ts
-    packages/cli-->node//modules///commander//js/extra//typings/index.d.ts
     packages/cli-->packages/core
+    packages/cli-->node//modules///commander//js/extra//typings/index.d.ts
     packages/cli-->node//modules/valibot/dist/index.d.cts
     packages/core-->node//modules///t3//oss/env//core/dist/index.d.ts
     packages/core-->node//modules///octokit/plugin//retry/dist//types/index.d.ts

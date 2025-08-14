@@ -58,6 +58,7 @@ flowchart LR
             end
         end
         subgraph packages/cli/src["/cli/src"]
+            packages/cli/src/verbose//logger.ts["verbose-logger.ts"]
             packages/cli/src/cli.ts["cli.ts"]
         end
     end
@@ -103,9 +104,11 @@ flowchart LR
     packages/action/src/index.ts-->node//modules/valibot/dist/index.d.cts
     packages/action/src/index.ts-->packages/action/src/github//actions//helpers.ts
     packages/action/src/index.ts-->packages/action/src/validation//helpers.ts
+    packages/cli/src/verbose//logger.ts-->packages/core/dist/index.d.ts
     packages/cli/src/cli.ts-->node//modules///commander//js/extra//typings/index.d.ts
     packages/cli/src/cli.ts-->packages/core/dist/index.d.ts
     packages/cli/src/cli.ts-->node//modules/valibot/dist/index.d.cts
+    packages/cli/src/cli.ts-->packages/cli/src/verbose//logger.ts
     packages/core/src/domain/validation//schemas.ts-->node//modules/valibot/dist/index.d.cts
     packages/core/src/domain/result.ts-->packages/core/src/domain/validation//schemas.ts
     packages/core/src/domain/env.ts-->node//modules///t3//oss/env//core/dist/index.d.ts
