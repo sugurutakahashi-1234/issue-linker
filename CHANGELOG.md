@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.1](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.3.0...v1.3.1) (2025-08-14)
+
+
+### 🐛 Bug Fixes
+
+* prevent post-release tasks from running on release-please PR updates ([#31](https://github.com/sugurutakahashi-1234/issue-linker/issues/31)) ([c94c24f](https://github.com/sugurutakahashi-1234/issue-linker/commit/c94c24f82c4c8a3e2cc5c27c09960d99c76c16b3))
+
+
+### ⚡ Performance Improvements
+
+* optimize branch validation and improve error messages ([#29](https://github.com/sugurutakahashi-1234/issue-linker/issues/29)) ([84861b3](https://github.com/sugurutakahashi-1234/issue-linker/commit/84861b3f5714db17e2c813491f2132857f825795))
+
 ## [1.3.0](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.2.0...v1.3.0) (2025-08-14)
 
 
