@@ -1,4 +1,4 @@
-// Application layer - Use case for checking text messages
+// Application layer - Use case for checking issue references in text
 
 import * as v from "valibot";
 import type { CheckMessageResult, InputConfig } from "../domain/result.js";

@@ -163,13 +163,13 @@ Examples:
 
   Basic validation:
     $ issue-linker -t "Fix: resolve authentication error #123"
-    ✅ Valid issues: #123
+    ✅ Valid issues: #123 in owner/repo
 
-    $ issue-linker -t "feat/123-auth-fix" -c branch  
-    ✅ Valid issues: #123
+    $ issue-linker -t "feat/123-auth-fix" -c branch
+    ✅ Valid issues: #123 in owner/repo
 
     $ issue-linker -t "Fix typo in README"
-    ❌ No issue numbers found
+    ❌ No issue number found in text
 
   Git integration:
     $ issue-linker -t "$(git branch --show-current)" -c branch
@@ -177,10 +177,10 @@ Examples:
 
   Skip validation:
     $ issue-linker -t "Release v2.0.0 [skip issue-linker]"
-    ✅ Validation skipped due to skip marker
+    ⏭️  Skipped: Contains [skip issue-linker] marker
 
     $ issue-linker -t "[WIP] Fix #789" --exclude "*[WIP]*"
-    ✅ Text was excluded from validation
+    ⏭️  Excluded: Matched exclude pattern "*[WIP]*"
 
   Custom options:
     $ issue-linker -t "Fix #123" --issue-status open
@@ -189,7 +189,9 @@ Examples:
     $ issue-linker -t "Fix #789" --json
 
 Skip Markers:
-  Use [skip issue-linker] or [issue-linker skip] to bypass validation
+  Use any of these markers to bypass validation (case-insensitive):
+    [skip issue-linker], [skip-issue-linker]
+    [issue-linker skip], [issue-linker-skip]
 
 For more information:
   https://github.com/sugurutakahashi-1234/issue-linker

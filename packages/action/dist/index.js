@@ -75668,7 +75668,7 @@ function findSkipMarker(text) {
 }
 //# sourceMappingURL=skip-marker-checker.js.map
 ;// CONCATENATED MODULE: ../core/dist/application/check-message-use-case.js
-// Application layer - Use case for checking text messages
+// Application layer - Use case for checking issue references in text
 
 
 
