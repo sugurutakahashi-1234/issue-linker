@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.2.0...v1.3.0) (2025-08-14)
+
+
+### ⚡ Performance Improvements
+
+* optimize branch validation workflow ([#27](https://github.com/sugurutakahashi-1234/issue-linker/issues/27)) ([a09028c](https://github.com/sugurutakahashi-1234/issue-linker/commit/a09028c1a93980709a550c0c612b3b2921ffd455))
+
+
+### 🔧 Maintenance
+
+* bump version to 1.3.0 ([1796eff](https://github.com/sugurutakahashi-1234/issue-linker/commit/1796effc831acd4afed0b30df3b535a651dd9195))
+
 ## [1.2.0](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.1.0...v1.2.0) (2025-08-14)
 
 
