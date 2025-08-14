@@ -36,7 +36,7 @@ async function run() {
     const commentOnIssuesWhenBranchPushed =
       core.getInput("comment-on-issues-when-branch-pushed") === "true";
 
-    // Advanced mode inputs
+    // Custom mode inputs
     const text = core.getInput("text");
     const checkMode = core.getInput("check-mode") || undefined;
     const extract = core.getInput("extract") || undefined;
@@ -196,7 +196,7 @@ async function run() {
       }
     }
 
-    // Advanced mode validation
+    // Custom mode validation
     if (text) {
       const messageOptions = {
         text,
@@ -216,7 +216,7 @@ async function run() {
         validatedArgs = v.parse(CheckMessageArgsSchema, messageOptions);
       } catch (error) {
         if (error instanceof v.ValiError) {
-          throw new Error(`Invalid advanced mode arguments: ${error.message}`);
+          throw new Error(`Invalid custom mode arguments: ${error.message}`);
         }
         throw error;
       }
