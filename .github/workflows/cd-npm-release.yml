@@ -21,7 +21,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
-      tag_name: ${{ steps.get_tag.outputs.tag_name }}
+      tag_name: ${{ steps.get_version.outputs.tag_name }}
     steps:
       - name: Release Please Action
         id: release
@@ -81,10 +81,17 @@ jobs:
 
       - name: Get created tag
         if: ${{ steps.release.outputs.release_created }}
-        id: get_tag
+        id: get_version
         run: |
           # Get the version from package.json (which release-please just updated)
           VERSION=$(jq -r .version package.json)
           TAG_NAME="v${VERSION}"
           echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
           echo "Created tag: ${TAG_NAME}"
+
+  # Trigger post-release tasks
+  trigger-post-release-tasks:
+    needs: cd-npm-release
+    if: ${{ needs.cd-npm-release.outputs.release_created == 'true' }}
+    uses: ./.github/workflows/ci-npm-released-tasks.yml
+    secrets: inherit
