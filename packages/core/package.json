@@ -76,7 +76,7 @@
     "valibot": "^1.1.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.1.4",
+    "@biomejs/biome": "^2.2.0",
     "@types/micromatch": "^4.0.9",
     "@ysk8hori/typescript-graph": "^0.26.4",
     "typescript": "^5.9.2"
