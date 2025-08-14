@@ -20,7 +20,7 @@
     "fix": "biome check --write --unsafe .",
     "check": "biome check .",
     "🧪": "========== Root-only Testing ==========",
-    "test:e2e": "bun scripts/testing/e2e-npm-package.ts",
+    "test:e2e": "bun scripts/testing/e2e-simple.ts",
     "test:action-marketplace": "act pull_request -W .github/workflows/local-test-action-marketplace.yml --eventpath .github/test-events/mock-pull-request-for-local-testing.json -s GITHUB_TOKEN=$(gh auth token)",
     "test:coverage": "bun test --coverage",
     "test:coverage:html": "bun test --coverage && bunx @lcov-viewer/cli lcov coverage/lcov.info -o coverage/html",
