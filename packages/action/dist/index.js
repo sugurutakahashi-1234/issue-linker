@@ -37311,7 +37311,7 @@ function isCreateBranchEvent(context) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createCheckMessageArgs = createCheckMessageArgs;
 const tslib_1 = __nccwpck_require__(4176);
-const core_1 = __nccwpck_require__(4023);
+const core_1 = __nccwpck_require__(6291);
 const v = tslib_1.__importStar(__nccwpck_require__(9487));
 /**
  * Helper function to create CheckMessageArgs with validation
@@ -46752,7 +46752,7 @@ function unwrap(schema) {
 
 /***/ }),
 
-/***/ 4023:
+/***/ 6291:
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
 
 // ESM COMPAT FLAG
@@ -46774,7 +46774,7 @@ __nccwpck_require__.d(__webpack_exports__, {
   checkDuplicateComment: () => (/* reexport */ checkDuplicateComment),
   checkMessage: () => (/* reexport */ checkMessage),
   commentOnBranchIssues: () => (/* reexport */ commentOnBranchIssues),
-  createIssueComment: () => (/* reexport */ createIssueComment),
+  createIssueComment: () => (/* reexport */ create_issue_comment_use_case_createIssueComment),
   getPullRequestCommits: () => (/* reexport */ getPullRequestCommits)
 });
 
@@ -68252,7 +68252,7 @@ function createOctokit(token, hostname) {
  * @param hostname - Optional GitHub hostname for Enterprise
  * @returns Result object containing issue or error information
  */
-async function getGitHubIssue(owner, repo, issueNumber, token, hostname) {
+async function getIssue(owner, repo, issueNumber, token, hostname) {
     const octokit = createOctokit(token, hostname);
     try {
         const { data } = await octokit.rest.issues.get({
@@ -68370,7 +68370,7 @@ async function fetchPullRequestCommits(owner, repo, prNumber, token, hostname) {
  * @returns Comment ID on success
  * @internal
  */
-async function createGitHubIssueComment(owner, repo, issueNumber, body, token, hostname) {
+async function createIssueComment(owner, repo, issueNumber, body, token, hostname) {
     const octokit = createOctokit(token, hostname);
     try {
         const { data } = await octokit.rest.issues.createComment({
@@ -68409,7 +68409,7 @@ async function createGitHubIssueComment(owner, repo, issueNumber, body, token, h
  * @returns Array of comment bodies
  * @internal
  */
-async function listGitHubIssueComments(owner, repo, issueNumber, token, hostname) {
+async function listIssueComments(owner, repo, issueNumber, token, hostname) {
     const octokit = createOctokit(token, hostname);
     try {
         const { data } = await octokit.rest.issues.listComments({
@@ -68500,7 +68500,7 @@ async function checkDuplicateComment(args) {
     }
     try {
         // Step 4: Get existing comments
-        const comments = await listGitHubIssueComments(owner, repo, validatedArgs.issueNumber, token, validatedArgs.hostname);
+        const comments = await listIssueComments(owner, repo, validatedArgs.issueNumber, token, validatedArgs.hostname);
         // Step 5: Check for marker in comments
         const duplicateComment = comments.find((comment) => comment.body.includes(validatedArgs.marker));
         if (duplicateComment) {
@@ -68623,87 +68623,6 @@ function createErrorResult(error, input) {
     };
 }
 //# sourceMappingURL=result-factory.js.map
-// EXTERNAL MODULE: ../../node_modules/micromatch/index.js
-var node_modules_micromatch = __nccwpck_require__(7805);
-;// CONCATENATED MODULE: ../core/dist/domain/constants.js
-// Constants for issue-linker
-// ===== Exclude Patterns (Glob) =====
-/**
- * Exclude patterns for each check mode using glob syntax (micromatch)
- */
-const EXCLUDE_PATTERNS = {
-    default: undefined,
-    branch: "{main,master,develop,release/**,renovate/**,dependabot/**,release-please*,snyk/**,imgbot/**,all-contributors/**}",
-    commit: "{Rebase*,Merge*,Revert*,fixup!*,squash!*,Applied suggestion*,Apply automatic changes,Automated Change*,Update branch*,Auto-merge*,*cherry picked from commit*,Initial commit,Update README.md,Update *.md,Updated content}",
-};
-// ===== Extract Patterns (RegExp) =====
-/**
- * Extract patterns for issue numbers using regular expressions
- * All patterns should capture the issue number in group 1
- */
-const EXTRACT_PATTERNS = {
-    default: /#(\d+)/g, // #123 format only
-    commit: /#(\d+)/g, // Same as default
-    branch: /(?<![.\d])(\d{1,7})(?![.\d])/g, // Numbers not in version strings (e.g., v2.0)
-};
-// ===== Skip Markers =====
-/**
- * Skip markers that bypass validation entirely
- * Case-insensitive patterns to match skip markers with space or hyphen
- */
-const constants_SKIP_MARKERS = [
-    /\[skip issue-linker\]/i,
-    /\[issue-linker skip\]/i,
-    /\[skip-issue-linker\]/i,
-    /\[issue-linker-skip\]/i,
-];
-//# sourceMappingURL=constants.js.map
-;// CONCATENATED MODULE: ../core/dist/infrastructure/branch-matcher.js
-// Infrastructure layer - Validation functions
-
-
-/**
- * Validates if a branch should be excluded from validation
- * @param branch - The branch name to check
- * @param pattern - Glob pattern for exclusion
- * @returns true if branch should be excluded
- */
-function isBranchExcluded(branch, pattern) {
-    if (!pattern)
-        return false;
-    return micromatch.isMatch(branch, pattern);
-}
-/**
- * Check if text should be excluded based on mode and pattern
- * @param text - The text to check
- * @param checkMode - The check mode
- * @param customExclude - Optional custom exclude pattern
- * @returns Object with exclusion status and the pattern used
- */
-function shouldExclude(text, checkMode, customExclude) {
-    // Use custom exclude pattern if provided, otherwise use mode-specific default
-    const pattern = customExclude ?? EXCLUDE_PATTERNS[checkMode];
-    // No pattern means no exclusion
-    if (!pattern) {
-        return { excluded: false };
-    }
-    const excluded = node_modules_micromatch.isMatch(text, pattern);
-    return excluded ? { excluded, pattern } : { excluded };
-}
-/**
- * Validates if an issue state is allowed
- * @param state - The issue state to check
- * @param filter - Issue state filter ("all", "open", or "closed")
- * @returns true if state is allowed
- */
-function isIssueStateAllowed(state, filter) {
-    const normalizedState = state.toLowerCase();
-    if (filter === "all") {
-        return true;
-    }
-    return normalizedState === filter;
-}
-//# sourceMappingURL=branch-matcher.js.map
 // EXTERNAL MODULE: ../../node_modules/@kwsites/file-exists/dist/index.js
 var dist = __nccwpck_require__(8921);
 // EXTERNAL MODULE: ../../node_modules/debug/src/index.js
@@ -73559,6 +73478,39 @@ function parseRepositoryFromGitUrl(url) {
         "  - ssh://git@github.com/owner/repo[.git]");
 }
 //# sourceMappingURL=git-url-parser.js.map
+;// CONCATENATED MODULE: ../core/dist/domain/constants.js
+// Constants for issue-linker
+// ===== Exclude Patterns (Glob) =====
+/**
+ * Exclude patterns for each check mode using glob syntax (micromatch)
+ */
+const EXCLUDE_PATTERNS = {
+    default: undefined,
+    branch: "{main,master,develop,release/**,renovate/**,dependabot/**,release-please*,snyk/**,imgbot/**,all-contributors/**}",
+    commit: "{Rebase*,Merge*,Revert*,fixup!*,squash!*,Applied suggestion*,Apply automatic changes,Automated Change*,Update branch*,Auto-merge*,*cherry picked from commit*,Initial commit,Update README.md,Update *.md,Updated content}",
+};
+// ===== Extract Patterns (RegExp) =====
+/**
+ * Extract patterns for issue numbers using regular expressions
+ * All patterns should capture the issue number in group 1
+ */
+const EXTRACT_PATTERNS = {
+    default: /#(\d+)/g, // #123 format only
+    commit: /#(\d+)/g, // Same as default
+    branch: /(?<![.\d])(\d{1,7})(?![.\d])/g, // Numbers not in version strings (e.g., v2.0)
+};
+// ===== Skip Markers =====
+/**
+ * Skip markers that bypass validation entirely
+ * Case-insensitive patterns to match skip markers with space or hyphen
+ */
+const SKIP_MARKERS = [
+    /\[skip issue-linker\]/i,
+    /\[issue-linker skip\]/i,
+    /\[skip-issue-linker\]/i,
+    /\[issue-linker-skip\]/i,
+];
+//# sourceMappingURL=constants.js.map
 ;// CONCATENATED MODULE: ../core/dist/infrastructure/issue-finder.js
 // Infrastructure layer - Issue number finding
 
@@ -73603,20 +73555,12 @@ function findIssueNumbers(text, checkMode, customPattern) {
 // Infrastructure layer - Skip marker detection
 
 /**
- * Check if text contains a skip marker
- * @param text - Text to check for skip markers
- * @returns true if skip marker is found
- */
-function hasSkipMarker(text) {
-    return SKIP_MARKERS.some((marker) => marker.test(text));
-}
-/**
  * Find which skip marker is present in the text
  * @param text - Text to check for skip markers
  * @returns The matched skip marker text or null if not found
  */
 function findSkipMarker(text) {
-    for (const marker of constants_SKIP_MARKERS) {
+    for (const marker of SKIP_MARKERS) {
         if (marker.test(text)) {
             // Get the actual matched string from the text
             const match = text.match(marker);
@@ -73626,6 +73570,54 @@ function findSkipMarker(text) {
     return null;
 }
 //# sourceMappingURL=skip-marker-checker.js.map
+// EXTERNAL MODULE: ../../node_modules/micromatch/index.js
+var node_modules_micromatch = __nccwpck_require__(7805);
+;// CONCATENATED MODULE: ../core/dist/infrastructure/validation-matcher.js
+// Infrastructure layer - Validation functions
+
+
+/**
+ * Validates if a branch should be excluded from validation
+ * @param branch - The branch name to check
+ * @param pattern - Glob pattern for exclusion
+ * @returns true if branch should be excluded
+ */
+function isBranchExcluded(branch, pattern) {
+    if (!pattern)
+        return false;
+    return micromatch.isMatch(branch, pattern);
+}
+/**
+ * Check if text should be excluded based on mode and pattern
+ * @param text - The text to check
+ * @param checkMode - The check mode
+ * @param customExclude - Optional custom exclude pattern
+ * @returns Object with exclusion status and the pattern used
+ */
+function shouldExclude(text, checkMode, customExclude) {
+    // Use custom exclude pattern if provided, otherwise use mode-specific default
+    const pattern = customExclude ?? EXCLUDE_PATTERNS[checkMode];
+    // No pattern means no exclusion
+    if (!pattern) {
+        return { excluded: false };
+    }
+    const excluded = node_modules_micromatch.isMatch(text, pattern);
+    return excluded ? { excluded, pattern } : { excluded };
+}
+/**
+ * Validates if an issue state is allowed
+ * @param state - The issue state to check
+ * @param filter - Issue state filter ("all", "open", or "closed")
+ * @returns true if state is allowed
+ */
+function isIssueStateAllowed(state, filter) {
+    const normalizedState = state.toLowerCase();
+    if (filter === "all") {
+        return true;
+    }
+    return normalizedState === filter;
+}
+//# sourceMappingURL=validation-matcher.js.map
 ;// CONCATENATED MODULE: ../core/dist/application/check-message-use-case.js
 // Application layer - Use case for checking issue references in text
 
@@ -73698,7 +73690,7 @@ async function checkMessage(args) {
         const notFoundIssues = [];
         const wrongStateIssues = [];
         for (const issueNumber of issueNumbers) {
-            const result = await getGitHubIssue(repository.owner, repository.repo, issueNumber, githubToken, validatedArgs.hostname);
+            const result = await getIssue(repository.owner, repository.repo, issueNumber, githubToken, validatedArgs.hostname);
             if (!result.found) {
                 notFoundIssues.push(issueNumber);
             }
@@ -73755,7 +73747,7 @@ async function checkMessage(args) {
  * @param args - Arguments for creating the comment
  * @returns Result of the comment creation
  */
-async function createIssueComment(args) {
+async function create_issue_comment_use_case_createIssueComment(args) {
     // Step 1: Validate args
     const validationResult = safeParse(CreateIssueCommentArgsSchema, args);
     if (!validationResult.success) {
@@ -73785,7 +73777,7 @@ async function createIssueComment(args) {
     }
     try {
         // Step 4: Create the comment
-        const commentId = await createGitHubIssueComment(owner, repo, validatedArgs.issueNumber, validatedArgs.body, token, validatedArgs.hostname);
+        const commentId = await createIssueComment(owner, repo, validatedArgs.issueNumber, validatedArgs.body, token, validatedArgs.hostname);
         return {
             success: true,
             message: `Comment created successfully on issue #${validatedArgs.issueNumber}`,
@@ -73854,7 +73846,7 @@ async function commentOnBranchIssues(args) {
                 };
             }
             // Create comment
-            const commentResult = await createIssueComment({
+            const commentResult = await create_issue_comment_use_case_createIssueComment({
                 repo: validatedArgs.repo,
                 issueNumber,
                 body: commentBody,
@@ -74020,7 +74012,7 @@ Object.defineProperty(exports, "B", ({ value: true }));
 const tslib_1 = __nccwpck_require__(4176);
 const core = tslib_1.__importStar(__nccwpck_require__(7184));
 const github = tslib_1.__importStar(__nccwpck_require__(5683));
-const core_1 = __nccwpck_require__(4023);
+const core_1 = __nccwpck_require__(6291);
 const v = tslib_1.__importStar(__nccwpck_require__(9487));
 const github_actions_helpers_js_1 = __nccwpck_require__(8773);
 const validation_helpers_js_1 = __nccwpck_require__(3195);

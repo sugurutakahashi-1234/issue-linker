@@ -1,3 +1,5 @@
+echo "🐶 Husky: Running pre-push checks..."
+
 # Prevent direct push to main
 [ "$(git branch --show-current)" = "main" ] && echo "❌ No direct push to main!" && exit 1
 

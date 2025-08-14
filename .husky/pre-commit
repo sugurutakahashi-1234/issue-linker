@@ -1,3 +1,5 @@
+echo "🐶 Husky: Running pre-commit checks..."
+
 # Prevent direct commits to main
 [ "$(git branch --show-current)" = "main" ] && echo "❌ No direct commits to main!" && exit 1
 

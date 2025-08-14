@@ -3,9 +3,9 @@ import {
   isBranchExcluded,
   isIssueStateAllowed,
   shouldExclude,
-} from "./branch-matcher.js";
+} from "./validation-matcher.js";
 
-describe("branch-matcher", () => {
+describe("validation-matcher", () => {
   describe("isBranchExcluded", () => {
     it("should exclude branches matching patterns", () => {
       expect(isBranchExcluded("main", "main")).toBe(true);

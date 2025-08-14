@@ -27,8 +27,8 @@ flowchart LR
         node//modules///octokit/plugin//throttling/dist//types/index.d.ts["@octokit/plugin-throttling"]
         node//modules///octokit/request//error/dist//types/index.d.ts["@octokit/request-error"]
         node//modules/octokit/dist//types/index.d.ts["octokit"]
-        node//modules///types/micromatch/index.d.ts["@types/micromatch"]
         node//modules/simple//git/dist/typings/index.d.ts["simple-git"]
+        node//modules///types/micromatch/index.d.ts["@types/micromatch"]
     end
     packages/action/src/github//actions//helpers.ts-->node//modules///actions/github/lib/context.d.ts
     packages/core-->node//modules/valibot/dist/index.d.cts
@@ -48,7 +48,7 @@ flowchart LR
     packages/core-->node//modules///octokit/plugin//throttling/dist//types/index.d.ts
     packages/core-->node//modules///octokit/request//error/dist//types/index.d.ts
     packages/core-->node//modules/octokit/dist//types/index.d.ts
-    packages/core-->node//modules///types/micromatch/index.d.ts
     packages/core-->node//modules/simple//git/dist/typings/index.d.ts
+    packages/core-->node//modules///types/micromatch/index.d.ts
 ```
 
