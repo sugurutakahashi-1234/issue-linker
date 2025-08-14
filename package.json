@@ -37,7 +37,7 @@
     "✅": "========== Validation & Release ==========",
     "validate:codecov": "cat codecov.yml | curl --data-binary @- https://codecov.io/validate",
     "validate:renovate": "$(which npx) --yes --package renovate -- renovate-config-validator renovate.json5 --strict",
-    "validate:branch": "git-branch-lint --config .elsikora/git-branch-lint.config.ts",
+    "validate:branch": "git-branch-lint",
     "release-please:dry-run": "bunx release-please release-pr --token=$(gh auth token) --repo-url=$(gh repo view --json nameWithOwner --jq '.nameWithOwner') --target-branch=$(git branch --show-current) --debug --dry-run",
     "npm-publish:dry-run": "bun run --filter='*' npm-publish:dry-run",
     "npm-publish": "bun run --filter='*' npm-publish",

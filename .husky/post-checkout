@@ -1,1 +1,1 @@
-bun run validate:branch
+bun run validate:branch || (echo "❌ Branch validation failed! Check: .elsikora/git-branch-lint.config.ts" && exit 1)

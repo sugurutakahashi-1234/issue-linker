@@ -28,14 +28,15 @@ jobs:
 
       - name: Install dependencies
         run: |
+          # Always recreate bun.lock to ensure consistency
+          rm -f bun.lock
+          bun install
+          
           if [[ "${{ github.event.pull_request.user.login }}" == "github-actions[bot]" ]]; then
             # Release-please PR: Skip lockfile check
-            bun install
+            echo "✅ Skipping lockfile check for release-please PR"
           else
             # Regular PR: Verify lockfile is in sync
-            rm -f bun.lock
-            bun install
-            
             if ! git diff --exit-code bun.lock > /dev/null 2>&1; then
               echo "❌ bun.lock is out of sync! Please run: rm -f bun.lock && bun install"
               git diff bun.lock
