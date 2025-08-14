@@ -27,9 +27,21 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        # NOTE: Not using --frozen-lockfile because release-please updates package.json versions
-        # but bun.lock still references old versions, causing installation failures
-        run: bun install
+        run: |
+          if [[ "${{ github.event.pull_request.user.login }}" == "github-actions[bot]" ]]; then
+            # Release-please PR: Skip lockfile check
+            bun install
+          else
+            # Regular PR: Verify lockfile is in sync
+            rm -f bun.lock
+            bun install
+            
+            if ! git diff --exit-code bun.lock > /dev/null 2>&1; then
+              echo "❌ bun.lock is out of sync! Please run: rm -f bun.lock && bun install"
+              git diff bun.lock
+              exit 1
+            fi
+          fi
 
       - name: Check code quality
         run: bun run check

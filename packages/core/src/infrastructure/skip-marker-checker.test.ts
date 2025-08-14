@@ -20,6 +20,22 @@ describe("hasSkipMarker", () => {
       );
       expect(hasSkipMarker("Text at end [issue-linker skip]")).toBe(true);
     });
+
+    it("should detect [skip-issue-linker]", () => {
+      expect(hasSkipMarker("[skip-issue-linker] Some text")).toBe(true);
+      expect(hasSkipMarker("Text with [skip-issue-linker] in middle")).toBe(
+        true,
+      );
+      expect(hasSkipMarker("Text at end [skip-issue-linker]")).toBe(true);
+    });
+
+    it("should detect [issue-linker-skip]", () => {
+      expect(hasSkipMarker("[issue-linker-skip] Some text")).toBe(true);
+      expect(hasSkipMarker("Text with [issue-linker-skip] in middle")).toBe(
+        true,
+      );
+      expect(hasSkipMarker("Text at end [issue-linker-skip]")).toBe(true);
+    });
   });
 
   describe("case insensitivity", () => {
@@ -31,6 +47,12 @@ describe("hasSkipMarker", () => {
         "[ISSUE-LINKER SKIP]",
         "[Issue-Linker Skip]",
         "[issue-linker SKIP]",
+        "[SKIP-ISSUE-LINKER]",
+        "[Skip-Issue-Linker]",
+        "[skip-ISSUE-linker]",
+        "[ISSUE-LINKER-SKIP]",
+        "[Issue-Linker-Skip]",
+        "[issue-linker-SKIP]",
       ];
 
       for (const text of testCases) {
@@ -43,7 +65,6 @@ describe("hasSkipMarker", () => {
     it("should not detect invalid markers", () => {
       const testCases = [
         "skip issue-linker", // Missing brackets
-        "[skip-issue-linker]", // Hyphen instead of space
         "[skip issuelinker]", // Missing hyphen
         "[skip issue linker]", // Missing hyphen between issue and linker
         "[skipissue-linker]", // No space after skip
