@@ -115,6 +115,7 @@ jobs:
         if: steps.check-changes.outputs.changed == 'true'
         run: |
           gh pr create \
+            --draft \
             --base main \
             --title "chore: update bun.lock after v${{ steps.get-version.outputs.version }} release" \
             --body "## Summary
@@ -122,6 +123,10 @@ jobs:
           Updates \`bun.lock\` to reflect the published v${{ steps.get-version.outputs.version }} packages.
           
           This PR was automatically created after the npm release workflow completed successfully.
+          
+          ## Draft Status
+          This PR is created as a draft to ensure all validation steps are properly reviewed before merging.
+          Once you've verified the changes, you can mark this PR as ready for review.
           
           ## Validation
           - ✅ NPM packages published successfully
