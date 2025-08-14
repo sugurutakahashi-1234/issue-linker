@@ -70689,11 +70689,13 @@ const EXTRACT_PATTERNS = {
 // ===== Skip Markers =====
 /**
  * Skip markers that bypass validation entirely
- * Case-insensitive patterns to match [skip issue-linker] and [issue-linker skip]
+ * Case-insensitive patterns to match skip markers with space or hyphen
  */
 const constants_SKIP_MARKERS = [
     /\[skip issue-linker\]/i,
     /\[issue-linker skip\]/i,
+    /\[skip-issue-linker\]/i,
+    /\[issue-linker-skip\]/i,
 ];
 //# sourceMappingURL=constants.js.map
 ;// CONCATENATED MODULE: ../core/dist/infrastructure/branch-matcher.js

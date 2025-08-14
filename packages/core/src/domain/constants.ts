@@ -31,9 +31,11 @@ export const EXTRACT_PATTERNS: Record<CheckMode, RegExp> = {
 
 /**
  * Skip markers that bypass validation entirely
- * Case-insensitive patterns to match [skip issue-linker] and [issue-linker skip]
+ * Case-insensitive patterns to match skip markers with space or hyphen
  */
 export const SKIP_MARKERS = [
   /\[skip issue-linker\]/i,
   /\[issue-linker skip\]/i,
+  /\[skip-issue-linker\]/i,
+  /\[issue-linker-skip\]/i,
 ] as const;

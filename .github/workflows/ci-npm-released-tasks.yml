@@ -46,12 +46,12 @@ jobs:
       - name: Use published action with skip marker
         uses: sugurutakahashi-1234/issue-linker@main
         with:
-          text: '[skip-issue-linker] Test message #123'
+          text: '[skip issue-linker] Test message #123'
       
       - name: Verify test
         run: |
           echo "✅ GitHub Action marketplace test successful"
-          echo "Note: Action should skip processing due to [skip-issue-linker] marker"
+          echo "Note: Action should skip processing due to [skip issue-linker] marker"
 
   # Update bun.lock and create PR
   update-bun-lock:

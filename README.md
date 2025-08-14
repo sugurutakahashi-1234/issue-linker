@@ -127,16 +127,13 @@ issue-linker provides three check modes for different validation contexts:
 
 ## Skip Markers
 
-Skip validation by including `[skip issue-linker]` or `[issue-linker skip]` anywhere in your text (case-insensitive). Works in all check modes.
+Skip validation by including any of these markers anywhere in your text (case-insensitive). Works in all check modes:
+- `[skip issue-linker]` or `[skip-issue-linker]`
+- `[issue-linker skip]` or `[issue-linker-skip]`
 
 ```bash
-# Skip auto-generated PR titles
 issue-linker -t "Release v2.0.0 [skip issue-linker]"
 # > ⏭️ Skipped: Contains [skip issue-linker] marker
-
-# Skip dependency updates
-issue-linker -t "chore: update dependencies [issue-linker skip]" -c commit
-# > ⏭️ Skipped: Contains [issue-linker skip] marker
 ```
 
 ## GitHub Actions
