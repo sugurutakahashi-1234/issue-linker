@@ -8,7 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub Marketplace](https://img.shields.io/badge/marketplace-issue--linker-blue?style=flat&logo=github)](https://github.com/marketplace/actions/issue-linker)
 
-A CLI and GitHub Action that validates issue references (#123) in any text - commit messages, branch names, PR titles, or custom strings.
+A CLI and GitHub Action that validates issue references actually exist in your GitHub repository - not just pattern matching, but real verification of commit messages (#123), branch names (feature/123, 123-fix-bug), PR titles, or any text.
 
 ## Why issue-linker?
 
@@ -53,17 +53,17 @@ npx issue-linker -t "Add feature #999"
 npx issue-linker -t "Implement #123" --issue-status closed
 # > ❌ Wrong state: #123 is open (expected: closed) in owner/repo
 
-npx issue-linker -t "feature/auth-improvements-123" -c branch
+npx issue-linker -t "feature/123-auth-improvements" -c branch
 # > ✅ Valid issues: #123 in owner/repo
 ```
 
 ### More Examples
 
 ```bash
-# Validate your current branch name
+# Validate your current branch name (e.g., feature/456, 789-hotfix)
 npx issue-linker -t "$(git branch --show-current)" -c branch
 
-# Validate your last commit message
+# Validate your last commit message (first line only)
 npx issue-linker -t "$(git log -1 --pretty=%s)" -c commit
 ```
 
