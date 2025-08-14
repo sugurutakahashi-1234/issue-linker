@@ -90,3 +90,10 @@ jobs:
           flags: unittests                        # Tag coverage as unit tests
           disable_search: false                   # Enable automatic coverage file search
           report_type: coverage                   # Specify coverage report type
+
+      # E2E Tests are disabled for PRs due to environment issues
+      # The tests work locally but have inconsistent behavior in CI for PRs
+      # E2E tests should be run on main branch after merge
+      # - name: E2E Tests
+      #   run: bun run test:e2e
+
