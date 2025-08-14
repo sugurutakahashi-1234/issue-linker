@@ -41,7 +41,7 @@ program
   )
   .option(
     "--exclude <pattern>",
-    "custom exclude pattern (micromatch glob) that overrides check-mode defaults",
+    "custom exclude pattern (glob) that overrides check-mode defaults",
   )
   .option(
     "--issue-status <status>",
