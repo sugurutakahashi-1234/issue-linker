@@ -96,8 +96,12 @@ program
 
       // Display human-readable result
       if (result.success) {
-        // Success output - simply use the message from result-factory
-        console.log(`✅ ${result.message}`);
+        // Success output - use appropriate emoji based on reason
+        const emoji =
+          result.reason === "excluded" || result.reason === "skipped"
+            ? "⏭️ "
+            : "✅";
+        console.log(`${emoji} ${result.message}`);
 
         // Show extra details in verbose mode
         if (options.verbose) {

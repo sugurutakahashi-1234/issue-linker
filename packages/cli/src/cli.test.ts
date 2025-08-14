@@ -50,7 +50,7 @@ describe("CLI", () => {
       const text = await new Response(proc.stdout).text();
       await proc.exited;
 
-      expect(text).toContain("excluded from validation");
+      expect(text).toContain("Skipped: Matched exclude pattern");
       expect(proc.exitCode).toBe(0);
     });
 
@@ -65,7 +65,7 @@ describe("CLI", () => {
       const text = await new Response(proc.stdout).text();
       await proc.exited;
 
-      expect(text).toContain("excluded from validation");
+      expect(text).toContain("Skipped: Matched exclude pattern");
       expect(proc.exitCode).toBe(0);
     });
 
@@ -90,7 +90,7 @@ describe("CLI", () => {
       const text = await new Response(proc.stdout).text();
       await proc.exited;
 
-      expect(text).toContain("excluded from validation");
+      expect(text).toContain("Skipped: Matched exclude pattern");
       expect(proc.exitCode).toBe(0);
     });
 
@@ -249,7 +249,7 @@ describe("CLI", () => {
       const text = await new Response(proc.stdout).text();
       await proc.exited;
 
-      expect(text).toContain("excluded");
+      expect(text).toContain("Skipped: Matched exclude pattern");
       expect(proc.exitCode).toBe(0);
     });
 

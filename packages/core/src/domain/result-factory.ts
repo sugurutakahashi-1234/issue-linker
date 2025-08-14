@@ -10,10 +10,16 @@ import type {
 /**
  * Create a result for when text is excluded from validation
  */
-export function createExcludedResult(input: InputConfig): CheckMessageResult {
+export function createExcludedResult(
+  input: InputConfig,
+  excludePattern?: string,
+): CheckMessageResult {
+  const message = excludePattern
+    ? `Skipped: Matched exclude pattern "${excludePattern}"`
+    : "Skipped: Matched exclude pattern";
   return {
     success: true,
-    message: "Text was excluded from validation",
+    message,
     reason: "excluded",
     input,
   };
@@ -22,10 +28,16 @@ export function createExcludedResult(input: InputConfig): CheckMessageResult {
 /**
  * Create a result for when validation is skipped due to skip marker
  */
-export function createSkippedResult(input: InputConfig): CheckMessageResult {
+export function createSkippedResult(
+  input: InputConfig,
+  skipMarker?: string,
+): CheckMessageResult {
+  const message = skipMarker
+    ? `Skipped: Contains ${skipMarker} marker`
+    : "Skipped: Contains skip marker";
   return {
     success: true,
-    message: "Validation skipped due to skip marker",
+    message,
     reason: "skipped",
     input,
   };

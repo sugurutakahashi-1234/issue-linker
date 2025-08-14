@@ -68531,10 +68531,13 @@ async function checkDuplicateComment(args) {
 /**
  * Create a result for when text is excluded from validation
  */
-function createExcludedResult(input) {
+function createExcludedResult(input, excludePattern) {
+    const message = excludePattern
+        ? `Skipped: Matched exclude pattern "${excludePattern}"`
+        : "Skipped: Matched exclude pattern";
     return {
         success: true,
-        message: "Text was excluded from validation",
+        message,
         reason: "excluded",
         input,
     };
@@ -68542,10 +68545,13 @@ function createExcludedResult(input) {
 /**
  * Create a result for when validation is skipped due to skip marker
  */
-function createSkippedResult(input) {
+function createSkippedResult(input, skipMarker) {
+    const message = skipMarker
+        ? `Skipped: Contains ${skipMarker} marker`
+        : "Skipped: Contains skip marker";
     return {
         success: true,
-        message: "Validation skipped due to skip marker",
+        message,
         reason: "skipped",
         input,
     };
@@ -70685,7 +70691,7 @@ const EXTRACT_PATTERNS = {
  * Skip markers that bypass validation entirely
  * Case-insensitive patterns to match [skip issue-linker] and [issue-linker skip]
  */
-const SKIP_MARKERS = [
+const constants_SKIP_MARKERS = [
     /\[skip issue-linker\]/i,
     /\[issue-linker skip\]/i,
 ];
@@ -70711,16 +70717,17 @@ function isBranchExcluded(branch, pattern) {
  * @param text - The text to check
  * @param checkMode - The check mode
  * @param customExclude - Optional custom exclude pattern
- * @returns true if text should be excluded
+ * @returns Object with exclusion status and the pattern used
  */
 function shouldExclude(text, checkMode, customExclude) {
     // Use custom exclude pattern if provided, otherwise use mode-specific default
     const pattern = customExclude ?? EXCLUDE_PATTERNS[checkMode];
     // No pattern means no exclusion
     if (!pattern) {
-        return false;
+        return { excluded: false };
     }
-    return minimatch(text, pattern);
+    const excluded = minimatch(text, pattern);
+    return excluded ? { excluded, pattern } : { excluded };
 }
 /**
  * Validates if an issue state is allowed
@@ -75642,6 +75649,21 @@ function findIssueNumbers(text, checkMode, customPattern) {
 function hasSkipMarker(text) {
     return SKIP_MARKERS.some((marker) => marker.test(text));
 }
+/**
+ * Find which skip marker is present in the text
+ * @param text - Text to check for skip markers
+ * @returns The matched skip marker text or null if not found
+ */
+function findSkipMarker(text) {
+    for (const marker of constants_SKIP_MARKERS) {
+        if (marker.test(text)) {
+            // Get the actual matched string from the text
+            const match = text.match(marker);
+            return match ? match[0] : null;
+        }
+    }
+    return null;
+}
 //# sourceMappingURL=skip-marker-checker.js.map
 ;// CONCATENATED MODULE: ../core/dist/application/check-message-use-case.js
 // Application layer - Use case for checking text messages
@@ -75695,12 +75717,14 @@ async function checkMessage(args) {
             ...(validatedArgs.actionMode && { actionMode: validatedArgs.actionMode }),
         };
         // Step 2: Check for skip markers
-        if (hasSkipMarker(validatedArgs.text)) {
-            return createSkippedResult(input);
+        const skipMarker = findSkipMarker(validatedArgs.text);
+        if (skipMarker) {
+            return createSkippedResult(input, skipMarker);
         }
         // Step 3: Check exclusion
-        if (shouldExclude(validatedArgs.text, checkMode, validatedArgs.exclude)) {
-            return createExcludedResult(input);
+        const excludeResult = shouldExclude(validatedArgs.text, checkMode, validatedArgs.exclude);
+        if (excludeResult.excluded) {
+            return createExcludedResult(input, excludeResult.pattern);
         }
         // Step 4: Find issue numbers
         const issueNumbers = findIssueNumbers(validatedArgs.text, checkMode, validatedArgs.extract);

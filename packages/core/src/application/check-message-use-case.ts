@@ -25,7 +25,7 @@ import { parseRepositoryFromGitUrl } from "../infrastructure/git-url-parser.js";
 import { getGitHubIssue } from "../infrastructure/github-client.js";
 import { findIssueNumbers } from "../infrastructure/issue-finder.js";
 import { parseRepositoryString } from "../infrastructure/repository-parser.js";
-import { hasSkipMarker } from "../infrastructure/skip-marker-checker.js";
+import { findSkipMarker } from "../infrastructure/skip-marker-checker.js";
 
 /**
  * Main use case for checking if text contains valid issue numbers
@@ -74,13 +74,19 @@ export async function checkMessage(
     };
 
     // Step 2: Check for skip markers
-    if (hasSkipMarker(validatedArgs.text)) {
-      return createSkippedResult(input);
+    const skipMarker = findSkipMarker(validatedArgs.text);
+    if (skipMarker) {
+      return createSkippedResult(input, skipMarker);
     }
 
     // Step 3: Check exclusion
-    if (shouldExclude(validatedArgs.text, checkMode, validatedArgs.exclude)) {
-      return createExcludedResult(input);
+    const excludeResult = shouldExclude(
+      validatedArgs.text,
+      checkMode,
+      validatedArgs.exclude,
+    );
+    if (excludeResult.excluded) {
+      return createExcludedResult(input, excludeResult.pattern);
     }
 
     // Step 4: Find issue numbers

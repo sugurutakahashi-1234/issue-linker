@@ -25,22 +25,23 @@ export function isBranchExcluded(branch: string, pattern: string): boolean {
  * @param text - The text to check
  * @param checkMode - The check mode
  * @param customExclude - Optional custom exclude pattern
- * @returns true if text should be excluded
+ * @returns Object with exclusion status and the pattern used
  */
 export function shouldExclude(
   text: string,
   checkMode: CheckMode,
   customExclude?: string,
-): boolean {
+): { excluded: boolean; pattern?: string } {
   // Use custom exclude pattern if provided, otherwise use mode-specific default
   const pattern = customExclude ?? EXCLUDE_PATTERNS[checkMode];
 
   // No pattern means no exclusion
   if (!pattern) {
-    return false;
+    return { excluded: false };
   }
 
-  return minimatch(text, pattern);
+  const excluded = minimatch(text, pattern);
+  return excluded ? { excluded, pattern } : { excluded };
 }
 
 /**
