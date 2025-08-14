@@ -40,7 +40,10 @@
     }
   },
   "plugins": [
-    "node-workspace",
+    {
+      "type": "node-workspace",
+      "always-link-local": true
+    },
     {
       "type": "linked-versions",
       "groupName": "issue-linker",
