@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.5.0](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.4.1...v1.5.0) (2025-08-14)
+
+
+### ♻️ Code Refactoring
+
+* unify glob pattern matching to use micromatch only ([#39](https://github.com/sugurutakahashi-1234/issue-linker/issues/39)) ([7d9f036](https://github.com/sugurutakahashi-1234/issue-linker/commit/7d9f036e64903dc3dfb69359b8e9083714159da8))
+
+
+### ✅ Tests
+
+* debug E2E test execution methods in CI ([#40](https://github.com/sugurutakahashi-1234/issue-linker/issues/40)) ([0aa0484](https://github.com/sugurutakahashi-1234/issue-linker/commit/0aa04841f9c5d2eadeb9713983bd3d646ba8f908))
+
+
+### 🔧 Maintenance
+
+* bump version to 1.5.0 ([7af205f](https://github.com/sugurutakahashi-1234/issue-linker/commit/7af205f12d67e575b7792d4cd28fa9267fb1b9a2))
+* update bun.lock after v1.4.1 release ([#37](https://github.com/sugurutakahashi-1234/issue-linker/issues/37)) ([5bf3f51](https://github.com/sugurutakahashi-1234/issue-linker/commit/5bf3f51cd0e2ab6c65427102adfa3350341dd95d))
+
 ## [1.4.1](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.4.0...v1.4.1) (2025-08-14)
 
 
