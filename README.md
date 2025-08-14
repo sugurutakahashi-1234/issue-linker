@@ -41,13 +41,25 @@ npm install -g issue-linker
 
 ## Quick Start
 
+Check if issue references actually exist in your repository:
+
 ```bash
-# Validate text with issue reference
-npx issue-linker -t "Fix #123"
+$ npx issue-linker -t "Fix #123"
+> ✅ Valid issues: #123
 
-# Check only open issues
-npx issue-linker -t "Fix #123" --issue-status open
+$ npx issue-linker -t "Add feature #999"
+> ❌ Issues not found: #999 in owner/repo
 
+$ npx issue-linker -t "Implement #123" --issue-status closed
+> ❌ Wrong state: #123 in owner/repo
+
+$ npx issue-linker -t "feature/auth-improvements-123" -c branch
+> ✅ Valid issues: #123
+```
+
+### More Examples
+
+```bash
 # Validate your current branch name
 npx issue-linker -t "$(git branch --show-current)" -c branch
 

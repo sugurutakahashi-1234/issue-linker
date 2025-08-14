@@ -170,7 +170,8 @@
       "Bash(brew upgrade:*)",
       "WebSearch",
       "Bash(git revert:*)",
-      "WebFetch(domain:docs.npmjs.com)"
+      "WebFetch(domain:docs.npmjs.com)",
+      "Bash(git remote set-url:*)"
     ],
     "deny": []
   },
