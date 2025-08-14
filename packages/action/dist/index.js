@@ -68629,7 +68629,7 @@ var node_modules_micromatch = __nccwpck_require__(7805);
 // Constants for issue-linker
 // ===== Exclude Patterns (Glob) =====
 /**
- * Exclude patterns for each check mode using glob syntax (minimatch)
+ * Exclude patterns for each check mode using glob syntax (micromatch)
  */
 const EXCLUDE_PATTERNS = {
     default: undefined,

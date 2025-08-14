@@ -5,7 +5,7 @@ import type { CheckMode } from "./validation-schemas.js";
 // ===== Exclude Patterns (Glob) =====
 
 /**
- * Exclude patterns for each check mode using glob syntax (minimatch)
+ * Exclude patterns for each check mode using glob syntax (micromatch)
  */
 export const EXCLUDE_PATTERNS: Record<CheckMode, string | undefined> = {
   default: undefined,
