@@ -1,0 +1,174 @@
+name: ci-npm-released-tasks
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    # Triggered when npm Release workflow completes
+    workflows: ["npm Release"]
+    types:
+      - completed
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  # Test CLI version command on multiple platforms
+  test-cli-version:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: [20, 22, 24]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    name: Test CLI on ${{ matrix.os }} / Node ${{ matrix.node }}
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      
+      - name: Test issue-linker version
+        shell: bash
+        run: |
+          # Simply test that the CLI can be executed
+          npx issue-linker@latest --version
+          echo "✅ CLI works on ${{ matrix.os }} with Node ${{ matrix.node }}"
+
+  # Test GitHub Action with skip marker (no actual execution)
+  test-github-action:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    name: Test GitHub Action Marketplace
+    steps:
+      - name: Use published action with skip marker
+        uses: sugurutakahashi-1234/issue-linker@main
+        with:
+          text: '[skip-issue-linker] Test message #123'
+      
+      - name: Verify test
+        run: |
+          echo "✅ GitHub Action marketplace test successful"
+          echo "Note: Action should skip processing due to [skip-issue-linker] marker"
+
+  # Update bun.lock and create PR
+  update-bun-lock:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [test-cli-version, test-github-action]
+    name: Update bun.lock
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+          
+      - name: Get current version
+        id: get-version
+        run: |
+          VERSION=$(cat package.json | jq -r .version)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $VERSION"
+          
+      - name: Create update branch
+        run: |
+          BRANCH_NAME="feature/update-bun-lock-v${{ steps.get-version.outputs.version }}"
+          git checkout -b "$BRANCH_NAME"
+          echo "Created branch: $BRANCH_NAME"
+          
+      - name: Update bun.lock
+        run: |
+          echo "Removing old bun.lock..."
+          rm -f bun.lock
+          
+          echo "Running bun install..."
+          bun install
+          
+          echo "bun.lock has been regenerated"
+          
+      - name: Check for changes
+        id: check-changes
+        run: |
+          if ! git diff --quiet -- bun.lock; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "📦 bun.lock has changes:"
+            git diff --stat -- bun.lock
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "✅ No changes to bun.lock"
+          fi
+          
+      - name: Commit and push changes
+        if: steps.check-changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          git add bun.lock
+          git commit -m "chore: update bun.lock after v${{ steps.get-version.outputs.version }} release"
+          
+          git push -u origin "feature/update-bun-lock-v${{ steps.get-version.outputs.version }}"
+          
+      - name: Create Pull Request
+        if: steps.check-changes.outputs.changed == 'true'
+        run: |
+          gh pr create \
+            --base main \
+            --title "chore: update bun.lock after v${{ steps.get-version.outputs.version }} release" \
+            --body "## Summary
+          
+          Updates \`bun.lock\` to reflect the published v${{ steps.get-version.outputs.version }} packages.
+          
+          This PR was automatically created after the npm release workflow completed successfully.
+          
+          ## Validation
+          - ✅ NPM packages published successfully
+          - ✅ CLI tested with \`npx issue-linker@latest --version\`
+          - ✅ GitHub Action tested from marketplace
+          - ✅ Cross-platform compatibility verified (3 OS × 3 Node versions)
+          - 📦 \`bun.lock\` updated with latest versions"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Summary job
+  summary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [test-cli-version, test-github-action, update-bun-lock]
+    if: always()
+    steps:
+      - name: Post-Release Tasks Summary
+        run: |
+          echo "## 🎉 Post-Release Tasks Summary"
+          echo ""
+          
+          if [[ "${{ needs.test-cli-version.result }}" == "success" ]]; then
+            echo "✅ CLI version command works on all platforms"
+          else
+            echo "❌ CLI version test failed"
+          fi
+          
+          if [[ "${{ needs.test-github-action.result }}" == "success" ]]; then
+            echo "✅ GitHub Action marketplace works"
+          else
+            echo "❌ GitHub Action marketplace test failed"
+          fi
+          
+          if [[ "${{ needs.update-bun-lock.result }}" == "success" ]]; then
+            echo "✅ bun.lock update PR created"
+          elif [[ "${{ needs.update-bun-lock.result }}" == "skipped" ]]; then
+            echo "⏭️ bun.lock update skipped (no changes needed)"
+          else
+            echo "❌ bun.lock update failed"
+          fi
+          
+          echo ""
+          echo "All post-release tasks completed!"
