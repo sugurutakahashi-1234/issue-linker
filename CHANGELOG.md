@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.1.0](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.0.1...v1.1.0) (2025-08-14)
+
+
+### ✨ Features
+
+* auto-update release PR after bun.lock sync ([#17](https://github.com/sugurutakahashi-1234/issue-linker/issues/17)) ([fe59899](https://github.com/sugurutakahashi-1234/issue-linker/commit/fe598991eda2c22d11b1a96a78bb0560b6bcc9f1))
+* update bun.lock sync strategy to post-release workflow ([#21](https://github.com/sugurutakahashi-1234/issue-linker/issues/21)) ([51241d7](https://github.com/sugurutakahashi-1234/issue-linker/commit/51241d7851b76edcbbd650aee46d277d65c3a295))
+
+
+### 🐛 Bug Fixes
+
+* remove --frozen-lockfile to resolve release-please compatibility ([#22](https://github.com/sugurutakahashi-1234/issue-linker/issues/22)) ([a187598](https://github.com/sugurutakahashi-1234/issue-linker/commit/a187598354b6437ffade47dfc9057fee0a56c519))
+* simplify E2E test by removing branch validation ([#23](https://github.com/sugurutakahashi-1234/issue-linker/issues/23)) ([0e2631b](https://github.com/sugurutakahashi-1234/issue-linker/commit/0e2631b1cfbe0a15eb20df403e7191c00ee0e698))
+
+
+### 🔧 Maintenance
+
+* unify changelog to root directory only ([#20](https://github.com/sugurutakahashi-1234/issue-linker/issues/20)) ([7e4ee37](https://github.com/sugurutakahashi-1234/issue-linker/commit/7e4ee37c37d559b713f982193324bf82ff7b7566))
+
 ## [1.0.1](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.0.0...v1.0.1) (2025-08-13)
 
 
