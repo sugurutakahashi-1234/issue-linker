@@ -173,7 +173,8 @@
       "WebFetch(domain:docs.npmjs.com)",
       "Bash(git remote set-url:*)",
       "Bash(./packages/cli/dist/cli.js -t \"Fix #6\" --issue-status open)",
-      "Bash(issue-linker:*)"
+      "Bash(issue-linker:*)",
+      "Bash(git --no-pager log -1 --pretty=%s)"
     ],
     "deny": []
   },
