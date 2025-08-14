@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.4.1](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.4.0...v1.4.1) (2025-08-14)
+
+
+### 🔧 Maintenance
+
+* update @biomejs/biome from 2.1.4 to 2.2.0 ([#35](https://github.com/sugurutakahashi-1234/issue-linker/issues/35)) ([244ad8b](https://github.com/sugurutakahashi-1234/issue-linker/commit/244ad8b4fd779730c0ba0a880fad10ae40bf670b))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @issue-linker/core bumped to 1.4.1
+
 ## [1.4.0](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.3.1...v1.4.0) (2025-08-14)
 
 
