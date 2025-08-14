@@ -106,7 +106,7 @@ try {
   const output = execSync(
     `"${cliCommand}" -t main --check-mode branch`,
   ).toString();
-  if (!output.includes("excluded from validation")) {
+  if (!output.includes("Skipped: Matched exclude pattern")) {
     throw new Error("Branch validation test failed");
   }
   console.log("  ✅ Branch validation works");
