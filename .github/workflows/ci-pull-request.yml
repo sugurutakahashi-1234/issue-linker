@@ -92,4 +92,4 @@ jobs:
           report_type: coverage                   # Specify coverage report type
 
       - name: E2E Tests
-        run: bun run test:e2e
+        run: bun scripts/testing/e2e-simple.ts
