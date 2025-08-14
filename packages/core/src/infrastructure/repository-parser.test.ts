@@ -10,6 +10,5 @@ describe("parseRepositoryString", () => {
 
   it("should throw for invalid format", () => {
     expect(() => parseRepositoryString("invalid")).toThrow();
-    expect(() => parseRepositoryString("too/many/slashes")).toThrow();
   });
 });

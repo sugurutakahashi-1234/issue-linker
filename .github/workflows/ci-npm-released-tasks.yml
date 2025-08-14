@@ -2,11 +2,8 @@ name: ci-npm-released-tasks
 
 on:
   workflow_dispatch:
-  workflow_run:
-    # Triggered when npm Release workflow completes
-    workflows: ["npm Release"]
-    types:
-      - completed
+  workflow_call:
+    # Can be called from other workflows
 
 permissions:
   contents: write
@@ -15,7 +12,6 @@ permissions:
 jobs:
   # Test CLI version command on multiple platforms
   test-cli-version:
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
@@ -38,7 +34,6 @@ jobs:
 
   # Test GitHub Action with skip marker (no actual execution)
   test-github-action:
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     name: Test GitHub Action Marketplace
@@ -55,7 +50,6 @@ jobs:
 
   # Update bun.lock and create PR
   update-bun-lock:
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: [test-cli-version, test-github-action]

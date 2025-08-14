@@ -23,13 +23,9 @@ Format validators can't catch this. issue-linker can.
 
 ### Key Features
 
-- ⚡ **Fast & lightweight** - Minimal dependencies, quick validation
 - 🔍 **Real verification** - Uses GitHub API to check issues actually exist
 - 🎯 **Smart detection** - Different patterns for branches vs commits
 - 🚦 **Status filtering** - Check if issues are open, closed, or any
-- 🔧 **Flexible integration** - CLI, Git hooks, GitHub Actions
-- 🏢 **Enterprise ready** - Full GitHub Enterprise Server support
-- 📊 **JSON output** - Integrate with any CI/CD pipeline
 
 Most validators only check format. issue-linker checks reality.
 
@@ -55,16 +51,6 @@ npx issue-linker -t "Implement #123" --issue-status closed
 
 npx issue-linker -t "feature/123-auth-improvements" -c branch
 # > ✅ Valid issues: #123 in owner/repo
-```
-
-### More Examples
-
-```bash
-# Validate your current branch name (e.g., feature/456, 789-hotfix)
-npx issue-linker -t "$(git branch --show-current)" -c branch
-
-# Validate your last commit message (first line only)
-npx issue-linker -t "$(git log -1 --pretty=%s)" -c commit
 ```
 
 ## CLI Reference
@@ -127,14 +113,9 @@ issue-linker provides three check modes for different validation contexts:
 
 ## Skip Markers
 
-Skip validation by including any of these markers anywhere in your text (case-insensitive). Works in all check modes:
-- `[skip issue-linker]` or `[skip-issue-linker]`
-- `[issue-linker skip]` or `[issue-linker-skip]`
+Skip validation with: `[skip issue-linker]`, `[skip-issue-linker]`, `[issue-linker skip]`, or `[issue-linker-skip]` (case-insensitive)
 
-```bash
-issue-linker -t "Release v2.0.0 [skip issue-linker]"
-# > ⏭️ Skipped: Contains [skip issue-linker] marker
-```
+Example: `issue-linker -t "Release v2.0.0 [skip issue-linker]"` → Skipped
 
 ## GitHub Actions
 
@@ -166,16 +147,14 @@ jobs:
 
 ### Action Inputs
 
-The action provides two modes:
-- **Simple validations** (`validate-*` options): Pre-configured for common use cases with sensible defaults
-- **Custom validation** (`text` + `check-mode` + `extract` + `exclude`): Full control over what and how to validate
+**Two validation modes:**
+- **Simple mode** (`validate-*` options): Pre-configured validations with smart defaults
+  - `validate-branch`: Uses `branch` mode (e.g., `123-feature`, `feat/123`)
+  - `validate-pr-title/body`: Uses `default` mode (e.g., `#123`)
+  - `validate-commits`: Uses `commit` mode with auto-exclusions (PR context only)
+- **Custom mode** (`text` + `check-mode` + `extract`/`exclude` options): Full control over validation logic
 
-**Common settings**: `issue-status`, `repo`, `github-token`, and `hostname` work with both modes.
-
-For simple validations, the action automatically applies the appropriate check-mode:
-- `validate-branch`: Uses `branch` check-mode to extract issue numbers from branch names (e.g., `123-feature`, `feat/123`)
-- `validate-pr-title` & `validate-pr-body`: Use `default` check-mode to detect `#123` format
-- `validate-commits`: Uses `commit` check-mode with auto-exclusion of merge/rebase commits. **Only works in PR context** (validates commits in the current PR)
+**Common options:** `issue-status`, `repo`, `github-token`, and `hostname` work with both modes.
 
 | Input                                  | Description                                                                                                                            | Default                    |
 | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
