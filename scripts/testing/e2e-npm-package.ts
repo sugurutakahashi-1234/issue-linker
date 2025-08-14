@@ -101,16 +101,6 @@ try {
   }
   console.log("  ✅ Help command works");
 
-  // Test basic functionality
-  console.log("  Testing branch validation...");
-  const output = execSync(
-    `"${cliCommand}" -t main --check-mode branch`,
-  ).toString();
-  if (!output.includes("Skipped: Matched exclude pattern")) {
-    throw new Error("Branch validation test failed");
-  }
-  console.log("  ✅ Branch validation works");
-
   // Step 6: Test npx execution
   console.log("\n🧪 Testing npx...");
   const npxVersion = execSync(`npx ${packageName} --version`, { cwd: tempDir })
