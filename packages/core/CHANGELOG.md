@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.1.0...v1.2.0) (2025-08-14)
+
+
+### ✨ Features
+
+* add hyphen variants for skip markers ([#24](https://github.com/sugurutakahashi-1234/issue-linker/issues/24)) ([49464d1](https://github.com/sugurutakahashi-1234/issue-linker/commit/49464d1898a375c85c62333ce655a9c28de90876))
+
 ## [1.1.0](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.0.1...v1.1.0) (2025-08-14)
 
 

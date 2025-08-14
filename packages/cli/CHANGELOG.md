@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.1](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.1.0...v1.1.1) (2025-08-14)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @issue-linker/core bumped to 1.2.0
+
 ## [1.1.0](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.0.1...v1.1.0) (2025-08-14)
 
 
