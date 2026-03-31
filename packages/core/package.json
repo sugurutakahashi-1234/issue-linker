@@ -68,7 +68,7 @@
     "@octokit/plugin-retry": "^8.0.1",
     "@octokit/plugin-throttling": "^11.0.1",
     "@octokit/request-error": "^7.0.0",
-    "@t3-oss/env-core": "^0.13.8",
+    "@t3-oss/env-core": "^0.13.11",
     "micromatch": "^4.0.8",
     "octokit": "^5.0.3",
     "simple-git": "^3.28.0",
