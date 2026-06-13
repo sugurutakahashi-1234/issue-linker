@@ -58,7 +58,7 @@
     "@commitlint/types": "^19.8.1",
     "@elsikora/git-branch-lint": "^1.1.2",
     "@types/bun": "^1.2.20",
-    "@types/node": "^24.2.1",
+    "@types/node": "^25.0.0",
     "@ysk8hori/typescript-graph": "^0.26.4",
     "concurrently": "^9.2.0",
     "husky": "^9.1.7",
