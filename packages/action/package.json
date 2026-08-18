@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.0",
-    "@vercel/ncc": "^0.38.3",
+    "@vercel/ncc": "^0.45.0",
     "@ysk8hori/typescript-graph": "^0.26.4",
     "typescript": "^5.9.2"
   }
