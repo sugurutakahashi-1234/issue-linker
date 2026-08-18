@@ -1,5 +1,6 @@
 {
   "lockfileVersion": 1,
+  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "issue-linker-monorepo",
@@ -30,7 +31,7 @@
       },
       "devDependencies": {
         "@biomejs/biome": "^2.2.0",
-        "@vercel/ncc": "^0.38.3",
+        "@vercel/ncc": "^0.45.0",
         "@ysk8hori/typescript-graph": "^0.26.4",
         "typescript": "^5.9.2",
       },
@@ -306,7 +307,7 @@
 
     "@types/react": ["@types/react@19.1.10", "", { "dependencies": { "csstype": "^3.0.2" } }, "sha512-EhBeSYX0Y6ye8pNebpKrwFJq7BoQ8J5SO6NlvNwwHjSj6adXJViPQrKlsyPw7hLBLvckEMO1yxeGdR82YBBlDg=="],
 
-    "@vercel/ncc": ["@vercel/ncc@0.38.3", "", { "bin": { "ncc": "dist/ncc/cli.js" } }, "sha512-rnK6hJBS6mwc+Bkab+PGPs9OiS0i/3kdTO+CkI8V0/VrW3vmz7O2Pxjw/owOlmo6PKEIxRSeZKv/kuL9itnpYA=="],
+    "@vercel/ncc": ["@vercel/ncc@0.45.0", "", { "bin": { "ncc": "dist/ncc/cli.js" } }, "sha512-8zPi1yO2mHpoKTD+e+Bf0ZT3e+sWHSOyGapm9s7b5R0gxJi3CiFTqmeQiMEyu6ejrz2s09M8JkEoUaTWjBJPQQ=="],
 
     "@ysk8hori/typescript-graph": ["@ysk8hori/typescript-graph@0.26.4", "", { "dependencies": { "chalk": "4.1.2", "chokidar": "4.0.3", "commander": "14.0.0", "console-table-printer": "2.14.6", "remeda": "2.26.1", "zod": "3.25.76" }, "bin": { "tsg": "bin/tsg.js" } }, "sha512-9QMUsJiHYY5g0YKS6nHLH4OraiBD1MranjiGENoceZLCCpMnO9fmhR3AEGoj6YpHiZfsvjO8+G9Zv+VIR89/FQ=="],
 
