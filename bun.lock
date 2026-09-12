@@ -1,5 +1,6 @@
 {
   "lockfileVersion": 1,
+  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "issue-linker-monorepo",
@@ -26,7 +27,7 @@
         "@actions/core": "^1.11.1",
         "@actions/github": "^6.0.1",
         "@issue-linker/core": "workspace:*",
-        "valibot": "^1.1.0",
+        "valibot": "^1.4.2",
       },
       "devDependencies": {
         "@biomejs/biome": "^2.2.0",
@@ -44,7 +45,7 @@
       "dependencies": {
         "@commander-js/extra-typings": "^14.0.0",
         "@issue-linker/core": "workspace:*",
-        "valibot": "^1.1.0",
+        "valibot": "^1.4.2",
       },
       "devDependencies": {
         "@biomejs/biome": "^2.2.0",
@@ -63,7 +64,7 @@
         "micromatch": "^4.0.8",
         "octokit": "^5.0.3",
         "simple-git": "^3.28.0",
-        "valibot": "^1.1.0",
+        "valibot": "^1.4.2",
       },
       "devDependencies": {
         "@biomejs/biome": "^2.2.0",
@@ -602,7 +603,7 @@
 
     "universal-user-agent": ["universal-user-agent@6.0.1", "", {}, "sha512-yCzhz6FN2wU1NiiQRogkTQszlQSlpWaw8SvVegAc+bDxbzHgh1vX8uIe8OYyMH6DwH+sdTJsgMl36+mSMdRJIQ=="],
 
-    "valibot": ["valibot@1.1.0", "", { "peerDependencies": { "typescript": ">=5" }, "optionalPeers": ["typescript"] }, "sha512-Nk8lX30Qhu+9txPYTwM0cFlWLdPFsFr6LblzqIySfbZph9+BFsAHsNvHOymEviUepeIW6KFHzpX8TKhbptBXXw=="],
+    "valibot": ["valibot@1.5.0", "", { "peerDependencies": { "typescript": ">=5" }, "optionalPeers": ["typescript"] }, "sha512-nil6AkP2TChWL43Z5uJ6GTxX01CUA+g8LWUM+N/rB9NBbkUMaUsi9PUNzlUPgoKASgmx9f7eGOYpJ04/fSa6FQ=="],
 
     "walk-up-path": ["walk-up-path@4.0.0", "", {}, "sha512-3hu+tD8YzSLGuFYtPRb48vdhKMi0KQV5sn+uWr8+7dMEq/2G/dtLrdDinkLjqq5TIbIBjYJ4Ax/n3YiaW7QM8A=="],
 
