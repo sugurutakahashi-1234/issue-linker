@@ -13,7 +13,7 @@ permissions:
   contents: write
   pull-requests: write
   issues: write
-  packages: write
+  id-token: write
 
 jobs:
   cd-npm-release:
@@ -44,12 +44,7 @@ jobs:
 
       - name: Install dependencies
         if: ${{ steps.release.outputs.release_created }}
-        run: |
-          # Remove old lockfile to regenerate with new versions
-          # This is necessary because release-please has updated package.json versions
-          # but bun.lock still references old versions
-          rm -f bun.lock
-          bun install
+        run: bun install
 
       - name: Check code quality
         if: ${{ steps.release.outputs.release_created }}
@@ -82,18 +77,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 'latest'
-          registry-url: 'https://registry.npmjs.org'
 
       - name: Publish to npm
         if: ${{ steps.release.outputs.release_created }}
-        env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          # Publish all public packages to npm using bun from root
-          # bun automatically converts workspace:* to actual versions
-          # Private packages (action) are automatically skipped
-          # Using NPM_CONFIG_TOKEN for bun publish authentication
-          bun run npm-publish
+          for workspace in core cli; do
+            archive="$RUNNER_TEMP/$workspace.tgz"
+            (cd "packages/$workspace" && bun pm pack --filename "$archive")
+            npm publish "$archive" --access public
+          done
 
       - name: Get created tag
         if: ${{ steps.release.outputs.release_created }}

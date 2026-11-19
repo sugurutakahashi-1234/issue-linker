@@ -1,6 +1,8 @@
 // GitHub Actions specific helper functions
 
-import type { Context } from "@actions/github/lib/context.js";
+import type { context as actionContext } from "@actions/github";
+
+type Context = typeof actionContext;
 
 /**
  * Extract branch name from GitHub Actions context
