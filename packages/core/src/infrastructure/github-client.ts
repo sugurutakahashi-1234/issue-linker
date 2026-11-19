@@ -50,7 +50,7 @@ function createOctokit(token?: string, hostname?: string): Octokit {
     },
     retry: {
       // Disable all retries for 404 and rate limits
-      doNotRetry: ["404", "429"],
+      doNotRetry: [404, 429],
       // No retries for maximum speed
       retries: 0, // 0 = no retries (tunable: increase for reliability)
     },

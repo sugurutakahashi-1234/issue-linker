@@ -10,7 +10,7 @@
   "private": true,
   "scripts": {
     "🔨": "========== Build & Type Check ==========",
-    "build": "ncc build src/index.ts --license licenses.txt --out dist --transpile-only --no-cache && rm -rf dist/package.json",
+    "build": "tsc -p tsconfig.json && ncc build .cache/action/index.js --license licenses.txt --out dist --no-cache && rm -rf dist/package.json",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "🧪": "========== Test ==========",
     "test": "echo '⚠️  No tests for action package (GitHub Actions environment required)'",
@@ -25,14 +25,14 @@
     "clean": "rm -rf dist *.tsbuildinfo"
   },
   "dependencies": {
-    "@actions/core": "^1.11.1",
-    "@actions/github": "^6.0.1",
+    "@actions/core": "^3.0.1",
+    "@actions/github": "^9.1.1",
     "@issue-linker/core": "workspace:*",
-    "valibot": "^1.1.0"
+    "valibot": "^1.5.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.0",
-    "@vercel/ncc": "^0.38.3",
+    "@vercel/ncc": "^0.45.0",
     "@ysk8hori/typescript-graph": "^0.26.4",
     "typescript": "^5.9.2"
   }
