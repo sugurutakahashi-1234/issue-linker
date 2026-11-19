@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.5.2](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.5.1...v1.5.2) (2026-11-19)
+
+
+### 🐛 Bug Fixes
+
+* npm の自動公開を OIDC に移行し GitHub SDK を更新 ([#61](https://github.com/sugurutakahashi-1234/issue-linker/issues/61)) ([43edd84](https://github.com/sugurutakahashi-1234/issue-linker/commit/43edd848fe0b290205a5337b949a544f75ce85d8))
+
+
+### 🔧 Maintenance
+
+* update bun.lock after v1.5.1 release ([#43](https://github.com/sugurutakahashi-1234/issue-linker/issues/43)) ([d1c5b3e](https://github.com/sugurutakahashi-1234/issue-linker/commit/d1c5b3ea847a26194c5eaccc15a12525e6318fdd))
+
 ## [1.5.1](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.5.0...v1.5.1) (2025-08-14)
 
 
