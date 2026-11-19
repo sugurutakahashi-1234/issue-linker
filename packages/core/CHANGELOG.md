@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.5.2...v2.0.0) (2026-11-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* npm パッケージの実行には Node.js 26 以上が必要です。
+
+### ✨ Features
+
+* 最低対応を Node.js 26 に引き上げる ([67d50aa](https://github.com/sugurutakahashi-1234/issue-linker/commit/67d50aacdc48ca9ebf4443bb8ae03b495b55b867))
+
 ## [1.5.2](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.5.1...v1.5.2) (2026-11-19)
 
 
