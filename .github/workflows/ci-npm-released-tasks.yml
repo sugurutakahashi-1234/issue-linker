@@ -79,15 +79,8 @@ jobs:
           echo "Created branch: $BRANCH_NAME"
           
       - name: Update bun.lock
-        run: |
-          echo "Removing old bun.lock..."
-          rm -f bun.lock
-          
-          echo "Running bun install..."
-          bun install
-          
-          echo "bun.lock has been regenerated"
-          
+        run: bun install
+
       - name: Check for changes
         id: check-changes
         run: |
