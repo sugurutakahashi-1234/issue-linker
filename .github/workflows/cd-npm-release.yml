@@ -44,12 +44,7 @@ jobs:
 
       - name: Install dependencies
         if: ${{ steps.release.outputs.release_created }}
-        run: |
-          # Remove old lockfile to regenerate with new versions
-          # This is necessary because release-please has updated package.json versions
-          # but bun.lock still references old versions
-          rm -f bun.lock
-          bun install
+        run: bun install
 
       - name: Check code quality
         if: ${{ steps.release.outputs.release_created }}
