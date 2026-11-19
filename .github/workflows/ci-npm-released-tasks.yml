@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        node: [20, 22, 24]
+        node: [26]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 5
     name: Test CLI on ${{ matrix.os }} / Node ${{ matrix.node }}
@@ -125,7 +125,7 @@ jobs:
           - ✅ NPM packages published successfully
           - ✅ CLI tested with \`npx issue-linker@latest --version\`
           - ✅ GitHub Action tested from marketplace
-          - ✅ Cross-platform compatibility verified (3 OS × 3 Node versions)
+          - ✅ Cross-platform compatibility verified (3 OS × Node.js 26)
           - 📦 \`bun.lock\` updated with latest versions"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

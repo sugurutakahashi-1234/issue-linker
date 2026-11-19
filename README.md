@@ -31,6 +31,8 @@ Most validators only check format. issue-linker checks reality.
 
 ## Installation
 
+The npm package requires Node.js 26 or later.
+
 ```bash
 npm install -g issue-linker
 ```

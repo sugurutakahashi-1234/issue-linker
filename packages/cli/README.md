@@ -4,6 +4,8 @@ A CLI and GitHub Action that validates issue references actually exist in your G
 
 ## Installation
 
+The npm package requires Node.js 26 or later.
+
 ```bash
 npm install -g issue-linker
 ```
