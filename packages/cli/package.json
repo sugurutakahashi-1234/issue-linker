@@ -1,5 +1,8 @@
 {
   "name": "issue-linker",
+  "engines": {
+    "node": ">=26.0.0"
+  },
   "version": "1.5.2",
   "description": "A CLI and GitHub Action that validates issue references actually exist in your GitHub repository - not just pattern matching, but real verification of commit messages (#123), branch names (feature/123, 123-fix-bug), PR titles, or any text",
   "keywords": [
@@ -69,7 +72,7 @@
     "clean": "rm -rf dist *.tsbuildinfo"
   },
   "dependencies": {
-    "@commander-js/extra-typings": "^14.0.0",
+    "@commander-js/extra-typings": "^15.1.0",
     "@issue-linker/core": "workspace:*",
     "valibot": "^1.5.0"
   },

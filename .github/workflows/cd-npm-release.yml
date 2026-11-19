@@ -36,6 +36,12 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
         uses: actions/checkout@v5
 
+      - name: Setup Node.js
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: '26'
+
       - name: Setup Bun
         if: ${{ steps.release.outputs.release_created }}
         uses: oven-sh/setup-bun@v2
@@ -69,14 +75,6 @@ jobs:
       - name: E2E Tests
         if: ${{ steps.release.outputs.release_created }}
         run: bun run test:e2e
-
-      # Setup Node.js for npm publish command
-      # Although we use Bun for development, npm publish requires Node.js environment
-      - name: Setup Node.js
-        if: ${{ steps.release.outputs.release_created }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: 'latest'
 
       - name: Publish to npm
         if: ${{ steps.release.outputs.release_created }}

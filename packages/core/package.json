@@ -1,5 +1,8 @@
 {
   "name": "@issue-linker/core",
+  "engines": {
+    "node": ">=26.0.0"
+  },
   "version": "1.5.2",
   "description": "Core library for issue-linker functionality",
   "keywords": [
