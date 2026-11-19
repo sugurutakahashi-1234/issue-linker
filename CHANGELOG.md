@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/sugurutakahashi-1234/issue-linker/compare/v2.0.0...v2.0.1) (2026-11-19)
+
+
+### 🔧 Maintenance
+
+* update bun.lock after v2.0.0 release ([0750b7e](https://github.com/sugurutakahashi-1234/issue-linker/commit/0750b7e00cd71fc2494555e3ef95b4a5a63782f9))
+
 ## [2.0.0](https://github.com/sugurutakahashi-1234/issue-linker/compare/v1.5.2...v2.0.0) (2026-11-19)
 
 
